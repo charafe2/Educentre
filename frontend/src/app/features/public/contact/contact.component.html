@@ -1,0 +1,172 @@
+<div class="contact-container">
+  <header class="page-header">
+    <div class="container">
+      <h1 class="page-title">Contact Us</h1>
+      <p class="page-subtitle">Get in touch with our team to learn more about our ERP solution</p>
+    </div>
+  </header>
+
+  <section class="contact-main">
+    <div class="container">
+      <div class="contact-grid">
+        <div class="contact-form-section">
+          <mat-card class="contact-form-card">
+            <mat-card-header>
+              <mat-card-title>Send us a Message</mat-card-title>
+              <mat-card-subtitle>We'll respond within 24 hours</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <form class="contact-form">
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Your Name</mat-label>
+                  <input matInput placeholder="Enter your full name" required>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Email Address</mat-label>
+                  <input matInput type="email" placeholder="your@email.com" required>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Phone Number</mat-label>
+                  <input matInput type="tel" placeholder="+212 6XX XXX XXX">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Tutoring Center Name</mat-label>
+                  <input matInput placeholder="Your tutoring center name">
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Subject</mat-label>
+                  <mat-select placeholder="Select a topic">
+                    <mat-option value="demo">Request Demo</mat-option>
+                    <mat-option value="pricing">Pricing Inquiry</mat-option>
+                    <mat-option value="support">Technical Support</mat-option>
+                    <mat-option value="partnership">Partnership Opportunity</mat-option>
+                    <mat-option value="other">Other</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="full-width">
+                  <mat-label>Message</mat-label>
+                  <textarea matInput placeholder="Tell us how we can help you..." rows="4" required></textarea>
+                </mat-form-field>
+
+                <div class="form-actions">
+                  <button mat-raised-button color="primary" type="submit">
+                    Send Message
+                  </button>
+                  <button mat-stroked-button type="button">
+                    Clear Form
+                  </button>
+                </div>
+              </form>
+            </mat-card-content>
+          </mat-card>
+        </div>
+
+        <div class="contact-info-section">
+          <div class="info-card">
+            <h3>Contact Information</h3>
+            <div class="contact-item">
+              <mat-icon class="contact-icon">email</mat-icon>
+              <div class="contact-details">
+                <h4>Email</h4>
+                <p>info@tutoring-erp.com</p>
+                <p>support@tutoring-erp.com</p>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <mat-icon class="contact-icon">phone</mat-icon>
+              <div class="contact-details">
+                <h4>Phone</h4>
+                <p>+212 5XX XXX XXX</p>
+                <p>+212 6XX XXX XXX (Mobile)</p>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <mat-icon class="contact-icon">location_on</mat-icon>
+              <div class="contact-details">
+                <h4>Office</h4>
+                <p>123 Business Avenue</p>
+                <p>Casablanca, Morocco</p>
+              </div>
+            </div>
+
+            <div class="contact-item">
+              <mat-icon class="contact-icon">schedule</mat-icon>
+              <div class="contact-details">
+                <h4>Business Hours</h4>
+                <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
+                <p>Saturday: 10:00 AM - 2:00 PM</p>
+                <p>Sunday: Closed</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="support-card">
+            <h3>Need Immediate Help?</h3>
+            <p>Our support team is ready to assist you with any questions about our ERP solution.</p>
+            <div class="support-actions">
+              <button mat-raised-button color="primary" routerLink="/auth/login">
+                Start Free Trial
+              </button>
+              <button mat-stroked-button>
+                Schedule Demo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="locations-section">
+    <div class="container">
+      <h2 class="section-title">Our Presence</h2>
+      <div class="locations-grid">
+        <mat-card class="location-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="location-icon">location_city</mat-icon>
+              Casablanca
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Main Office & Support Center</p>
+            <p>123 Business Avenue, Casablanca</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="location-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="location-icon">location_city</mat-icon>
+              Rabat
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Sales & Demo Center</p>
+            <p>456 Tech Street, Rabat</p>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="location-card">
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon class="location-icon">location_city</mat-icon>
+              Marrakech
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>Regional Office</p>
+            <p>789 Innovation Road, Marrakech</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </div>
+  </section>
+</div>
