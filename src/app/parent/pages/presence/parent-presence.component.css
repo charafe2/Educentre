@@ -1,0 +1,226 @@
+.presence-page {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 0.25rem;
+}
+
+/* Rate Ring */
+.rate-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.25rem 0 0.5rem;
+}
+
+.rate-ring-wrapper {
+  padding: 4px;
+  border-radius: 50%;
+}
+
+.rate-ring {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.rate-inner {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.rate-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rate-label {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.rate-title {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Status Counts */
+.status-counts {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.status-count-item {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.6rem;
+}
+
+.status-count-item i {
+  font-size: 0.85rem;
+}
+
+.count-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1;
+}
+
+.count-label {
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.status-count-item.status-present i { color: var(--success); }
+.status-count-item.status-absent i { color: var(--danger); }
+.status-count-item.status-late i { color: var(--warning); }
+.status-count-item.status-excused i { color: #6b21a8; }
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--text-light);
+}
+
+.empty-state i { font-size: 2.5rem; }
+.empty-state p { font-size: 0.9rem; margin: 0; }
+
+/* Class Group */
+.class-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.class-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem 0 0.625rem;
+  border-left: 3px solid transparent;
+}
+
+.group-class-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.group-class-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+  flex: 1;
+}
+
+.group-count {
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+/* Records List */
+.records-list {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-status-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.record-status-icon.status-present { background: var(--success-bg); color: var(--success); }
+.record-status-icon.status-absent  { background: var(--danger-bg);  color: var(--danger);  }
+.record-status-icon.status-late    { background: var(--warning-bg); color: var(--warning); }
+.record-status-icon.status-excused { background: #f3e8ff; color: #6b21a8; }
+
+.record-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.record-session {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.record-class-name {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.record-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.record-badge.status-present { background: var(--success-bg); color: var(--success); }
+.record-badge.status-absent  { background: var(--danger-bg);  color: var(--danger);  }
+.record-badge.status-late    { background: var(--warning-bg); color: var(--warning); }
+.record-badge.status-excused { background: #f3e8ff; color: #6b21a8; }

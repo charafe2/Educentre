@@ -1,0 +1,48 @@
+<div class="parent-shell">
+  <!-- Top Header -->
+  <header class="parent-header">
+    <div class="header-left">
+      <div class="header-avatar" [style.background-color]="student()?.avatarColor">
+        {{ getInitials() }}
+      </div>
+      <div class="header-info">
+        <span class="header-name">{{ student()?.firstName }} {{ student()?.lastName }}</span>
+        <span class="header-subtitle">{{ student()?.level }}</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <a routerLink="/dashboard" class="admin-link" title="Vue administrateur">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </a>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="parent-content">
+    <router-outlet />
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <a routerLink="/parent/accueil" routerLinkActive="active" class="nav-tab">
+      <i class="fa-solid fa-house"></i>
+      <span>Accueil</span>
+    </a>
+    <a routerLink="/parent/cours" routerLinkActive="active" class="nav-tab">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Cours</span>
+    </a>
+    <a routerLink="/parent/paiements" routerLinkActive="active" class="nav-tab">
+      <i class="fa-regular fa-credit-card"></i>
+      <span>Paiements</span>
+    </a>
+    <a routerLink="/parent/presence" routerLinkActive="active" class="nav-tab">
+      <i class="fa-regular fa-calendar-check"></i>
+      <span>Présence</span>
+    </a>
+    <a routerLink="/parent/notes" routerLinkActive="active" class="nav-tab">
+      <i class="fa-solid fa-chart-simple"></i>
+      <span>Notes</span>
+    </a>
+  </nav>
+</div>

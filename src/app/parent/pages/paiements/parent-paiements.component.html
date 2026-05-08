@@ -1,0 +1,73 @@
+<div class="paiements-page">
+
+  <h2 class="page-title">Paiements</h2>
+
+  <!-- Summary Cards -->
+  <div class="summary-row">
+    <div class="summary-card summary-paid">
+      <span class="summary-icon"><i class="fa-solid fa-circle-check"></i></span>
+      <span class="summary-amount">{{ totals().paid }}</span>
+      <span class="summary-label">Payé (Dhs)</span>
+    </div>
+    <div class="summary-card summary-pending">
+      <span class="summary-icon"><i class="fa-regular fa-clock"></i></span>
+      <span class="summary-amount">{{ totals().pending }}</span>
+      <span class="summary-label">En attente</span>
+    </div>
+    <div class="summary-card summary-overdue">
+      <span class="summary-icon"><i class="fa-solid fa-triangle-exclamation"></i></span>
+      <span class="summary-amount">{{ totals().overdue }}</span>
+      <span class="summary-label">Impayé</span>
+    </div>
+  </div>
+
+  <!-- Overdue Alert -->
+  @if (totals().overdue > 0) {
+    <div class="overdue-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span>Veuillez régulariser vos paiements impayés. Contactez le centre.</span>
+    </div>
+  }
+
+  <!-- Payment List -->
+  @if (payments().length === 0) {
+    <div class="empty-state">
+      <i class="fa-regular fa-credit-card"></i>
+      <p>Aucun paiement enregistré</p>
+    </div>
+  }
+
+  <div class="payments-list">
+    @for (p of payments(); track p.id) {
+      <div class="payment-card" [class.overdue-card]="p.status === 'overdue'" [class.paid-card]="p.status === 'paid'" [class.pending-card]="p.status === 'pending'">
+        <div class="payment-main">
+          <div class="payment-info">
+            <span class="payment-month">{{ formatMonth(p.periodMonth) }}</span>
+            <span class="payment-class">{{ getClassName(p.classeId) }}</span>
+          </div>
+          <div class="payment-right">
+            <span class="payment-amount">{{ p.amount }} Dhs</span>
+            <span class="status-badge" [class.badge-paid]="p.status === 'paid'" [class.badge-pending]="p.status === 'pending'" [class.badge-overdue]="p.status === 'overdue'">
+              {{ paymentLabel(p.status) }}
+            </span>
+          </div>
+        </div>
+        @if (p.status === 'paid') {
+          <div class="payment-footer">
+            <span class="footer-item">
+              <i class="fa-solid fa-money-bill-wave"></i>
+              {{ methodLabel(p.method) }}
+            </span>
+            @if (p.paidAt) {
+              <span class="footer-item">
+                <i class="fa-regular fa-calendar-check"></i>
+                {{ p.paidAt }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+</div>

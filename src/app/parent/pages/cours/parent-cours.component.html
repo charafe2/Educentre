@@ -1,0 +1,69 @@
+<div class="cours-page">
+
+  <h2 class="page-title">Mes Cours</h2>
+
+  @if (enrolledClasses().length === 0) {
+    <div class="empty-state">
+      <i class="fa-solid fa-book-open"></i>
+      <p>Aucun cours inscrit</p>
+    </div>
+  }
+
+  @for (cls of enrolledClasses(); track cls.id) {
+    <div class="class-card" [style.border-left-color]="cls.color">
+
+      <!-- Card Header -->
+      <div class="class-header">
+        <div class="class-header-left">
+          <span class="class-name">{{ cls.name }}</span>
+          <div class="class-badges">
+            <span class="subject-badge" [style.background-color]="cls.bgColor" [style.color]="cls.color">
+              {{ cls.subject }}
+            </span>
+            <span class="level-badge">{{ cls.level }}</span>
+          </div>
+        </div>
+        <div class="class-price">
+          <span class="price-value">{{ cls.monthlyPrice }}</span>
+          <span class="price-unit">Dhs/mois</span>
+        </div>
+      </div>
+
+      <!-- Teacher Info -->
+      @if (getTeacher(cls.teacherId); as teacher) {
+        <div class="teacher-row">
+          <div class="teacher-avatar" [style.background-color]="teacher.avatarColor">
+            {{ getTeacherInitials(cls.teacherId) }}
+          </div>
+          <div class="teacher-info">
+            <span class="teacher-name">{{ teacher.firstName }} {{ teacher.lastName }}</span>
+            <span class="teacher-specialty">{{ teacher.specialty }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Sessions -->
+      @if (getSessionsForClass(cls.id).length > 0) {
+        <div class="sessions-section">
+          <span class="sessions-label">
+            <i class="fa-regular fa-calendar"></i>
+            Horaires
+          </span>
+          <div class="sessions-list">
+            @for (session of getSessionsForClass(cls.id); track session.id) {
+              <div class="session-item">
+                <span class="session-day">{{ dayName(session.day) }}</span>
+                <span class="session-time">
+                  <i class="fa-regular fa-clock"></i>
+                  {{ formatHour(session.startHour) }} – {{ formatHour(session.endHour) }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  }
+
+</div>

@@ -1,0 +1,77 @@
+<div class="presence-page">
+
+  <h2 class="page-title">Présence</h2>
+
+  <!-- Attendance Rate Ring -->
+  <div class="rate-section">
+    <div class="rate-ring-wrapper">
+      <div class="rate-ring" [style.background]="rateGradient()">
+        <div class="rate-inner">
+          <span class="rate-value" [style.color]="rateColor()">{{ attendanceRate() }}%</span>
+          <span class="rate-label">présence</span>
+        </div>
+      </div>
+    </div>
+    <p class="rate-title">Taux de présence</p>
+  </div>
+
+  <!-- Status Counts -->
+  <div class="status-counts">
+    <div class="status-count-item status-present">
+      <i class="fa-solid fa-check"></i>
+      <span class="count-value">{{ countsByStatus().present }}</span>
+      <span class="count-label">Présent</span>
+    </div>
+    <div class="status-count-item status-absent">
+      <i class="fa-solid fa-xmark"></i>
+      <span class="count-value">{{ countsByStatus().absent }}</span>
+      <span class="count-label">Absent</span>
+    </div>
+    <div class="status-count-item status-late">
+      <i class="fa-solid fa-clock"></i>
+      <span class="count-value">{{ countsByStatus().late }}</span>
+      <span class="count-label">En retard</span>
+    </div>
+    <div class="status-count-item status-excused">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      <span class="count-value">{{ countsByStatus().excused }}</span>
+      <span class="count-label">Excusé</span>
+    </div>
+  </div>
+
+  <!-- Records grouped by class -->
+  @if (records().length === 0) {
+    <div class="empty-state">
+      <i class="fa-regular fa-calendar-check"></i>
+      <p>Aucun enregistrement de présence</p>
+    </div>
+  }
+
+  @for (group of groupedByClass(); track group.classe.id) {
+    <div class="class-group">
+      <div class="class-group-header" [style.border-left-color]="group.classe.color">
+        <span class="group-class-dot" [style.background-color]="group.classe.color"></span>
+        <span class="group-class-name">{{ group.classe.name }}</span>
+        <span class="group-count">{{ group.records.length }} séance(s)</span>
+      </div>
+
+      <div class="records-list">
+        @for (er of group.records; track er.record.id) {
+          <div class="record-item" [ngClass]="statusClass(er.record.status)">
+            <div class="record-status-icon" [ngClass]="statusClass(er.record.status)">
+              <i class="fa-solid" [ngClass]="statusIcon(er.record.status)"></i>
+            </div>
+            <div class="record-info">
+              <span class="record-session">{{ dayName(er.session.day) }} — {{ formatHour(er.session.startHour) }}–{{ formatHour(er.session.endHour) }}</span>
+              <span class="record-class-name">{{ er.classe.subject }}</span>
+            </div>
+            <span class="record-badge" [ngClass]="statusClass(er.record.status)">
+              {{ statusLabel(er.record.status) }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

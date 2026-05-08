@@ -282,3 +282,20 @@ nav { flex: 1; overflow: hidden; }
 .logout-btn:hover {
   color: var(--danger);
 }
+
+/* Parent Switch Button */
+.parent-switch-btn {
+  background: var(--accent-light);
+  color: var(--accent) !important;
+  margin-top: 0.25rem;
+}
+
+.parent-switch-btn:hover {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+.parent-switch-btn i,
+.parent-switch-btn .nav-text {
+  color: inherit !important;
+}

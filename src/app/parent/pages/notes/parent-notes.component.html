@@ -1,0 +1,48 @@
+<div class="notes-page">
+
+  <h2 class="page-title">Notes &amp; Résultats</h2>
+
+  <!-- Overall Average Card -->
+  <div class="overall-card" [ngClass]="overallColorClass()">
+    <div class="overall-center">
+      <span class="overall-score">{{ overallAvg() }}</span>
+      <span class="overall-denom">/20</span>
+    </div>
+    <p class="overall-label">Moyenne générale</p>
+  </div>
+
+  <!-- Per Subject Sections -->
+  @for (group of gradesBySubject(); track group.subject) {
+    <div class="subject-section">
+      <div class="subject-header">
+        <span class="subject-dot" [style.background-color]="group.color"></span>
+        <span class="subject-name">{{ group.subject }}</span>
+        <span class="subject-avg-badge" [ngClass]="gradeColorClass(group.avg, 20)">
+          Moy. {{ group.avg }}/20
+        </span>
+      </div>
+
+      <div class="grades-list">
+        @for (g of group.grades; track g.title) {
+          <div class="grade-item">
+            <div class="grade-top">
+              <span class="grade-title">{{ g.title }}</span>
+              <div class="grade-score-group">
+                <span class="grade-score" [ngClass]="gradeColorClass(g.score, g.maxScore)">
+                  {{ g.score }}/{{ g.maxScore }}
+                </span>
+              </div>
+            </div>
+            <div class="grade-bottom">
+              <span class="grade-date">{{ formatDate(g.date) }}</span>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" [style.width.%]="scoreBar(g.score, g.maxScore)" [style.background-color]="group.color"></div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

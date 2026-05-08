@@ -1,0 +1,47 @@
+<div class="login-page">
+  <div class="login-container">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <div class="logo-icon">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <h1 class="logo-name">Moujtahid</h1>
+      <p class="logo-subtitle">Espace Parents</p>
+    </div>
+
+    <!-- Card -->
+    <div class="login-card">
+      <h2 class="card-title">Sélectionnez votre enfant</h2>
+
+      <ul class="student-list">
+        @for (s of students(); track s.id) {
+          <li class="student-item" (click)="select(s.id)" role="button" tabindex="0" (keydown.enter)="select(s.id)">
+            <div class="student-avatar" [style.background-color]="s.avatarColor">
+              {{ getInitials(s) }}
+            </div>
+            <div class="student-info">
+              <span class="student-name">{{ s.firstName }} {{ s.lastName }}</span>
+              <span class="student-meta">
+                <span class="student-school">{{ s.school }}</span>
+                <span class="level-badge">{{ s.level }}</span>
+              </span>
+            </div>
+            <div class="student-right">
+              <span class="parent-name">{{ s.parentName }}</span>
+              <i class="fa-solid fa-chevron-right chevron"></i>
+            </div>
+          </li>
+        }
+      </ul>
+    </div>
+
+    <!-- Footer -->
+    <p class="login-footer">Accès réservé aux parents et tuteurs</p>
+    <a routerLink="/dashboard" class="back-link">
+      <i class="fa-solid fa-arrow-left"></i>
+      Retour à l'administration
+    </a>
+
+  </div>
+</div>
