@@ -1,0 +1,303 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Finances</h1>
+      <p>Suivi des paiements et revenus</p>
+    </div>
+    <button class="btn-primary" (click)="openAdd()">
+      <i class="fa-solid fa-plus"></i>
+      Nouveau paiement
+    </button>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totals().totalPaid.toLocaleString('fr-MA') }} Dhs</span>
+        <span class="stat-label">Total encaissé</span>
+      </div>
+    </div>
+    <div class="stat-card urgent">
+      <div class="stat-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <div class="stat-info">
+        <span class="stat-value danger">{{ totals().totalOverdue.toLocaleString('fr-MA') }} Dhs</span>
+        <span class="stat-label">Impayés</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totals().totalPending.toLocaleString('fr-MA') }} Dhs</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-teal"><i class="fa-solid fa-percent"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ recoveryRate() }}%</span>
+        <span class="stat-label">Taux de recouvrement</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="panel">
+    <div class="filter-bar">
+      <select class="filter-select" (change)="onMonthChange($event)">
+        <option value="">Tous les mois</option>
+        @for (month of months; track month) {
+          <option [value]="month">{{ monthLabels[month] }}</option>
+        }
+      </select>
+      <select class="filter-select" (change)="onStatusChange($event)">
+        <option value="">Tous les statuts</option>
+        <option value="paid">Payé</option>
+        <option value="pending">En attente</option>
+        <option value="overdue">Impayé</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="finances-layout">
+    <!-- Payments Table -->
+    <div class="panel table-panel payments-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">Paiements</h3>
+        <span class="results-count">{{ filteredPayments().length }} entrée(s)</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Étudiant</th>
+              <th>Classe</th>
+              <th>Mois</th>
+              <th>Montant</th>
+              <th>Mode</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (payment of filteredPayments(); track payment.id) {
+              <tr [ngClass]="['table-row', payment.status === 'overdue' ? 'row-overdue' : '']">
+                <td><strong>{{ getStudentName(payment.studentId) }}</strong></td>
+                <td>{{ getClassName(payment.classeId) }}</td>
+                <td>{{ getPeriodLabel(payment.periodMonth) }}</td>
+                <td><strong>{{ payment.amount }} Dhs</strong></td>
+                <td>
+                  @if (payment.method) {
+                    <span class="method-tag">{{ payment.method }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td>
+                  <div [ngClass]="['status-badge', 'status-' + payment.status]">
+                    {{ getStatusLabel(payment.status) }}
+                  </div>
+                </td>
+                <td class="date-cell">{{ payment.paidAt || '—' }}</td>
+                <td>
+                  <div class="action-btns">
+                    <button class="action-btn" title="Modifier" (click)="openEdit(payment)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    @if (payment.status !== 'paid') {
+                      <button class="action-btn" title="Marquer comme payé" (click)="openMarkPaid(payment)">
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                    }
+                    <button class="action-btn danger-btn" title="Supprimer" (click)="deletePayment(payment)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="side-panels">
+      <!-- Bar Chart -->
+      <div class="panel breakdown-panel">
+        <div class="panel-header">
+          <h3 class="panel-title">Répartition des paiements</h3>
+        </div>
+        <div class="breakdown-chart">
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span class="dot dot-paid"></span>
+              <span>Payés</span>
+              <span class="breakdown-pct">{{ paidPct() }}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-paid" [style.width]="paidPct() + '%'"></div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span class="dot dot-pending"></span>
+              <span>En attente</span>
+              <span class="breakdown-pct">{{ pendingPct() }}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-pending" [style.width]="pendingPct() + '%'"></div>
+            </div>
+          </div>
+          <div class="breakdown-item">
+            <div class="breakdown-label">
+              <span class="dot dot-overdue"></span>
+              <span>Impayés</span>
+              <span class="breakdown-pct">{{ overduePct() }}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill bar-overdue" [style.width]="overduePct() + '%'"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="summary-totals">
+          <div class="total-row">
+            <span>Total encaissé</span>
+            <strong class="total-paid">{{ totals().totalPaid.toLocaleString('fr-MA') }} Dhs</strong>
+          </div>
+          <div class="total-row">
+            <span>En cours</span>
+            <strong class="total-pending">{{ totals().totalPending.toLocaleString('fr-MA') }} Dhs</strong>
+          </div>
+          <div class="total-row">
+            <span>Impayés</span>
+            <strong class="total-overdue">{{ totals().totalOverdue.toLocaleString('fr-MA') }} Dhs</strong>
+          </div>
+          <div class="total-row total-main">
+            <span>Total attendu</span>
+            <strong>{{ totalAll().toLocaleString('fr-MA') }} Dhs</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="panel quick-actions-panel">
+        <h4 class="panel-subtitle">Actions rapides</h4>
+        <div class="quick-actions">
+          <button class="quick-btn">
+            <i class="fa-brands fa-whatsapp"></i>
+            Relances WhatsApp
+          </button>
+          <button class="quick-btn">
+            <i class="fa-solid fa-file-invoice"></i>
+            Générer les reçus
+          </button>
+          <button class="quick-btn">
+            <i class="fa-solid fa-download"></i>
+            Exporter CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Payment Modal -->
+@if (showModal()) {
+  <app-modal
+    [title]="editingPayment() ? 'Modifier le paiement' : 'Nouveau paiement'"
+    size="md"
+    (closed)="showModal.set(false)"
+  >
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Étudiant</label>
+        <select class="form-select" [(ngModel)]="formData.studentId">
+          @for (s of students(); track s.id) {
+            <option [value]="s.id">{{ s.firstName }} {{ s.lastName }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Classe</label>
+        <select class="form-select" [(ngModel)]="formData.classeId">
+          @for (c of classes(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Mois</label>
+          <input class="form-input" type="month" [(ngModel)]="formData.periodMonth" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Montant (Dhs)</label>
+          <input class="form-input" type="number" [(ngModel)]="formData.amount" min="0" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="formData.status">
+            <option value="pending">En attente</option>
+            <option value="paid">Payé</option>
+            <option value="overdue">Impayé</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mode de paiement</label>
+          <select class="form-select" [(ngModel)]="formData.method">
+            <option value="">—</option>
+            <option value="Espèces">Espèces</option>
+            <option value="Virement">Virement</option>
+            <option value="Chèque">Chèque</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note (optionnelle)</label>
+        <input class="form-input" type="text" [(ngModel)]="formData.note" placeholder="Remarque..." />
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="submit()">
+        <i class="fa-solid fa-floppy-disk"></i>
+        {{ editingPayment() ? 'Enregistrer' : 'Ajouter' }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- Mark as Paid Modal -->
+@if (showPayModal(); as p) {
+  <app-modal title="Marquer comme payé" size="sm" (closed)="showPayModal.set(null)">
+    <div class="form-body">
+      <p style="color:var(--text-muted); font-size:0.9rem;">
+        Confirmer le paiement de <strong>{{ p.amount }} Dhs</strong>
+        pour <strong>{{ getStudentName(p.studentId) }}</strong>
+      </p>
+      <div class="form-group">
+        <label class="form-label">Mode de paiement</label>
+        <select class="form-select" [(ngModel)]="selectedPayMethod">
+          <option value="Espèces">Espèces</option>
+          <option value="Virement">Virement</option>
+          <option value="Chèque">Chèque</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showPayModal.set(null)">Annuler</button>
+      <button class="btn-primary" (click)="confirmMarkPaid()">
+        <i class="fa-solid fa-check"></i>
+        Confirmer
+      </button>
+    </div>
+  </app-modal>
+}

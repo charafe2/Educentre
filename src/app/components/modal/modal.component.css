@@ -1,0 +1,37 @@
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(15,23,42,0.5);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  animation: fade-in 0.15s ease;
+}
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slide-up 0.2s ease;
+  width: 100%;
+}
+@keyframes slide-up { from { transform: translateY(16px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }
+
+.modal-sm { max-width: 400px; }
+.modal-md { max-width: 560px; }
+.modal-lg { max-width: 760px; }
+
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.5rem 1.5rem 0;
+  margin-bottom: 1.25rem;
+}
+.modal-title { font-size: 1.125rem; font-weight: 600; color: var(--text-main); }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--border-dark); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: all 0.2s;
+}
+.modal-close:hover { background: var(--bg-color); color: var(--text-main); }

@@ -1,0 +1,104 @@
+<aside class="sidebar" [class.collapsed]="collapsed()">
+
+  <!-- Logo + toggle -->
+  <div class="logo-row">
+    <div class="logo">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span class="logo-text">Moujtahid</span>
+    </div>
+    <button class="toggle-btn" (click)="toggle()" [title]="collapsed() ? 'Expand' : 'Collapse'">
+      <i class="fa-solid" [ngClass]="collapsed() ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+    </button>
+  </div>
+
+  <nav>
+    <ul class="nav-menu">
+      <li class="nav-label">Menu Principal</li>
+      <li>
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" title="Vue d'ensemble">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-layer-group"></i>
+            <span class="nav-text">Vue d'ensemble</span>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/etudiants" routerLinkActive="active" class="nav-item" title="Étudiants">
+          <div class="nav-item-left">
+            <i class="fa-regular fa-user"></i>
+            <span class="nav-text">Étudiants</span>
+          </div>
+          <span class="shortcut">G E</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" title="Professeurs">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-chalkboard-user"></i>
+            <span class="nav-text">Professeurs</span>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/finances" routerLinkActive="active" class="nav-item" title="Finances">
+          <div class="nav-item-left">
+            <i class="fa-regular fa-credit-card"></i>
+            <span class="nav-text">Finances</span>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/calendrier" routerLinkActive="active" class="nav-item" title="Calendrier">
+          <div class="nav-item-left">
+            <i class="fa-regular fa-calendar"></i>
+            <span class="nav-text">Calendrier</span>
+          </div>
+          <span class="shortcut">G C</span>
+        </a>
+      </li>
+
+      <li class="nav-label">Rapports</li>
+      <li>
+        <a routerLink="/analytiques" routerLinkActive="active" class="nav-item" title="Analytiques">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-chart-line"></i>
+            <span class="nav-text">Analytiques</span>
+          </div>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/documents" routerLinkActive="active" class="nav-item" title="Documents">
+          <div class="nav-item-left">
+            <i class="fa-regular fa-file-lines"></i>
+            <span class="nav-text">Documents</span>
+          </div>
+        </a>
+      </li>
+
+      <li class="nav-label">Système</li>
+      <li>
+        <a routerLink="/parametres" routerLinkActive="active" class="nav-item" title="Paramètres">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-gear"></i>
+            <span class="nav-text">Paramètres</span>
+          </div>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <!-- User profile pinned at bottom -->
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">AD</div>
+      <div class="user-info">
+        <span class="user-name">Admin</span>
+        <span class="user-role">Administrateur</span>
+      </div>
+      <button class="logout-btn" title="Déconnexion">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </button>
+    </div>
+  </div>
+
+</aside>

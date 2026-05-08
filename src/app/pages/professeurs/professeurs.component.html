@@ -1,0 +1,235 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Professeurs</h1>
+      <p>Gérez l'équipe pédagogique</p>
+    </div>
+    <button class="btn-primary" (click)="openAdd()">
+      <i class="fa-solid fa-plus"></i>
+      Nouveau professeur
+    </button>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><i class="fa-solid fa-chalkboard-user"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalCount() }}</span>
+        <span class="stat-label">Total Professeurs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ activeCount() }}</span>
+        <span class="stat-label">Actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-teal"><i class="fa-solid fa-wallet"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ formatSalary(totalPayroll()) }}</span>
+        <span class="stat-label">Salaire Total Mensuel</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><i class="fa-solid fa-graduation-cap"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ classes().length }}</span>
+        <span class="stat-label">Classes actives</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="panel">
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Rechercher un professeur..."
+          (input)="onSearch($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Teachers Table -->
+  <div class="panel table-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">Équipe pédagogique</h3>
+      <span class="results-count">{{ filteredTeachers().length }} professeur(s)</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Professeur</th>
+            <th>Spécialité</th>
+            <th>Mode de Paiement</th>
+            <th>Classes</th>
+            <th>Étudiants</th>
+            <th>Salaire</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (teacher of filteredTeachers(); track teacher.id) {
+            <tr class="table-row">
+              <td>
+                <div class="teacher-cell">
+                  <div class="avatar" [style.background-color]="teacher.avatarColor">
+                    {{ getInitials(teacher.firstName, teacher.lastName) }}
+                  </div>
+                  <div class="teacher-info">
+                    <span class="teacher-name">{{ teacher.firstName }} {{ teacher.lastName }}</span>
+                    <span class="teacher-email">{{ teacher.email }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="specialty-tag">{{ teacher.specialty }}</span></td>
+              <td>
+                <span [ngClass]="['mode-badge', teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
+                  {{ getPaymentModeLabel(teacher.paymentMode) }}
+                  @if (teacher.paymentMode === 'per_student') {
+                    <span class="rate-detail">({{ teacher.ratePerStudent }} Dhs/ét.)</span>
+                  }
+                </span>
+              </td>
+              <td><span class="count-pill">{{ getTeacherClasses(teacher).length }}</span></td>
+              <td><span class="count-pill">{{ getStudentCount(teacher) }}</span></td>
+              <td><strong class="salary-val">{{ formatSalary(getSalary(teacher)) }}</strong></td>
+              <td>
+                <div [ngClass]="['status-badge', teacher.status === 'active' ? 'status-active' : 'status-inactive']">
+                  {{ teacher.status === 'active' ? 'Actif' : 'Inactif' }}
+                </div>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button class="action-btn" title="Modifier" (click)="openEdit(teacher)">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  <button class="action-btn danger-btn" title="Supprimer" (click)="deleteTeacher(teacher)">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Payroll Summary -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3 class="panel-title">
+        <i class="fa-solid fa-receipt" style="color:var(--accent);margin-right:0.5rem;"></i>
+        Récapitulatif de la paie
+      </h3>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Professeur</th>
+            <th>Spécialité</th>
+            <th>Mode</th>
+            <th>Classes</th>
+            <th>Étudiants</th>
+            <th>Salaire calculé</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of teachers(); track t.id) {
+            <tr class="table-row">
+              <td><strong>{{ t.firstName }} {{ t.lastName }}</strong></td>
+              <td>{{ t.specialty }}</td>
+              <td>{{ getPaymentModeLabel(t.paymentMode) }}</td>
+              <td>{{ getTeacherClasses(t).length }}</td>
+              <td>{{ getStudentCount(t) }}</td>
+              <td><strong>{{ formatSalary(getSalary(t)) }}</strong></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+@if (showModal()) {
+  <app-modal
+    [title]="editingTeacher() ? 'Modifier le professeur' : 'Nouveau professeur'"
+    size="lg"
+    (closed)="showModal.set(false)"
+  >
+    <div class="form-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prénom</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.firstName" placeholder="Prénom" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.lastName" placeholder="Nom de famille" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" [(ngModel)]="formData.email" placeholder="email@centre.ma" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone</label>
+          <input class="form-input" type="tel" [(ngModel)]="formData.phone" placeholder="0661234567" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Spécialité</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.specialty" placeholder="Mathématiques, Physique..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="formData.status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mode de paiement</label>
+        <select class="form-select" [(ngModel)]="formData.paymentMode">
+          <option value="fixed">Salaire fixe</option>
+          <option value="per_student">Par étudiant</option>
+        </select>
+      </div>
+      @if (formData.paymentMode === 'fixed') {
+        <div class="form-group">
+          <label class="form-label">Salaire fixe (Dhs)</label>
+          <input class="form-input" type="number" [(ngModel)]="formData.fixedSalary" min="0" />
+        </div>
+      }
+      @if (formData.paymentMode === 'per_student') {
+        <div class="form-group">
+          <label class="form-label">Taux par étudiant (Dhs)</label>
+          <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" />
+        </div>
+      }
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="submit()">
+        <i class="fa-solid fa-floppy-disk"></i>
+        {{ editingTeacher() ? 'Enregistrer' : 'Ajouter' }}
+      </button>
+    </div>
+  </app-modal>
+}

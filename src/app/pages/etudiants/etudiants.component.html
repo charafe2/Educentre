@@ -1,0 +1,307 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Étudiants</h1>
+      <p>Gérez les inscriptions et profils étudiants</p>
+    </div>
+    <button class="btn-primary" (click)="openAdd()">
+      <i class="fa-solid fa-plus"></i>
+      Nouvel étudiant
+    </button>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalCount() }}</span>
+        <span class="stat-label">Total Étudiants</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ activeCount() }}</span>
+        <span class="stat-label">Actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><i class="fa-solid fa-user-plus"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalCount() - activeCount() }}</span>
+        <span class="stat-label">Inactifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-teal"><i class="fa-solid fa-chart-line"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ activeCount() > 0 ? (activeCount() / totalCount() * 100).toFixed(0) + '%' : '0%' }}</span>
+        <span class="stat-label">Taux actifs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="panel">
+    <div class="filter-bar">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Rechercher un étudiant..."
+          (input)="onSearch($event)"
+        />
+      </div>
+      <select class="filter-select" (change)="onLevelChange($event)">
+        <option value="">Tous les niveaux</option>
+        @for (level of levels; track level) {
+          <option [value]="level">{{ level }}</option>
+        }
+      </select>
+      <select class="filter-select" (change)="onStatusChange($event)">
+        <option value="">Tous les statuts</option>
+        <option value="active">Actif</option>
+        <option value="inactive">Inactif</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Students Table -->
+  <div class="panel table-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">Liste des étudiants</h3>
+      <span class="results-count">{{ filteredStudents().length }} étudiant(s)</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Étudiant</th>
+            <th>Niveau</th>
+            <th>Classes</th>
+            <th>Paiement</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (student of filteredStudents(); track student.id) {
+            <tr class="table-row">
+              <td><span class="code-badge">{{ student.code }}</span></td>
+              <td>
+                <div class="student-cell">
+                  <div class="avatar" [style.background-color]="student.avatarColor">
+                    {{ getInitials(student.firstName, student.lastName) }}
+                  </div>
+                  <div class="student-info">
+                    <span class="student-name">{{ student.firstName }} {{ student.lastName }}</span>
+                    <span class="student-school">{{ student.school }}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span class="level-badge">{{ student.level }}</span></td>
+              <td>
+                <div class="classes-list">
+                  @for (cls of getEnrolledClasses(student); track cls.id) {
+                    <span class="class-tag">{{ cls.subject }}</span>
+                  }
+                  @if (student.enrolledClassIds.length === 0) {
+                    <span class="text-muted">—</span>
+                  }
+                </div>
+              </td>
+              <td>
+                <div [ngClass]="['status-badge', 'status-' + student.paymentStatus]">
+                  {{ getPaymentLabel(student.paymentStatus) }}
+                </div>
+              </td>
+              <td>
+                <div [ngClass]="['status-badge', student.status === 'active' ? 'status-active' : 'status-inactive']">
+                  {{ student.status === 'active' ? 'Actif' : 'Inactif' }}
+                </div>
+              </td>
+              <td>
+                <div class="action-btns">
+                  <button class="action-btn" title="Voir détails" (click)="showDetailPanel.set(student)">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                  <button class="action-btn" title="Modifier" (click)="openEdit(student)">
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  <button class="action-btn danger-btn" title="Supprimer" (click)="deleteStudent(student)">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+@if (showModal()) {
+  <app-modal
+    [title]="editingStudent() ? 'Modifier l\'étudiant' : 'Nouvel étudiant'"
+    size="lg"
+    (closed)="showModal.set(false)"
+  >
+    <div class="form-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Prénom</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.firstName" placeholder="Prénom" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nom</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.lastName" placeholder="Nom de famille" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date de naissance</label>
+          <input class="form-input" type="date" [(ngModel)]="formData.birthDate" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">École</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.school" placeholder="Nom de l'école" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" [(ngModel)]="formData.level">
+            @for (level of levels; track level) {
+              <option [value]="level">{{ level }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select class="form-select" [(ngModel)]="formData.status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Classes inscrites</label>
+        <div class="classes-checkbox-grid">
+          @for (cls of availableClasses; track cls.id) {
+            <label class="class-checkbox-item" [class.selected]="isClassSelected(cls.id)">
+              <input
+                type="checkbox"
+                [checked]="isClassSelected(cls.id)"
+                (change)="toggleClass(cls.id)"
+              />
+              <span class="class-color-dot" [style.background-color]="cls.color"></span>
+              <span class="class-checkbox-label">
+                <span class="class-checkbox-name">{{ cls.name }}</span>
+                <span class="class-checkbox-price">{{ cls.monthlyPrice }} Dhs/mois</span>
+              </span>
+            </label>
+          }
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nom du parent</label>
+        <input class="form-input" type="text" [(ngModel)]="formData.parentName" placeholder="Nom du parent/tuteur" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Téléphone parent</label>
+          <input class="form-input" type="tel" [(ngModel)]="formData.parentPhone" placeholder="0661234567" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp parent</label>
+          <input class="form-input" type="tel" [(ngModel)]="formData.parentWhatsapp" placeholder="0661234567" />
+        </div>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="submit()">
+        <i class="fa-solid fa-floppy-disk"></i>
+        {{ editingStudent() ? 'Enregistrer' : 'Ajouter' }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- Detail Side Panel -->
+@if (showDetailPanel(); as s) {
+  <div class="detail-panel">
+    <div class="detail-panel-header">
+      <h3 style="font-size:1rem; font-weight:600;">Profil étudiant</h3>
+      <button class="modal-close" (click)="showDetailPanel.set(null)">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="detail-panel-body">
+      <div style="display:flex; align-items:center; gap:1rem;">
+        <div class="avatar avatar-lg" [style.background-color]="s.avatarColor">
+          {{ getInitials(s.firstName, s.lastName) }}
+        </div>
+        <div>
+          <div style="font-weight:600; font-size:1rem;">{{ s.firstName }} {{ s.lastName }}</div>
+          <div style="color:var(--text-muted); font-size:0.8rem;">{{ s.code }}</div>
+          <div [ngClass]="['status-badge', s.status === 'active' ? 'status-active' : 'status-inactive']" style="margin-top:0.5rem; display:inline-flex;">
+            {{ s.status === 'active' ? 'Actif' : 'Inactif' }}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="detail-section-title">Informations</div>
+        <div class="detail-info-row"><span>École</span><span>{{ s.school }}</span></div>
+        <div class="detail-info-row"><span>Niveau</span><span>{{ s.level }}</span></div>
+        <div class="detail-info-row"><span>Naissance</span><span>{{ s.birthDate || '—' }}</span></div>
+      </div>
+
+      @if (s.parentName) {
+        <div>
+          <div class="detail-section-title">Contact parent</div>
+          <div class="detail-info-row"><span>Nom</span><span>{{ s.parentName }}</span></div>
+          <div class="detail-info-row"><span>Tél.</span><span>{{ s.parentPhone }}</span></div>
+          <div class="detail-info-row"><span>WhatsApp</span><span>{{ s.parentWhatsapp }}</span></div>
+        </div>
+      }
+
+      <div>
+        <div class="detail-section-title">Classes inscrites ({{ s.enrolledClassIds.length }})</div>
+        @for (cls of getEnrolledClasses(s); track cls.id) {
+          <div class="detail-class-item" [style.border-left-color]="cls.color">
+            <span class="detail-class-name">{{ cls.name }}</span>
+            <span class="detail-class-price">{{ cls.monthlyPrice }} Dhs/mois</span>
+          </div>
+        }
+        @if (s.enrolledClassIds.length === 0) {
+          <p style="color:var(--text-muted); font-size:0.85rem;">Aucune classe inscrite</p>
+        }
+      </div>
+
+      <div>
+        <div class="detail-section-title">Paiement</div>
+        <div [ngClass]="['status-badge', 'status-' + s.paymentStatus]">
+          {{ getPaymentLabel(s.paymentStatus) }}
+        </div>
+      </div>
+
+      <div style="display:flex; gap:0.5rem; flex-direction:column;">
+        <button class="btn-primary" (click)="openEdit(s); showDetailPanel.set(null)">
+          <i class="fa-regular fa-pen-to-square"></i> Modifier
+        </button>
+        <button class="btn-danger" (click)="deleteStudent(s)">
+          <i class="fa-regular fa-trash-can"></i> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+}

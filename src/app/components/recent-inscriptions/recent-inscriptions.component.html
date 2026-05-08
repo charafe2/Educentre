@@ -1,0 +1,47 @@
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Inscriptions récentes</h2>
+    <a routerLink="/etudiants" class="btn-ghost">Voir tout</a>
+  </div>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Étudiant</th>
+          <th>Niveau</th>
+          <th>Date</th>
+          <th>Paiement</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of recentStudents(); track s.id) {
+          <tr class="table-row">
+            <td>
+              <div class="student-info">
+                <div class="student-avatar-initials" [style.background-color]="s.avatarColor">
+                  {{ getInitials(s) }}
+                </div>
+                <div class="student-details">
+                  <span class="student-name">{{ s.firstName }} {{ s.lastName }}</span>
+                  <span class="student-id">{{ s.code }}</span>
+                </div>
+              </div>
+            </td>
+            <td>{{ s.level }}</td>
+            <td>{{ formatDate(s.createdAt) }}</td>
+            <td>
+              <div class="status-badge" [ngClass]="paymentClass(s.paymentStatus)">
+                <div class="status-dot"></div>
+                {{ paymentLabel(s.paymentStatus) }}
+              </div>
+            </td>
+            <td class="action-cell">
+              <a routerLink="/etudiants" class="row-action">Détails</a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

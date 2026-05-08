@@ -1,0 +1,133 @@
+.topbar {
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2.5rem;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.search-container {
+  position: relative;
+  width: 380px;
+  display: flex;
+  align-items: center;
+}
+
+.search-container > i.fa-magnifying-glass {
+  position: absolute;
+  left: 1.2rem;
+  color: var(--text-light);
+  font-size: 0.875rem;
+}
+
+.search-input {
+  width: 100%;
+  padding: 0.7rem 3rem 0.7rem 2.8rem;
+  border-radius: 100px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  font-size: 0.875rem;
+  color: var(--text-main);
+  transition: all 0.2s;
+  outline: none;
+}
+
+.search-input:focus {
+  background-color: var(--surface);
+  border-color: var(--border-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.search-input::placeholder {
+  color: var(--text-light);
+}
+
+.search-shortcut {
+  position: absolute;
+  right: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--surface);
+  border: 1px solid var(--border-dark);
+  border-radius: 100px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  gap: 0.25rem;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  color: var(--text-muted);
+  font-size: 1.05rem;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  color: var(--text-main);
+  border-color: var(--border-dark);
+  background-color: var(--bg-color);
+  transform: scale(1.05);
+}
+
+.badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: var(--danger);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--surface);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border-radius: 100px;
+  transition: background-color 0.2s;
+}
+
+.user-profile:hover {
+  background-color: var(--bg-color);
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 500;
+  font-size: 0.8rem;
+  box-shadow: var(--shadow-sm);
+}

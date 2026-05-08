@@ -1,0 +1,50 @@
+<div class="panel">
+  <div class="panel-header">
+    <h2 class="panel-title">Aujourd'hui</h2>
+    <button class="icon-btn-sm"><i class="fa-solid fa-ellipsis"></i></button>
+  </div>
+
+  <div class="timeline">
+    @if (isWeekend) {
+      <p class="no-sessions">Aucune séance le dimanche.</p>
+    } @else if (schedule().length === 0) {
+      <p class="no-sessions">Aucune séance prévue aujourd'hui.</p>
+    } @else {
+      @for (item of schedule(); track item.time) {
+        <div class="timeline-item" [ngClass]="item.state">
+          <div class="timeline-icon" [ngClass]="item.state">
+            @if (item.state === 'past') {
+              <i class="fa-solid fa-check"></i>
+            } @else if (item.state === 'active') {
+              <i class="fa-solid fa-circle"></i>
+            } @else {
+              <i class="fa-regular fa-circle"></i>
+            }
+          </div>
+          <div class="timeline-content">
+            <span class="timeline-time">{{ item.time }}</span>
+            <span class="timeline-title">{{ item.title }}</span>
+            <span class="timeline-desc">{{ item.desc }}</span>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="quick-actions-header">
+    <h2 class="section-title">Actions Rapides</h2>
+  </div>
+
+  <div class="quick-actions-grid">
+    <button class="quick-btn">
+      <i class="fa-solid fa-file-invoice"></i>
+      <span>Nouveau Reçu</span>
+    </button>
+    <button class="quick-btn">
+      <i class="fa-brands fa-whatsapp whatsapp-icon"></i>
+      <span>WhatsApp</span>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,23 @@
+<main class="content-area">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Tableau de bord</h1>
+      <p>Voici un aperçu de l'activité de votre centre aujourd'hui.</p>
+    </div>
+    <button class="btn-primary">
+      <i class="fa-solid fa-plus"></i>
+      Nouvelle inscription
+    </button>
+  </div>
+
+  <div class="stats-grid">
+    @for (stat of stats(); track stat.title) {
+      <app-stat-card [data]="stat" />
+    }
+  </div>
+
+  <div class="dashboard-layout">
+    <app-recent-inscriptions />
+    <app-schedule-panel />
+  </div>
+</main>

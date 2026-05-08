@@ -1,0 +1,201 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Calendrier</h1>
+      <p>Planning des séances et cours</p>
+    </div>
+    <div class="header-right">
+      <div class="week-nav">
+        <button class="nav-btn" (click)="prevWeek()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="week-label">{{ currentWeekLabel }}</span>
+        <button class="nav-btn" (click)="nextWeek()">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+        <button class="btn-secondary btn-sm" (click)="thisWeek()">Cette semaine</button>
+      </div>
+      <button class="btn-primary" (click)="openAddSession()">
+        <i class="fa-solid fa-plus"></i>
+        Nouvelle séance
+      </button>
+    </div>
+  </div>
+
+  <!-- Weekly Grid -->
+  <div class="panel calendar-panel">
+    <div class="calendar-grid">
+      <!-- Header row -->
+      <div class="time-gutter"></div>
+      @for (day of days; track day) {
+        <div class="day-header">{{ day }}</div>
+      }
+
+      <!-- Time slots -->
+      @for (hour of hours; track hour) {
+        <div class="time-label">{{ hour }}:00</div>
+        @for (day of days; track day; let di = $index) {
+          <div class="time-cell" [style.height.px]="60">
+            @for (session of getSessionsForSlot(di, hour); track session.id) {
+              <div class="session-block" [ngStyle]="getSessionStyle(session)" (click)="openAttendance(session)">
+                <div class="session-name">{{ getClasseForSession(session)?.name ?? '—' }}</div>
+                <div class="session-time">{{ session.startHour }}h – {{ session.endHour }}h</div>
+                @if (session.isCancelled) {
+                  <div class="session-cancelled">Annulé</div>
+                }
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Today's Sessions -->
+  <div class="panel today-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">
+        <i class="fa-regular fa-calendar-day" style="color:var(--accent);margin-right:0.5rem;"></i>
+        Séances du jour
+      </h3>
+      <span class="results-count">{{ todaySessions.length }} séance(s)</span>
+    </div>
+    @if (todaySessions.length === 0) {
+      <p class="empty-state">Aucune séance aujourd'hui.</p>
+    } @else {
+      <div class="today-timeline">
+        @for (session of todaySessions; track session.id) {
+          <div class="timeline-item">
+            <div class="timeline-time">{{ session.startHour }}:00 – {{ session.endHour }}:00</div>
+            <div class="timeline-dot" [style.background-color]="getClasseForSession(session)?.color ?? '#94a3b8'"></div>
+            <div class="timeline-content" [style.border-left-color]="getClasseForSession(session)?.color ?? '#94a3b8'">
+              <div class="timeline-title">{{ getClasseForSession(session)?.name ?? '—' }}</div>
+              <div class="timeline-meta">
+                <span><i class="fa-solid fa-book"></i> {{ getClasseForSession(session)?.subject ?? '—' }}</span>
+                <span><i class="fa-solid fa-users"></i> {{ getStudentsForSession(session).length }} étudiants</span>
+              </div>
+            </div>
+            <button class="action-btn" title="Présences" (click)="openAttendance(session)">
+              <i class="fa-solid fa-clipboard-list"></i>
+            </button>
+            <button class="action-btn" title="Modifier" (click)="openEditSession(session)">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Add/Edit Session Modal -->
+@if (showAddModal()) {
+  <app-modal
+    [title]="editingSession() ? 'Modifier la séance' : 'Nouvelle séance'"
+    size="md"
+    (closed)="showAddModal.set(false)"
+  >
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Classe</label>
+        <select class="form-select" [(ngModel)]="formData.classeId">
+          @for (c of classes(); track c.id) {
+            <option [value]="c.id">{{ c.name }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Jour</label>
+        <select class="form-select" [(ngModel)]="formData.day">
+          @for (day of days; track $index) {
+            <option [value]="$index">{{ day }}</option>
+          }
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Heure début</label>
+          <select class="form-select" [(ngModel)]="formData.startHour">
+            @for (h of hours; track h) {
+              <option [value]="h">{{ h }}:00</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Heure fin</label>
+          <select class="form-select" [(ngModel)]="formData.endHour">
+            @for (h of hours; track h) {
+              <option [value]="h">{{ h }}:00</option>
+            }
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="form-footer">
+      @if (editingSession()) {
+        <button class="btn-danger" style="margin-right:auto;" (click)="deleteSession(editingSession()!); showAddModal.set(false)">
+          <i class="fa-regular fa-trash-can"></i> Supprimer
+        </button>
+      }
+      <button class="btn-secondary" (click)="showAddModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="submitSession()">
+        <i class="fa-solid fa-floppy-disk"></i>
+        {{ editingSession() ? 'Enregistrer' : 'Ajouter' }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- Attendance Modal -->
+@if (showAttendanceModal(); as session) {
+  <app-modal
+    [title]="'Présences — ' + (getClasseForSession(session)?.name ?? '')"
+    size="md"
+    (closed)="showAttendanceModal.set(null)"
+  >
+    <div class="form-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+        <span style="font-size:0.85rem; color:var(--text-muted);">
+          Séance {{ days[session.day] }} {{ session.startHour }}h – {{ session.endHour }}h
+        </span>
+        @if (!session.isCancelled) {
+          <button class="btn-danger" style="font-size:0.8rem; padding:0.4rem 0.8rem;" (click)="cancelSession(session)">
+            <i class="fa-solid fa-ban"></i> Annuler la séance
+          </button>
+        } @else {
+          <span class="status-badge status-overdue">Séance annulée</span>
+        }
+      </div>
+
+      @for (student of getStudentsForSession(session); track student!.id) {
+        <div class="attendance-row">
+          <div class="att-avatar" [style.background-color]="student!.avatarColor">
+            {{ student!.firstName[0] }}{{ student!.lastName[0] }}
+          </div>
+          <span class="att-name">{{ student!.firstName }} {{ student!.lastName }}</span>
+          <select class="att-select"
+            [ngModel]="attendanceMap()[student!.id]"
+            (ngModelChange)="setAttendance(student!.id, $event)">
+            <option value="present">Présent</option>
+            <option value="absent">Absent</option>
+            <option value="late">En retard</option>
+            <option value="excused">Excusé</option>
+          </select>
+        </div>
+      }
+      @if (getStudentsForSession(session).length === 0) {
+        <p style="color:var(--text-muted); text-align:center; padding:1rem 0;">Aucun étudiant inscrit</p>
+      }
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showAttendanceModal.set(null)">Fermer</button>
+      @if (!session.isCancelled) {
+        <button class="btn-primary" (click)="saveAttendance()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Enregistrer présences
+        </button>
+      }
+    </div>
+  </app-modal>
+}

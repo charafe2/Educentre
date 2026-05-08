@@ -1,0 +1,133 @@
+.stat-card {
+  background-color: var(--surface);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-float);
+  border-color: var(--border-dark);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.stat-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+}
+
+.icon-blue  { background-color: var(--accent-light); color: var(--accent); }
+.icon-green { background-color: var(--success-bg);   color: var(--success); }
+.icon-orange{ background-color: var(--warning-bg);   color: var(--warning); }
+.icon-red   { background-color: var(--danger-bg);    color: var(--danger); }
+
+.stat-title {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.stat-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-value {
+  font-size: 2.25rem;
+  font-weight: 600;
+  color: var(--text-main);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.stat-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.trend-up      { color: var(--success); }
+.trend-down    { color: var(--danger); }
+.trend-neutral { color: var(--text-muted); }
+
+.sparkline {
+  position: absolute;
+  bottom: -5px;
+  right: 0;
+  width: 100px;
+  height: 40px;
+  opacity: 0.4;
+  z-index: 0;
+  transition: opacity 0.3s;
+}
+
+.stat-card:hover .sparkline {
+  opacity: 1;
+}
+
+/* ── Urgent variant ─────────────────────────────────────── */
+.stat-card.urgent {
+  background-color: #fff5f7;
+  border-color: rgba(225, 29, 72, 0.2);
+}
+
+.stat-card.urgent:hover {
+  border-color: rgba(225, 29, 72, 0.35);
+  box-shadow: 0 20px 40px -10px rgba(225, 29, 72, 0.1);
+}
+
+.urgent-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--danger);
+  background-color: var(--danger-bg);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  padding: 0.2rem 0.5rem;
+  border-radius: 100px;
+  animation: badge-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}

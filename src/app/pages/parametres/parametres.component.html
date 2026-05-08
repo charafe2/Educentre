@@ -1,0 +1,303 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Paramètres</h1>
+      <p>Configuration du centre et du système</p>
+    </div>
+  </div>
+
+  <!-- Two-column layout -->
+  <div class="settings-layout">
+    <!-- Left Nav Sidebar -->
+    <div class="settings-sidebar">
+      @for (tab of tabs; track tab.id) {
+        <button
+          [ngClass]="['tab-item', activeTab() === tab.id ? 'tab-active' : '']"
+          (click)="setTab(tab.id)"
+        >
+          <i [class]="tab.icon"></i>
+          <span>{{ tab.label }}</span>
+          <i class="fa-solid fa-chevron-right tab-arrow"></i>
+        </button>
+      }
+    </div>
+
+    <!-- Right Content Panel -->
+    <div class="settings-content panel">
+
+      <!-- Centre Info -->
+      @if (activeTab() === 'centre') {
+        <div class="settings-section">
+          <h3 class="section-title">Informations du centre</h3>
+          <p class="section-desc">Modifiez les informations principales de votre établissement.</p>
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label class="form-label">Nom du centre</label>
+              <input class="form-input" type="text" [(ngModel)]="centreForm.name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Type</label>
+              <select class="form-input" [(ngModel)]="centreForm.type">
+                @for (t of centreTypes; track t) {
+                  <option [value]="t">{{ t }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ville</label>
+              <input class="form-input" type="text" [(ngModel)]="centreForm.city" />
+            </div>
+            <div class="form-group form-full">
+              <label class="form-label">Adresse</label>
+              <input class="form-input" type="text" [(ngModel)]="centreForm.address" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone</label>
+              <input class="form-input" type="tel" [(ngModel)]="centreForm.phone" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">WhatsApp</label>
+              <input class="form-input" type="tel" [(ngModel)]="centreForm.whatsapp" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn-secondary" (click)="resetCentreForm()">Annuler</button>
+            <button class="btn-primary" (click)="saveCentreForm()">
+              <i class="fa-solid fa-floppy-disk"></i>
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Users -->
+      @if (activeTab() === 'users') {
+        <div class="settings-section">
+          <div class="panel-header" style="margin-bottom:1.5rem;">
+            <h3 class="section-title" style="margin:0;">Utilisateurs</h3>
+            <button class="btn-primary btn-sm" (click)="openAddUser()">
+              <i class="fa-solid fa-plus"></i>
+              Ajouter
+            </button>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nom</th>
+                  <th>Email</th>
+                  <th>Rôle</th>
+                  <th>Dernière connexion</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (user of users(); track user.id) {
+                  <tr class="table-row">
+                    <td><strong>{{ user.name }}</strong></td>
+                    <td>{{ user.email }}</td>
+                    <td>
+                      <span [ngClass]="['role-badge', 'role-' + user.roleType]">{{ user.role }}</span>
+                    </td>
+                    <td>{{ user.lastLogin }}</td>
+                    <td>
+                      <div class="action-btns">
+                        <button class="action-btn danger-btn" (click)="deleteUser(user)">
+                          <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <!-- Subscription -->
+      @if (activeTab() === 'subscription') {
+        <div class="settings-section">
+          <h3 class="section-title">Abonnement</h3>
+          <div class="subscription-card">
+            <div class="sub-header">
+              <div>
+                <span class="plan-name">Plan Pro</span>
+                <span class="plan-badge">Actif</span>
+              </div>
+              <div class="plan-price">
+                <strong>450 Dhs</strong><span>/mois</span>
+              </div>
+            </div>
+            <div class="sub-info">
+              <div class="sub-detail">
+                <i class="fa-regular fa-calendar"></i>
+                Renouvellement : <strong>01/06/2025</strong>
+              </div>
+              <div class="sub-detail">
+                <i class="fa-solid fa-shield-halved"></i>
+                Paiement sécurisé par carte bancaire
+              </div>
+            </div>
+          </div>
+          <h4 class="features-title">Fonctionnalités incluses</h4>
+          <div class="features-list">
+            @for (f of subscriptionFeatures; track f.label) {
+              <div [ngClass]="['feature-item', f.included ? '' : 'feature-excluded']">
+                <i [ngClass]="f.included ? 'fa-solid fa-check feature-check' : 'fa-solid fa-xmark feature-cross'"></i>
+                <span>{{ f.label }}</span>
+              </div>
+            }
+          </div>
+          <button class="btn-primary" style="margin-top:1.5rem;">
+            <i class="fa-solid fa-arrow-up"></i>
+            Passer à Enterprise
+          </button>
+        </div>
+      }
+
+      <!-- Notifications -->
+      @if (activeTab() === 'notifications') {
+        <div class="settings-section">
+          <h3 class="section-title">Paramètres de notifications</h3>
+          <p class="section-desc">Configurez quand et comment vous recevez des notifications.</p>
+          <div class="notif-list">
+            <div class="notif-item">
+              <div class="notif-info">
+                <span class="notif-label">Rappels de paiement</span>
+                <span class="notif-desc">Envoyer des rappels aux parents avant échéance</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="notifSettings.paymentReminder" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-info">
+                <span class="notif-label">Alertes d'absence</span>
+                <span class="notif-desc">Notifier les parents en cas d'absence</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="notifSettings.absenceAlert" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-info">
+                <span class="notif-label">Nouvelle inscription</span>
+                <span class="notif-desc">Alerte lors d'une nouvelle inscription</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="notifSettings.newEnrollment" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-info">
+                <span class="notif-label">Notifications WhatsApp</span>
+                <span class="notif-desc">Utiliser WhatsApp pour les communications</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="notifSettings.whatsappNotifs" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            <div class="notif-item">
+              <div class="notif-info">
+                <span class="notif-label">Rapports par email</span>
+                <span class="notif-desc">Recevoir les rapports hebdomadaires par email</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" [(ngModel)]="notifSettings.emailReports" />
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+          <div style="margin-top:1.5rem;">
+            <button class="btn-primary" (click)="saveNotifications()">
+              <i class="fa-solid fa-floppy-disk"></i>
+              Enregistrer les préférences
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Integrations -->
+      @if (activeTab() === 'integrations') {
+        <div class="settings-section">
+          <h3 class="section-title">Intégrations</h3>
+          <p class="section-desc">Connectez votre centre avec des services externes.</p>
+          <div class="integrations-list">
+            <div class="integration-card">
+              <div class="int-icon wa-icon"><i class="fa-brands fa-whatsapp"></i></div>
+              <div class="int-info">
+                <strong>WhatsApp Business</strong>
+                <span>Envoi automatique de messages aux parents</span>
+              </div>
+              <span class="status-badge status-active">Connecté</span>
+            </div>
+            <div class="integration-card">
+              <div class="int-icon google-icon"><i class="fa-brands fa-google"></i></div>
+              <div class="int-info">
+                <strong>Google Calendar</strong>
+                <span>Synchronisation du planning des cours</span>
+              </div>
+              <button class="btn-secondary btn-sm">Connecter</button>
+            </div>
+            <div class="integration-card">
+              <div class="int-icon sms-icon"><i class="fa-solid fa-comment-sms"></i></div>
+              <div class="int-info">
+                <strong>SMS Gateway</strong>
+                <span>Envoi de SMS aux parents et étudiants</span>
+              </div>
+              <button class="btn-secondary btn-sm">Connecter</button>
+            </div>
+            <div class="integration-card">
+              <div class="int-icon stripe-icon"><i class="fa-brands fa-stripe"></i></div>
+              <div class="int-info">
+                <strong>Paiement en ligne</strong>
+                <span>Permettre les paiements par carte bancaire</span>
+              </div>
+              <button class="btn-secondary btn-sm">Configurer</button>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+@if (showUserModal()) {
+  <app-modal title="Ajouter un utilisateur" size="sm" (closed)="showUserModal.set(false)">
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">Nom complet</label>
+        <input class="form-input" type="text" [(ngModel)]="userForm.name" placeholder="Prénom Nom" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" type="email" [(ngModel)]="userForm.email" placeholder="email@centre.ma" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Rôle</label>
+        <select class="form-select" [(ngModel)]="userForm.roleType"
+          (ngModelChange)="userForm.role = $event === 'admin' ? 'Administrateur' : $event === 'teacher' ? 'Professeur' : $event === 'manager' ? 'Gestionnaire' : 'Comptable'">
+          <option value="admin">Administrateur</option>
+          <option value="teacher">Professeur</option>
+          <option value="manager">Gestionnaire</option>
+          <option value="accountant">Comptable</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="showUserModal.set(false)">Annuler</button>
+      <button class="btn-primary" (click)="submitUser()">
+        <i class="fa-solid fa-plus"></i>
+        Ajouter
+      </button>
+    </div>
+  </app-modal>
+}

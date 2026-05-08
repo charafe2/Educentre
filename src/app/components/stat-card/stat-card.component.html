@@ -1,0 +1,32 @@
+<div class="stat-card"
+     [class.urgent]="data.urgent"
+     [class.clickable]="!!data.route"
+     (click)="navigate()">
+  <div class="stat-header">
+    <div class="stat-header-left">
+      <div class="stat-icon" [ngClass]="data.iconColorClass">
+        <i [class]="data.iconClass"></i>
+      </div>
+      <span class="stat-title">{{ data.title }}</span>
+    </div>
+    @if (data.urgent) {
+      <span class="urgent-badge">Action requise</span>
+    }
+  </div>
+  <div class="stat-body">
+    <div class="stat-info">
+      <div class="stat-value" [innerHTML]="data.value"></div>
+      <div class="stat-trend" [ngClass]="'trend-' + data.trendType">
+        <i class="fa-solid" [ngClass]="{
+          'fa-arrow-up': data.trendType === 'up',
+          'fa-arrow-down': data.trendType === 'down',
+          'fa-minus': data.trendType === 'neutral'
+        }"></i>
+        <span>{{ data.trendLabel }}</span>
+      </div>
+    </div>
+  </div>
+  <svg class="sparkline" viewBox="0 0 100 40">
+    <path [attr.d]="data.sparkPath" fill="none" [attr.stroke]="data.sparkColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</div>

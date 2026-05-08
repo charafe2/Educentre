@@ -1,0 +1,14 @@
+export interface Classe {
+  id: number;
+  name: string;
+  subject: string;
+  level: string;
+  teacherId: number;
+  roomId: number;
+  maxCapacity: number;
+  monthlyPrice: number;
+  enrolledStudentIds: number[];
+  status: 'active' | 'inactive';
+  color: string;
+  bgColor: string;
+}

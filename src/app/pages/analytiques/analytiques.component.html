@@ -1,0 +1,174 @@
+<div class="content-area">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Analytiques</h1>
+      <p>Rapports de performance et statistiques</p>
+    </div>
+    <select class="filter-select" (change)="onPeriodChange($event)">
+      @for (p of periods; track p) {
+        <option [value]="p">{{ p }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalRevenue().toLocaleString('fr-MA') }} Dhs</span>
+        <span class="stat-label">Revenus encaissés</span>
+        <span class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> Payé</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ totalStudents() }}</span>
+        <span class="stat-label">Étudiants inscrits</span>
+        <span class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> {{ activeStudents() }} actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-orange"><i class="fa-regular fa-calendar-check"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ attendanceRate() }}%</span>
+        <span class="stat-label">Taux de présence</span>
+        <span class="stat-trend neutral">Calculé</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-teal"><i class="fa-solid fa-chalkboard-user"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ teacherPerformance().length }}</span>
+        <span class="stat-label">Professeurs actifs</span>
+        <span class="stat-trend neutral">Équipe</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <!-- Revenue Bar Chart -->
+    <div class="panel chart-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">Revenus Mensuels</h3>
+        <span class="chart-legend">Paiements encaissés</span>
+      </div>
+      @if (monthlyRevenues().length > 0) {
+        <div class="bar-chart">
+          @for (item of monthlyRevenues(); track item.month) {
+            <div class="bar-col">
+              <div class="bar-wrap">
+                <div
+                  class="bar-rect"
+                  [ngStyle]="{'height': getBarHeight(item.amount, item.maxAmount) + '%'}"
+                >
+                  <span class="bar-tooltip">{{ item.amount.toLocaleString() }} Dhs</span>
+                </div>
+              </div>
+              <span class="bar-label">{{ item.month }}</span>
+            </div>
+          }
+        </div>
+      } @else {
+        <p style="text-align:center; color:var(--text-muted); padding:2rem 0;">Aucune donnée de revenus</p>
+      }
+    </div>
+
+    <!-- Attendance Rates -->
+    <div class="panel chart-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">Présence par classe</h3>
+      </div>
+      <div class="attendance-list">
+        @for (cls of classAttendance(); track cls.className) {
+          <div class="attendance-item">
+            <div class="att-header">
+              <span class="att-name">{{ cls.className }}</span>
+              <span class="att-rate" [style.color]="cls.color">{{ cls.rate }}%</span>
+            </div>
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [ngStyle]="{'width': cls.rate + '%', 'background-color': cls.color}"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Enrollment Trend -->
+  <div class="panel trend-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">Évolution des inscriptions</h3>
+      <span class="chart-legend">12 derniers mois</span>
+    </div>
+    <div class="trend-chart">
+      <svg viewBox="0 0 540 110" class="trend-svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <polyline
+          [attr.points]="svgPoints"
+          fill="none"
+          stroke="var(--accent)"
+          stroke-width="2.5"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+        />
+      </svg>
+      <div class="trend-months">
+        @for (m of trendMonths; track m) {
+          <span>{{ m }}</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Teacher Performance -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3 class="panel-title">Performance des professeurs</h3>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Professeur</th>
+            <th>Classes</th>
+            <th>Étudiants</th>
+            <th>Taux présence</th>
+            <th>Note moyenne</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of teacherPerformance(); track t.name) {
+            <tr class="table-row">
+              <td><strong>{{ t.name }}</strong></td>
+              <td>{{ t.classes }}</td>
+              <td>{{ t.students }}</td>
+              <td>
+                <div class="inline-progress">
+                  <div class="mini-bar" [ngStyle]="{'width': t.attendanceRate + '%'}"></div>
+                  <span>{{ t.attendanceRate }}%</span>
+                </div>
+              </td>
+              <td>
+                <span class="grade-badge" [ngStyle]="{'color': t.avgGrade >= 14 ? 'var(--success)' : 'var(--warning)'}">
+                  {{ t.avgGrade.toFixed(1) }}/20
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
