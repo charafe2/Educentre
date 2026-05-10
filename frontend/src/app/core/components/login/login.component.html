@@ -1,0 +1,121 @@
+<div class="login-container">
+  <div class="login-background">
+    <div class="login-pattern"></div>
+  </div>
+  
+  <mat-card class="login-card">
+    <mat-card-header class="login-header">
+      <div class="logo-section">
+        <div class="logo-circle">
+          <mat-icon class="logo-icon">school</mat-icon>
+        </div>
+        <mat-card-title class="login-title">SaaS ERP</mat-card-title>
+      </div>
+      <mat-card-subtitle class="login-subtitle">Tutoring Center Management System</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content class="login-content">
+      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+        <div class="form-section">
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>
+              <mat-icon class="field-icon">email</mat-icon>
+              Email Address
+            </mat-label>
+            <input matInput 
+                   formControlName="email" 
+                   type="email" 
+                   placeholder="Enter your email address"
+                   autocomplete="email">
+            <mat-icon matSuffix class="field-suffix-icon" 
+                       *ngIf="loginForm.get('email')?.value"
+                       [color]="loginForm.get('email')?.valid ? 'primary' : 'warn'">
+              {{ loginForm.get('email')?.valid ? 'check_circle' : 'error' }}
+            </mat-icon>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('required')">
+              Email address is required
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('email')?.hasError('email')">
+              Please enter a valid email address
+            </mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>
+              <mat-icon class="field-icon">lock</mat-icon>
+              Password
+            </mat-label>
+            <input matInput 
+                   formControlName="password" 
+                   [type]="showPassword ? 'text' : 'password'" 
+                   placeholder="Enter your password"
+                   autocomplete="current-password">
+            <button mat-icon-button 
+                    type="button"
+                    matSuffix
+                    (click)="showPassword = !showPassword"
+                    class="password-toggle">
+              <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+              Password is required
+            </mat-error>
+            <mat-error *ngIf="loginForm.get('password')?.hasError('minlength')">
+              Password must be at least 8 characters
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="form-actions">
+          <mat-checkbox class="remember-me">
+            Remember me
+          </mat-checkbox>
+          
+          <a class="forgot-password" href="#" (click)="handleForgotPassword($event)">
+            Forgot password?
+          </a>
+        </div>
+
+        <div class="button-section">
+          <button mat-raised-button 
+                  type="submit" 
+                  class="login-button"
+                  [disabled]="loginForm.invalid || isLoading"
+                  color="primary">
+            <mat-icon *ngIf="!isLoading" class="button-icon">login</mat-icon>
+            <mat-spinner *ngIf="isLoading" 
+                       diameter="20" 
+                       class="loading-spinner">
+            </mat-spinner>
+            <span class="button-text">
+              {{ isLoading ? 'Signing in...' : 'Sign In' }}
+            </span>
+          </button>
+        </div>
+
+        <div class="demo-section">
+          <mat-divider class="demo-divider"></mat-divider>
+          <p class="demo-text">Demo Account</p>
+          <div class="demo-buttons">
+            <button mat-stroked-button 
+                    type="button" 
+                    class="demo-button"
+                    (click)="fillDemoCredentials('admin')"
+                    color="accent">
+              <mat-icon>admin_panel_settings</mat-icon>
+              Admin Login
+            </button>
+            <button mat-stroked-button 
+                    type="button" 
+                    class="demo-button"
+                    (click)="fillDemoCredentials('teacher')"
+                    color="accent">
+              <mat-icon>person</mat-icon>
+              Teacher Login
+            </button>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

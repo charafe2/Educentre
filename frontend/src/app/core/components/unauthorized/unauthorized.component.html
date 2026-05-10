@@ -1,0 +1,30 @@
+<div class="unauthorized-container">
+  <mat-card class="unauthorized-card">
+    <mat-card-header>
+      <mat-card-title class="unauthorized-title">
+        <mat-icon class="warning-icon">warning</mat-icon>
+        Access Denied
+      </mat-card-title>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <p class="unauthorized-message">
+        You don't have permission to access this page. Please contact your administrator if you believe this is an error.
+      </p>
+    </mat-card-content>
+    
+    <mat-card-actions class="unauthorized-actions">
+      <button mat-raised-button 
+              color="primary" 
+              (click)="goToDashboard()"
+              class="action-button">
+        Go to Dashboard
+      </button>
+      <button mat-button 
+              (click)="logout()"
+              class="action-button">
+        Logout
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
