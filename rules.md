@@ -1,245 +1,1015 @@
-🚀 Project Rules – SaaS ERP (Angular + Laravel)
-🧠 General Principles
+# 🚀 `RULES.md` — Modern SaaS ERP Architecture Guide (2026 Edition)
 
-Build a multi-tenant SaaS ERP for Tutoring Centers.
+# 🏫 Project Overview
 
-Code-First Architecture: Clean, scalable, production-ready.
-Strict Isolation: School A must NEVER access School B data.
-High Performance: Optimize for concurrency (peak: registrations, payments).
-Modular Design: Each feature is isolated (frontend + backend).
-🧱 Tech Stack
-Frontend: Angular (latest), Angular Material, RxJS, Lodash
-Backend: Laravel (latest), PHP 8.x, Sanctum (Auth), Redis (Queues & Cache)
-Infrastructure: PostgreSQL, Laravel Queues
-UI Assets: Roboto Font, Google Material Icons
-📁 Frontend Architecture
-src/app/
- ├── core/          (auth, interceptors, guards, tenant context)
- ├── shared/        (UI components, pipes, services)
- ├── features/
- │    ├── public/         (landing, marketing)
- │    ├── dashboard/
- │    ├── students/
- │    ├── planning/
- │    ├── finance/
- │    ├── communication/
- │    ├── settings/
- │    ├── layout/         (main shell)
-🚦 Routing System (CRITICAL)
-🧠 Principles
-Tenant-first routing: URL defines tenant context
-Lazy loading ONLY: Every feature module must be lazy-loaded
-Guard everything: Auth + Tenant + Role
-No logic in components: Routing handles access control
-Scalable URL structure
-🌍 Global Routing Structure
-/                  → Public pages
-/auth              → Authentication
-/:tenant/...       → SaaS App (tenant scoped)
+Build a production-grade multi-tenant SaaS ERP for tutoring centers and schools.
+
+Platform goals:
+
+* Massive scalability
+* Strong tenant isolation
+* Modular architecture
+* Enterprise-grade maintainability
+* Real-time operations
+* High performance under concurrent usage
+* Clean developer experience
+
+---
+
+# 🧠 Core Architecture Philosophy
+
+## 1. Tenant-First Architecture
+
+Every request, query, websocket event, cache entry, notification, and file must belong to a tenant.
+
+A tenant = one tutoring center/school.
+
+Cross-tenant leakage is a CRITICAL FAILURE.
+
+---
+
+## 2. Domain-Driven Modular Structure
+
+The application is split into business domains.
+
+Each domain owns:
+
+* Controllers
+* Services
+* Repositories
+* DTOs
+* Requests
+* Policies
+* Events
+* Notifications
+* Routes
+* Tests
 
 Example:
 
-/minassa/dashboard
+```txt
+app/
+ ├── Domains/
+ │    ├── Students/
+ │    ├── Finance/
+ │    ├── Planning/
+ │    ├── Communication/
+ │    ├── Auth/
+ │    ├── Notifications/
+ │    ├── Academic/
+```
+
+---
+
+# 🧱 Modern Tech Stack (2026)
+
+## Frontend
+
+* Angular 19+
+* Angular Signals
+* Angular Material 3
+* RxJS
+* NgRx Signal Store
+* Standalone Components
+* TanStack Query (Angular Query)
+* ngx-translate
+* Full lazy loading
+* PWA enabled
+
+---
+
+## Backend
+
+* Laravel 12+
+* PHP 8.4+
+* PostgreSQL 16+
+* Redis
+* Laravel Horizon
+* Laravel Reverb (WebSockets)
+* Laravel Sanctum
+* Laravel Pulse
+* Laravel Pennant (Feature flags)
+* Laravel Scout (optional search)
+* Spatie Permission
+* Spatie Media Library
+* Laravel Precognition
+
+---
+
+## Infrastructure
+
+* Docker
+* Nginx
+* PostgreSQL
+* Redis
+* MinIO / S3
+* Queue workers
+* Supervisor
+* CI/CD (GitHub Actions)
+
+---
+
+# 🏗️ Backend Folder Architecture
+
+```txt
+app/
+ ├── Domains/
+ │    ├── Students/
+ │    │    ├── Actions/
+ │    │    ├── DTOs/
+ │    │    ├── Events/
+ │    │    ├── Exceptions/
+ │    │    ├── Models/
+ │    │    ├── Notifications/
+ │    │    ├── Policies/
+ │    │    ├── Repositories/
+ │    │    ├── Requests/
+ │    │    ├── Resources/
+ │    │    ├── Services/
+ │    │    ├── Traits/
+ │    │    └── routes.php
+```
+
+---
+
+# 🛡️ Multi-Tenancy Implementation Guide
+
+# 1. Database Strategy
+
+Use:
+
+## Shared Database + tenant_id
+
+Every business table MUST contain:
+
+```sql
+tenant_id BIGINT NOT NULL
+```
+
+Example:
+
+```sql
+students
+teachers
+payments
+sessions
+notifications
+```
+
+---
+
+# 2. Tenant Resolution
+
+Tenant extracted from:
+
+```txt
+/:tenant/dashboard
+```
+
+Example:
+
+```txt
 /minassa/students
-📌 App Routing Rules
-1. Public Routes
-No authentication required
-Marketing pages, landing pages
-2. Auth Routes
-Login, Register, Password reset
-Must NOT be accessible if already authenticated
-3. Tenant Routes (MAIN APP)
+```
 
-All business features MUST be under:
+Laravel Middleware:
 
-/:tenant/
-
-✔ Enforced via TenantGuard
-✔ Prevents cross-tenant access
-✔ Sets tenant context globally
-
-🏫 Tenant Context Handling
-Extract tenant from URL (:tenant)
-Store it in a TenantService
-Attach tenant to:
-All API requests (headers or subdomain logic)
-WebSocket connections
-Reject invalid tenants immediately
-🛡️ Route Guards (MANDATORY)
-🔐 AuthGuard
-Blocks unauthenticated users
-Redirect → /auth/login
-🏫 TenantGuard (CRITICAL)
+```php
+ResolveTenantMiddleware
+```
 
 Responsibilities:
 
-Validate tenant existence
-Set tenant context
-Prevent URL tampering
-👤 RoleGuard (RBAC)
+* Validate tenant exists
+* Store tenant in container
+* Attach tenant globally
+* Prevent spoofing
 
-Roles:
+---
 
-SuperAdmin
-SchoolAdmin
-Teacher
-Parent
+# 3. Global Tenant Scope
+
+Every tenant-aware model MUST use:
+
+```php
+TenantScope
+```
+
+Example:
+
+```php
+protected static function booted()
+{
+    static::addGlobalScope(new TenantScope);
+}
+```
+
+---
+
+# 4. Auto tenant_id Injection
+
+During creation:
+
+```php
+$model->tenant_id = tenant()->id;
+```
+
+NEVER trust frontend tenant_id.
+
+---
+
+# 🧬 Database Architecture Guide
+
+# Core Rules
+
+## IDs
+
+Use:
+
+```sql
+BIGINT GENERATED ALWAYS AS IDENTITY
+```
+
+Avoid SERIAL in modern PostgreSQL.
+
+---
+
+# Timestamp Convention
+
+Every table:
+
+```sql
+created_at TIMESTAMPTZ
+updated_at TIMESTAMPTZ
+deleted_at TIMESTAMPTZ NULL
+```
+
+Use soft deletes for recoverability.
+
+---
+
+# UUID Public IDs
+
+Expose UUIDs publicly.
+
+Internal DB:
+
+```sql
+id BIGINT
+```
+
+Public:
+
+```sql
+uuid UUID UNIQUE
+```
+
+Avoid exposing sequential IDs.
+
+---
+
+# Recommended PostgreSQL Extensions
+
+```sql
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+```
+
+---
+
+# 📚 Schema-by-Schema Backend Guide
+
+# 👥 USERS
+
+## Tables
+
+```txt
+users
+user_profiles
+user_preferences
+user_sessions
+user_2fa
+user_privacy_settings
+```
+
+---
+
+# Users Table
+
+Purpose:
+
+Authentication identity.
 
 Rules:
 
-Access defined via route metadata
-Unauthorized → redirect to dashboard
-🧩 Layout Routing (Shell Architecture)
-Use a MainLayoutComponent
-Contains:
-Sidebar
-Navbar
-Router outlet
+* Email unique globally
+* tenant_id mandatory
+* Passwords hashed using Argon2id
 
-All protected routes live inside this layout.
+Recommended additions:
 
-📦 Feature Module Routing
+```sql
+last_login_at
+avatar_url
+status
+email_verified_at
+```
 
-Each feature must:
+Indexes:
 
-Have its own routing module
-Be lazy-loaded
-Define child routes internally
+```sql
+INDEX(tenant_id, email)
+INDEX(status)
+```
 
-Example structure:
+---
 
-students/
- ├── students.module.ts
- ├── students-routing.module.ts
-🔄 Route Resolvers (REQUIRED for heavy pages)
+# 👨‍🎓 STUDENTS DOMAIN
 
-Use resolvers to:
+## Tables
 
-Preload critical data before rendering
-Avoid empty UI states
+```txt
+students
+parents
+enrollments
+attendance
+grades
+```
 
-Examples:
+---
 
-Student Profile
-Dashboard stats
-Session details
-⚡ Performance Rules
-Lazy load ALL modules
-Use PreloadAllModules strategy
-Use ChangeDetectionStrategy.OnPush
-Avoid unnecessary route re-renders
-🔁 Navigation Rules
-Always include tenant in navigation:
-this.router.navigate([tenant, 'students']);
-NEVER hardcode routes without tenant
-❌ Routing Anti-Patterns (FORBIDDEN)
-❌ Accessing routes without tenant context
-❌ Hardcoded URLs (/students instead of /:tenant/students)
-❌ Role logic inside components
-❌ Eager-loaded feature modules
-❌ Fetching critical data inside ngOnInit instead of resolvers
-🔔 Communication & Notifications
-Use a centralized NotificationService (Angular)
-Backend:
-ALL notifications MUST be queued (ShouldQueue)
-Channels:
-SMS
-Email
-WhatsApp
-⚡ Real-Time
-Use Laravel Echo + WebSockets (Pusher/Reverb)
+# Students Rules
+
+Use:
+
+```sql
+current_school
+school_level
+birth_date
+status
+medical_notes
+emergency_contact
+```
+
+Soft delete students instead of hard delete.
+
+---
+
+# Enrollments
+
+This table is critical.
+
+Acts as pivot between:
+
+```txt
+students <-> classes
+```
+
+Add constraints:
+
+```sql
+UNIQUE(student_id, class_id)
+```
+
+Prevent duplicates.
+
+---
+
+# Attendance Rules
+
+## Recommended Status Enum
+
+```txt
+present
+absent
+late
+excused
+```
+
+---
+
+# Prevent Duplicate Attendance
+
+```sql
+UNIQUE(session_id, student_id)
+```
+
+---
+
+# 👨‍🏫 TEACHERS DOMAIN
+
+## Teacher Payroll Logic
+
+Current schema is good.
+
+Recommended improvements:
+
+### Add payroll_snapshots
+
+Never recalculate old payroll dynamically.
+
+Store immutable monthly payroll snapshots.
+
+---
+
+# Suggested Payroll Flow
+
+```txt
+sessions completed
+→ student count computed
+→ bonuses computed
+→ payroll snapshot generated
+→ invoice generated
+→ payment processed
+```
+
+---
+
+# 📅 PLANNING DOMAIN
+
+## Tables
+
+```txt
+rooms
+classes
+sessions
+```
+
+---
+
+# CRITICAL RULE
+
+Prevent overlapping sessions.
+
+Use PostgreSQL exclusion constraints.
+
 Example:
-"New student enrolled"
-"Payment received"
-🔌 Webhooks Handling
-Incoming Webhooks
-Use WebhookController
-Requirements:
-✅ Idempotency keys (avoid duplicates)
-✅ Signature verification (security)
-✅ Validation before processing
-✅ Store logs in webhook_logs
-📅 Academic & School Logic
-Planning & Sessions
-Prevent overlapping sessions (teacher/room)
-Attendance:
-One-click check-in/out
-Auto "Absent" if not checked in
-💳 Subscriptions
-Tier: 399 MAD/month
-Lifecycle:
-Auto reminder (3 days before expiry)
-Grace period handling
-🎨 UI & UX
-Design System
 
-Colors:
+```sql
+EXCLUDE USING gist (
+    teacher_id WITH =,
+    tstzrange(start_at, end_at) WITH &&
+)
+```
 
-#546B41
-#99AD7A
-#DCCCAC
-#FFF8EC
-High data density (tables)
-Clean dashboards
-Components
-Advanced Data Tables (filters, search)
-Interactive Calendar (planning)
-Centralized Toast/Snackbar system
-🛡️ Security & Multi-Tenancy
-Every model MUST include:
-tenant_id
-Apply Global Scope (TenantScope)
-Backend Rules
-Use FormRequest validation
-No direct DB queries in controllers
-Use Services/Repositories
-API Protection
-Rate limiting (anti-bruteforce)
-Secure endpoints (Sanctum)
-RBAC Enforcement
-Backend MUST validate roles (not only frontend)
-🔌 API Rules
-Standard Response Format
+Same for rooms.
+
+---
+
+# Sessions
+
+Recommended columns:
+
+```sql
+start_at
+end_at
+status
+meeting_url
+is_online
+```
+
+---
+
+# 💳 FINANCE DOMAIN
+
+## Tables
+
+```txt
+student_payments
+teacher_payroll
+invoices
+subscriptions
+expenses
+```
+
+---
+
+# Financial Rules
+
+## NEVER MODIFY PAID RECORDS
+
+Instead:
+
+* Create adjustment rows
+* Use audit logs
+
+---
+
+# Payment Status Enum
+
+```txt
+pending
+paid
+failed
+overdue
+cancelled
+refunded
+```
+
+---
+
+# Recommended Additions
+
+## expenses
+
+```txt
+rent
+utilities
+marketing
+teacher_salary
+equipment
+```
+
+---
+
+# Audit Trail
+
+Every finance mutation MUST be logged.
+
+Table:
+
+```txt
+audit_logs
+```
+
+---
+
+# 📩 NOTIFICATIONS DOMAIN
+
+## Architecture
+
+Use event-driven notifications.
+
+Example:
+
+```txt
+PaymentReceived
+StudentEnrolled
+SessionCancelled
+SubscriptionExpiring
+```
+
+---
+
+# Queue EVERYTHING
+
+Notifications MUST implement:
+
+```php
+ShouldQueue
+```
+
+---
+
+# Channels
+
+```txt
+email
+sms
+whatsapp
+push
+in_app
+```
+
+---
+
+# Recommended Tables
+
+```txt
+notifications
+notification_logs
+notification_templates
+```
+
+---
+
+# 🔌 WEBHOOKS DOMAIN
+
+## Required Table
+
+```txt
+webhook_logs
+```
+
+Columns:
+
+```txt
+provider
+event_type
+payload
+signature
+status
+processed_at
+```
+
+---
+
+# Security Rules
+
+## MUST HAVE
+
+* Signature verification
+* Replay attack protection
+* Idempotency keys
+* Rate limiting
+
+---
+
+# ⚡ Real-Time Architecture
+
+Use:
+
+```txt
+Laravel Reverb
+Laravel Echo
+Redis
+```
+
+Events:
+
+```txt
+NewPaymentReceived
+NewStudentEnrollment
+TeacherAssigned
+SessionStarted
+```
+
+---
+
+# 📊 Analytics & Reporting
+
+Recommended:
+
+## Materialized Views
+
+For heavy dashboards.
+
+Example:
+
+```txt
+monthly_revenue
+attendance_rates
+teacher_profitability
+student_retention
+```
+
+Refresh asynchronously.
+
+---
+
+# 🧠 Caching Strategy
+
+Use Redis aggressively.
+
+Cache:
+
+* Dashboard stats
+* Tenant config
+* Permissions
+* Feature flags
+
+---
+
+# Cache Keys
+
+Always tenant scoped.
+
+Example:
+
+```txt
+tenant:5:dashboard:stats
+```
+
+---
+
+# 🔐 Security Rules
+
+# Authentication
+
+Use:
+
+```txt
+Laravel Sanctum
+```
+
+---
+
+# Password Rules
+
+Mandatory:
+
+* Minimum 12 chars
+* Password breach detection
+* MFA support
+
+---
+
+# Authorization
+
+Backend ALWAYS validates RBAC.
+
+Never trust frontend.
+
+Use:
+
+```txt
+Policies
+Gates
+Spatie Permissions
+```
+
+---
+
+# API Architecture
+
+# Versioning
+
+```txt
+/api/v1/
+```
+
+---
+
+# Standard Response
+
+```json
 {
   "success": true,
   "data": {},
   "message": "",
   "errors": null
 }
-Standard Endpoints
-/api/v1/attendance
-/api/v1/sessions
-/api/v1/notifications
-/api/v1/webhooks/{provider}
-🧪 Code Quality & Performance
-No any in TypeScript
-Use Interfaces everywhere
-Lazy loading mandatory
-Use OnPush strategy
-Documentation
-Maintain README for:
-Webhooks payloads
-API contracts
-⚠️ Anti-Patterns (FORBIDDEN)
-❌ Business logic in Angular components
-❌ Direct DB queries in controllers
-❌ Missing tenant_id
-❌ Blocking operations
-❌ Hardcoded translations (use i18n)
-✅ Definition of Done
+```
 
-A feature is complete ONLY if:
+---
 
-Frontend
-Angular Material used
-Responsive UI
-Routing + Guards applied
-Backend
-Validation implemented
-Tenant scope enforced
-Communication
-Notifications queued
-Webhooks tested (if applicable)
-Observability
-Errors logged
-User feedback handled (toasts)
+# Example Controller
+
+Controllers MUST remain thin.
+
+```php
+public function store(StoreStudentRequest $request)
+{
+    return StudentResource::make(
+        $this->studentService->create($request->validated())
+    );
+}
+```
+
+---
+
+# NEVER DO
+
+```php
+DB::table(...)
+```
+
+inside controllers.
+
+---
+
+# 🧪 Testing Requirements
+
+# Mandatory Tests
+
+## Feature Tests
+
+* Auth
+* RBAC
+* Tenant isolation
+* API validation
+
+---
+
+## Unit Tests
+
+* Services
+* Payroll calculations
+* Planning conflict detection
+
+---
+
+## Browser/E2E
+
+Use:
+
+```txt
+Playwright
+```
+
+---
+
+# 🚀 Performance Rules
+
+# MUST
+
+## Backend
+
+* Eager loading
+* Queue heavy jobs
+* Use chunking
+* Use cursor pagination
+
+---
+
+## Frontend
+
+* Lazy loading
+* OnPush
+* Signals
+* Virtual scrolling
+
+---
+
+# 🧩 Angular Architecture Rules
+
+# Feature Structure
+
+```txt
+features/
+ ├── students/
+ │    ├── pages/
+ │    ├── components/
+ │    ├── services/
+ │    ├── store/
+ │    ├── resolvers/
+ │    ├── guards/
+ │    ├── models/
+```
+
+---
+
+# State Management
+
+Use:
+
+```txt
+Signals + Signal Store
+```
+
+Avoid bloated NgRx reducers.
+
+---
+
+# Smart vs Dumb Components
+
+## Smart
+
+* Fetch data
+* Interact with services
+
+## Dumb
+
+* Pure presentation
+* Inputs/Outputs only
+
+---
+
+# 🎨 UI/UX Standards
+
+# Design Principles
+
+* Dense dashboards
+* Minimal clicks
+* Fast workflows
+* Keyboard friendly
+* Responsive
+
+---
+
+# Mandatory UX
+
+* Skeleton loaders
+* Optimistic updates
+* Snackbar feedback
+* Empty states
+* Error boundaries
+
+---
+
+# 🌍 Internationalization
+
+Mandatory:
+
+```txt
+Arabic
+French
+English
+```
+
+Use:
+
+```txt
+ngx-translate
+```
+
+RTL support mandatory.
+
+---
+
+# 📦 DevOps Standards
+
+# Dockerized Services
+
+```txt
+nginx
+php-fpm
+postgres
+redis
+queue-worker
+reverb
+```
+
+---
+
+# CI/CD
+
+GitHub Actions:
+
+* Tests
+* Lint
+* Static analysis
+* Security scanning
+* Build pipeline
+
+---
+
+# 📈 Observability
+
+Use:
+
+```txt
+Laravel Pulse
+Sentry
+OpenTelemetry
+```
+
+---
+
+# Monitor
+
+* Slow queries
+* Queue failures
+* Tenant errors
+* Webhook failures
+* API latency
+
+---
+
+# ❌ Forbidden Anti-Patterns
+
+## Backend
+
+❌ Fat controllers
+❌ Missing tenant scope
+❌ Business logic in models
+❌ Raw SQL everywhere
+❌ Synchronous notifications
+❌ Shared mutable financial records
+
+---
+
+## Frontend
+
+❌ Business logic in components
+❌ Hardcoded routes
+❌ Eager-loaded modules
+❌ Direct HTTP calls in components
+❌ any in TypeScript
+
+---
+
+# ✅ Definition of Done
+
+A feature is COMPLETE only if:
+
+## Backend
+
+* Validation implemented
+* RBAC enforced
+* Tenant isolation verified
+* Tests written
+* Queues used
+* Logs added
+
+---
+
+## Frontend
+
+* Lazy loaded
+* Responsive
+* Accessible
+* Uses Angular Material
+* Uses guards/resolvers
+* Handles loading/errors
+
+---
+
+## Infrastructure
+
+* Metrics exposed
+* Queue monitored
+* Errors observable
+* Cache strategy applied
+
