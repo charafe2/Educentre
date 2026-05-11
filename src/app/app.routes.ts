@@ -11,8 +11,8 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
   },
   {
-    path: 'register',
-    loadComponent: () => import('./auth/pages/register/register.component').then(m => m.RegisterComponent),
+    path: 'forgot-password',
+    loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
 
   // Admin section — protected by authGuard, wrapped in AdminLayoutComponent

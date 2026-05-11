@@ -5,6 +5,7 @@ import { CentreService } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ToastService } from '../../services/toast.service';
+import { AuthService } from '../../auth/auth.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 
 interface User {
@@ -27,12 +28,14 @@ export class ParametresComponent {
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
   private toast = inject(ToastService);
+  private auth = inject(AuthService);
 
   activeTab = signal('centre');
 
   tabs = [
     { id: 'centre', label: 'Informations du centre', icon: 'fa-solid fa-building' },
     { id: 'users', label: 'Utilisateurs', icon: 'fa-solid fa-users' },
+    { id: 'securite', label: 'Sécurité', icon: 'fa-solid fa-lock' },
     { id: 'subscription', label: 'Abonnement', icon: 'fa-solid fa-credit-card' },
     { id: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
     { id: 'integrations', label: 'Intégrations', icon: 'fa-solid fa-plug' },
@@ -109,6 +112,39 @@ export class ParametresComponent {
 
   saveNotifications(): void {
     this.toast.show('Paramètres de notifications enregistrés');
+  }
+
+  // Security — password change
+  passwordForm = { current: '', newPw: '', confirm: '' };
+  showCurrent  = signal(false);
+  showNew      = signal(false);
+  showConfirm  = signal(false);
+  passwordError = signal('');
+
+  changePassword(): void {
+    this.passwordError.set('');
+    const { current, newPw, confirm } = this.passwordForm;
+
+    if (!current || !newPw || !confirm) {
+      this.passwordError.set('Tous les champs sont obligatoires.');
+      return;
+    }
+    const user = this.auth.user();
+    if (!user || !this.auth.checkCurrentPassword(user.email, current)) {
+      this.passwordError.set('Le mot de passe actuel est incorrect.');
+      return;
+    }
+    if (newPw.length < 6) {
+      this.passwordError.set('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (newPw !== confirm) {
+      this.passwordError.set('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    this.passwordForm = { current: '', newPw: '', confirm: '' };
+    this.toast.show('Mot de passe modifié avec succès');
   }
 
   setTab(tabId: string): void { this.activeTab.set(tabId); }

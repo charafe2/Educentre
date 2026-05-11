@@ -27,8 +27,8 @@ export class AuthService {
     return false;
   }
 
-  register(data: { centreName: string; centreType: string; city: string; name: string; email: string }): void {
-    this._user.set({ name: data.name, email: data.email, role: 'Administrateur' });
+  checkCurrentPassword(email: string, password: string): boolean {
+    return MOCK_ACCOUNTS.some(u => u.email === email && u.password === password);
   }
 
   logout(): void {

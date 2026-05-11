@@ -116,6 +116,83 @@
         </div>
       }
 
+      <!-- Security -->
+      @if (activeTab() === 'securite') {
+        <div class="settings-section">
+          <h3 class="section-title">Changer le mot de passe</h3>
+          <p class="section-desc">Assurez-vous que votre nouveau mot de passe contient au moins 6 caractères.</p>
+
+          @if (passwordError()) {
+            <div class="pw-error">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ passwordError() }}
+            </div>
+          }
+
+          <div class="pw-form">
+            <div class="form-group form-full">
+              <label class="form-label">Mot de passe actuel</label>
+              <div class="pw-input-wrapper">
+                <i class="fa-solid fa-lock pw-icon"></i>
+                <input
+                  class="form-input pw-input"
+                  [type]="showCurrent() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.current"
+                  name="current"
+                  placeholder="Votre mot de passe actuel"
+                />
+                <button type="button" class="pw-toggle" (click)="showCurrent.update(v => !v)">
+                  <i class="fa-regular" [class.fa-eye]="!showCurrent()" [class.fa-eye-slash]="showCurrent()"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="pw-divider"></div>
+
+            <div class="form-group form-full">
+              <label class="form-label">Nouveau mot de passe</label>
+              <div class="pw-input-wrapper">
+                <i class="fa-solid fa-key pw-icon"></i>
+                <input
+                  class="form-input pw-input"
+                  [type]="showNew() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.newPw"
+                  name="newPw"
+                  placeholder="Minimum 6 caractères"
+                />
+                <button type="button" class="pw-toggle" (click)="showNew.update(v => !v)">
+                  <i class="fa-regular" [class.fa-eye]="!showNew()" [class.fa-eye-slash]="showNew()"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group form-full">
+              <label class="form-label">Confirmer le nouveau mot de passe</label>
+              <div class="pw-input-wrapper">
+                <i class="fa-solid fa-key pw-icon"></i>
+                <input
+                  class="form-input pw-input"
+                  [type]="showConfirm() ? 'text' : 'password'"
+                  [(ngModel)]="passwordForm.confirm"
+                  name="confirm"
+                  placeholder="Répéter le nouveau mot de passe"
+                />
+                <button type="button" class="pw-toggle" (click)="showConfirm.update(v => !v)">
+                  <i class="fa-regular" [class.fa-eye]="!showConfirm()" [class.fa-eye-slash]="showConfirm()"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" (click)="changePassword()">
+              <i class="fa-solid fa-shield-halved"></i>
+              Mettre à jour le mot de passe
+            </button>
+          </div>
+        </div>
+      }
+
       <!-- Subscription -->
       @if (activeTab() === 'subscription') {
         <div class="settings-section">

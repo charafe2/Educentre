@@ -392,3 +392,54 @@ th { text-align: left; padding: 0.75rem 1rem; font-size: 0.78rem; font-weight: 6
 td { padding: 0.9rem 1rem; font-size: 0.875rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); vertical-align: middle; }
 .table-row:last-child td { border-bottom: none; }
 .table-row:hover td { background: var(--bg-color); }
+
+/* ── Security / Password change ─────────────────────────── */
+.pw-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.pw-input-wrapper { position: relative; }
+
+.pw-icon {
+  position: absolute;
+  left: 0.875rem; top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-light); font-size: 0.8rem;
+  pointer-events: none; transition: color 0.15s;
+}
+
+.pw-input-wrapper:focus-within .pw-icon { color: var(--accent); }
+
+.pw-input {
+  padding-left: 2.4rem !important;
+  padding-right: 2.75rem !important;
+}
+
+.pw-toggle {
+  position: absolute; right: 0.75rem; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text-light); font-size: 0.85rem; padding: 0.25rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s;
+}
+.pw-toggle:hover { color: var(--text-main); }
+
+.pw-divider {
+  height: 1px;
+  background: var(--border-color);
+  margin: 0.25rem 0;
+}
+
+.pw-error {
+  display: flex; align-items: center; gap: 0.6rem;
+  background: var(--danger-bg); color: var(--danger);
+  border: 1px solid rgba(225,29,72,0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem; font-weight: 500;
+  margin-bottom: 1.25rem;
+}
