@@ -98,12 +98,12 @@
   <!-- User profile pinned at bottom -->
   <div class="sidebar-footer">
     <div class="user-card">
-      <div class="user-avatar">AD</div>
+      <div class="user-avatar">{{ user()?.name?.slice(0,2)?.toUpperCase() ?? 'AD' }}</div>
       <div class="user-info">
-        <span class="user-name">Admin</span>
-        <span class="user-role">Administrateur</span>
+        <span class="user-name">{{ user()?.name ?? 'Admin' }}</span>
+        <span class="user-role">{{ user()?.role ?? 'Administrateur' }}</span>
       </div>
-      <button class="logout-btn" title="Déconnexion">
+      <button class="logout-btn" title="Déconnexion" (click)="logout()">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>
     </div>
