@@ -1,0 +1,94 @@
+<div class="sa-shell">
+
+  <!-- Background grid -->
+  <div class="sa-grid"></div>
+
+  <!-- Top bar -->
+  <header class="sa-topbar">
+    <div class="sa-logo">
+      <i class="fa-solid fa-graduation-cap"></i>
+      <span>Moujtahid</span>
+    </div>
+    <span class="sa-badge">
+      <i class="fa-solid fa-shield-halved"></i>
+      Accès restreint
+    </span>
+  </header>
+
+  <!-- Centered card -->
+  <main class="sa-main">
+    <div class="sa-card">
+
+      <div class="sa-card-header">
+        <div class="sa-icon">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <h1 class="sa-title">Super Administration</h1>
+        <p class="sa-subtitle">Panneau de contrôle global — accès hautement restreint</p>
+      </div>
+
+      <div class="sa-divider">
+        <span>Authentification requise</span>
+      </div>
+
+      @if (error()) {
+        <div class="sa-error">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          {{ error() }}
+        </div>
+      }
+
+      <form (ngSubmit)="submit()">
+        <div class="sa-field">
+          <label class="sa-label">Adresse e-mail</label>
+          <div class="sa-input-wrap">
+            <i class="fa-regular fa-envelope sa-input-icon"></i>
+            <input
+              class="sa-input"
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              placeholder="superadmin@moujtahid.ma"
+              autocomplete="username"
+            />
+          </div>
+        </div>
+
+        <div class="sa-field">
+          <label class="sa-label">Mot de passe</label>
+          <div class="sa-input-wrap">
+            <i class="fa-solid fa-lock sa-input-icon"></i>
+            <input
+              class="sa-input"
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              placeholder="••••••••••••"
+              autocomplete="current-password"
+            />
+            <button type="button" class="sa-toggle-pw" (click)="showPassword.update(v => !v)">
+              <i class="fa-regular" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="sa-btn" [class.sa-loading]="loading()" [disabled]="loading()">
+          @if (loading()) {
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+            Vérification...
+          } @else {
+            <i class="fa-solid fa-right-to-bracket"></i>
+            Accéder au panneau
+          }
+        </button>
+      </form>
+
+      <div class="sa-footer">
+        <i class="fa-solid fa-lock"></i>
+        <span>Session chiffrée · Accès journalisé · Moujtahid © 2025</span>
+      </div>
+
+    </div>
+  </main>
+
+</div>

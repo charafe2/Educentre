@@ -13,5 +13,7 @@ export interface Student {
   parentName?: string;
   parentPhone?: string;
   parentWhatsapp?: string;
+  absenceCount: number;
+  totalSessions: number;
   createdAt: string;
 }

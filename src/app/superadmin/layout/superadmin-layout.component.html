@@ -1,0 +1,58 @@
+<div class="sa-shell" [class.collapsed]="sidebarCollapsed()">
+
+  <!-- Sidebar -->
+  <aside class="sa-sidebar">
+    <div class="sa-sidebar-header">
+      <div class="sa-brand">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span class="sa-brand-name">Moujtahid</span>
+      </div>
+      <button class="sa-collapse-btn" (click)="sidebarCollapsed.update(v => !v)">
+        <i class="fa-solid" [class.fa-chevron-left]="!sidebarCollapsed()" [class.fa-chevron-right]="sidebarCollapsed()"></i>
+      </button>
+    </div>
+
+    <div class="sa-nav-label">Gestion</div>
+
+    <nav class="sa-nav">
+      <a routerLink="/superadmin/dashboard" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Vue d'ensemble">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Vue d'ensemble</span>
+      </a>
+      <a routerLink="/superadmin/clients" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Clients">
+        <i class="fa-solid fa-buildings"></i>
+        <span>Clients</span>
+      </a>
+    </nav>
+
+    <div class="sa-sidebar-footer">
+      <div class="sa-user">
+        <div class="sa-user-avatar">SA</div>
+        <div class="sa-user-info">
+          <span class="sa-user-name">Super Admin</span>
+          <span class="sa-user-role">Accès total</span>
+        </div>
+      </div>
+      <button class="sa-logout-btn" (click)="logout()" title="Déconnexion">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="sa-main">
+    <header class="sa-topbar">
+      <div class="sa-topbar-left">
+        <div class="sa-restricted-badge">
+          <i class="fa-solid fa-shield-halved"></i>
+          Panneau Super Administration
+        </div>
+      </div>
+    </header>
+
+    <div class="sa-content">
+      <router-outlet />
+    </div>
+  </div>
+
+</div>

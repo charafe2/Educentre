@@ -82,7 +82,7 @@
             <th>Code</th>
             <th>Étudiant</th>
             <th>Niveau</th>
-            <th>Classes</th>
+            <th>Groupes</th>
             <th>Paiement</th>
             <th>Statut</th>
             <th>Actions</th>
@@ -106,8 +106,11 @@
               <td><span class="level-badge">{{ student.level }}</span></td>
               <td>
                 <div class="classes-list">
-                  @for (cls of getEnrolledClasses(student); track cls.id) {
-                    <span class="class-tag">{{ cls.subject }}</span>
+                  @for (g of getStudentGroups(student); track g.classe.id) {
+                    <span class="group-tag" [style.background]="g.classe.bgColor" [style.color]="g.classe.color">
+                      {{ g.classe.name }}
+                      <span class="group-tag-num">· G{{ g.group.groupNumber }}</span>
+                    </span>
                   }
                   @if (student.enrolledClassIds.length === 0) {
                     <span class="text-muted">—</span>
@@ -284,6 +287,24 @@
         }
         @if (s.enrolledClassIds.length === 0) {
           <p style="color:var(--text-muted); font-size:0.85rem;">Aucune classe inscrite</p>
+        }
+      </div>
+
+      <div>
+        <div class="detail-section-title">Groupes ({{ getStudentGroups(s).length }})</div>
+        @for (g of getStudentGroups(s); track g.classe.id) {
+          <div class="detail-group-item" [style.border-left-color]="g.classe.color">
+            <div class="detail-group-left">
+              <span class="detail-group-name">{{ g.classe.name }}</span>
+              <span class="detail-group-sub">{{ g.classe.subject }} · {{ g.classe.level }}</span>
+            </div>
+            <span class="detail-group-pill" [style.background]="g.classe.bgColor" [style.color]="g.classe.color">
+              Groupe {{ g.group.groupNumber }}
+            </span>
+          </div>
+        }
+        @if (getStudentGroups(s).length === 0) {
+          <p style="color:var(--text-muted); font-size:0.85rem;">Aucun groupe assigné</p>
         }
       </div>
 

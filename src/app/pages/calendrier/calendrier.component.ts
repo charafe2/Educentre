@@ -1,5 +1,5 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import { NgStyle } from '@angular/common';
+import { NgStyle, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SessionsService } from '../../services/sessions.service';
 import { ClassesService } from '../../services/classes.service';
@@ -13,7 +13,7 @@ import { AttendanceStatus } from '../../models/attendance.model';
 
 @Component({
   selector: 'app-calendrier',
-  imports: [NgStyle, FormsModule, ModalComponent],
+  imports: [NgStyle, NgClass, FormsModule, ModalComponent],
   templateUrl: './calendrier.component.html',
   styleUrl: './calendrier.component.css'
 })
@@ -35,8 +35,13 @@ export class CalendrierComponent {
   editingSession = signal<Session | null>(null);
   showAttendanceModal = signal<Session | null>(null);
 
-  // attendance records for current session
   attendanceMap = signal<Record<number, AttendanceStatus>>({});
+
+  // ── Drag state ──
+  draggingId = signal<number | null>(null);
+  draggingDuration = signal(0);
+  dragOverSlot = signal<{ day: number; hour: number } | null>(null);
+  isDragging = signal(false);
 
   formData = {
     classeId: 0,
@@ -45,6 +50,7 @@ export class CalendrierComponent {
     endHour: 11,
   };
 
+  // ── Session CRUD ──
   openAddSession(): void {
     this.formData = { classeId: this.classes()[0]?.id ?? 1, day: 0, startHour: 9, endHour: 11 };
     this.editingSession.set(null);
@@ -76,7 +82,10 @@ export class CalendrierComponent {
     }
   }
 
+  // ── Attendance ──
   openAttendance(s: Session): void {
+    // Do not open attendance while dragging
+    if (this.draggingId() !== null) return;
     const records = this.attendanceService.getBySession(s.id);
     const map: Record<number, AttendanceStatus> = {};
     const classe = this.classesService.getById(s.classeId);
@@ -118,6 +127,71 @@ export class CalendrierComponent {
     }
   }
 
+  // ── Drag & Drop ──
+  onDragStart(event: DragEvent, session: Session): void {
+    this.draggingId.set(session.id);
+    this.draggingDuration.set(session.endHour - session.startHour);
+    this.isDragging.set(true);
+    event.dataTransfer!.effectAllowed = 'move';
+    event.dataTransfer!.setData('text/plain', String(session.id));
+  }
+
+  onDragEnd(event: DragEvent): void {
+    this.draggingId.set(null);
+    this.dragOverSlot.set(null);
+    this.isDragging.set(false);
+  }
+
+  onDragOver(event: DragEvent, day: number, hour: number): void {
+    event.preventDefault();
+    event.dataTransfer!.dropEffect = 'move';
+    const current = this.dragOverSlot();
+    if (!current || current.day !== day || current.hour !== hour) {
+      this.dragOverSlot.set({ day, hour });
+    }
+  }
+
+  onDragLeave(event: DragEvent, day: number, hour: number): void {
+    // Only clear if we're leaving to outside the cell (not to a child)
+    const related = event.relatedTarget as HTMLElement | null;
+    const cell = event.currentTarget as HTMLElement;
+    if (!related || !cell.contains(related)) {
+      const current = this.dragOverSlot();
+      if (current?.day === day && current?.hour === hour) {
+        this.dragOverSlot.set(null);
+      }
+    }
+  }
+
+  onDrop(event: DragEvent, day: number, hour: number): void {
+    event.preventDefault();
+    const id = this.draggingId();
+    const duration = this.draggingDuration();
+
+    // Reset drag state first — Angular may destroy the source element before
+    // dragend fires, which would leave isDragging=true and block future drags.
+    this.draggingId.set(null);
+    this.dragOverSlot.set(null);
+    this.isDragging.set(false);
+
+    if (id === null) return;
+
+    const maxHour = this.hours[this.hours.length - 1] + 1; // 21
+    if (hour + duration > maxHour) {
+      this.toast.show('Impossible : dépasse la plage horaire', 'info');
+      return;
+    }
+
+    this.sessionsService.update(id, { day, startHour: hour, endHour: hour + duration });
+    this.toast.show('Séance déplacée');
+  }
+
+  isDragOver(day: number, hour: number): boolean {
+    const slot = this.dragOverSlot();
+    return slot?.day === day && slot?.hour === hour;
+  }
+
+  // ── Helpers ──
   getClasseForSession(s: Session): Classe | undefined {
     return this.classesService.getById(s.classeId);
   }
@@ -149,7 +223,7 @@ export class CalendrierComponent {
       'padding': '4px 6px',
       'font-size': '0.75rem',
       'overflow': 'hidden',
-      'cursor': 'pointer',
+      'cursor': 'grab',
       'opacity': session.isCancelled ? '0.5' : '1',
     };
   }

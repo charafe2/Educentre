@@ -1,0 +1,238 @@
+<div class="page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Comptes clients</h1>
+      <p class="page-subtitle">Gérez les centres et leurs propriétaires</p>
+    </div>
+    <button class="btn-create" (click)="openCreate()">
+      <i class="fa-solid fa-plus"></i>
+      Créer un compte
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon icon-total"><i class="fa-solid fa-buildings"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ totalClients() }}</span>
+        <span class="stat-label">Centres total</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-active"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ activeClients() }}</span>
+        <span class="stat-label">Actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-trial"><i class="fa-solid fa-hourglass-half"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ trialClients() }}</span>
+        <span class="stat-label">En essai</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-students"><i class="fa-solid fa-user-graduate"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ totalStudents() }}</span>
+        <span class="stat-label">Étudiants total</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Rechercher un centre, propriétaire, ville..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <div class="filter-tabs">
+      @for (f of [['all','Tous'],['active','Actifs'],['trial','Essai'],['suspended','Suspendus']]; track f[0]) {
+        <button
+          [ngClass]="['filter-tab', filterStatus() === f[0] ? 'filter-active' : '']"
+          (click)="filterStatus.set($any(f[0]))"
+        >{{ f[1] }}</button>
+      }
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Centre</th>
+          <th>Propriétaire</th>
+          <th>Contact</th>
+          <th>Plan</th>
+          <th>Étudiants</th>
+          <th>Statut</th>
+          <th>Créé le</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (client of filteredClients(); track client.id) {
+          <tr>
+            <td>
+              <div class="centre-cell">
+                <div class="centre-avatar">{{ client.centreName.slice(0,2).toUpperCase() }}</div>
+                <div>
+                  <span class="centre-name">{{ client.centreName }}</span>
+                  <span class="centre-type">{{ client.centreType }} · {{ client.city }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="owner-name">{{ client.ownerName }}</td>
+            <td>
+              <div class="contact-cell">
+                <span>{{ client.email }}</span>
+                <span class="phone">{{ client.phone }}</span>
+              </div>
+            </td>
+            <td>
+              <span [ngClass]="['plan-badge', 'plan-' + client.plan.toLowerCase()]">{{ client.plan }}</span>
+            </td>
+            <td class="students-count">{{ client.studentsCount }}</td>
+            <td>
+              <span [ngClass]="['status-badge', 'status-' + client.status]">
+                <span class="status-dot"></span>
+                {{ client.status === 'active' ? 'Actif' : client.status === 'trial' ? 'Essai' : 'Suspendu' }}
+              </span>
+            </td>
+            <td class="date-cell">{{ client.createdAt }}</td>
+            <td>
+              <div class="actions">
+                <button
+                  class="action-btn"
+                  [class.action-suspend]="client.status !== 'suspended'"
+                  [class.action-activate]="client.status === 'suspended'"
+                  [title]="client.status === 'suspended' ? 'Réactiver' : 'Suspendre'"
+                  (click)="toggleStatus(client)"
+                >
+                  <i class="fa-solid" [class.fa-ban]="client.status !== 'suspended'" [class.fa-circle-check]="client.status === 'suspended'"></i>
+                </button>
+                <button class="action-btn action-delete" title="Supprimer" (click)="deleteClient(client)">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr>
+            <td colspan="8" class="empty-row">
+              <i class="fa-solid fa-buildings"></i>
+              <span>Aucun client trouvé</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Create account modal -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-icon"><i class="fa-solid fa-user-plus"></i></div>
+          <div>
+            <h2 class="modal-title">Créer un compte propriétaire</h2>
+            <p class="modal-subtitle">Le client recevra ses identifiants de connexion</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showModal.set(false)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        @if (formError()) {
+          <div class="form-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ formError() }}
+          </div>
+        }
+
+        <div class="form-section-label">Informations du centre</div>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Nom du centre <span class="req">*</span></label>
+            <input class="form-input" type="text" [(ngModel)]="form.centreName" placeholder="Centre Al Moujtahid" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Type</label>
+            <select class="form-input" [(ngModel)]="form.centreType">
+              @for (t of centreTypes; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ville</label>
+            <input class="form-input" type="text" [(ngModel)]="form.city" placeholder="Casablanca" />
+          </div>
+        </div>
+
+        <div class="form-section-label">Compte propriétaire</div>
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Nom complet <span class="req">*</span></label>
+            <input class="form-input" type="text" [(ngModel)]="form.ownerName" placeholder="Prénom et nom" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Adresse e-mail <span class="req">*</span></label>
+            <input class="form-input" type="email" [(ngModel)]="form.email" placeholder="owner@centre.ma" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input class="form-input" type="tel" [(ngModel)]="form.phone" placeholder="+212 6 00 00 00 00" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mot de passe <span class="req">*</span></label>
+            <div class="pw-wrap">
+              <input class="form-input" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password" placeholder="Min. 6 caractères" />
+              <button type="button" class="pw-toggle" (click)="showPassword.update(v => !v)">
+                <i class="fa-regular" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Plan d'abonnement</label>
+            <select class="form-input" [(ngModel)]="form.plan">
+              @for (p of plans; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showModal.set(false)">Annuler</button>
+        <button class="btn-confirm" (click)="submitCreate()">
+          <i class="fa-solid fa-user-plus"></i>
+          Créer le compte
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

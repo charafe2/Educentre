@@ -3,7 +3,10 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
+import { GroupsService } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
+import { Group } from '../../models/group.model';
+import { Classe } from '../../models/classe.model';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { Student } from '../../models/student.model';
 
@@ -16,6 +19,7 @@ import { Student } from '../../models/student.model';
 export class EtudiantsComponent {
   private studentsService = inject(StudentsService);
   private classesService = inject(ClassesService);
+  private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
 
   searchTerm = signal('');
@@ -111,11 +115,10 @@ export class EtudiantsComponent {
     const editing = this.editingStudent();
     if (editing) {
       this.studentsService.update(editing.id, { ...this.formData, enrolledClassIds: this.selectedClassIds });
-      // Sync class enrollments
       const added = this.selectedClassIds.filter(id => !editing.enrolledClassIds.includes(id));
       const removed = editing.enrolledClassIds.filter(id => !this.selectedClassIds.includes(id));
-      added.forEach(id => this.classesService.enrollStudent(id, editing.id));
-      removed.forEach(id => this.classesService.unenrollStudent(id, editing.id));
+      added.forEach(id => { this.classesService.enrollStudent(id, editing.id); this.groupsService.addStudent(id, editing.id); });
+      removed.forEach(id => { this.classesService.unenrollStudent(id, editing.id); this.groupsService.removeStudent(id, editing.id); });
       this.toast.show('Étudiant mis à jour avec succès');
     } else {
       const newId = this.studentsService.add({
@@ -123,7 +126,7 @@ export class EtudiantsComponent {
         enrolledClassIds: this.selectedClassIds,
         paymentStatus: 'pending',
       });
-      this.selectedClassIds.forEach(id => this.classesService.enrollStudent(id, newId));
+      this.selectedClassIds.forEach(id => { this.classesService.enrollStudent(id, newId); this.groupsService.addStudent(id, newId); });
       this.toast.show('Étudiant ajouté avec succès');
     }
     this.showModal.set(false);
@@ -139,6 +142,14 @@ export class EtudiantsComponent {
 
   getEnrolledClasses(s: Student) {
     return this.classesService.getByIds(s.enrolledClassIds);
+  }
+
+  getStudentGroups(s: Student): { classe: Classe; group: Group }[] {
+    return s.enrolledClassIds.flatMap(classId => {
+      const classe = this.classesService.getById(classId);
+      const group = this.groupsService.getGroupForStudent(classId, s.id);
+      return classe && group ? [{ classe, group }] : [];
+    });
   }
 
   getPaymentHistory(s: Student) {

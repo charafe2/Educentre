@@ -1,0 +1,199 @@
+<div class="content-area">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="page-title">
+      <h1>Groupes</h1>
+      <p>Répartition automatique des élèves par matière</p>
+    </div>
+    <div class="header-right">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Rechercher une matière…" (input)="onSearch($event)" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend-bar">
+    <span class="legend-item">
+      <span class="legend-dot drag"></span>
+      Glisser-déposer pour déplacer un élève entre groupes
+    </span>
+    <span class="legend-item">
+      <span class="legend-dot full"></span>
+      Groupe complet ({{ 0 }}/{{ 0 }}) — nouveau groupe créé automatiquement
+    </span>
+  </div>
+
+  @if (subjectViews().length === 0) {
+    <div class="empty-state">Aucune matière trouvée.</div>
+  }
+
+  @for (view of subjectViews(); track view.classe.id) {
+    <div class="subject-section">
+
+      <!-- Subject header -->
+      <div class="subject-header">
+        <span class="subject-dot" [style.background]="view.classe.color"></span>
+        <div class="subject-info">
+          <span class="subject-name">{{ view.classe.name }}</span>
+          <span class="subject-meta">
+            {{ view.classe.subject }} · {{ view.classe.level }} · {{ view.totalStudents }} élève(s)
+          </span>
+        </div>
+        <div class="subject-badge" [style.background]="view.classe.bgColor" [style.color]="view.classe.color">
+          {{ view.groups.length }} groupe(s)
+        </div>
+      </div>
+
+      <!-- Group cards -->
+      <div class="groups-row">
+        @for (group of view.groups; track group.id) {
+          @let stats = getGroupPaymentStats(group, view.classe);
+          <div
+            class="group-card"
+            [class.drag-target]="isDragTarget(group.id)"
+            [class.drag-source]="isSameGroup(group.id)"
+            [class.group-full-drop]="isGroupFull(group) && isDragging()"
+            (dragover)="onDragOver($event, group.id)"
+            (dragleave)="onDragLeave($event, group.id)"
+            (drop)="onDrop($event, group.id)"
+          >
+            <!-- Card header -->
+            <div class="card-head">
+              <div class="head-left">
+                <span class="group-title">Groupe {{ group.groupNumber }}</span>
+                @if (isGroupFull(group)) {
+                  <span class="tag-full">COMPLET</span>
+                }
+              </div>
+
+              @if (editingCapacityGroupId() === group.id) {
+                <!-- Inline edit mode -->
+                <div class="capacity-edit">
+                  <span class="edit-current" [style.color]="view.classe.color">
+                    {{ group.studentIds.length }}/
+                  </span>
+                  <input
+                    class="capacity-input"
+                    type="number"
+                    min="1"
+                    [(ngModel)]="editingCapacityValue"
+                    (keydown)="onCapacityKey($event, group.id)"
+                    (blur)="confirmCapacity(group.id)"
+                    #capInput
+                  />
+                  <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
+                    <i class="fa-solid fa-check"></i>
+                  </button>
+                  <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              } @else {
+                <!-- Normal ring — pencil shows on hover -->
+                <div class="capacity-ring-wrap">
+                  <div class="capacity-ring" [style.border-color]="view.classe.color" [style.color]="view.classe.color">
+                    {{ group.studentIds.length }}<span class="ring-sep">/</span>{{ group.maxCapacity }}
+                  </div>
+                  <button
+                    class="edit-cap-btn"
+                    title="Modifier la limite"
+                    (click)="startEditCapacity(group.id, group.maxCapacity, $event)"
+                  >
+                    <i class="fa-regular fa-pen-to-square"></i>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Payment progress bar -->
+            <div class="capacity-bar-track">
+              <div
+                class="capacity-bar-fill"
+                [style.width.%]="stats.total > 0 ? (stats.paid / stats.total) * 100 : 0"
+              ></div>
+            </div>
+
+            <!-- Students -->
+            <div class="student-list" [class.list-dragging]="isDragging()">
+              @if (group.studentIds.length === 0) {
+                <div class="empty-group">Aucun élève</div>
+              }
+              @for (sid of group.studentIds; track sid) {
+                @let student = getStudent(sid);
+                @if (student) {
+                  <div
+                    class="student-row"
+                    [class.row-dragging]="isBeingDragged(sid)"
+                    draggable="true"
+                    (dragstart)="onDragStart($event, sid, group.id)"
+                    (dragend)="onDragEnd()"
+                  >
+                    <div class="s-avatar" [style.background]="student.avatarColor">
+                      {{ getInitials(student) }}
+                    </div>
+                    <div class="s-info">
+                      <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
+                      <span class="s-code">{{ student.code }}</span>
+                    </div>
+                    <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
+                      {{ absenceLabel(student) }}
+                    </span>
+                    <i class="fa-solid fa-grip-vertical s-grip"></i>
+                  </div>
+                }
+              }
+            </div>
+
+            <!-- Payment footer -->
+            <div class="card-footer">
+              <i class="fa-regular fa-credit-card footer-icon"></i>
+              <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
+              <span class="footer-sep">/</span>
+              <span class="footer-total">{{ formatMoney(stats.total) }}</span>
+            </div>
+          </div>
+        }
+
+        <!-- Auto-create hint -->
+        @if (view.groups.length > 0 && isGroupFull(view.groups[view.groups.length - 1])) {
+          <div class="new-group-hint">
+            <i class="fa-solid fa-plus hint-icon"></i>
+            <span>Nouveau groupe créé automatiquement au prochain ajout</span>
+          </div>
+        }
+      </div>
+
+    </div>
+  }
+
+</div>
+
+<!-- Full-group confirmation modal -->
+@if (pendingFullDrop(); as pending) {
+  <div class="modal-backdrop" (click)="keepInSameGroup()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="confirm-title">Groupe complet</h3>
+      <p class="confirm-body">
+        Le groupe cible est plein. Que voulez-vous faire avec
+        <strong>{{ pending.studentName }}</strong>
+        dans <strong>{{ pending.className }}</strong> ?
+      </p>
+      <div class="confirm-actions">
+        <button class="btn-keep" (click)="keepInSameGroup()">
+          <i class="fa-solid fa-arrow-left"></i>
+          Garder dans le même groupe
+        </button>
+        <button class="btn-create" (click)="confirmCreateNewGroup()">
+          <i class="fa-solid fa-circle-plus"></i>
+          Créer un nouveau groupe
+        </button>
+      </div>
+    </div>
+  </div>
+}

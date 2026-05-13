@@ -151,15 +151,50 @@
 
 /* Session Block */
 .session-block {
-  cursor: pointer;
-  transition: opacity 0.15s, transform 0.15s;
+  cursor: grab;
+  transition: box-shadow 0.15s;
+  user-select: none;
 }
 
 .session-block:hover {
-  opacity: 0.9;
-  transform: scale(1.01);
-  z-index: 3 !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 10 !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+
+.session-block:active {
+  cursor: grabbing;
+}
+
+/* The block being dragged fades in place */
+.session-block.block-is-dragging {
+  opacity: 0.25 !important;
+}
+
+/* While any drag is active: disable pointer events on all OTHER blocks
+   so dragover/drop reach the underlying time-cell */
+.calendar-grid.grid-is-dragging .session-block:not(.block-is-dragging) {
+  pointer-events: none;
+}
+
+/* Drag handle icon — visible, no pointer interference */
+.drag-handle {
+  float: right;
+  font-size: 0.7rem;
+  opacity: 0.5;
+  pointer-events: none;
+  line-height: 1;
+  margin-left: 4px;
+}
+
+.session-block:hover .drag-handle {
+  opacity: 0.85;
+}
+
+/* Drop target highlight */
+.time-cell.drag-over {
+  background: rgba(13, 148, 136, 0.15) !important;
+  outline: 2px dashed rgba(13, 148, 136, 0.6);
+  outline-offset: -2px;
 }
 
 .session-name { font-weight: 700; font-size: 0.72rem; line-height: 1.2; }

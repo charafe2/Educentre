@@ -25,7 +25,7 @@
 
   <!-- Weekly Grid -->
   <div class="panel calendar-panel">
-    <div class="calendar-grid">
+    <div class="calendar-grid" [class.grid-is-dragging]="isDragging()">
       <!-- Header row -->
       <div class="time-gutter"></div>
       @for (day of days; track day) {
@@ -36,9 +36,27 @@
       @for (hour of hours; track hour) {
         <div class="time-label">{{ hour }}:00</div>
         @for (day of days; track day; let di = $index) {
-          <div class="time-cell" [style.height.px]="60">
+          <div
+            class="time-cell"
+            [style.height.px]="60"
+            [class.drag-over]="isDragOver(di, hour)"
+            (dragover)="onDragOver($event, di, hour)"
+            (dragleave)="onDragLeave($event, di, hour)"
+            (drop)="onDrop($event, di, hour)"
+          >
             @for (session of getSessionsForSlot(di, hour); track session.id) {
-              <div class="session-block" [ngStyle]="getSessionStyle(session)" (click)="openAttendance(session)">
+              <div
+                class="session-block"
+                [ngStyle]="getSessionStyle(session)"
+                [class.block-is-dragging]="draggingId() === session.id"
+                draggable="true"
+                (dragstart)="onDragStart($event, session)"
+                (dragend)="onDragEnd($event)"
+                (click)="openAttendance(session)"
+              >
+                <div class="drag-handle">
+                  <i class="fa-solid fa-grip-vertical"></i>
+                </div>
                 <div class="session-name">{{ getClasseForSession(session)?.name ?? '—' }}</div>
                 <div class="session-time">{{ session.startHour }}h – {{ session.endHour }}h</div>
                 @if (session.isCancelled) {

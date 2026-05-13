@@ -3,9 +3,12 @@ import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
+import { GroupsService } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { Teacher } from '../../models/teacher.model';
+import { Classe } from '../../models/classe.model';
+import { Group } from '../../models/group.model';
 
 @Component({
   selector: 'app-professeurs',
@@ -16,6 +19,7 @@ import { Teacher } from '../../models/teacher.model';
 export class ProfesseursComponent {
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
+  private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
 
   searchTerm = signal('');
@@ -113,6 +117,13 @@ export class ProfesseursComponent {
 
   getTeacherClasses(t: Teacher) {
     return this.classesService.getByIds(t.classIds);
+  }
+
+  getTeacherGroups(t: Teacher): { classe: Classe; groups: Group[] }[] {
+    return this.getTeacherClasses(t).map(classe => ({
+      classe,
+      groups: this.groupsService.getGroupsForClasse(classe.id),
+    }));
   }
 
   getStudentCount(t: Teacher): number {

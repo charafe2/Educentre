@@ -32,6 +32,14 @@
         </a>
       </li>
       <li>
+        <a routerLink="/groupes" routerLinkActive="active" class="nav-item" title="Groupes">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-people-group"></i>
+            <span class="nav-text">Groupes</span>
+          </div>
+        </a>
+      </li>
+      <li>
         <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" title="Professeurs">
           <div class="nav-item-left">
             <i class="fa-solid fa-chalkboard-user"></i>
@@ -84,19 +92,16 @@
           </div>
         </a>
       </li>
-      <li>
-        <a routerLink="/parent/login" class="nav-item parent-switch-btn" title="Vue Parents">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-mobile-screen"></i>
-            <span class="nav-text">Vue Parents</span>
-          </div>
-        </a>
-      </li>
     </ul>
   </nav>
 
   <!-- User profile pinned at bottom -->
   <div class="sidebar-footer">
+    <a href="/parent/login" target="_blank" class="parent-link" title="Vue Parents">
+      <i class="fa-solid fa-mobile-screen"></i>
+      <span class="nav-text">Vue Parents</span>
+      <i class="fa-solid fa-arrow-up-right-from-square parent-link-ext"></i>
+    </a>
     <div class="user-card">
       <div class="user-avatar">{{ user()?.name?.slice(0,2)?.toUpperCase() ?? 'AD' }}</div>
       <div class="user-info">

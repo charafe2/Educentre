@@ -101,7 +101,25 @@
                   }
                 </span>
               </td>
-              <td><span class="count-pill">{{ getTeacherClasses(teacher).length }}</span></td>
+              <td>
+                <div class="classes-list">
+                  @for (item of getTeacherGroups(teacher); track item.classe.id) {
+                    <div class="class-groups-cell">
+                      <span class="group-tag" [style.background]="item.classe.bgColor" [style.color]="item.classe.color">
+                        {{ item.classe.name }}
+                      </span>
+                      @for (g of item.groups; track g.id) {
+                        <span class="group-num-tag" [style.border-color]="item.classe.color" [style.color]="item.classe.color">
+                          G{{ g.groupNumber }}
+                        </span>
+                      }
+                    </div>
+                  }
+                  @if (getTeacherClasses(teacher).length === 0) {
+                    <span class="text-muted">—</span>
+                  }
+                </div>
+              </td>
               <td><span class="count-pill">{{ getStudentCount(teacher) }}</span></td>
               <td><strong class="salary-val">{{ formatSalary(getSalary(teacher)) }}</strong></td>
               <td>

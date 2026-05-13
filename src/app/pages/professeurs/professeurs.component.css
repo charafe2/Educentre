@@ -258,6 +258,30 @@ td {
 
 .bonus-cell { color: var(--success); }
 
+.classes-list { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.class-groups-cell { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+
+.group-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.55rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.group-num-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  border: 1.5px solid;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.text-muted { color: var(--text-muted); font-size: 0.85rem; }
+
 .search-wrapper { position: relative; flex: 1; min-width: 200px; }
 .search-icon { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: var(--text-light); font-size: 0.85rem; }
 .search-input { width: 100%; padding: 0.55rem 1rem 0.55rem 2.25rem; border: 1px solid var(--border-dark); border-radius: var(--radius-md); font-size: 0.875rem; color: var(--text-main); background: var(--bg-color); outline: none; box-sizing: border-box; }

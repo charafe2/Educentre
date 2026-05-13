@@ -1,9 +1,14 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { parentAuthGuard } from './parent/parent-auth.guard';
+import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
+    pathMatch: 'full',
+  },
 
   // Auth pages (no layout)
   {
@@ -23,12 +28,34 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       { path: 'etudiants', loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent) },
+      { path: 'groupes', loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent) },
       { path: 'professeurs', loadComponent: () => import('./pages/professeurs/professeurs.component').then(m => m.ProfesseursComponent) },
       { path: 'finances', loadComponent: () => import('./pages/finances/finances.component').then(m => m.FinancesComponent) },
       { path: 'calendrier', loadComponent: () => import('./pages/calendrier/calendrier.component').then(m => m.CalendrierComponent) },
       { path: 'analytiques', loadComponent: () => import('./pages/analytiques/analytiques.component').then(m => m.AnalytiquesComponent) },
       { path: 'documents', loadComponent: () => import('./pages/documents/documents.component').then(m => m.DocumentsComponent) },
       { path: 'parametres', loadComponent: () => import('./pages/parametres/parametres.component').then(m => m.ParametresComponent) },
+    ],
+  },
+
+  // Superadmin portal
+  {
+    path: 'superadmin',
+    children: [
+      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      {
+        path: 'login',
+        loadComponent: () => import('./superadmin/pages/login/superadmin-login.component').then(m => m.SuperadminLoginComponent),
+      },
+      {
+        path: '',
+        loadComponent: () => import('./superadmin/layout/superadmin-layout.component').then(m => m.SuperadminLayoutComponent),
+        canActivate: [superadminAuthGuard],
+        children: [
+          { path: 'dashboard', loadComponent: () => import('./superadmin/pages/overview/superadmin-overview.component').then(m => m.SuperadminOverviewComponent) },
+          { path: 'clients',   loadComponent: () => import('./superadmin/pages/clients/superadmin-clients.component').then(m => m.SuperadminClientsComponent) },
+        ],
+      },
     ],
   },
 

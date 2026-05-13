@@ -1,0 +1,50 @@
+<section class="hero">
+  <div class="hero-inner">
+
+    <!-- Background video -->
+    <video autoplay loop muted playsinline class="hero-video">
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" type="video/mp4" />
+    </video>
+
+    <!-- Noise overlay -->
+    <div class="noise-overlay"></div>
+
+    <!-- Gradient overlay -->
+    <div class="gradient-overlay"></div>
+
+    <!-- Navbar -->
+    <nav class="hero-nav">
+      <div class="nav-pill">
+        @for (item of navItems; track item) {
+          <a href="#" class="nav-link">{{ item }}</a>
+        }
+      </div>
+    </nav>
+
+    <!-- Hero content -->
+    <div class="hero-content">
+      <div class="hero-grid">
+
+        <div class="title-col">
+          <h1 class="hero-title">
+            <span class="pull-word">Moujtahid</span><span class="hero-asterisk">*</span>
+          </h1>
+        </div>
+
+        <div class="right-col">
+          <p class="hero-desc pull-word" style="animation-delay: 0.5s">
+            Moujtahid est un centre éducatif dédié à l'excellence scolaire — un réseau d'enseignants passionnés et de méthodes éprouvées pour révéler le potentiel de chaque élève.
+          </p>
+          <a routerLink="/login" class="hero-cta pull-word" style="animation-delay: 0.7s">
+            Commencer
+            <span class="cta-icon">
+              <i class="fa-solid fa-arrow-right"></i>
+            </span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</section>
