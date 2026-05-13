@@ -1,6 +1,86 @@
-﻿node_modules/
-dist/
+# ============================================================
+# SaaS Centre — Monorepo .gitignore
+# ============================================================
+
+# ── Secrets & environment ────────────────────────────────────
 .env
-.env.local
-.DS_Store
+.env.*
+!.env.example
+!.env.docker
+
+# ── Node / npm ───────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ── Angular (frontend/) ──────────────────────────────────────
+/frontend/dist/
+/frontend/tmp/
+/frontend/out-tsc/
+**/.angular/
+/frontend/coverage/
+/frontend/.sass-cache/
+/frontend/connect.lock
+/frontend/libpeerconnection.log
+/frontend/testem.log
+/frontend/__screenshots__/
+
+# ── Laravel (backend/) ───────────────────────────────────────
+/backend/vendor/
+/backend/.env
+/backend/.env.backup
+/backend/.env.production
+/backend/storage/*.key
+/backend/storage/pail/
+/backend/storage/logs/*.log
+/backend/storage/framework/cache/data/
+/backend/storage/framework/sessions/
+/backend/storage/framework/views/
+/backend/public/build/
+/backend/public/hot/
+/backend/public/storage/
+/backend/bootstrap/cache/*.php
+/backend/bootstrap/cache_bak/
+/backend/.phpunit.result.cache
+/backend/.phpunit.cache/
+/backend/auth.json
+/backend/Homestead.json
+/backend/Homestead.yaml
+/backend/_ide_helper.php
+/backend/node_modules/
+
+# ── Docker ───────────────────────────────────────────────────
+docker_old/
+
+# ── Build / compiled output ───────────────────────────────────
+dist/
 *.log
+
+# ── IDEs & editors ───────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/mcp.json
+.history/
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+.nova/
+.zed/
+.codex/
+.cursor/
+
+# ── OS artefacts ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Misc ─────────────────────────────────────────────────────
+*.bak
+*.orig
+*.tmp

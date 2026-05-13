@@ -1,0 +1,17 @@
+.env
+.git
+.gitignore
+.gitattributes
+docker/
+vendor/
+node_modules/
+storage/framework/cache/data/
+storage/logs/.gitignore
+*.sqlite
+*.md
+.editorconfig
+.php-cs-fixer.php
+.phpunit*
+docker-compose*
+Dockerfile
+.dockerignore
