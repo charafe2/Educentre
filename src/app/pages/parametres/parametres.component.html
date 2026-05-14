@@ -63,9 +63,14 @@
           </div>
           <div class="form-actions">
             <button class="btn-secondary" (click)="resetCentreForm()">Annuler</button>
-            <button class="btn-primary" (click)="saveCentreForm()">
-              <i class="fa-solid fa-floppy-disk"></i>
-              Enregistrer
+            <button class="btn-primary" (click)="saveCentreForm()" [disabled]="saving()">
+              @if (saving()) {
+                <i class="fa-solid fa-circle-notch fa-spin"></i>
+                Enregistrement...
+              } @else {
+                <i class="fa-solid fa-floppy-disk"></i>
+                Enregistrer
+              }
             </button>
           </div>
         </div>

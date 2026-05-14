@@ -728,7 +728,7 @@ Spatie Permissions
 ```txt
 /api/v1/
 ```
-
+Every API must be Swagger documented
 ---
 
 # Standard Response

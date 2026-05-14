@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface CentreInfo {
   name: string;
@@ -11,16 +14,45 @@ export interface CentreInfo {
 
 @Injectable({ providedIn: 'root' })
 export class CentreService {
+  private http = inject(HttpClient);
+  private _loading = signal(false);
+
   centreInfo = signal<CentreInfo>({
-    name: 'Centre Éducatif Al Moujtahid',
-    type: 'Soutien scolaire',
-    city: 'Casablanca',
-    address: '12 Rue Al Qods, Hay Mohammadi',
-    phone: '+212 522 123 456',
-    whatsapp: '+212 661 234 567',
+    name: '',
+    type: '',
+    city: '',
+    address: '',
+    phone: '',
+    whatsapp: '',
   });
 
-  update(data: Partial<CentreInfo>): void {
+  loading = this._loading.asReadonly();
+
+  async load(): Promise<void> {
+    this._loading.set(true);
+    try {
+      const result = await firstValueFrom(
+        this.http.get<{ success: boolean; data: CentreInfo }>(
+          `${environment.apiUrl}/v1/settings/centre`
+        )
+      );
+      if (result.success) {
+        this.centreInfo.set(result.data);
+      }
+    } catch {
+      // Keep defaults on error
+    } finally {
+      this._loading.set(false);
+    }
+  }
+
+  async update(data: Partial<CentreInfo>): Promise<void> {
+    await firstValueFrom(
+      this.http.put<{ success: boolean; data: CentreInfo }>(
+        `${environment.apiUrl}/v1/settings/centre`,
+        data
+      )
+    );
     this.centreInfo.update(info => ({ ...info, ...data }));
   }
 }
