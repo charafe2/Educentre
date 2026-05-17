@@ -1,6 +1,7 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { CentreService } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
@@ -23,7 +24,7 @@ interface User {
   templateUrl: './parametres.component.html',
   styleUrl: './parametres.component.css'
 })
-export class ParametresComponent {
+export class ParametresComponent implements OnInit {
   private centreService = inject(CentreService);
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
@@ -41,8 +42,8 @@ export class ParametresComponent {
     { id: 'integrations', label: 'Intégrations', icon: 'fa-solid fa-plug' },
   ];
 
-  // Local copy of centreInfo for the form
   centreForm = { ...this.centreService.centreInfo() };
+  saving = signal(false);
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique'];
 
@@ -75,9 +76,26 @@ export class ParametresComponent {
     emailReports: false,
   };
 
-  saveCentreForm(): void {
-    this.centreService.update({ ...this.centreForm });
-    this.toast.show('Informations du centre enregistrées');
+  ngOnInit(): void {
+    this.loadCentreSettings();
+  }
+
+  async loadCentreSettings(): Promise<void> {
+    await this.centreService.load();
+    this.centreForm = { ...this.centreService.centreInfo() };
+  }
+
+  async saveCentreForm(): Promise<void> {
+    this.saving.set(true);
+    try {
+      await this.centreService.update({ ...this.centreForm });
+      this.toast.show('Informations du centre enregistrées');
+    } catch (err: unknown) {
+      const message = extractValidationError(err);
+      this.toast.show(message);
+    } finally {
+      this.saving.set(false);
+    }
   }
 
   resetCentreForm(): void {
@@ -120,8 +138,9 @@ export class ParametresComponent {
   showNew      = signal(false);
   showConfirm  = signal(false);
   passwordError = signal('');
+  changingPassword = signal(false);
 
-  changePassword(): void {
+  async changePassword(): Promise<void> {
     this.passwordError.set('');
     const { current, newPw, confirm } = this.passwordForm;
 
@@ -129,17 +148,13 @@ export class ParametresComponent {
       this.passwordError.set('Tous les champs sont obligatoires.');
       return;
     }
-    const user = this.auth.user();
-    if (!user || !this.auth.checkCurrentPassword(user.email, current)) {
-      this.passwordError.set('Le mot de passe actuel est incorrect.');
-      return;
-    }
-    if (newPw.length < 6) {
-      this.passwordError.set('Le nouveau mot de passe doit contenir au moins 6 caractères.');
-      return;
-    }
-    if (newPw !== confirm) {
-      this.passwordError.set('Les mots de passe ne correspondent pas.');
+
+    this.changingPassword.set(true);
+    const error = await this.auth.changePassword(current, newPw, confirm);
+    this.changingPassword.set(false);
+
+    if (error) {
+      this.passwordError.set(error);
       return;
     }
 
@@ -148,4 +163,15 @@ export class ParametresComponent {
   }
 
   setTab(tabId: string): void { this.activeTab.set(tabId); }
+}
+
+function extractValidationError(err: unknown, fallback = 'Erreur lors de l\'enregistrement'): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

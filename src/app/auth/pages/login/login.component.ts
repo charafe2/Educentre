@@ -28,19 +28,22 @@ export class LoginComponent {
     }
     this.loading.set(true);
     this.error.set('');
-    // Simulate network latency
-    await new Promise(r => setTimeout(r, 600));
-    const ok = this.auth.login(this.email, this.password);
-    this.loading.set(false);
-    if (ok) {
-      this.router.navigate(['/dashboard']);
-    } else {
-      this.error.set('Email ou mot de passe incorrect.');
+    try {
+      const ok = await this.auth.login(this.email, this.password);
+      if (ok) {
+        this.router.navigate(['/dashboard']);
+      } else {
+        this.error.set('Email ou mot de passe incorrect.');
+      }
+    } catch {
+      this.error.set('Erreur de connexion au serveur.');
+    } finally {
+      this.loading.set(false);
     }
   }
 
   fillDemo() {
     this.email = 'admin@moujtahid.ma';
-    this.password = 'admin123';
+    this.password = 'admin123456789';
   }
 }
