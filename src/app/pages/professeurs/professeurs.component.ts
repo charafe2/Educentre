@@ -23,19 +23,23 @@ export class ProfesseursComponent {
   private toast = inject(ToastService);
 
   searchTerm = signal('');
+  statusFilter = signal('');
 
   teachers = this.teachersService.teachers;
   classes = this.classesService.classes;
 
   filteredTeachers = computed(() => {
     const term = this.searchTerm().toLowerCase();
-    if (!term) return this.teachers();
-    return this.teachers().filter(t =>
-      t.firstName.toLowerCase().includes(term) ||
-      t.lastName.toLowerCase().includes(term) ||
-      t.email.toLowerCase().includes(term) ||
-      t.specialty.toLowerCase().includes(term)
-    );
+    const status = this.statusFilter();
+    return this.teachers().filter(t => {
+      const matchesSearch = !term ||
+        t.firstName.toLowerCase().includes(term) ||
+        t.lastName.toLowerCase().includes(term) ||
+        t.email.toLowerCase().includes(term) ||
+        t.specialty.toLowerCase().includes(term);
+      const matchesStatus = !status || t.status === status;
+      return matchesSearch && matchesStatus;
+    });
   });
 
   totalCount = computed(() => this.teachers().length);
@@ -148,5 +152,9 @@ export class ProfesseursComponent {
 
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+  }
+
+  onStatusFilter(event: Event): void {
+    this.statusFilter.set((event.target as HTMLSelectElement).value);
   }
 }

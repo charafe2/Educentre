@@ -13,28 +13,28 @@
 
   <!-- Stats Row -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
         <span class="stat-label">Total Étudiants</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
         <span class="stat-label">Actifs</span>
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-orange"><i class="fa-solid fa-user-plus"></i></div>
+    <div class="stat-card stat-orange">
+      <div class="stat-icon icon-orange"><i class="fa-solid fa-user-xmark"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() - activeCount() }}</span>
         <span class="stat-label">Inactifs</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chart-line"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() > 0 ? (activeCount() / totalCount() * 100).toFixed(0) + '%' : '0%' }}</span>
@@ -43,38 +43,43 @@
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="panel">
-    <div class="filter-bar">
-      <div class="search-wrapper">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Rechercher un étudiant..."
-          (input)="onSearch($event)"
-        />
-      </div>
-      <select class="filter-select" (change)="onLevelChange($event)">
-        <option value="">Tous les niveaux</option>
-        @for (level of levels; track level) {
-          <option [value]="level">{{ level }}</option>
-        }
-      </select>
-      <select class="filter-select" (change)="onStatusChange($event)">
-        <option value="">Tous les statuts</option>
-        <option value="active">Actif</option>
-        <option value="inactive">Inactif</option>
-      </select>
-    </div>
-  </div>
-
   <!-- Students Table -->
   <div class="panel table-panel">
     <div class="panel-header">
-      <h3 class="panel-title">Liste des étudiants</h3>
-      <span class="results-count">{{ filteredStudents().length }} étudiant(s)</span>
+      <div class="panel-header-left">
+        <h3 class="panel-title">Liste des étudiants</h3>
+        <span class="results-count">{{ filteredStudents().length }} étudiant(s)</span>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher..."
+            (input)="onSearch($event)"
+          />
+        </div>
+        <select class="filter-select" (change)="onLevelChange($event)">
+          <option value="">Tous les niveaux</option>
+          @for (level of levels; track level) {
+            <option [value]="level">{{ level }}</option>
+          }
+        </select>
+        <select class="filter-select" (change)="onStatusChange($event)">
+          <option value="">Tous les statuts</option>
+          <option value="active">Actifs</option>
+          <option value="inactive">Inactifs</option>
+        </select>
+        <select class="filter-select filter-select-payment" (change)="onPaymentStatusChange($event)">
+          <option value="">Tous les paiements</option>
+          <option value="paid">Payé</option>
+          <option value="pending">En attente</option>
+          <option value="overdue">Impayé</option>
+        </select>
+      </div>
     </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
@@ -85,7 +90,7 @@
             <th>Groupes</th>
             <th>Paiement</th>
             <th>Statut</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -119,25 +124,48 @@
               </td>
               <td>
                 <div [ngClass]="['status-badge', 'status-' + student.paymentStatus]">
+                  <span [ngClass]="['status-dot', 'dot-' + student.paymentStatus]"></span>
                   {{ getPaymentLabel(student.paymentStatus) }}
                 </div>
               </td>
               <td>
                 <div [ngClass]="['status-badge', student.status === 'active' ? 'status-active' : 'status-inactive']">
+                  <span [ngClass]="['status-dot', student.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
                   {{ student.status === 'active' ? 'Actif' : 'Inactif' }}
                 </div>
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" title="Voir détails" (click)="showDetailPanel.set(student)">
+                  @if (student.paymentStatus === 'pending' || student.paymentStatus === 'overdue') {
+                    <button
+                      class="action-btn remind-btn"
+                      [class.remind-overdue]="student.paymentStatus === 'overdue'"
+                      aria-label="Rappeler le parent"
+                      title="Rappeler le parent via WhatsApp"
+                      (click)="rappeler(student)"
+                    >
+                      <i class="fa-brands fa-whatsapp"></i>
+                    </button>
+                  }
+                  <button class="action-btn" aria-label="Voir détails" title="Voir détails" (click)="showDetailPanel.set(student)">
                     <i class="fa-regular fa-eye"></i>
                   </button>
-                  <button class="action-btn" title="Modifier" (click)="openEdit(student)">
+                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(student)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button class="action-btn danger-btn" title="Supprimer" (click)="deleteStudent(student)">
+                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteStudent(student)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <i class="fa-solid fa-users empty-icon"></i>
+                  <p class="empty-title">Aucun étudiant trouvé</p>
+                  <p class="empty-sub">Modifiez vos filtres ou ajoutez un nouvel étudiant.</p>
                 </div>
               </td>
             </tr>
@@ -212,10 +240,9 @@
           }
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label">Nom du parent</label>
-        <input class="form-input" type="text" [(ngModel)]="formData.parentName" placeholder="Nom du parent/tuteur" />
+        <input class="form-input" type="text" [(ngModel)]="formData.parentName" placeholder="Nom du parent / tuteur" />
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -242,20 +269,22 @@
 @if (showDetailPanel(); as s) {
   <div class="detail-panel">
     <div class="detail-panel-header">
-      <h3 style="font-size:1rem; font-weight:600;">Profil étudiant</h3>
+      <h3 class="detail-panel-title">Profil étudiant</h3>
       <button class="modal-close" (click)="showDetailPanel.set(null)">
         <i class="fa-solid fa-xmark"></i>
       </button>
     </div>
     <div class="detail-panel-body">
-      <div style="display:flex; align-items:center; gap:1rem;">
+
+      <div class="detail-profile-header">
         <div class="avatar avatar-lg" [style.background-color]="s.avatarColor">
           {{ getInitials(s.firstName, s.lastName) }}
         </div>
-        <div>
-          <div style="font-weight:600; font-size:1rem;">{{ s.firstName }} {{ s.lastName }}</div>
-          <div style="color:var(--text-muted); font-size:0.8rem;">{{ s.code }}</div>
-          <div [ngClass]="['status-badge', s.status === 'active' ? 'status-active' : 'status-inactive']" style="margin-top:0.5rem; display:inline-flex;">
+        <div class="detail-profile-meta">
+          <div class="detail-profile-name">{{ s.firstName }} {{ s.lastName }}</div>
+          <div class="detail-profile-code">{{ s.code }}</div>
+          <div [ngClass]="['status-badge', s.status === 'active' ? 'status-active' : 'status-inactive']" class="detail-status-badge">
+            <span [ngClass]="['status-dot', s.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
             {{ s.status === 'active' ? 'Actif' : 'Inactif' }}
           </div>
         </div>
@@ -286,7 +315,7 @@
           </div>
         }
         @if (s.enrolledClassIds.length === 0) {
-          <p style="color:var(--text-muted); font-size:0.85rem;">Aucune classe inscrite</p>
+          <p class="detail-empty-text">Aucune classe inscrite</p>
         }
       </div>
 
@@ -304,18 +333,25 @@
           </div>
         }
         @if (getStudentGroups(s).length === 0) {
-          <p style="color:var(--text-muted); font-size:0.85rem;">Aucun groupe assigné</p>
+          <p class="detail-empty-text">Aucun groupe assigné</p>
         }
       </div>
 
       <div>
         <div class="detail-section-title">Paiement</div>
         <div [ngClass]="['status-badge', 'status-' + s.paymentStatus]">
+          <span [ngClass]="['status-dot', 'dot-' + s.paymentStatus]"></span>
           {{ getPaymentLabel(s.paymentStatus) }}
         </div>
       </div>
 
-      <div style="display:flex; gap:0.5rem; flex-direction:column;">
+      <div class="detail-actions">
+        @if (s.paymentStatus === 'pending' || s.paymentStatus === 'overdue') {
+          <button class="btn-remind" (click)="rappeler(s)">
+            <i class="fa-brands fa-whatsapp"></i>
+            Rappeler le parent
+          </button>
+        }
         <button class="btn-primary" (click)="openEdit(s); showDetailPanel.set(null)">
           <i class="fa-regular fa-pen-to-square"></i> Modifier
         </button>
@@ -323,6 +359,7 @@
           <i class="fa-regular fa-trash-can"></i> Supprimer
         </button>
       </div>
+
     </div>
   </div>
 }

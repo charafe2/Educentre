@@ -1,5 +1,5 @@
 import { Component, signal, computed, inject } from '@angular/core';
-import { NgStyle } from '@angular/common';
+import { NgStyle, NgClass } from '@angular/common';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
@@ -8,7 +8,7 @@ import { AttendanceService } from '../../services/attendance.service';
 
 @Component({
   selector: 'app-analytiques',
-  imports: [NgStyle],
+  imports: [NgStyle, NgClass],
   templateUrl: './analytiques.component.html',
   styleUrl: './analytiques.component.css'
 })
@@ -67,14 +67,49 @@ export class AnalytiquesComponent {
   enrollmentTrend = [42, 58, 71, 89, 112, 134, 158, 187, 210, 231, 248, 248];
   trendMonths = ['Juin', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
 
+  paymentDistribution = computed(() => {
+    const students = this.studentsService.students();
+    const total = students.length || 1;
+    const paid    = students.filter(s => s.paymentStatus === 'paid').length;
+    const pending = students.filter(s => s.paymentStatus === 'pending').length;
+    const overdue = students.filter(s => s.paymentStatus === 'overdue').length;
+    return {
+      paid:    { count: paid,    pct: Math.round(paid    / total * 100) },
+      pending: { count: pending, pct: Math.round(pending / total * 100) },
+      overdue: { count: overdue, pct: Math.round(overdue / total * 100) },
+      total:   students.length,
+    };
+  });
+
   get svgPoints(): string {
     const maxVal = Math.max(...this.enrollmentTrend);
     const w = 540, h = 100;
     return this.enrollmentTrend.map((v, i) => {
       const x = (i / (this.enrollmentTrend.length - 1)) * w;
       const y = h - (v / maxVal) * h;
-      return `${x},${y}`;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(' ');
+  }
+
+  get svgFillPath(): string {
+    const maxVal = Math.max(...this.enrollmentTrend);
+    const w = 540, h = 100;
+    const pts = this.enrollmentTrend.map((v, i) => {
+      const x = (i / (this.enrollmentTrend.length - 1)) * w;
+      const y = h - (v / maxVal) * h;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return `M${pts.join(' L')} L${w},${h} L0,${h} Z`;
+  }
+
+  get svgDots(): { x: number; y: number; value: number }[] {
+    const maxVal = Math.max(...this.enrollmentTrend);
+    const w = 540, h = 100;
+    return this.enrollmentTrend.map((v, i) => ({
+      x: (i / (this.enrollmentTrend.length - 1)) * w,
+      y: h - (v / maxVal) * h,
+      value: v,
+    }));
   }
 
   private classDefaultRates: Record<number, number> = { 1: 96, 2: 89, 3: 93, 4: 91, 5: 87, 6: 85 };

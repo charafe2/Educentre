@@ -1,99 +1,148 @@
 <div class="content-area">
+
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-title">
       <h1>Analytiques</h1>
       <p>Rapports de performance et statistiques</p>
     </div>
-    <select class="filter-select" (change)="onPeriodChange($event)">
+    <div class="period-tabs">
       @for (p of periods; track p) {
-        <option [value]="p">{{ p }}</option>
+        <button
+          class="period-tab"
+          [class.active]="selectedPeriod() === p"
+          (click)="selectedPeriod.set(p)"
+        >{{ p }}</button>
       }
-    </select>
+    </div>
   </div>
 
   <!-- Summary Stats -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ totalRevenue().toLocaleString('fr-MA') }} Dhs</span>
+        <span class="stat-value">{{ totalRevenue().toLocaleString('fr-MA') }} <small>Dhs</small></span>
         <span class="stat-label">Revenus encaissés</span>
-        <span class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> Payé</span>
+        <span class="stat-trend up"><i class="fa-solid fa-circle-check"></i> Payé</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalStudents() }}</span>
         <span class="stat-label">Étudiants inscrits</span>
-        <span class="stat-trend up"><i class="fa-solid fa-arrow-up"></i> {{ activeStudents() }} actifs</span>
+        <span class="stat-trend up"><i class="fa-solid fa-user-check"></i> {{ activeStudents() }} actifs</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-regular fa-calendar-check"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ attendanceRate() }}%</span>
+        <span class="stat-value">{{ attendanceRate() }}<small>%</small></span>
         <span class="stat-label">Taux de présence</span>
-        <span class="stat-trend neutral">Calculé</span>
+        <span class="stat-trend neutral"><i class="fa-solid fa-chart-bar"></i> Calculé</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ teacherPerformance().length }}</span>
         <span class="stat-label">Professeurs actifs</span>
-        <span class="stat-trend neutral">Équipe</span>
+        <span class="stat-trend neutral"><i class="fa-solid fa-star"></i> Équipe</span>
       </div>
+    </div>
+  </div>
+
+  <!-- Payment Distribution Strip -->
+  <div class="pay-dist-panel">
+    <div class="pay-dist-header">
+      <span class="pay-dist-title"><i class="fa-solid fa-chart-pie"></i> Répartition des paiements</span>
+      <span class="pay-dist-total">{{ paymentDistribution().total }} étudiants</span>
+    </div>
+    <div class="pay-dist-segments">
+      <div class="pay-segment seg-paid">
+        <span class="seg-value">{{ paymentDistribution().paid.count }}</span>
+        <span class="seg-label">Payés</span>
+        <span class="seg-pct">{{ paymentDistribution().paid.pct }}%</span>
+      </div>
+      <div class="pay-segment seg-pending">
+        <span class="seg-value">{{ paymentDistribution().pending.count }}</span>
+        <span class="seg-label">En attente</span>
+        <span class="seg-pct">{{ paymentDistribution().pending.pct }}%</span>
+      </div>
+      <div class="pay-segment seg-overdue">
+        <span class="seg-value">{{ paymentDistribution().overdue.count }}</span>
+        <span class="seg-label">Impayés</span>
+        <span class="seg-pct">{{ paymentDistribution().overdue.pct }}%</span>
+      </div>
+    </div>
+    <div class="pay-dist-bar">
+      <div class="pay-bar-fill fill-paid"   [style.width.%]="paymentDistribution().paid.pct"></div>
+      <div class="pay-bar-fill fill-pending" [style.width.%]="paymentDistribution().pending.pct"></div>
+      <div class="pay-bar-fill fill-overdue" [style.width.%]="paymentDistribution().overdue.pct"></div>
     </div>
   </div>
 
   <!-- Charts Row -->
   <div class="charts-row">
+
     <!-- Revenue Bar Chart -->
     <div class="panel chart-panel">
       <div class="panel-header">
-        <h3 class="panel-title">Revenus Mensuels</h3>
-        <span class="chart-legend">Paiements encaissés</span>
+        <div class="panel-header-left">
+          <h3 class="panel-title">Revenus Mensuels</h3>
+          <span class="chart-chip">Paiements encaissés</span>
+        </div>
       </div>
       @if (monthlyRevenues().length > 0) {
         <div class="bar-chart">
-          @for (item of monthlyRevenues(); track item.month) {
-            <div class="bar-col">
-              <div class="bar-wrap">
-                <div
-                  class="bar-rect"
-                  [ngStyle]="{'height': getBarHeight(item.amount, item.maxAmount) + '%'}"
-                >
-                  <span class="bar-tooltip">{{ item.amount.toLocaleString() }} Dhs</span>
+          <div class="bar-grid">
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+          </div>
+          <div class="bars-row">
+            @for (item of monthlyRevenues(); track item.month) {
+              <div class="bar-col">
+                <div class="bar-wrap">
+                  <div class="bar-rect" [ngStyle]="{'height': getBarHeight(item.amount, item.maxAmount) + '%'}">
+                    <span class="bar-tooltip">{{ item.amount.toLocaleString() }} Dhs</span>
+                  </div>
                 </div>
+                <span class="bar-label">{{ item.month }}</span>
               </div>
-              <span class="bar-label">{{ item.month }}</span>
-            </div>
-          }
+            }
+          </div>
         </div>
       } @else {
-        <p style="text-align:center; color:var(--text-muted); padding:2rem 0;">Aucune donnée de revenus</p>
+        <div class="chart-empty">
+          <i class="fa-solid fa-chart-column"></i>
+          <span>Aucune donnée de revenus</span>
+        </div>
       }
     </div>
 
     <!-- Attendance Rates -->
     <div class="panel chart-panel">
       <div class="panel-header">
-        <h3 class="panel-title">Présence par classe</h3>
+        <div class="panel-header-left">
+          <h3 class="panel-title">Présence par classe</h3>
+          <span class="chart-chip">Taux d'assiduité</span>
+        </div>
       </div>
       <div class="attendance-list">
         @for (cls of classAttendance(); track cls.className) {
           <div class="attendance-item">
             <div class="att-header">
-              <span class="att-name">{{ cls.className }}</span>
+              <div class="att-name-row">
+                <span class="att-color-dot" [style.background]="cls.color"></span>
+                <span class="att-name">{{ cls.className }}</span>
+              </div>
               <span class="att-rate" [style.color]="cls.color">{{ cls.rate }}%</span>
             </div>
             <div class="progress-track">
-              <div
-                class="progress-fill"
-                [ngStyle]="{'width': cls.rate + '%', 'background-color': cls.color}"
-              ></div>
+              <div class="progress-fill" [ngStyle]="{'width': cls.rate + '%', 'background-color': cls.color}"></div>
             </div>
           </div>
         }
@@ -104,17 +153,26 @@
   <!-- Enrollment Trend -->
   <div class="panel trend-panel">
     <div class="panel-header">
-      <h3 class="panel-title">Évolution des inscriptions</h3>
-      <span class="chart-legend">12 derniers mois</span>
+      <div class="panel-header-left">
+        <h3 class="panel-title">Évolution des inscriptions</h3>
+        <span class="chart-chip">12 derniers mois</span>
+      </div>
+      <span class="trend-total">
+        <i class="fa-solid fa-arrow-trend-up" style="color:var(--accent)"></i>
+        {{ enrollmentTrend[enrollmentTrend.length - 1] }} étudiants
+      </span>
     </div>
     <div class="trend-chart">
       <svg viewBox="0 0 540 110" class="trend-svg" preserveAspectRatio="none">
         <defs>
           <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
+            <stop offset="0%"   stop-color="var(--accent)" stop-opacity="0.20"/>
             <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
           </linearGradient>
         </defs>
+        <!-- Fill area -->
+        <path [attr.d]="svgFillPath" fill="url(#trendGrad)" />
+        <!-- Line -->
         <polyline
           [attr.points]="svgPoints"
           fill="none"
@@ -123,6 +181,18 @@
           stroke-linejoin="round"
           stroke-linecap="round"
         />
+        <!-- Dots -->
+        @for (dot of svgDots; track dot.x) {
+          <circle
+            [attr.cx]="dot.x"
+            [attr.cy]="dot.y"
+            r="3.5"
+            fill="var(--accent)"
+            stroke="#fff"
+            stroke-width="1.5"
+            class="trend-dot"
+          />
+        }
       </svg>
       <div class="trend-months">
         @for (m of trendMonths; track m) {
@@ -135,7 +205,10 @@
   <!-- Teacher Performance -->
   <div class="panel">
     <div class="panel-header">
-      <h3 class="panel-title">Performance des professeurs</h3>
+      <div class="panel-header-left">
+        <h3 class="panel-title">Performance des professeurs</h3>
+        <span class="chart-chip">{{ teacherPerformance().length }} actifs</span>
+      </div>
     </div>
     <div class="table-wrapper">
       <table>
@@ -145,23 +218,32 @@
             <th>Classes</th>
             <th>Étudiants</th>
             <th>Taux présence</th>
-            <th>Note moyenne</th>
+            <th>Note moy.</th>
           </tr>
         </thead>
         <tbody>
-          @for (t of teacherPerformance(); track t.name) {
+          @for (t of teacherPerformance(); track t.name; let i = $index) {
             <tr class="table-row">
-              <td><strong>{{ t.name }}</strong></td>
-              <td>{{ t.classes }}</td>
-              <td>{{ t.students }}</td>
+              <td>
+                <div class="teacher-cell">
+                  <div class="t-avatar" [ngClass]="'avatar-hue-' + (i % 6)">
+                    {{ t.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase() }}
+                  </div>
+                  <strong>{{ t.name }}</strong>
+                </div>
+              </td>
+              <td><span class="count-chip">{{ t.classes }}</span></td>
+              <td><span class="count-chip">{{ t.students }}</span></td>
               <td>
                 <div class="inline-progress">
-                  <div class="mini-bar" [ngStyle]="{'width': t.attendanceRate + '%'}"></div>
-                  <span>{{ t.attendanceRate }}%</span>
+                  <div class="mini-bar-track">
+                    <div class="mini-bar" [ngStyle]="{'width': t.attendanceRate + '%', 'background': t.attendanceRate >= 90 ? 'var(--success)' : t.attendanceRate >= 80 ? 'var(--warning)' : 'var(--danger)'}"></div>
+                  </div>
+                  <span [ngStyle]="{'color': t.attendanceRate >= 90 ? 'var(--success)' : t.attendanceRate >= 80 ? 'var(--warning)' : 'var(--danger)'}">{{ t.attendanceRate }}%</span>
                 </div>
               </td>
               <td>
-                <span class="grade-badge" [ngStyle]="{'color': t.avgGrade >= 14 ? 'var(--success)' : 'var(--warning)'}">
+                <span class="grade-badge" [ngClass]="t.avgGrade >= 14 ? 'grade-good' : 'grade-avg'">
                   {{ t.avgGrade.toFixed(1) }}/20
                 </span>
               </td>
@@ -171,4 +253,5 @@
       </table>
     </div>
   </div>
+
 </div>

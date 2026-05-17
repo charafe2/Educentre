@@ -8,7 +8,7 @@
     <div class="header-actions">
       <button class="btn-whatsapp" (click)="bulkSendWhatsapp()">
         <i class="fa-brands fa-whatsapp"></i>
-        Envoyer tout par WhatsApp
+        Envoyer tout
       </button>
       <button class="btn-primary" (click)="openGenerateModal()">
         <i class="fa-solid fa-plus"></i>
@@ -19,114 +19,128 @@
 
   <!-- Stats Row -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-file-invoice"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
         <span class="stat-label">Total Documents</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-brands fa-whatsapp"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ sentCount() }}</span>
         <span class="stat-label">Envoyés WhatsApp</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-regular fa-clock"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ pendingCount() }}</span>
-        <span class="stat-label">En attente</span>
+        <span class="stat-label">Non envoyés</span>
       </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-teal"><i class="fa-regular fa-calendar"></i></div>
+    <div class="stat-card stat-teal">
+      <div class="stat-icon icon-teal"><i class="fa-solid fa-coins"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ filteredDocuments().length }}</span>
-        <span class="stat-label">Filtrés</span>
+        <span class="stat-value">{{ totalAmount().toLocaleString('fr-MA') }}</span>
+        <span class="stat-label">Montant total (Dhs)</span>
       </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="panel">
-    <div class="filter-bar">
-      <div class="search-wrapper">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Rechercher un document..."
-          (input)="onSearch($event)"
-        />
-      </div>
-      <select class="filter-select" (change)="onTypeChange($event)">
-        <option value="">Tous les types</option>
-        <option value="Reçu">Reçu</option>
-        <option value="Relevé">Relevé</option>
-        <option value="Attestation">Attestation</option>
-      </select>
     </div>
   </div>
 
   <!-- Documents Table -->
   <div class="panel table-panel">
     <div class="panel-header">
-      <h3 class="panel-title">Liste des documents</h3>
-      <span class="results-count">{{ filteredDocuments().length }} document(s)</span>
+      <div class="panel-header-left">
+        <h3 class="panel-title">Liste des documents</h3>
+        <span class="results-count">{{ filteredDocuments().length }} document(s)</span>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher..."
+            (input)="onSearch($event)"
+          />
+        </div>
+        <select class="filter-select" (change)="onTypeChange($event)">
+          <option value="">Tous les types</option>
+          <option value="Reçu">Reçu</option>
+          <option value="Relevé">Relevé</option>
+          <option value="Attestation">Attestation</option>
+        </select>
+      </div>
     </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
           <tr>
-            <th>N° Facture</th>
+            <th>Référence</th>
             <th>Étudiant</th>
-            <th>Classe</th>
-            <th>Mois</th>
+            <th>Période</th>
             <th>Montant</th>
             <th>Type</th>
-            <th>WhatsApp</th>
-            <th>Date</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           @for (doc of filteredDocuments(); track doc.id) {
             <tr class="table-row">
-              <td><span class="invoice-num">{{ doc.invoiceNumber }}</span></td>
-              <td><strong>{{ getStudentName(doc.studentId) }}</strong></td>
-              <td>{{ getClassName(doc.classeId) }}</td>
-              <td>{{ getPeriodLabel(doc.periodMonth) }}</td>
-              <td><strong>{{ doc.amount }} Dhs</strong></td>
               <td>
-                <span [ngClass]="['type-badge',
-                  doc.type === 'Reçu' ? 'type-recu' :
-                  doc.type === 'Relevé' ? 'type-releve' : 'type-attestation']">
-                  {{ doc.type }}
-                </span>
+                <div class="ref-cell">
+                  <span class="invoice-num">{{ doc.invoiceNumber }}</span>
+                  <span class="ref-date">{{ doc.generatedAt }}</span>
+                </div>
               </td>
-              <td class="whatsapp-cell">
-                @if (doc.sentViaWhatsapp) {
-                  <i class="fa-solid fa-circle-check wa-sent"></i>
-                } @else {
-                  <i class="fa-regular fa-clock wa-pending"></i>
-                }
+              <td>
+                <div class="student-cell">
+                  <div class="student-info">
+                    <span class="student-name">{{ getStudentName(doc.studentId) }}</span>
+                    <span class="student-class">{{ getClassName(doc.classeId) }}</span>
+                  </div>
+                </div>
               </td>
-              <td>{{ doc.generatedAt }}</td>
+              <td>{{ getPeriodLabel(doc.periodMonth) }}</td>
+              <td><strong class="amount-val">{{ doc.amount }} Dhs</strong></td>
+              <td>
+                <div class="type-cell">
+                  <span [ngClass]="['type-badge',
+                    doc.type === 'Reçu' ? 'type-recu' :
+                    doc.type === 'Relevé' ? 'type-releve' : 'type-attestation']">
+                    {{ doc.type }}
+                  </span>
+                  @if (doc.sentViaWhatsapp) {
+                    <i class="fa-brands fa-whatsapp wa-icon wa-sent" title="Envoyé via WhatsApp"></i>
+                  }
+                </div>
+              </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" title="Télécharger" (click)="downloadSimulated()">
+                  <button class="action-btn" aria-label="Télécharger" title="Télécharger" (click)="downloadSimulated()">
                     <i class="fa-solid fa-download"></i>
                   </button>
                   @if (!doc.sentViaWhatsapp) {
-                    <button class="action-btn" title="Envoyer WhatsApp" (click)="markSentWhatsapp(doc)">
+                    <button class="action-btn wa-btn" aria-label="Envoyer WhatsApp" title="Marquer envoyé WhatsApp" (click)="markSentWhatsapp(doc)">
                       <i class="fa-brands fa-whatsapp"></i>
                     </button>
                   }
-                  <button class="action-btn danger-btn" title="Supprimer" (click)="deleteDocument(doc)">
+                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteDocument(doc)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="fa-solid fa-file-invoice empty-icon"></i>
+                  <p class="empty-title">Aucun document trouvé</p>
+                  <p class="empty-sub">Modifiez votre recherche ou générez un nouveau document.</p>
                 </div>
               </td>
             </tr>
@@ -151,7 +165,6 @@
           }
         </select>
       </div>
-
       @if (genSelectedStudentId() > 0) {
         <div class="form-group">
           <label class="form-label">Paiement</label>
@@ -166,7 +179,6 @@
           </select>
         </div>
       }
-
       <div class="form-group">
         <label class="form-label">Type de document</label>
         <select class="form-select" [ngModel]="genType()" (ngModelChange)="genType.set($event)">

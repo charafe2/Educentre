@@ -47,9 +47,10 @@ export class DocumentsComponent {
     });
   });
 
-  totalCount = computed(() => this.documents().length);
-  sentCount = computed(() => this.documents().filter(d => d.sentViaWhatsapp).length);
+  totalCount   = computed(() => this.documents().length);
+  sentCount    = computed(() => this.documents().filter(d => d.sentViaWhatsapp).length);
   pendingCount = computed(() => this.documents().filter(d => !d.sentViaWhatsapp).length);
+  totalAmount  = computed(() => this.documents().reduce((sum, d) => sum + d.amount, 0));
 
   showGenerateModal = signal(false);
   genSelectedStudentId = signal(0);

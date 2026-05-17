@@ -10,7 +10,6 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
-  // Auth pages (no layout)
   {
     path: 'login',
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
@@ -20,7 +19,6 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
 
-  // Admin section — protected by authGuard, wrapped in AdminLayoutComponent
   {
     path: '',
     loadComponent: () => import('./layout/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
@@ -38,7 +36,6 @@ export const routes: Routes = [
     ],
   },
 
-  // Superadmin portal
   {
     path: 'superadmin',
     children: [
@@ -59,7 +56,6 @@ export const routes: Routes = [
     ],
   },
 
-  // Parent portal
   {
     path: 'parent',
     children: [

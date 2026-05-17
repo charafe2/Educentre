@@ -45,6 +45,9 @@
         <div class="subject-badge" [style.background]="view.classe.bgColor" [style.color]="view.classe.color">
           {{ view.groups.length }} groupe(s)
         </div>
+        <button class="btn-edit-class" (click)="openEditClasse(view.classe)" title="Modifier la classe">
+          <i class="fa-solid fa-pen-to-square"></i>
+        </button>
       </div>
 
       <!-- Group cards -->
@@ -172,6 +175,86 @@
 </div>
 
 <!-- Full-group confirmation modal -->
+<!-- Edit classe modal -->
+@if (editingClasse(); as ec) {
+  <div class="modal-backdrop" (click)="closeEditClasse()">
+    <div class="edit-modal" (click)="$event.stopPropagation()">
+
+      <div class="edit-modal-header">
+        <div class="edit-modal-title">
+          <span class="subject-dot" [style.background]="ec.color"></span>
+          <h3>Modifier la classe</h3>
+        </div>
+        <button class="btn-close-modal" (click)="closeEditClasse()">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="edit-modal-body">
+
+        <div class="edit-field-row">
+          <div class="edit-field">
+            <label>Nom de la classe</label>
+            <input type="text" [(ngModel)]="editForm.name" placeholder="Ex : Maths 2Bac A" />
+          </div>
+          <div class="edit-field">
+            <label>Matière</label>
+            <input type="text" [(ngModel)]="editForm.subject" placeholder="Ex : Mathématiques" />
+          </div>
+        </div>
+
+        <div class="edit-field-row">
+          <div class="edit-field">
+            <label>Niveau</label>
+            <input type="text" [(ngModel)]="editForm.level" placeholder="Ex : 2ème Bac" />
+          </div>
+          <div class="edit-field">
+            <label>Statut</label>
+            <select [(ngModel)]="editForm.status">
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="edit-field-row">
+          <div class="edit-field">
+            <label>Prix mensuel (dh)</label>
+            <div class="input-prefix-wrap">
+              <span class="input-prefix">dh</span>
+              <input type="number" [(ngModel)]="editForm.monthlyPrice" min="0" placeholder="350" />
+            </div>
+          </div>
+          <div class="edit-field">
+            <label>Capacité max</label>
+            <input type="number" [(ngModel)]="editForm.maxCapacity" min="1" placeholder="15" />
+          </div>
+        </div>
+
+        <div class="edit-field">
+          <label>Professeur</label>
+          <select [(ngModel)]="editForm.teacherId">
+            @for (t of allTeachers(); track t.id) {
+              <option [value]="t.id">{{ t.firstName }} {{ t.lastName }} — {{ t.specialty }}</option>
+            }
+          </select>
+        </div>
+
+      </div>
+
+      <div class="edit-modal-footer">
+        <button class="btn-cancel-edit" (click)="closeEditClasse()">Annuler</button>
+        <button class="btn-save-edit" (click)="saveEditClasse()">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Enregistrer
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Full-group confirmation modal -->
 @if (pendingFullDrop(); as pending) {
   <div class="modal-backdrop" (click)="keepInSameGroup()">
     <div class="confirm-modal" (click)="$event.stopPropagation()">
@@ -185,9 +268,9 @@
         dans <strong>{{ pending.className }}</strong> ?
       </p>
       <div class="confirm-actions">
-        <button class="btn-keep" (click)="keepInSameGroup()">
-          <i class="fa-solid fa-arrow-left"></i>
-          Garder dans le même groupe
+        <button class="btn-keep" (click)="addAnyway()">
+          <i class="fa-solid fa-user-plus"></i>
+          Ajouter quand même
         </button>
         <button class="btn-create" (click)="confirmCreateNewGroup()">
           <i class="fa-solid fa-circle-plus"></i>

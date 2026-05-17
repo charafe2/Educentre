@@ -13,28 +13,28 @@
 
   <!-- Stats Row -->
   <div class="stats-grid">
-    <div class="stat-card">
+    <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
         <span class="stat-label">Total Professeurs</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
         <span class="stat-label">Actifs</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-wallet"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ formatSalary(totalPayroll()) }}</span>
-        <span class="stat-label">Salaire Total Mensuel</span>
+        <span class="stat-label">Masse Salariale</span>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-solid fa-graduation-cap"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ classes().length }}</span>
@@ -43,39 +43,43 @@
     </div>
   </div>
 
-  <!-- Search Bar -->
-  <div class="panel">
-    <div class="filter-bar">
-      <div class="search-wrapper">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Rechercher un professeur..."
-          (input)="onSearch($event)"
-        />
-      </div>
-    </div>
-  </div>
-
   <!-- Teachers Table -->
   <div class="panel table-panel">
     <div class="panel-header">
-      <h3 class="panel-title">Équipe pédagogique</h3>
-      <span class="results-count">{{ filteredTeachers().length }} professeur(s)</span>
+      <div class="panel-header-left">
+        <h3 class="panel-title">Équipe pédagogique</h3>
+        <span class="results-count">{{ filteredTeachers().length }} professeur(s)</span>
+      </div>
+      <div class="filter-bar">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Rechercher..."
+            (input)="onSearch($event)"
+          />
+        </div>
+        <select class="filter-select" (change)="onStatusFilter($event)">
+          <option value="">Tous les statuts</option>
+          <option value="active">Actifs</option>
+          <option value="inactive">Inactifs</option>
+        </select>
+      </div>
     </div>
+
     <div class="table-wrapper">
       <table>
         <thead>
           <tr>
             <th>Professeur</th>
             <th>Spécialité</th>
-            <th>Mode de Paiement</th>
+            <th>Paiement</th>
             <th>Classes</th>
             <th>Étudiants</th>
             <th>Salaire</th>
             <th>Statut</th>
-            <th>Actions</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -92,12 +96,14 @@
                   </div>
                 </div>
               </td>
-              <td><span class="specialty-tag">{{ teacher.specialty }}</span></td>
+              <td>
+                <span class="specialty-tag">{{ teacher.specialty }}</span>
+              </td>
               <td>
                 <span [ngClass]="['mode-badge', teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
                   {{ getPaymentModeLabel(teacher.paymentMode) }}
                   @if (teacher.paymentMode === 'per_student') {
-                    <span class="rate-detail">({{ teacher.ratePerStudent }} Dhs/ét.)</span>
+                    <span class="rate-detail">{{ teacher.ratePerStudent }} Dhs/ét.</span>
                   }
                 </span>
               </td>
@@ -120,59 +126,38 @@
                   }
                 </div>
               </td>
-              <td><span class="count-pill">{{ getStudentCount(teacher) }}</span></td>
-              <td><strong class="salary-val">{{ formatSalary(getSalary(teacher)) }}</strong></td>
+              <td>
+                <span class="count-pill">{{ getStudentCount(teacher) }}</span>
+              </td>
+              <td>
+                <strong class="salary-val">{{ formatSalary(getSalary(teacher)) }}</strong>
+              </td>
               <td>
                 <div [ngClass]="['status-badge', teacher.status === 'active' ? 'status-active' : 'status-inactive']">
+                  <span [ngClass]="['status-dot', teacher.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
                   {{ teacher.status === 'active' ? 'Actif' : 'Inactif' }}
                 </div>
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" title="Modifier" (click)="openEdit(teacher)">
+                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(teacher)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button class="action-btn danger-btn" title="Supprimer" (click)="deleteTeacher(teacher)">
+                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteTeacher(teacher)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
               </td>
             </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Payroll Summary -->
-  <div class="panel">
-    <div class="panel-header">
-      <h3 class="panel-title">
-        <i class="fa-solid fa-receipt" style="color:var(--accent);margin-right:0.5rem;"></i>
-        Récapitulatif de la paie
-      </h3>
-    </div>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr>
-            <th>Professeur</th>
-            <th>Spécialité</th>
-            <th>Mode</th>
-            <th>Classes</th>
-            <th>Étudiants</th>
-            <th>Salaire calculé</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of teachers(); track t.id) {
-            <tr class="table-row">
-              <td><strong>{{ t.firstName }} {{ t.lastName }}</strong></td>
-              <td>{{ t.specialty }}</td>
-              <td>{{ getPaymentModeLabel(t.paymentMode) }}</td>
-              <td>{{ getTeacherClasses(t).length }}</td>
-              <td>{{ getStudentCount(t) }}</td>
-              <td><strong>{{ formatSalary(getSalary(t)) }}</strong></td>
+          } @empty {
+            <tr>
+              <td colspan="8">
+                <div class="empty-state">
+                  <i class="fa-solid fa-chalkboard-user empty-icon"></i>
+                  <p class="empty-title">Aucun professeur trouvé</p>
+                  <p class="empty-sub">Modifiez votre recherche ou ajoutez un nouveau professeur.</p>
+                </div>
+              </td>
             </tr>
           }
         </tbody>
@@ -224,21 +209,29 @@
       </div>
       <div class="form-group">
         <label class="form-label">Mode de paiement</label>
-        <select class="form-select" [(ngModel)]="formData.paymentMode">
-          <option value="fixed">Salaire fixe</option>
-          <option value="per_student">Par étudiant</option>
-        </select>
+        <div class="payment-mode-picker">
+          <label class="mode-option" [class.selected]="formData.paymentMode === 'fixed'">
+            <input type="radio" [(ngModel)]="formData.paymentMode" value="fixed" />
+            <i class="fa-solid fa-money-bill-wave"></i>
+            <span>Salaire fixe</span>
+          </label>
+          <label class="mode-option" [class.selected]="formData.paymentMode === 'per_student'">
+            <input type="radio" [(ngModel)]="formData.paymentMode" value="per_student" />
+            <i class="fa-solid fa-users"></i>
+            <span>Par étudiant</span>
+          </label>
+        </div>
       </div>
       @if (formData.paymentMode === 'fixed') {
         <div class="form-group">
           <label class="form-label">Salaire fixe (Dhs)</label>
-          <input class="form-input" type="number" [(ngModel)]="formData.fixedSalary" min="0" />
+          <input class="form-input" type="number" [(ngModel)]="formData.fixedSalary" min="0" placeholder="0" />
         </div>
       }
       @if (formData.paymentMode === 'per_student') {
         <div class="form-group">
           <label class="form-label">Taux par étudiant (Dhs)</label>
-          <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" />
+          <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" placeholder="0" />
         </div>
       }
     </div>

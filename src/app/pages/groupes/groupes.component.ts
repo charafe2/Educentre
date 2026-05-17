@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { GroupsService } from '../../services/groups.service';
 import { ClassesService } from '../../services/classes.service';
 import { StudentsService } from '../../services/students.service';
+import { TeachersService } from '../../services/teachers.service';
 import { ToastService } from '../../services/toast.service';
 import { Group } from '../../models/group.model';
 import { Classe } from '../../models/classe.model';
@@ -26,17 +27,62 @@ export class GroupesComponent {
   private groupsService = inject(GroupsService);
   private classesService = inject(ClassesService);
   private studentsService = inject(StudentsService);
+  private teachersService = inject(TeachersService);
   private toast = inject(ToastService);
+
+  allTeachers = this.teachersService.teachers;
+
+  editingClasse = signal<Classe | null>(null);
+  editForm = {
+    name: '',
+    subject: '',
+    level: '',
+    monthlyPrice: 0,
+    maxCapacity: 0,
+    teacherId: 0,
+    status: 'active' as 'active' | 'inactive',
+  };
+
+  openEditClasse(classe: Classe): void {
+    this.editForm = {
+      name: classe.name,
+      subject: classe.subject,
+      level: classe.level,
+      monthlyPrice: classe.monthlyPrice,
+      maxCapacity: classe.maxCapacity,
+      teacherId: classe.teacherId,
+      status: classe.status,
+    };
+    this.editingClasse.set(classe);
+  }
+
+  closeEditClasse(): void {
+    this.editingClasse.set(null);
+  }
+
+  saveEditClasse(): void {
+    const ec = this.editingClasse();
+    if (!ec) return;
+    this.classesService.update(ec.id, {
+      name: this.editForm.name.trim() || ec.name,
+      subject: this.editForm.subject.trim() || ec.subject,
+      level: this.editForm.level.trim() || ec.level,
+      monthlyPrice: +this.editForm.monthlyPrice,
+      maxCapacity: +this.editForm.maxCapacity,
+      teacherId: +this.editForm.teacherId,
+      status: this.editForm.status,
+    });
+    this.toast.show('Classe mise à jour');
+    this.editingClasse.set(null);
+  }
 
   searchTerm = signal('');
 
-  // ── Drag state ──
   draggingStudentId = signal<number | null>(null);
   draggingFromGroupId = signal<number | null>(null);
   dragOverGroupId = signal<number | null>(null);
   isDragging = signal(false);
 
-  // ── Capacity editing ──
   editingCapacityGroupId = signal<number | null>(null);
   editingCapacityValue = signal(0);
 
@@ -64,8 +110,7 @@ export class GroupesComponent {
     if (event.key === 'Escape') this.cancelCapacity();
   }
 
-  // ── Full-group confirmation modal ──
-  pendingFullDrop = signal<{ studentId: number; fromGroupId: number; classeId: number; studentName: string; className: string } | null>(null);
+  pendingFullDrop = signal<{ studentId: number; fromGroupId: number; toGroupId: number; classeId: number; studentName: string; className: string } | null>(null);
 
   subjectViews = computed<SubjectView[]>(() => {
     const term = this.searchTerm().toLowerCase();
@@ -127,7 +172,6 @@ export class GroupesComponent {
     this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
-  // ── Drag & Drop ──
   onDragStart(event: DragEvent, studentId: number, fromGroupId: number): void {
     this.draggingStudentId.set(studentId);
     this.draggingFromGroupId.set(fromGroupId);
@@ -179,6 +223,7 @@ export class GroupesComponent {
       this.pendingFullDrop.set({
         studentId,
         fromGroupId,
+        toGroupId,
         classeId,
         studentName: student ? `${student.firstName} ${student.lastName}` : '—',
         className: classe?.name ?? '—',
@@ -189,6 +234,14 @@ export class GroupesComponent {
   }
 
   keepInSameGroup(): void {
+    this.pendingFullDrop.set(null);
+  }
+
+  addAnyway(): void {
+    const pending = this.pendingFullDrop();
+    if (!pending) return;
+    this.groupsService.forceAddToGroup(pending.studentId, pending.fromGroupId, pending.toGroupId);
+    this.toast.show('Élève ajouté');
     this.pendingFullDrop.set(null);
   }
 

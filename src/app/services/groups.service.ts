@@ -88,6 +88,17 @@ export class GroupsService {
     return 'ok';
   }
 
+  // Force-move a student to a full group, ignoring capacity
+  forceAddToGroup(studentId: number, fromGroupId: number, toGroupId: number): void {
+    this.groups.update(list =>
+      list.map(g => {
+        if (g.id === fromGroupId) return { ...g, studentIds: g.studentIds.filter(id => id !== studentId) };
+        if (g.id === toGroupId) return { ...g, studentIds: [...g.studentIds, studentId] };
+        return g;
+      })
+    );
+  }
+
   // Create a brand-new group for the class and move the student into it
   createGroupAndMove(studentId: number, fromGroupId: number, classeId: number): void {
     const groups = this.getGroupsForClasse(classeId);

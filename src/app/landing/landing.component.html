@@ -1,50 +1,271 @@
-<section class="hero">
-  <div class="hero-inner">
+<div class="landing-wrap">
 
-    <!-- Background video -->
-    <video autoplay loop muted playsinline class="hero-video">
-      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_170732_8a9ccda6-5cff-4628-b164-059c500a2b41.mp4" type="video/mp4" />
-    </video>
-
-    <!-- Noise overlay -->
-    <div class="noise-overlay"></div>
-
-    <!-- Gradient overlay -->
-    <div class="gradient-overlay"></div>
-
-    <!-- Navbar -->
-    <nav class="hero-nav">
-      <div class="nav-pill">
-        @for (item of navItems; track item) {
-          <a href="#" class="nav-link">{{ item }}</a>
-        }
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar" [class.scrolled]="navScrolled()">
+    <div class="nav-inner">
+      <a class="nav-logo" routerLink="/">
+        <div class="logo-mark"><i class="fa-solid fa-graduation-cap"></i></div>
+        <span class="logo-name">Moujtahid</span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Fonctionnalités</a></li>
+        <li><a href="#how">Comment ça marche</a></li>
+        <li><a href="#stats">Chiffres clés</a></li>
+      </ul>
+      <div class="nav-end">
+        <a routerLink="/login" class="nav-login">Se connecter</a>
+        <a routerLink="/login" class="nav-cta">Essai gratuit <i class="fa-solid fa-arrow-right"></i></a>
       </div>
-    </nav>
+    </div>
+  </nav>
 
-    <!-- Hero content -->
-    <div class="hero-content">
-      <div class="hero-grid">
+  <!-- ══ HERO ══ -->
+  <section class="hero">
+    <div class="hero-blob b1"></div>
+    <div class="hero-blob b2"></div>
+    <div class="hero-blob b3"></div>
 
-        <div class="title-col">
-          <h1 class="hero-title">
-            <span class="pull-word">Moujtahid</span><span class="hero-asterisk">*</span>
-          </h1>
+    <div class="hero-inner">
+
+      <!-- Copy -->
+      <div class="hero-copy">
+        <div class="hero-badge reveal-badge">
+          <span class="badge-pulse"></span>
+          Plateforme N°1 de gestion scolaire
         </div>
 
-        <div class="right-col">
-          <p class="hero-desc pull-word" style="animation-delay: 0.5s">
-            Moujtahid est un centre éducatif dédié à l'excellence scolaire — un réseau d'enseignants passionnés et de méthodes éprouvées pour révéler le potentiel de chaque élève.
-          </p>
-          <a routerLink="/login" class="hero-cta pull-word" style="animation-delay: 0.7s">
-            Commencer
-            <span class="cta-icon">
-              <i class="fa-solid fa-arrow-right"></i>
-            </span>
+        <h1 class="hero-h1">
+          <span class="line-wrap"><span class="line-in">Gérez votre</span></span>
+          <span class="line-wrap"><span class="line-in d1">centre <em class="h1-em">éducatif</em></span></span>
+          <span class="line-wrap"><span class="line-in d2">avec élégance</span></span>
+        </h1>
+
+        <p class="hero-sub reveal-sub">
+          Moujtahid centralise étudiants, professeurs, finances et planning
+          dans une plateforme intuitive et puissante — pensée pour le Maroc.
+        </p>
+
+        <div class="hero-btns reveal-btns">
+          <a routerLink="/login" class="btn-primary">
+            Commencer gratuitement
+            <span class="btn-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+          </a>
+          <a href="#features" class="btn-ghost">
+            <i class="fa-solid fa-circle-play"></i>
+            Voir les fonctionnalités
           </a>
         </div>
 
+        <div class="hero-trust reveal-trust">
+          <div class="trust-avatars">
+            <div class="av av1">A</div>
+            <div class="av av2">B</div>
+            <div class="av av3">C</div>
+            <div class="av av4">D</div>
+          </div>
+          <div class="trust-text"><strong>500+ centres</strong> nous font confiance</div>
+        </div>
+      </div>
+
+      <!-- Visual -->
+      <div class="hero-visual reveal-visual">
+        <div class="visual-glow"></div>
+
+        <!-- Browser mockup -->
+        <div class="mock-browser">
+          <div class="browser-chrome">
+            <div class="chrome-dots">
+              <span class="cdot red"></span>
+              <span class="cdot yellow"></span>
+              <span class="cdot green"></span>
+            </div>
+            <div class="chrome-url">app.moujtahid.ma/dashboard</div>
+          </div>
+          <div class="browser-body">
+            <div class="dash-sidebar">
+              <div class="ds-logo"></div>
+              @for (n of dashNav; track n.icon) {
+                <div class="ds-item" [class.active]="n.active">
+                  <i class="fa-solid {{ n.icon }}"></i>
+                </div>
+              }
+            </div>
+            <div class="dash-main">
+              <div class="dash-header-row">
+                <div class="dash-title">Tableau de bord</div>
+                <div class="dash-date">17 Mai 2025</div>
+              </div>
+              <div class="dash-kpi-row">
+                @for (k of kpis; track k.label) {
+                  <div class="kpi-card" [style.--kc]="k.color">
+                    <div class="kpi-icon"><i class="fa-solid {{ k.icon }}"></i></div>
+                    <div class="kpi-val">{{ k.value }}</div>
+                    <div class="kpi-lbl">{{ k.label }}</div>
+                    <div class="kpi-change">{{ k.change }}</div>
+                  </div>
+                }
+              </div>
+              <div class="dash-chart-area">
+                <div class="chart-label">Présence cette semaine</div>
+                <div class="mini-chart">
+                  @for (b of chartBars; track $index) {
+                    <div class="mc-bar" [style.height]="b + '%'" [class.hi]="$index === 5"></div>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Floating cards -->
+        <div class="float-card fc1">
+          <div class="fc-icon success"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <div class="fc-title">Paiement reçu</div>
+            <div class="fc-val">850 DH · Youssef A.</div>
+          </div>
+        </div>
+
+        <div class="float-card fc2">
+          <div class="fc-spark">
+            <div class="spark-bar" style="height:40%"></div>
+            <div class="spark-bar" style="height:70%"></div>
+            <div class="spark-bar" style="height:55%"></div>
+            <div class="spark-bar hi" style="height:90%"></div>
+            <div class="spark-bar" style="height:65%"></div>
+          </div>
+          <div>
+            <div class="fc-big">87%</div>
+            <div class="fc-sub">Présence</div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <div class="scroll-hint">
+      <div class="sh-mouse"><div class="sh-wheel"></div></div>
+    </div>
+  </section>
+
+  <!-- ══ MARQUEE ══ -->
+  <div class="marquee-section">
+    <div class="marquee-track">
+      <div class="marquee-inner">
+        @for (item of marqueeItems; track $index) {
+          <span class="mq-item"><i class="fa-solid {{ item.icon }}"></i> {{ item.text }}</span>
+          <span class="mq-sep">·</span>
+        }
+        @for (item of marqueeItems; track $index) {
+          <span class="mq-item"><i class="fa-solid {{ item.icon }}"></i> {{ item.text }}</span>
+          <span class="mq-sep">·</span>
+        }
+      </div>
+    </div>
   </div>
-</section>
+
+  <!-- ══ STATS ══ -->
+  <section class="stats-section" id="stats">
+    <div class="s-wrap">
+      <div class="stats-inner">
+        @for (s of stats; track s.label) {
+          <div class="stat-item anim fade-up">
+            <div class="stat-num">{{ s.current() }}<span class="stat-sfx">{{ s.suffix }}</span></div>
+            <div class="stat-lbl">{{ s.label }}</div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FEATURES ══ -->
+  <section class="features-section" id="features">
+    <div class="s-wrap">
+      <div class="s-eyebrow anim fade-up">Fonctionnalités</div>
+      <h2 class="s-title anim fade-up d1">
+        Tout ce dont vous avez besoin,<br>
+        <span class="grad-text">en un seul endroit</span>
+      </h2>
+      <p class="s-sub anim fade-up d2">
+        Une suite complète d'outils pensés pour les centres éducatifs modernes.
+      </p>
+
+      <div class="feat-grid">
+        @for (f of features; track f.title; let i = $index) {
+          <div class="feat-card anim fade-up"
+               [style.transition-delay]="(i * 60) + 'ms'"
+               (mousemove)="onCardTilt($event)"
+               (mouseleave)="onCardReset($event)">
+            <div class="feat-card-glow" [style.background]="f.color + '33'"></div>
+            <div class="feat-top-bar" [style.background]="f.color"></div>
+            <div class="feat-icon" [style.color]="f.color" [style.background]="f.color + '15'">
+              <i class="fa-solid {{ f.icon }}"></i>
+            </div>
+            <h3 class="feat-title">{{ f.title }}</h3>
+            <p class="feat-desc">{{ f.desc }}</p>
+            <div class="feat-link" [style.color]="f.color">
+              En savoir plus <i class="fa-solid fa-arrow-right"></i>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ HOW IT WORKS ══ -->
+  <section class="how-section" id="how">
+    <div class="s-wrap">
+      <div class="s-eyebrow anim fade-up">Comment ça marche</div>
+      <h2 class="s-title anim fade-up d1">
+        Opérationnel en <span class="grad-text">3 étapes simples</span>
+      </h2>
+
+      <div class="steps-grid">
+        @for (step of steps; track step.num; let i = $index) {
+          <div class="step-card anim fade-up" [style.transition-delay]="(i * 100) + 'ms'">
+            <div class="step-num">{{ step.num }}</div>
+            <div class="step-icon"><i class="fa-solid {{ step.icon }}"></i></div>
+            <h3 class="step-title">{{ step.title }}</h3>
+            <p class="step-desc">{{ step.desc }}</p>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <section class="cta-section">
+    <div class="cta-bg">
+      <div class="cta-orb co1"></div>
+      <div class="cta-orb co2"></div>
+    </div>
+    <div class="s-wrap">
+      <div class="cta-inner anim fade-up">
+        <div class="cta-icon-ring"><i class="fa-solid fa-rocket"></i></div>
+        <h2 class="cta-h2">Transformez votre centre<br><span class="cta-hi">dès aujourd'hui</span></h2>
+        <p class="cta-p">Rejoignez des centaines de centres qui gèrent mieux, plus vite, avec Moujtahid.</p>
+        <a routerLink="/login" class="cta-btn">
+          Démarrer maintenant — c'est gratuit
+          <span class="btn-arrow"><i class="fa-solid fa-arrow-right"></i></span>
+        </a>
+        <div class="cta-note">Aucune carte de crédit requise · Configuration en 5 minutes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <div class="logo-mark sm"><i class="fa-solid fa-graduation-cap"></i></div>
+        <span>Moujtahid</span>
+      </div>
+      <p class="footer-copy">© 2025 Moujtahid — Plateforme de gestion de centres éducatifs.</p>
+      <div class="footer-links">
+        <a routerLink="/login">Administration</a>
+        <a routerLink="/parent/login">Espace Parents</a>
+        <a routerLink="/superadmin/login">Super Admin</a>
+      </div>
+    </div>
+  </footer>
+
+</div>

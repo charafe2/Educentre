@@ -63,7 +63,10 @@ export class FinancesComponent {
     return all ? Math.round((this.totals().totalOverdue / all) * 100) : 0;
   });
 
-  paidCount = computed(() => this.payments().filter(p => p.status === 'paid').length);
+  paidCount    = computed(() => this.payments().filter(p => p.status === 'paid').length);
+  overdueCount = computed(() => this.payments().filter(p => p.status === 'overdue').length);
+  pendingCount = computed(() => this.payments().filter(p => p.status === 'pending').length);
+
   recoveryRate = computed(() => {
     const total = this.payments().length;
     return total ? Math.round((this.paidCount() / total) * 100) : 0;
@@ -160,6 +163,20 @@ export class FinancesComponent {
   getStudentName(studentId: number): string {
     const s = this.studentsService.getById(studentId);
     return s ? `${s.firstName} ${s.lastName}` : '—';
+  }
+
+  getStudentInitials(studentId: number): string {
+    const s = this.studentsService.getById(studentId);
+    return s ? (s.firstName[0] + s.lastName[0]).toUpperCase() : '?';
+  }
+
+  getStudentColor(studentId: number): string {
+    const colors = ['#0d9488', '#7c3aed', '#dc2626', '#d97706', '#059669', '#0891b2', '#be185d', '#b45309'];
+    return colors[studentId % colors.length];
+  }
+
+  sendReminder(p: Payment): void {
+    this.toast.show(`Rappel envoyé à ${this.getStudentName(p.studentId)}`);
   }
 
   getClassName(classeId: number): string {

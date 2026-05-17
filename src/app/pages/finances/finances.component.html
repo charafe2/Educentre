@@ -1,81 +1,95 @@
 <div class="content-area">
+
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-title">
       <h1>Finances</h1>
       <p>Suivi des paiements et revenus</p>
     </div>
-    <button class="btn-primary" (click)="openAdd()">
-      <i class="fa-solid fa-plus"></i>
-      Nouveau paiement
-    </button>
+    <div class="header-actions">
+      <div class="filter-row">
+        <div class="filter-wrap">
+          <i class="fa-regular fa-calendar filter-icon"></i>
+          <select class="filter-select" (change)="onMonthChange($event)">
+            <option value="">Tous les mois</option>
+            @for (month of months; track month) {
+              <option [value]="month">{{ monthLabels[month] }}</option>
+            }
+          </select>
+        </div>
+        <div class="filter-wrap">
+          <i class="fa-solid fa-filter filter-icon"></i>
+          <select class="filter-select" (change)="onStatusChange($event)">
+            <option value="">Tous les statuts</option>
+            <option value="paid">Payé</option>
+            <option value="pending">En attente</option>
+            <option value="overdue">Impayé</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn-primary" (click)="openAdd()">
+        <i class="fa-solid fa-plus"></i>
+        Nouveau paiement
+      </button>
+    </div>
   </div>
 
   <!-- Stats Row -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
-      <div class="stat-info">
-        <span class="stat-value">{{ totals().totalPaid.toLocaleString('fr-MA') }} Dhs</span>
+      <div class="stat-top">
         <span class="stat-label">Total encaissé</span>
+        <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
       </div>
+      <span class="stat-value">{{ totals().totalPaid.toLocaleString('fr-MA') }}<span class="stat-unit"> dh</span></span>
+      <span class="stat-sub">{{ paidCount() }} paiement(s)</span>
     </div>
-    <div class="stat-card urgent">
-      <div class="stat-icon icon-red"><i class="fa-solid fa-triangle-exclamation"></i></div>
-      <div class="stat-info">
-        <span class="stat-value danger">{{ totals().totalOverdue.toLocaleString('fr-MA') }} Dhs</span>
+
+    <div class="stat-card stat-danger">
+      <div class="stat-top">
         <span class="stat-label">Impayés</span>
+        <div class="stat-icon icon-red"><i class="fa-solid fa-circle-exclamation"></i></div>
       </div>
+      <span class="stat-value danger">{{ totals().totalOverdue.toLocaleString('fr-MA') }}<span class="stat-unit"> dh</span></span>
+      <span class="stat-sub">{{ overdueCount() }} entrée(s) à relancer</span>
     </div>
+
     <div class="stat-card">
-      <div class="stat-icon icon-blue"><i class="fa-solid fa-hourglass-half"></i></div>
-      <div class="stat-info">
-        <span class="stat-value">{{ totals().totalPending.toLocaleString('fr-MA') }} Dhs</span>
+      <div class="stat-top">
         <span class="stat-label">En attente</span>
+        <div class="stat-icon icon-amber"><i class="fa-solid fa-hourglass-half"></i></div>
       </div>
+      <span class="stat-value amber">{{ totals().totalPending.toLocaleString('fr-MA') }}<span class="stat-unit"> dh</span></span>
+      <span class="stat-sub">{{ pendingCount() }} paiement(s)</span>
     </div>
+
     <div class="stat-card">
-      <div class="stat-icon icon-teal"><i class="fa-solid fa-percent"></i></div>
-      <div class="stat-info">
-        <span class="stat-value">{{ recoveryRate() }}%</span>
+      <div class="stat-top">
         <span class="stat-label">Taux de recouvrement</span>
+        <div class="stat-icon icon-teal"><i class="fa-solid fa-percent"></i></div>
+      </div>
+      <span class="stat-value">{{ recoveryRate() }}<span class="stat-unit">%</span></span>
+      <div class="recovery-bar-track">
+        <div class="recovery-bar-fill" [style.width]="recoveryRate() + '%'"></div>
       </div>
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="panel">
-    <div class="filter-bar">
-      <select class="filter-select" (change)="onMonthChange($event)">
-        <option value="">Tous les mois</option>
-        @for (month of months; track month) {
-          <option [value]="month">{{ monthLabels[month] }}</option>
-        }
-      </select>
-      <select class="filter-select" (change)="onStatusChange($event)">
-        <option value="">Tous les statuts</option>
-        <option value="paid">Payé</option>
-        <option value="pending">En attente</option>
-        <option value="overdue">Impayé</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Two-column layout -->
+  <!-- Main Layout -->
   <div class="finances-layout">
+
     <!-- Payments Table -->
-    <div class="panel table-panel payments-panel">
+    <div class="panel table-panel">
       <div class="panel-header">
         <h3 class="panel-title">Paiements</h3>
-        <span class="results-count">{{ filteredPayments().length }} entrée(s)</span>
+        <span class="results-count">{{ filteredPayments().length }} résultat(s)</span>
       </div>
       <div class="table-wrapper">
         <table>
           <thead>
             <tr>
               <th>Étudiant</th>
-              <th>Classe</th>
-              <th>Mois</th>
+              <th>Période</th>
               <th>Montant</th>
               <th>Mode</th>
               <th>Statut</th>
@@ -84,12 +98,26 @@
             </tr>
           </thead>
           <tbody>
+            @if (filteredPayments().length === 0) {
+              <tr>
+                <td colspan="7" class="empty-row">Aucun paiement trouvé.</td>
+              </tr>
+            }
             @for (payment of filteredPayments(); track payment.id) {
-              <tr [ngClass]="['table-row', payment.status === 'overdue' ? 'row-overdue' : '']">
-                <td><strong>{{ getStudentName(payment.studentId) }}</strong></td>
-                <td>{{ getClassName(payment.classeId) }}</td>
+              <tr [class.row-overdue]="payment.status === 'overdue'">
+                <td>
+                  <div class="student-cell">
+                    <div class="student-avatar" [style.background]="getStudentColor(payment.studentId)">
+                      {{ getStudentInitials(payment.studentId) }}
+                    </div>
+                    <div class="student-info">
+                      <span class="student-name">{{ getStudentName(payment.studentId) }}</span>
+                      <span class="class-sub">{{ getClassName(payment.classeId) }}</span>
+                    </div>
+                  </div>
+                </td>
                 <td>{{ getPeriodLabel(payment.periodMonth) }}</td>
-                <td><strong>{{ payment.amount }} Dhs</strong></td>
+                <td><strong class="amount-cell">{{ payment.amount.toLocaleString('fr-MA') }} dh</strong></td>
                 <td>
                   @if (payment.method) {
                     <span class="method-tag">{{ payment.method }}</span>
@@ -98,21 +126,27 @@
                   }
                 </td>
                 <td>
-                  <div [ngClass]="['status-badge', 'status-' + payment.status]">
+                  <span [class]="'status-badge status-' + payment.status">
+                    @if (payment.status === 'paid') { <i class="fa-solid fa-check"></i> }
+                    @if (payment.status === 'pending') { <i class="fa-solid fa-clock"></i> }
+                    @if (payment.status === 'overdue') { <i class="fa-solid fa-circle-exclamation"></i> }
                     {{ getStatusLabel(payment.status) }}
-                  </div>
+                  </span>
                 </td>
                 <td class="date-cell">{{ payment.paidAt || '—' }}</td>
                 <td>
                   <div class="action-btns">
-                    <button class="action-btn" title="Modifier" (click)="openEdit(payment)">
-                      <i class="fa-regular fa-pen-to-square"></i>
-                    </button>
                     @if (payment.status !== 'paid') {
-                      <button class="action-btn" title="Marquer comme payé" (click)="openMarkPaid(payment)">
+                      <button class="action-btn wa-btn" title="Rappeler via WhatsApp" (click)="sendReminder(payment)">
+                        <i class="fa-brands fa-whatsapp"></i>
+                      </button>
+                      <button class="action-btn btn-mark-paid" title="Marquer comme payé" (click)="openMarkPaid(payment)">
                         <i class="fa-solid fa-check"></i>
                       </button>
                     }
+                    <button class="action-btn" title="Modifier" (click)="openEdit(payment)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
                     <button class="action-btn danger-btn" title="Supprimer" (click)="deletePayment(payment)">
                       <i class="fa-regular fa-trash-can"></i>
                     </button>
@@ -125,13 +159,16 @@
       </div>
     </div>
 
-    <!-- Right Panel -->
+    <!-- Right Sidebar -->
     <div class="side-panels">
-      <!-- Bar Chart -->
+
+      <!-- Breakdown -->
       <div class="panel breakdown-panel">
         <div class="panel-header">
-          <h3 class="panel-title">Répartition des paiements</h3>
+          <h3 class="panel-title">Répartition</h3>
+          <span class="total-badge">{{ totalAll().toLocaleString('fr-MA') }} dh</span>
         </div>
+
         <div class="breakdown-chart">
           <div class="breakdown-item">
             <div class="breakdown-label">
@@ -167,42 +204,52 @@
 
         <div class="summary-totals">
           <div class="total-row">
-            <span>Total encaissé</span>
-            <strong class="total-paid">{{ totals().totalPaid.toLocaleString('fr-MA') }} Dhs</strong>
+            <span>Encaissé</span>
+            <strong class="total-paid">{{ totals().totalPaid.toLocaleString('fr-MA') }} dh</strong>
           </div>
           <div class="total-row">
             <span>En cours</span>
-            <strong class="total-pending">{{ totals().totalPending.toLocaleString('fr-MA') }} Dhs</strong>
+            <strong class="total-pending">{{ totals().totalPending.toLocaleString('fr-MA') }} dh</strong>
           </div>
           <div class="total-row">
             <span>Impayés</span>
-            <strong class="total-overdue">{{ totals().totalOverdue.toLocaleString('fr-MA') }} Dhs</strong>
+            <strong class="total-overdue">{{ totals().totalOverdue.toLocaleString('fr-MA') }} dh</strong>
           </div>
           <div class="total-row total-main">
             <span>Total attendu</span>
-            <strong>{{ totalAll().toLocaleString('fr-MA') }} Dhs</strong>
+            <strong>{{ totalAll().toLocaleString('fr-MA') }} dh</strong>
           </div>
         </div>
       </div>
 
       <!-- Quick Actions -->
-      <div class="panel quick-actions-panel">
+      <div class="panel quick-panel">
         <h4 class="panel-subtitle">Actions rapides</h4>
         <div class="quick-actions">
-          <button class="quick-btn">
-            <i class="fa-brands fa-whatsapp"></i>
-            Relances WhatsApp
+          <button class="quick-btn quick-whatsapp">
+            <div class="quick-btn-left">
+              <i class="fa-brands fa-whatsapp"></i>
+              <span>Relances WhatsApp</span>
+            </div>
+            @if (overdueCount() > 0) {
+              <span class="quick-badge">{{ overdueCount() }}</span>
+            }
           </button>
           <button class="quick-btn">
-            <i class="fa-solid fa-file-invoice"></i>
-            Générer les reçus
+            <div class="quick-btn-left">
+              <i class="fa-solid fa-file-invoice"></i>
+              <span>Générer les reçus</span>
+            </div>
           </button>
           <button class="quick-btn">
-            <i class="fa-solid fa-download"></i>
-            Exporter CSV
+            <div class="quick-btn-left">
+              <i class="fa-solid fa-download"></i>
+              <span>Exporter CSV</span>
+            </div>
           </button>
         </div>
       </div>
+
     </div>
   </div>
 </div>
@@ -237,7 +284,7 @@
           <input class="form-input" type="month" [(ngModel)]="formData.periodMonth" />
         </div>
         <div class="form-group">
-          <label class="form-label">Montant (Dhs)</label>
+          <label class="form-label">Montant (dh)</label>
           <input class="form-input" type="number" [(ngModel)]="formData.amount" min="0" />
         </div>
       </div>
@@ -279,8 +326,8 @@
 @if (showPayModal(); as p) {
   <app-modal title="Marquer comme payé" size="sm" (closed)="showPayModal.set(null)">
     <div class="form-body">
-      <p style="color:var(--text-muted); font-size:0.9rem;">
-        Confirmer le paiement de <strong>{{ p.amount }} Dhs</strong>
+      <p class="confirm-text">
+        Confirmer le paiement de <strong>{{ p.amount.toLocaleString('fr-MA') }} dh</strong>
         pour <strong>{{ getStudentName(p.studentId) }}</strong>
       </p>
       <div class="form-group">

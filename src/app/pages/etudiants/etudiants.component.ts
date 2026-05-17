@@ -25,6 +25,7 @@ export class EtudiantsComponent {
   searchTerm = signal('');
   selectedLevel = signal('');
   selectedStatus = signal('');
+  selectedPaymentStatus = signal('');
 
   levels = ['3ème Collège', 'Tronc Commun', '1ère Bac', '2ème Bac'];
 
@@ -34,6 +35,7 @@ export class EtudiantsComponent {
     const term = this.searchTerm().toLowerCase();
     const level = this.selectedLevel();
     const status = this.selectedStatus();
+    const payment = this.selectedPaymentStatus();
     return this.students().filter(s => {
       const matchesSearch = !term ||
         s.firstName.toLowerCase().includes(term) ||
@@ -42,7 +44,8 @@ export class EtudiantsComponent {
         s.school.toLowerCase().includes(term);
       const matchesLevel = !level || s.level === level;
       const matchesStatus = !status || s.status === status;
-      return matchesSearch && matchesLevel && matchesStatus;
+      const matchesPayment = !payment || s.paymentStatus === payment;
+      return matchesSearch && matchesLevel && matchesStatus && matchesPayment;
     });
   });
 
@@ -176,5 +179,23 @@ export class EtudiantsComponent {
 
   onStatusChange(event: Event): void {
     this.selectedStatus.set((event.target as HTMLSelectElement).value);
+  }
+
+  onPaymentStatusChange(event: Event): void {
+    this.selectedPaymentStatus.set((event.target as HTMLSelectElement).value);
+  }
+
+  rappeler(s: Student): void {
+    const raw = s.parentWhatsapp || s.parentPhone;
+    if (!raw) {
+      this.toast.show('Aucun numéro de contact enregistré', 'error');
+      return;
+    }
+    // Normalize Moroccan number: 06XXXXXXXX → +2126XXXXXXXX
+    const digits = raw.replace(/\D/g, '');
+    const intl = digits.startsWith('212') ? digits : '212' + digits.replace(/^0/, '');
+    const label = this.getPaymentLabel(s.paymentStatus);
+    const msg = `Bonjour ${s.parentName || 'cher(e) parent'},\n\nNous vous rappelons que le paiement de *${s.firstName} ${s.lastName}* est actuellement *${label.toLowerCase()}*.\n\nMerci de bien vouloir régulariser la situation.\n\nCordialement,\nL'équipe du centre.`;
+    window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 }
