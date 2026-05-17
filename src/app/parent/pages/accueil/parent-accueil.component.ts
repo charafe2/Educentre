@@ -85,7 +85,7 @@ export class ParentAccueilComponent {
     const classe = classes.find(c => c.id === best.session.classeId);
     if (!classe) return null;
 
-    const teacher = this.teachersService.getById(classe.teacherId);
+    const teacher = classe.teacherId !== null ? this.teachersService.getById(classe.teacherId) : undefined;
     const teacherName = teacher ? `${teacher.firstName} ${teacher.lastName}` : '—';
 
     return { session: best.session, classe, teacherName };

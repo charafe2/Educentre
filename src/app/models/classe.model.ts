@@ -3,8 +3,10 @@ export interface Classe {
   name: string;
   subject: string;
   level: string;
-  teacherId: number;
+  teacherId: number | null;
+  teacherName?: string;
   roomId: number;
+  roomName?: string;
   maxCapacity: number;
   monthlyPrice: number;
   enrolledStudentIds: number[];

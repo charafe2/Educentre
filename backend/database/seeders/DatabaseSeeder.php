@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Tenant;
 use App\Models\User;
+use App\Domains\Core\Models\Centre;
+use App\Domains\Teachers\Models\Teacher;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -16,7 +18,16 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        User::factory()->create([
+        Centre::create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Centre Moujtahid',
+            'city' => 'Casablanca',
+            'phone' => '0522000000',
+            'whatsapp_number' => '0661000000',
+            'is_active' => true,
+        ]);
+
+        $admin = User::factory()->create([
             'tenant_id' => $tenant->id,
             'name' => 'Ahmed Berrada',
             'email' => 'admin@moujtahid.ma',
@@ -25,7 +36,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        User::factory()->create([
+        $manager = User::factory()->create([
             'tenant_id' => $tenant->id,
             'name' => 'Khadija Alami',
             'email' => 'manager@moujtahid.ma',
@@ -33,5 +44,11 @@ class DatabaseSeeder extends Seeder
             'role' => 'manager',
             'status' => 'active',
         ]);
+
+        Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Mathématiques', 'payment_mode' => 'fixed', 'is_active' => true]);
+        Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $manager->id, 'specialty' => 'Physique-Chimie', 'payment_mode' => 'fixed', 'is_active' => true]);
+        Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Français', 'payment_mode' => 'fixed', 'is_active' => true]);
+
+        $this->call(PlanningSeeder::class);
     }
 }

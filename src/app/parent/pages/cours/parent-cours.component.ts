@@ -26,11 +26,12 @@ export class ParentCoursComponent {
     return s ? this.classesService.getByIds(s.enrolledClassIds) : [];
   });
 
-  getTeacher(teacherId: number): Teacher | undefined {
+  getTeacher(teacherId: number | null): Teacher | undefined {
+    if (teacherId === null) return undefined;
     return this.teachersService.getById(teacherId);
   }
 
-  getTeacherInitials(teacherId: number): string {
+  getTeacherInitials(teacherId: number | null): string {
     const t = this.getTeacher(teacherId);
     if (!t) return '?';
     return (t.firstName[0] + t.lastName[0]).toUpperCase();

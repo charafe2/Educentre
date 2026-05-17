@@ -58,7 +58,7 @@
             class="group-card"
             [class.drag-target]="isDragTarget(group.id)"
             [class.drag-source]="isSameGroup(group.id)"
-            [class.group-full-drop]="isGroupFull(group) && isDragging()"
+            [class.group-full-drop]="isGroupFull(group) && dragState()"
             (dragover)="onDragOver($event, group.id)"
             (dragleave)="onDragLeave($event, group.id)"
             (drop)="onDrop($event, group.id)"
@@ -120,7 +120,7 @@
             </div>
 
             <!-- Students -->
-            <div class="student-list" [class.list-dragging]="isDragging()">
+            <div class="student-list" [class.list-dragging]="dragState()">
               @if (group.studentIds.length === 0) {
                 <div class="empty-group">Aucun élève</div>
               }

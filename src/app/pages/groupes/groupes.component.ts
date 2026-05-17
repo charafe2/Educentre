@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GroupsService } from '../../services/groups.service';
+import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ClassesService } from '../../services/classes.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
@@ -34,24 +34,16 @@ export class GroupesComponent {
 
   editingClasse = signal<Classe | null>(null);
   editForm = {
-    name: '',
-    subject: '',
-    level: '',
-    monthlyPrice: 0,
-    maxCapacity: 0,
-    teacherId: 0,
+    name: '', subject: '', level: '',
+    monthlyPrice: 0, maxCapacity: 0, teacherId: 0,
     status: 'active' as 'active' | 'inactive',
   };
 
   openEditClasse(classe: Classe): void {
     this.editForm = {
-      name: classe.name,
-      subject: classe.subject,
-      level: classe.level,
-      monthlyPrice: classe.monthlyPrice,
-      maxCapacity: classe.maxCapacity,
-      teacherId: classe.teacherId,
-      status: classe.status,
+      name: classe.name, subject: classe.subject, level: classe.level,
+      monthlyPrice: classe.monthlyPrice, maxCapacity: classe.maxCapacity,
+      teacherId: classe.teacherId ?? 0, status: classe.status,
     };
     this.editingClasse.set(classe);
   }
@@ -71,46 +63,24 @@ export class GroupesComponent {
       maxCapacity: +this.editForm.maxCapacity,
       teacherId: +this.editForm.teacherId,
       status: this.editForm.status,
+    }).subscribe(() => {
+      this.toast.show('Classe mise à jour');
+      this.editingClasse.set(null);
     });
-    this.toast.show('Classe mise à jour');
-    this.editingClasse.set(null);
   }
 
   searchTerm = signal('');
 
-  draggingStudentId = signal<number | null>(null);
-  draggingFromGroupId = signal<number | null>(null);
+  dragState = signal<{ studentId: number; fromGroupId: number } | null>(null);
   dragOverGroupId = signal<number | null>(null);
-  isDragging = signal(false);
 
   editingCapacityGroupId = signal<number | null>(null);
   editingCapacityValue = signal(0);
 
-  startEditCapacity(groupId: number, current: number, event: Event): void {
-    event.stopPropagation();
-    this.editingCapacityGroupId.set(groupId);
-    this.editingCapacityValue.set(current);
-  }
-
-  confirmCapacity(groupId: number): void {
-    const val = this.editingCapacityValue();
-    if (val >= 1) {
-      this.groupsService.updateCapacity(groupId, val);
-      this.toast.show('Limite mise à jour');
-    }
-    this.editingCapacityGroupId.set(null);
-  }
-
-  cancelCapacity(): void {
-    this.editingCapacityGroupId.set(null);
-  }
-
-  onCapacityKey(event: KeyboardEvent, groupId: number): void {
-    if (event.key === 'Enter') this.confirmCapacity(groupId);
-    if (event.key === 'Escape') this.cancelCapacity();
-  }
-
-  pendingFullDrop = signal<{ studentId: number; fromGroupId: number; toGroupId: number; classeId: number; studentName: string; className: string } | null>(null);
+  pendingFullDrop = signal<{
+    studentId: number; fromGroupId: number; toGroupId: number;
+    classeId: number; studentName: string; className: string;
+  } | null>(null);
 
   subjectViews = computed<SubjectView[]>(() => {
     const term = this.searchTerm().toLowerCase();
@@ -137,17 +107,14 @@ export class GroupesComponent {
 
   getGroupPaymentStats(group: Group, classe: Classe): { paid: number; total: number } {
     const price = classe.monthlyPrice;
-    const students = group.studentIds
-      .map(id => this.studentsService.getById(id))
-      .filter((s): s is Student => !!s);
+    const students = group.studentIds.map(id => this.studentsService.getById(id)).filter((s): s is Student => !!s);
     const paid = students.filter(s => s.paymentStatus === 'paid').length * price;
     const total = students.length * price;
     return { paid, total };
   }
 
   getAbsenceRate(student: Student): number {
-    if (student.totalSessions === 0) return 0;
-    return Math.round((student.absenceCount / student.totalSessions) * 100);
+    return student.totalSessions === 0 ? 0 : Math.round((student.absenceCount / student.totalSessions) * 100);
   }
 
   absenceClass(student: Student): string {
@@ -159,9 +126,7 @@ export class GroupesComponent {
   }
 
   absenceLabel(student: Student): string {
-    const rate = this.getAbsenceRate(student);
-    if (student.totalSessions === 0) return '—';
-    return `${student.absenceCount}abs`;
+    return student.totalSessions === 0 ? '—' : `${student.absenceCount}abs`;
   }
 
   formatMoney(amount: number): string {
@@ -172,25 +137,51 @@ export class GroupesComponent {
     this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
+  startEditCapacity(groupId: number, current: number, event: Event): void {
+    event.stopPropagation();
+    this.editingCapacityGroupId.set(groupId);
+    this.editingCapacityValue.set(current);
+  }
+
+  confirmCapacity(groupId: number): void {
+    const val = this.editingCapacityValue();
+    if (val < 1) { this.editingCapacityGroupId.set(null); return; }
+    this.groupsService.groups.update(list =>
+      list.map(g => g.id === groupId ? { ...g, maxCapacity: val } : g)
+    );
+    this.groupsService.updateCapacity(groupId, val).subscribe({
+      error: () => this.groupsService.loadGroups(),
+    });
+    this.toast.show('Limite mise à jour');
+    this.editingCapacityGroupId.set(null);
+  }
+
+  cancelCapacity(): void {
+    this.editingCapacityGroupId.set(null);
+  }
+
+  onCapacityKey(event: KeyboardEvent, groupId: number): void {
+    if (event.key === 'Enter') this.confirmCapacity(groupId);
+    if (event.key === 'Escape') this.cancelCapacity();
+  }
+
+  /* ── Drag & Drop ── */
+
   onDragStart(event: DragEvent, studentId: number, fromGroupId: number): void {
-    this.draggingStudentId.set(studentId);
-    this.draggingFromGroupId.set(fromGroupId);
-    this.isDragging.set(true);
+    this.dragState.set({ studentId, fromGroupId });
     event.dataTransfer!.effectAllowed = 'move';
     event.dataTransfer!.setData('text/plain', String(studentId));
   }
 
   onDragEnd(): void {
-    this.draggingStudentId.set(null);
-    this.draggingFromGroupId.set(null);
+    this.dragState.set(null);
     this.dragOverGroupId.set(null);
-    this.isDragging.set(false);
   }
 
   onDragOver(event: DragEvent, groupId: number): void {
     event.preventDefault();
     event.dataTransfer!.dropEffect = 'move';
-    if (this.dragOverGroupId() !== groupId) this.dragOverGroupId.set(groupId);
+    this.dragOverGroupId.set(groupId);
   }
 
   onDragLeave(event: DragEvent, groupId: number): void {
@@ -201,36 +192,48 @@ export class GroupesComponent {
     }
   }
 
+  private swapStudentLocally(studentId: number, fromGroupId: number, toGroupId: number): void {
+    this.groupsService.groups.update(list =>
+      list.map(g => {
+        if (g.id === fromGroupId) return { ...g, studentIds: g.studentIds.filter(id => id !== studentId) };
+        if (g.id === toGroupId) return { ...g, studentIds: [...g.studentIds, studentId] };
+        return g;
+      })
+    );
+  }
+
   onDrop(event: DragEvent, toGroupId: number): void {
     event.preventDefault();
-    const studentId = this.draggingStudentId();
-    const fromGroupId = this.draggingFromGroupId();
-
-    this.draggingStudentId.set(null);
-    this.draggingFromGroupId.set(null);
+    const ds = this.dragState();
+    this.dragState.set(null);
     this.dragOverGroupId.set(null);
-    this.isDragging.set(false);
 
-    if (studentId === null || fromGroupId === null) return;
+    if (!ds || ds.fromGroupId === toGroupId) return;
 
-    const result = this.groupsService.moveStudent(studentId, fromGroupId, toGroupId);
+    const toGroup = this.groupsService.groups().find(g => g.id === toGroupId);
+    if (!toGroup) return;
 
-    if (result === 'full') {
+    if (toGroup.studentIds.length >= toGroup.maxCapacity) {
       const classeId = this.groupsService.getClasseIdForGroup(toGroupId);
       if (classeId === undefined) return;
-      const student = this.studentsService.getById(studentId);
+      const student = this.studentsService.getById(ds.studentId);
       const classe = this.classesService.getById(classeId);
       this.pendingFullDrop.set({
-        studentId,
-        fromGroupId,
-        toGroupId,
-        classeId,
-        studentName: student ? `${student.firstName} ${student.lastName}` : '—',
+        studentId: ds.studentId, fromGroupId: ds.fromGroupId, toGroupId,
+        classeId, studentName: student ? `${student.firstName} ${student.lastName}` : '—',
         className: classe?.name ?? '—',
       });
-    } else if (result === 'ok') {
-      this.toast.show('Élève déplacé');
+      return;
     }
+
+    this.swapStudentLocally(ds.studentId, ds.fromGroupId, toGroupId);
+    this.groupsService.moveStudent(ds.studentId, ds.fromGroupId, toGroupId).subscribe({
+      next: () => this.toast.show('Élève déplacé'),
+      error: () => {
+        this.groupsService.loadGroups();
+        this.toast.show('Erreur lors du déplacement', 'error');
+      },
+    });
   }
 
   keepInSameGroup(): void {
@@ -240,28 +243,47 @@ export class GroupesComponent {
   addAnyway(): void {
     const pending = this.pendingFullDrop();
     if (!pending) return;
-    this.groupsService.forceAddToGroup(pending.studentId, pending.fromGroupId, pending.toGroupId);
-    this.toast.show('Élève ajouté');
-    this.pendingFullDrop.set(null);
+
+    this.swapStudentLocally(pending.studentId, pending.fromGroupId, pending.toGroupId);
+    this.groupsService.moveStudent(pending.studentId, pending.fromGroupId, pending.toGroupId).subscribe({
+      next: () => {
+        this.toast.show('Élève ajouté');
+        this.pendingFullDrop.set(null);
+      },
+      error: () => {
+        this.groupsService.loadGroups();
+        this.toast.show('Erreur lors de l\'ajout', 'error');
+      },
+    });
   }
 
   confirmCreateNewGroup(): void {
     const pending = this.pendingFullDrop();
     if (!pending) return;
-    this.groupsService.createGroupAndMove(pending.studentId, pending.fromGroupId, pending.classeId);
-    this.toast.show('Nouveau groupe créé et élève déplacé');
-    this.pendingFullDrop.set(null);
+
+    const groups = this.groupsService.getGroupsForClasse(pending.classeId);
+    const nextGroupNumber = groups.length + 1;
+
+    this.groupsService.createGroup(pending.classeId, nextGroupNumber, pending.studentId).subscribe({
+      next: (res) => {
+        this.groupsService.loadGroups();
+        this.toast.show('Nouveau groupe créé et élève déplacé');
+        this.pendingFullDrop.set(null);
+      },
+      error: () => this.toast.show('Erreur lors de la création', 'error'),
+    });
   }
 
   isBeingDragged(studentId: number): boolean {
-    return this.draggingStudentId() === studentId;
+    return this.dragState()?.studentId === studentId;
   }
 
   isDragTarget(groupId: number): boolean {
-    return this.dragOverGroupId() === groupId && this.draggingFromGroupId() !== groupId;
+    const ds = this.dragState();
+    return this.dragOverGroupId() === groupId && ds?.fromGroupId !== groupId;
   }
 
   isSameGroup(groupId: number): boolean {
-    return this.draggingFromGroupId() === groupId;
+    return this.dragState()?.fromGroupId === groupId;
   }
 }

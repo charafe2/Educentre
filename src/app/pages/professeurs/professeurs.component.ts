@@ -1,4 +1,4 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TeachersService } from '../../services/teachers.service';
@@ -10,11 +10,26 @@ import { Teacher } from '../../models/teacher.model';
 import { Classe } from '../../models/classe.model';
 import { Group } from '../../models/group.model';
 
+interface TeacherForm {
+  firstName: string; lastName: string; email: string; phone: string;
+  specialty: string; paymentMode: 'fixed' | 'per_student';
+  fixedSalary: number; ratePerStudent: number;
+  status: 'active' | 'inactive'; classIds: number[];
+}
+
+interface TeacherRow {
+  teacher: Teacher;
+  classes: Classe[];
+  groups: { classe: Classe; groups: Group[] }[];
+  studentCount: number;
+  salary: number;
+}
+
 @Component({
   selector: 'app-professeurs',
   imports: [NgClass, FormsModule, ModalComponent],
   templateUrl: './professeurs.component.html',
-  styleUrl: './professeurs.component.css'
+  styleUrl: './professeurs.component.css',
 })
 export class ProfesseursComponent {
   private teachersService = inject(TeachersService);
@@ -32,41 +47,41 @@ export class ProfesseursComponent {
     const term = this.searchTerm().toLowerCase();
     const status = this.statusFilter();
     return this.teachers().filter(t => {
-      const matchesSearch = !term ||
-        t.firstName.toLowerCase().includes(term) ||
-        t.lastName.toLowerCase().includes(term) ||
-        t.email.toLowerCase().includes(term) ||
-        t.specialty.toLowerCase().includes(term);
-      const matchesStatus = !status || t.status === status;
-      return matchesSearch && matchesStatus;
+      if (status && t.status !== status) return false;
+      if (!term) return true;
+      return t.firstName.toLowerCase().includes(term)
+        || t.lastName.toLowerCase().includes(term)
+        || t.email.toLowerCase().includes(term)
+        || t.specialty.toLowerCase().includes(term);
+    });
+  });
+
+  teacherRows = computed<TeacherRow[]>(() => {
+    const allClasses = this.classes();
+    return this.filteredTeachers().map(teacher => {
+      const classes = allClasses.filter(c => teacher.classIds.includes(c.id));
+      const groups = classes.map(c => ({
+        classe: c,
+        groups: this.groupsService.getGroupsForClasse(c.id),
+      }));
+      const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+      const salary = this.teachersService.getPayrollAmount(teacher, studentCount);
+      return { teacher, classes, groups, studentCount, salary };
     });
   });
 
   totalCount = computed(() => this.teachers().length);
   activeCount = computed(() => this.teachers().filter(t => t.status === 'active').length);
-
-  totalPayroll = computed(() => {
-    return this.teachers().reduce((sum, t) => {
-      const classes = this.classesService.getByIds(t.classIds);
-      const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
-      return sum + this.teachersService.getPayrollAmount(t, studentCount);
-    }, 0);
-  });
+  totalPayroll = computed(() => this.teacherRows().reduce((s, r) => s + r.salary, 0));
 
   showModal = signal(false);
   editingTeacher = signal<Teacher | null>(null);
 
-  formData = {
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    specialty: '',
-    paymentMode: 'fixed' as 'fixed' | 'per_student',
-    fixedSalary: 0,
-    ratePerStudent: 0,
-    status: 'active' as 'active' | 'inactive',
-    classIds: [] as number[],
+  formData: TeacherForm = {
+    firstName: '', lastName: '', email: '', phone: '',
+    specialty: '', paymentMode: 'fixed',
+    fixedSalary: 0, ratePerStudent: 0,
+    status: 'active', classIds: [],
   };
 
   openAdd(): void {
@@ -81,9 +96,8 @@ export class ProfesseursComponent {
 
   openEdit(t: Teacher): void {
     this.formData = {
-      firstName: t.firstName, lastName: t.lastName, email: t.email,
-      phone: t.phone, specialty: t.specialty,
-      paymentMode: t.paymentMode,
+      firstName: t.firstName, lastName: t.lastName, email: t.email, phone: t.phone,
+      specialty: t.specialty, paymentMode: t.paymentMode,
       fixedSalary: t.fixedSalary ?? 0, ratePerStudent: t.ratePerStudent ?? 0,
       status: t.status, classIds: [...t.classIds],
     };
@@ -93,49 +107,42 @@ export class ProfesseursComponent {
 
   submit(): void {
     const editing = this.editingTeacher();
-    const data = {
+    const payload = {
       ...this.formData,
       fixedSalary: this.formData.paymentMode === 'fixed' ? this.formData.fixedSalary : undefined,
       ratePerStudent: this.formData.paymentMode === 'per_student' ? this.formData.ratePerStudent : undefined,
     };
+
     if (editing) {
-      this.teachersService.update(editing.id, data);
-      this.toast.show('Professeur mis à jour');
+      this.teachersService.update(editing.id, payload).subscribe({
+        next: () => {
+          this.toast.show('Professeur mis à jour');
+          this.showModal.set(false);
+        },
+        error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
+      });
     } else {
-      this.teachersService.add(data);
-      this.toast.show('Professeur ajouté');
+      this.teachersService.add(payload).subscribe({
+        next: () => {
+          this.toast.show('Professeur ajouté');
+          this.showModal.set(false);
+        },
+        error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
+      });
     }
-    this.showModal.set(false);
   }
 
   deleteTeacher(t: Teacher): void {
-    if (confirm(`Supprimer le professeur ${t.firstName} ${t.lastName} ?`)) {
-      // set teacherId to 0 on affected classes
-      this.classesService.classes().filter(c => c.teacherId === t.id).forEach(c => {
-        this.classesService.update(c.id, { teacherId: 0 });
-      });
-      this.teachersService.delete(t.id);
-      this.toast.show('Professeur supprimé', 'info');
-    }
-  }
+    if (!confirm(`Supprimer le professeur ${t.firstName} ${t.lastName} ?`)) return;
 
-  getTeacherClasses(t: Teacher) {
-    return this.classesService.getByIds(t.classIds);
-  }
+    this.classesService.classes()
+      .filter(c => c.teacherId === t.id)
+      .forEach(c => this.classesService.update(c.id, { teacherId: null }).subscribe());
 
-  getTeacherGroups(t: Teacher): { classe: Classe; groups: Group[] }[] {
-    return this.getTeacherClasses(t).map(classe => ({
-      classe,
-      groups: this.groupsService.getGroupsForClasse(classe.id),
-    }));
-  }
-
-  getStudentCount(t: Teacher): number {
-    return this.getTeacherClasses(t).reduce((s, c) => s + c.enrolledStudentIds.length, 0);
-  }
-
-  getSalary(t: Teacher): number {
-    return this.teachersService.getPayrollAmount(t, this.getStudentCount(t));
+    this.teachersService.delete(t.id).subscribe({
+      next: () => this.toast.show('Professeur supprimé', 'info'),
+      error: () => this.toast.show('Erreur lors de la suppression', 'error'),
+    });
   }
 
   getInitials(firstName: string, lastName: string): string {

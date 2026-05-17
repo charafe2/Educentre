@@ -33,7 +33,7 @@ export class SchedulePanelComponent {
       .sort((a, b) => a.startHour - b.startHour)
       .map(session => {
         const classe = this.classesService.getById(session.classeId);
-        const teacher = classe ? this.teachersService.getById(classe.teacherId) : undefined;
+        const teacher = classe && classe.teacherId !== null ? this.teachersService.getById(classe.teacherId) : undefined;
 
         let state: 'past' | 'active' | 'upcoming';
         if (currentHour >= session.endHour) state = 'past';
