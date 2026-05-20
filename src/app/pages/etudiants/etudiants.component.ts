@@ -117,29 +117,32 @@ export class EtudiantsComponent {
   submit(): void {
     const editing = this.editingStudent();
     if (editing) {
-      this.studentsService.update(editing.id, { ...this.formData, enrolledClassIds: this.selectedClassIds });
-      const added = this.selectedClassIds.filter(id => !editing.enrolledClassIds.includes(id));
-      const removed = editing.enrolledClassIds.filter(id => !this.selectedClassIds.includes(id));
-      added.forEach(id => { this.classesService.enrollStudent(id, editing.id); this.groupsService.addStudent(id, editing.id); });
-      removed.forEach(id => { this.classesService.unenrollStudent(id, editing.id); this.groupsService.removeStudent(id, editing.id); });
-      this.toast.show('Étudiant mis à jour avec succès');
+      this.studentsService.update(editing.id, { ...this.formData, enrolledClassIds: this.selectedClassIds }).subscribe(() => {
+        const added = this.selectedClassIds.filter(id => !editing.enrolledClassIds.includes(id));
+        added.forEach(id => this.groupsService.addStudent(id, editing.id));
+        this.toast.show('Étudiant mis à jour avec succès');
+        this.showModal.set(false);
+      });
     } else {
-      const newId = this.studentsService.add({
+      this.studentsService.add({
         ...this.formData,
         enrolledClassIds: this.selectedClassIds,
         paymentStatus: 'pending',
+      }).subscribe(res => {
+        const newId = res.data.id;
+        this.selectedClassIds.forEach(id => this.groupsService.addStudent(id, newId));
+        this.toast.show('Étudiant ajouté avec succès');
+        this.showModal.set(false);
       });
-      this.selectedClassIds.forEach(id => { this.classesService.enrollStudent(id, newId); this.groupsService.addStudent(id, newId); });
-      this.toast.show('Étudiant ajouté avec succès');
     }
-    this.showModal.set(false);
   }
 
   deleteStudent(s: Student): void {
     if (confirm(`Supprimer l'étudiant ${s.firstName} ${s.lastName} ?`)) {
-      this.studentsService.delete(s.id);
-      if (this.showDetailPanel()?.id === s.id) this.showDetailPanel.set(null);
-      this.toast.show('Étudiant supprimé', 'info');
+      this.studentsService.delete(s.id).subscribe(() => {
+        if (this.showDetailPanel()?.id === s.id) this.showDetailPanel.set(null);
+        this.toast.show('Étudiant supprimé', 'info');
+      });
     }
   }
 

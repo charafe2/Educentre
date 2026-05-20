@@ -1,18 +1,45 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Classe } from '../models/classe.model';
+import { environment } from '../../environments/environment';
+import { tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { ApiResponse } from '../models/api-response.model';
+
+const CLASS_COLORS = [
+  { color: '#1d4ed8', bgColor: '#dbeafe' },
+  { color: '#c2410c', bgColor: '#ffedd5' },
+  { color: '#166534', bgColor: '#dcfce7' },
+  { color: '#0f766e', bgColor: '#ccfbf1' },
+  { color: '#6b21a8', bgColor: '#f3e8ff' },
+  { color: '#be185d', bgColor: '#fce7f3' },
+  { color: '#1e40af', bgColor: '#e0e7ff' },
+  { color: '#92400e', bgColor: '#fef3c7' },
+  { color: '#115e59', bgColor: '#ccfbf1' },
+  { color: '#7c2d12', bgColor: '#ffedd5' },
+];
 
 @Injectable({ providedIn: 'root' })
 export class ClassesService {
-  private nextId = signal(7);
+  private http = inject(HttpClient);
 
-  classes = signal<Classe[]>([
-    { id: 1, name: 'Maths 2Bac A', subject: 'Mathématiques', level: '2ème Bac', teacherId: 1, roomId: 1, maxCapacity: 15, monthlyPrice: 350, enrolledStudentIds: [1, 4, 7], status: 'active', color: '#1d4ed8', bgColor: '#dbeafe' },
-    { id: 2, name: 'Physique 2Bac', subject: 'Physique-Chimie', level: '2ème Bac', teacherId: 2, roomId: 2, maxCapacity: 12, monthlyPrice: 320, enrolledStudentIds: [1, 2, 4, 7], status: 'active', color: '#c2410c', bgColor: '#ffedd5' },
-    { id: 3, name: 'Français 3ème', subject: 'Français', level: '3ème Collège', teacherId: 3, roomId: 3, maxCapacity: 18, monthlyPrice: 280, enrolledStudentIds: [2, 6, 8], status: 'active', color: '#166534', bgColor: '#dcfce7' },
-    { id: 4, name: 'Arabe TC', subject: 'Arabe', level: 'Tronc Commun', teacherId: 4, roomId: 1, maxCapacity: 20, monthlyPrice: 300, enrolledStudentIds: [5], status: 'active', color: '#0f766e', bgColor: '#ccfbf1' },
-    { id: 5, name: 'Anglais 1Bac', subject: 'Anglais', level: '1ère Bac', teacherId: 5, roomId: 4, maxCapacity: 15, monthlyPrice: 310, enrolledStudentIds: [3, 6], status: 'active', color: '#6b21a8', bgColor: '#f3e8ff' },
-    { id: 6, name: 'SVT 1Bac', subject: 'SVT', level: '1ère Bac', teacherId: 6, roomId: 3, maxCapacity: 10, monthlyPrice: 290, enrolledStudentIds: [3], status: 'active', color: '#166534', bgColor: '#dcfce7' },
-  ]);
+  classes = signal<Classe[]>([]);
+
+  constructor() {
+    this.loadClasses();
+  }
+
+  loadClasses(): void {
+    this.http.get<ApiResponse<any[]>>(`${environment.apiUrl}/v1/classes`).subscribe(res => {
+      if (res.success) {
+        this.classes.set(res.data.map((c, i) => ({
+          ...c,
+          color: c.color || CLASS_COLORS[i % CLASS_COLORS.length].color,
+          bgColor: c.bgColor || CLASS_COLORS[i % CLASS_COLORS.length].bgColor,
+        })));
+      }
+    });
+  }
 
   getById(id: number): Classe | undefined {
     return this.classes().find(c => c.id === id);
@@ -22,34 +49,21 @@ export class ClassesService {
     return this.classes().filter(c => ids.includes(c.id));
   }
 
-  add(data: Omit<Classe, 'id'>): number {
-    const id = this.nextId();
-    this.classes.update(list => [...list, { ...data, id }]);
-    this.nextId.update(n => n + 1);
-    return id;
+  add(data: any): Observable<ApiResponse<{id: number}>> {
+    return this.http.post<ApiResponse<{id: number}>>(`${environment.apiUrl}/v1/classes`, data).pipe(
+      tap(() => this.loadClasses())
+    );
   }
 
-  update(id: number, data: Partial<Classe>): void {
-    this.classes.update(list => list.map(c => c.id === id ? { ...c, ...data } : c));
+  update(id: number, data: Partial<Classe>): Observable<ApiResponse<null>> {
+    return this.http.put<ApiResponse<null>>(`${environment.apiUrl}/v1/classes/${id}`, data).pipe(
+      tap(() => this.loadClasses())
+    );
   }
 
-  delete(id: number): void {
-    this.classes.update(list => list.filter(c => c.id !== id));
-  }
-
-  enrollStudent(classeId: number, studentId: number): void {
-    this.classes.update(list => list.map(c =>
-      c.id === classeId
-        ? { ...c, enrolledStudentIds: [...c.enrolledStudentIds, studentId] }
-        : c
-    ));
-  }
-
-  unenrollStudent(classeId: number, studentId: number): void {
-    this.classes.update(list => list.map(c =>
-      c.id === classeId
-        ? { ...c, enrolledStudentIds: c.enrolledStudentIds.filter(id => id !== studentId) }
-        : c
-    ));
+  delete(id: number): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${environment.apiUrl}/v1/classes/${id}`).pipe(
+      tap(() => this.loadClasses())
+    );
   }
 }

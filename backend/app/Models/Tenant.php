@@ -6,8 +6,13 @@ use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+<<<<<<< HEAD
 use Illuminate\Support\Str;
+=======
+use App\Domains\Core\Models\Centre;
+>>>>>>> 6568720da86eb47ead3cfc5dedc29a94f79c387a
 
 class Tenant extends Model
 {
@@ -43,5 +48,10 @@ class Tenant extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function centre(): HasOne
+    {
+        return $this->hasOne(Centre::class);
     }
 }

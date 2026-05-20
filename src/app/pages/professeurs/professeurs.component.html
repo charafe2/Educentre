@@ -1,5 +1,4 @@
 <div class="content-area">
-  <!-- Page Header -->
   <div class="page-header">
     <div class="page-title">
       <h1>Professeurs</h1>
@@ -11,7 +10,6 @@
     </button>
   </div>
 
-  <!-- Stats Row -->
   <div class="stats-grid">
     <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-chalkboard-user"></i></div>
@@ -43,22 +41,16 @@
     </div>
   </div>
 
-  <!-- Teachers Table -->
   <div class="panel table-panel">
     <div class="panel-header">
       <div class="panel-header-left">
         <h3 class="panel-title">Équipe pédagogique</h3>
-        <span class="results-count">{{ filteredTeachers().length }} professeur(s)</span>
+        <span class="results-count">{{ teacherRows().length }} professeur(s)</span>
       </div>
       <div class="filter-bar">
         <div class="search-wrapper">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input
-            type="text"
-            class="search-input"
-            placeholder="Rechercher..."
-            (input)="onSearch($event)"
-          />
+          <input type="text" class="search-input" placeholder="Rechercher..." (input)="onSearch($event)" />
         </div>
         <select class="filter-select" (change)="onStatusFilter($event)">
           <option value="">Tous les statuts</option>
@@ -83,33 +75,31 @@
           </tr>
         </thead>
         <tbody>
-          @for (teacher of filteredTeachers(); track teacher.id) {
+          @for (row of teacherRows(); track row.teacher.id) {
             <tr class="table-row">
               <td>
                 <div class="teacher-cell">
-                  <div class="avatar" [style.background-color]="teacher.avatarColor">
-                    {{ getInitials(teacher.firstName, teacher.lastName) }}
+                  <div class="avatar" [style.background-color]="row.teacher.avatarColor">
+                    {{ getInitials(row.teacher.firstName, row.teacher.lastName) }}
                   </div>
                   <div class="teacher-info">
-                    <span class="teacher-name">{{ teacher.firstName }} {{ teacher.lastName }}</span>
-                    <span class="teacher-email">{{ teacher.email }}</span>
+                    <span class="teacher-name">{{ row.teacher.firstName }} {{ row.teacher.lastName }}</span>
+                    <span class="teacher-email">{{ row.teacher.email }}</span>
                   </div>
                 </div>
               </td>
+              <td><span class="specialty-tag">{{ row.teacher.specialty }}</span></td>
               <td>
-                <span class="specialty-tag">{{ teacher.specialty }}</span>
-              </td>
-              <td>
-                <span [ngClass]="['mode-badge', teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
-                  {{ getPaymentModeLabel(teacher.paymentMode) }}
-                  @if (teacher.paymentMode === 'per_student') {
-                    <span class="rate-detail">{{ teacher.ratePerStudent }} Dhs/ét.</span>
+                <span [ngClass]="['mode-badge', row.teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
+                  {{ getPaymentModeLabel(row.teacher.paymentMode) }}
+                  @if (row.teacher.paymentMode === 'per_student') {
+                    <span class="rate-detail">{{ row.teacher.ratePerStudent }} Dhs/ét.</span>
                   }
                 </span>
               </td>
               <td>
                 <div class="classes-list">
-                  @for (item of getTeacherGroups(teacher); track item.classe.id) {
+                  @for (item of row.groups; track item.classe.id) {
                     <div class="class-groups-cell">
                       <span class="group-tag" [style.background]="item.classe.bgColor" [style.color]="item.classe.color">
                         {{ item.classe.name }}
@@ -121,29 +111,25 @@
                       }
                     </div>
                   }
-                  @if (getTeacherClasses(teacher).length === 0) {
+                  @if (row.classes.length === 0) {
                     <span class="text-muted">—</span>
                   }
                 </div>
               </td>
+              <td><span class="count-pill">{{ row.studentCount }}</span></td>
+              <td><strong class="salary-val">{{ formatSalary(row.salary) }}</strong></td>
               <td>
-                <span class="count-pill">{{ getStudentCount(teacher) }}</span>
-              </td>
-              <td>
-                <strong class="salary-val">{{ formatSalary(getSalary(teacher)) }}</strong>
-              </td>
-              <td>
-                <div [ngClass]="['status-badge', teacher.status === 'active' ? 'status-active' : 'status-inactive']">
-                  <span [ngClass]="['status-dot', teacher.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
-                  {{ teacher.status === 'active' ? 'Actif' : 'Inactif' }}
+                <div [ngClass]="['status-badge', row.teacher.status === 'active' ? 'status-active' : 'status-inactive']">
+                  <span [ngClass]="['status-dot', row.teacher.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
+                  {{ row.teacher.status === 'active' ? 'Actif' : 'Inactif' }}
                 </div>
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(teacher)">
+                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(row.teacher)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteTeacher(teacher)">
+                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteTeacher(row.teacher)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
@@ -166,7 +152,6 @@
   </div>
 </div>
 
-<!-- Add/Edit Modal -->
 @if (showModal()) {
   <app-modal
     [title]="editingTeacher() ? 'Modifier le professeur' : 'Nouveau professeur'"
