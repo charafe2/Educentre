@@ -16,6 +16,13 @@ interface SubjectView {
   totalStudents: number;
 }
 
+interface LevelView {
+  level: string;
+  subjects: SubjectView[];
+  totalStudents: number;
+  totalGroups: number;
+}
+
 @Component({
   selector: 'app-groupes',
   standalone: true,
@@ -115,13 +122,87 @@ export class GroupesComponent {
   subjectViews = computed<SubjectView[]>(() => {
     const term = this.searchTerm().toLowerCase();
     return this.classesService.classes()
-      .filter(c => !term || c.name.toLowerCase().includes(term) || c.subject.toLowerCase().includes(term))
+      .filter(c => !term || c.name.toLowerCase().includes(term) || c.subject.toLowerCase().includes(term) || c.level.toLowerCase().includes(term))
       .map(c => ({
         classe: c,
         groups: this.groupsService.getGroupsForClasse(c.id),
         totalStudents: this.groupsService.getGroupsForClasse(c.id).reduce((s, g) => s + g.studentIds.length, 0),
       }));
   });
+
+  levelViews = computed<LevelView[]>(() => {
+    const map = new Map<string, SubjectView[]>();
+    for (const v of this.subjectViews()) {
+      if (!map.has(v.classe.level)) map.set(v.classe.level, []);
+      map.get(v.classe.level)!.push(v);
+    }
+    return Array.from(map.entries()).map(([level, subjects]) => ({
+      level,
+      subjects,
+      totalStudents: subjects.reduce((s, v) => s + v.totalStudents, 0),
+      totalGroups: subjects.reduce((s, v) => s + v.groups.length, 0),
+    }));
+  });
+
+  collapsedLevels = signal<Set<string>>(new Set());
+
+  toggleLevel(level: string): void {
+    this.collapsedLevels.update(set => {
+      const next = new Set(set);
+      if (next.has(level)) next.delete(level); else next.add(level);
+      return next;
+    });
+  }
+
+  isLevelCollapsed(level: string): boolean {
+    return this.collapsedLevels().has(level);
+  }
+
+  collapsedSubjects = signal<Set<number>>(new Set());
+
+  toggleSubject(classeId: number, event: Event): void {
+    event.stopPropagation();
+    this.collapsedSubjects.update(set => {
+      const next = new Set(set);
+      if (next.has(classeId)) next.delete(classeId); else next.add(classeId);
+      return next;
+    });
+  }
+
+  isSubjectCollapsed(classeId: number): boolean {
+    return this.collapsedSubjects().has(classeId);
+  }
+
+  // Returns true if this student is already enrolled in any group of the given class
+  private isStudentInClasse(studentId: number, classeId: number): boolean {
+    return this.groupsService.getGroupsForClasse(classeId).some(g => g.studentIds.includes(studentId));
+  }
+
+  canDropInGroup(toGroupId: number): boolean {
+    const studentId = this.draggingStudentId();
+    const fromGroupId = this.draggingFromGroupId();
+    if (studentId === null || fromGroupId === null || fromGroupId === toGroupId) return false;
+
+    const fromClasseId = this.groupsService.getClasseIdForGroup(fromGroupId);
+    const toClasseId   = this.groupsService.getClasseIdForGroup(toGroupId);
+    if (fromClasseId === undefined || toClasseId === undefined) return false;
+
+    const fromClasse = this.classesService.getById(fromClasseId);
+    const toClasse   = this.classesService.getById(toClasseId);
+    if (!fromClasse || !toClasse) return false;
+
+    // Block cross-level drops
+    if (fromClasse.level !== toClasse.level) return false;
+
+    // Block cross-subject drops when student is already enrolled in target subject
+    if (fromClasseId !== toClasseId && this.isStudentInClasse(studentId, toClasseId)) return false;
+
+    return true;
+  }
+
+  isBlockedDragTarget(groupId: number): boolean {
+    return this.isDragging() && !this.isSameGroup(groupId) && !this.canDropInGroup(groupId);
+  }
 
   getStudent(id: number): Student | undefined {
     return this.studentsService.getById(id);
@@ -189,8 +270,10 @@ export class GroupesComponent {
 
   onDragOver(event: DragEvent, groupId: number): void {
     event.preventDefault();
-    event.dataTransfer!.dropEffect = 'move';
-    if (this.dragOverGroupId() !== groupId) this.dragOverGroupId.set(groupId);
+    const valid = this.canDropInGroup(groupId);
+    event.dataTransfer!.dropEffect = valid ? 'move' : 'none';
+    const next = valid ? groupId : null;
+    if (this.dragOverGroupId() !== next) this.dragOverGroupId.set(next);
   }
 
   onDragLeave(event: DragEvent, groupId: number): void {
@@ -212,6 +295,19 @@ export class GroupesComponent {
     this.isDragging.set(false);
 
     if (studentId === null || fromGroupId === null) return;
+
+    if (!this.canDropInGroup(toGroupId)) {
+      const fromClasseId = this.groupsService.getClasseIdForGroup(fromGroupId);
+      const toClasseId   = this.groupsService.getClasseIdForGroup(toGroupId);
+      const fromClasse   = fromClasseId ? this.classesService.getById(fromClasseId) : undefined;
+      const toClasse     = toClasseId   ? this.classesService.getById(toClasseId)   : undefined;
+      if (fromClasse && toClasse && fromClasse.level !== toClasse.level) {
+        this.toast.show('Impossible : niveaux différents');
+      } else {
+        this.toast.show('Élève déjà inscrit dans les deux matières');
+      }
+      return;
+    }
 
     const result = this.groupsService.moveStudent(studentId, fromGroupId, toGroupId);
 

@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('tenant_id')->after('id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->after('id')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->after('id')->unique();
             $table->string('role', 50)->after('email')->default('admin');
             $table->string('status', 50)->after('password')->default('active');
             $table->timestamp('last_login_at')->nullable()->after('remember_token');

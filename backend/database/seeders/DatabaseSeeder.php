@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,20 +17,20 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        User::factory()->create([
+        User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Ahmed Berrada',
             'email' => 'admin@moujtahid.ma',
-            'password' => 'admin123456789',
+            'password' => Hash::make('admin123456789'),
             'role' => 'admin',
             'status' => 'active',
         ]);
 
-        User::factory()->create([
+        User::create([
             'tenant_id' => $tenant->id,
             'name' => 'Khadija Alami',
             'email' => 'manager@moujtahid.ma',
-            'password' => 'manager1234567',
+            'password' => Hash::make('manager1234567'),
             'role' => 'manager',
             'status' => 'active',
         ]);

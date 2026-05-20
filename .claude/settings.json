@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -e \"SHOW DATABASES;\" 2>&1)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysqld.exe\" --install-manual 2>&1)",
+      "PowerShell(net start mysql 2>&1)",
+      "PowerShell(Start-Process \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysqld.exe\" -ArgumentList \"--defaults-file=C:\\\\xampp\\\\mysql\\\\bin\\\\my.ini\" -WindowStyle Hidden)",
+      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -e \"CREATE DATABASE IF NOT EXISTS moujtahid CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\" 2>&1)",
+      "PowerShell(php \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\" key:generate --ansi 2>&1)",
+      "PowerShell(php \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\" migrate --force --ansi 2>&1)",
+      "PowerShell(php \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\" migrate:fresh --force --ansi 2>&1)",
+      "PowerShell(php \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\" db:seed --force --ansi 2>&1)",
+      "PowerShell(php \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\" migrate:fresh --seed --force --ansi 2>&1)",
+      "PowerShell(Start-Process php -ArgumentList \"C:\\\\xampp\\\\htdocs\\\\Moujtahid\\\\backend\\\\artisan\", \"serve\", \"--port=8000\" -WindowStyle Hidden; Start-Sleep -Seconds 2; try { Invoke-WebRequest -Uri \"http://localhost:8000/api/v1/auth/login\" -Method POST -ContentType \"application/json\" -Body '{\"email\":\"admin@moujtahid.ma\",\"password\":\"admin123456789\"}' -UseBasicParsing | Select-Object -ExpandProperty Content } catch { $_.Exception.Response.StatusCode })",
+      "Bash(Get-ChildItem -Path \"c:\\\\xampp\\\\htdocs\\\\Moujtahid\" -Recurse -Filter \"*group*\" -Include \"*.ts\", \"*.html\", \"*.scss\", \"*.css\")",
+      "Bash(Select-Object -ExpandProperty FullName)"
+    ]
+  }
+}
