@@ -1,0 +1,617 @@
+<div class="lp">
+
+  <a href="#lp-main" class="skip-link">Aller au contenu</a>
+
+  <!-- ===================== NAV ===================== -->
+  <nav class="nav" id="lp-nav" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <a routerLink="/" class="nav__logo" aria-label="Accueil Moujtahid">Moujtahid<span>.</span></a>
+
+      <div class="nav__links" role="list">
+        <a href="#lp-features"  class="nav__link" role="listitem">Fonctionnalités</a>
+        <a href="#lp-hiw"       class="nav__link" role="listitem">Comment ça marche</a>
+        <a href="#lp-pricing"   class="nav__link" role="listitem">Tarifs</a>
+        <a href="#lp-faq"       class="nav__link" role="listitem">FAQ</a>
+      </div>
+
+      <div class="nav__actions">
+        <a routerLink="/login" class="nav__sign-in">Connexion</a>
+        <a routerLink="/login" class="btn-nav">Commencer</a>
+        <button class="nav__hamburger" id="lp-hamburger"
+                aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="lp-mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav__mobile" id="lp-mobile-menu" aria-label="Menu mobile">
+      <a href="#lp-features"  class="nav__mobile-link">Fonctionnalités</a>
+      <a href="#lp-hiw"       class="nav__mobile-link">Comment ça marche</a>
+      <a href="#lp-pricing"   class="nav__mobile-link">Tarifs</a>
+      <a href="#lp-faq"       class="nav__mobile-link">FAQ</a>
+      <a routerLink="/login"  class="nav__mobile-link">Connexion</a>
+    </div>
+  </nav>
+
+  <main id="lp-main">
+
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" aria-label="Accroche principale">
+      
+
+      <!-- Headline built char-by-char by JS. aria-label provides accessible text. -->
+      <h1 class="hero__headline" id="lp-headline"
+          aria-label="Gérez votre centre avec précision"></h1>
+
+      <p class="hero__subhead" id="lp-subhead">
+        Moujtahid unifie planification, présences, paiements et analyses &mdash;
+        pour que vous puissiez vous concentrer sur l'enseignement, pas sur l'administration.
+      </p>
+
+      <div class="hero__ctas" id="lp-ctas">
+        <a routerLink="/login" class="btn-primary">
+          Commencer gratuitement
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#lp-hiw" class="btn-ghost">Voir comment ça marche</a>
+      </div>
+
+      <!-- Device Mockup -->
+      <div class="hero__mockup-wrap" id="lp-mockup" aria-hidden="true">
+        <div class="mockup" role="img" aria-label="Aperçu du tableau de bord Moujtahid">
+          <div class="mockup__bar">
+            <div class="mockup__dots">
+              <div class="mockup__dot"></div>
+              <div class="mockup__dot"></div>
+              <div class="mockup__dot"></div>
+            </div>
+            <div class="mockup__url">app.moujtahid.ma/tableau-de-bord</div>
+          </div>
+          <div class="mockup__content">
+            <aside class="mockup__sidebar">
+              <span class="mockup__sidebar-label">Menu</span>
+              <div class="mockup__nav-item mockup__nav-item--active">
+                <div class="mockup__nav-icon" style="border-radius:50%"></div>Tableau de bord
+              </div>
+              <div class="mockup__nav-item"><div class="mockup__nav-icon"></div>Planning</div>
+              <div class="mockup__nav-item"><div class="mockup__nav-icon" style="border-radius:50%"></div>Élèves</div>
+              <div class="mockup__nav-item"><div class="mockup__nav-icon"></div>Présences</div>
+              <div class="mockup__nav-item"><div class="mockup__nav-icon" style="border-radius:2px"></div>Paiements</div>
+              <div class="mockup__nav-item"><div class="mockup__nav-icon"></div>Rapports</div>
+            </aside>
+            <div class="mockup__main">
+              <div class="mockup__topbar">
+                <span class="mockup__page-title">Vue d'ensemble &mdash; Juin 2025</span>
+                <span class="mockup__badge">Tous les sites</span>
+              </div>
+              <div class="mockup__stats">
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Élèves</div>
+                  <div class="mockup__stat-value" data-count="248">248</div>
+                  <div class="mockup__stat-change">&#x25B2; 12 ce mois</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Présences</div>
+                  <div class="mockup__stat-value" data-count="94" data-suffix="%">94%</div>
+                  <div class="mockup__stat-change">&#x25B2; 2,1 %</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Revenus</div>
+                  <div class="mockup__stat-value" style="font-size:16px;">34,2K</div>
+                  <div class="mockup__stat-change">&#x25B2; MAD</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Enseignants</div>
+                  <div class="mockup__stat-value" data-count="12">12</div>
+                  <div class="mockup__stat-change" style="color:var(--color-gray-300);">Actifs</div>
+                </div>
+              </div>
+              <div class="mockup__chart-area">
+                <div class="mockup__chart-title">Présences hebdomadaires &mdash; 7 dernières semaines</div>
+                <div class="mockup__chart-bars" aria-hidden="true">
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SOCIAL PROOF ===================== -->
+    <div class="social-proof" aria-label="Centres partenaires">
+      <p class="social-proof__label">Approuvé par des centres éducatifs à travers le Maroc et au-delà</p>
+      <div class="social-proof__logos" aria-hidden="true">
+        <div class="social-proof__item">Académie Lumière</div>
+        <div class="social-proof__item">Atlas Prep</div>
+        <div class="social-proof__item">Étoile Formation</div>
+        <div class="social-proof__item">Centre Ibn Khaldoun</div>
+        <div class="social-proof__item">Dar Taalim</div>
+        <!-- Duplicate pour le marquee mobile -->
+        <div class="social-proof__item" aria-hidden="true">Académie Lumière</div>
+        <div class="social-proof__item" aria-hidden="true">Atlas Prep</div>
+        <div class="social-proof__item" aria-hidden="true">Étoile Formation</div>
+        <div class="social-proof__item" aria-hidden="true">Centre Ibn Khaldoun</div>
+        <div class="social-proof__item" aria-hidden="true">Dar Taalim</div>
+      </div>
+    </div>
+
+    <!-- ===================== FONCTIONNALITÉS ===================== -->
+    <section class="section features" id="lp-features" aria-labelledby="lp-features-title">
+      <div class="section__inner">
+        <header class="section__header">
+          <p class="section__overline reveal">Tout ce dont vous avez besoin</p>
+          <h2 class="section__title reveal" id="lp-features-title">Conçu pour la réalité des centres</h2>
+          <p class="section__body reveal">Chaque fonctionnalité naît de conversations avec des directeurs, enseignants et administrateurs qui en avaient assez de jongler avec des tableurs.</p>
+        </header>
+
+        <div class="bento">
+          <!-- Carte large — Planification -->
+          <article class="bento__card bento__card--wide" aria-labelledby="feat-planning">
+            <div class="bento__text">
+              <div class="bento__icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="18" height="17" rx="3"/><path d="M2 8h18M7 2v2M15 2v2"/>
+                </svg>
+              </div>
+              <h3 class="bento__title" id="feat-planning">Planification intelligente</h3>
+              <p class="bento__body">La planification par glisser-déposer résout automatiquement les conflits de salles, les chevauchements d'enseignants et les incompatibilités d'élèves. Ce qui prenait une journée entière ne prend plus que dix minutes.</p>
+            </div>
+            <div class="bento__visual" aria-hidden="true">
+              <div class="schedule-preview">
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="bento__card" aria-labelledby="feat-presences">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="7" r="4"/><path d="M2 20c0-4 3.1-7 7-7M17 14l-3 3 1.5 1.5L20 14"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-presences">Suivi des présences</h3>
+            <p class="bento__body">Un seul appui par élève pour marquer présent ou absent. Des alertes SMS automatiques avertissent les parents dès que leur enfant ne se présente pas.</p>
+          </article>
+
+          <article class="bento__card" aria-labelledby="feat-paiements">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="18" height="13" rx="2"/><path d="M2 10h18M6 14h2"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-paiements">Gestion des paiements</h3>
+            <p class="bento__body">Facturation automatisée, liens de paiement en ligne et suivi des revenus en temps réel. Sachez exactement qui a payé et ce qui est attendu le mois prochain.</p>
+          </article>
+
+          <article class="bento__card" aria-labelledby="feat-analyses">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 17l4-6 4 3 4-8"/>
+                <circle cx="4"  cy="17" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="8"  cy="11" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="16" cy="6"  r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-analyses">Analyses pédagogiques</h3>
+            <p class="bento__body">Des tableaux de bord par élève qui identifient qui progresse et qui a besoin d'aide — des données que vos enseignants exploiteront vraiment.</p>
+          </article>
+
+          <article class="bento__card" aria-labelledby="feat-parents">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h14a2 2 0 012 2v8a2 2 0 01-2 2H8l-4 3V6a2 2 0 012-2z"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-parents">Communication parents</h3>
+            <p class="bento__body">Annonces, bulletins et messages directs envoyés en quelques secondes. Les parents restent informés, votre équipe cesse de répondre aux appels répétitifs.</p>
+          </article>
+
+          <article class="bento__card" aria-labelledby="feat-multisites">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="5" r="2"/><circle cx="4" cy="17" r="2"/><circle cx="18" cy="17" r="2"/>
+                <path d="M11 7v4m0 4l-5 2m10-2l-5-2"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-multisites">Gestion multi-sites</h3>
+            <p class="bento__body">Gérez chaque site depuis un tableau de bord unifié. Comparez les performances, transférez des élèves et uniformisez les processus à l'échelle de vos centres.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CONVICTION ===================== -->
+    <section class="statement" aria-label="Notre conviction">
+      <div class="statement__inner reveal">
+        <p class="statement__eyebrow">Notre conviction</p>
+        <h2 class="statement__quote">
+          L'éducation se passe en classe.<br>
+          <em>Tout le reste devrait se gérer tout seul.</em>
+        </h2>
+        <p class="statement__source">Le principe derrière chaque décision chez Moujtahid.</p>
+      </div>
+    </section>
+
+    <!-- ===================== COMMENT ÇA MARCHE ===================== -->
+    <section class="section how-it-works" id="lp-hiw" aria-labelledby="lp-hiw-title">
+      <div class="section__inner">
+        <header class="section__header">
+          <p class="section__overline reveal">Simplicité par conception</p>
+          <h2 class="section__title reveal" id="lp-hiw-title">Opérationnel en un après-midi</h2>
+          <p class="section__body reveal">Aucune session de formation. Aucun consultant informatique. Aucune migration complexe. Une configuration simple qui s'efface pour vous laisser travailler.</p>
+        </header>
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">1</div>
+            <h3 class="step__title">Configurez votre centre</h3>
+            <p class="step__desc">Ajoutez vos matières, salles, enseignants et élèves en quelques minutes grâce à notre assistant ou à l'import en masse.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">2</div>
+            <h3 class="step__title">Lancez votre planning</h3>
+            <p class="step__desc">La planification intelligente gère automatiquement les conflits, les remplacements et les attributions de salles.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">3</div>
+            <h3 class="step__title">Regardez-le prospérer</h3>
+            <p class="step__desc">Des analyses en temps réel vous tiennent informé et les parents engagés, session après session.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TÉMOIGNAGES ===================== -->
+    <section class="section testimonials" aria-labelledby="lp-testimonials-title">
+      <div class="section__inner">
+        <header class="section__header">
+          <p class="section__overline reveal">Témoignages</p>
+          <h2 class="section__title reveal" id="lp-testimonials-title">Les centres qui ont fait le pas</h2>
+        </header>
+        <div class="testimonials__grid">
+
+          <article class="t-card" aria-label="Témoignage de Fatima Zahra M.">
+            <div class="t-card__stars" aria-label="5 étoiles">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &laquo;&nbsp;Moujtahid nous a économisé douze heures par semaine rien que sur la planification. Les alertes de présence changent tout &mdash; les parents nous remercient de les tenir informés.&nbsp;&raquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-blue" aria-hidden="true">FZ</div>
+              <div>
+                <div class="t-card__name">Fatima Zahra M.</div>
+                <div class="t-card__role">Directrice, Académie Lumière &mdash; Casablanca</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card" aria-label="Témoignage de Youssef B.">
+            <div class="t-card__stars" aria-label="5 étoiles">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &laquo;&nbsp;Nous sommes passés des registres papier à un tableau de bord en temps réel en un seul après-midi. L'intégration était fluide et l'équipe disponible à chaque étape.&nbsp;&raquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-green" aria-hidden="true">YB</div>
+              <div>
+                <div class="t-card__name">Youssef B.</div>
+                <div class="t-card__role">Directeur, Atlas Prep Centre &mdash; Rabat</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card" aria-label="Témoignage de Nadia O.">
+            <div class="t-card__stars" aria-label="5 étoiles">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &laquo;&nbsp;La réconciliation des paiements occupait notre comptable une journée entière. Avec Moujtahid, c'est automatisé, précis au dirham, et vérifiable en moins de cinq minutes.&nbsp;&raquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-purple" aria-hidden="true">NO</div>
+              <div>
+                <div class="t-card__name">Nadia O.</div>
+                <div class="t-card__role">Responsable, Étoile Formation &mdash; Marrakech</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card" aria-label="Témoignage de Omar K.">
+            <div class="t-card__stars" aria-label="5 étoiles">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &laquo;&nbsp;Les analyses nous ont donné des informations que nous n'avions jamais eues. Nous identifions maintenant les élèves fragiles des semaines avant les examens &mdash; et nous pouvons vraiment agir.&nbsp;&raquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-orange" aria-hidden="true">OK</div>
+              <div>
+                <div class="t-card__name">Omar K.</div>
+                <div class="t-card__role">Fondateur, Centre Avenir &mdash; Fès</div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TARIFS ===================== -->
+    <section class="section pricing" id="lp-pricing" aria-labelledby="lp-pricing-title">
+      <div class="section__inner">
+        <header class="section__header">
+          <p class="section__overline reveal">Tarification transparente</p>
+          <h2 class="section__title reveal" id="lp-pricing-title">Sans mauvaises surprises.</h2>
+          <p class="section__body reveal">Commencez gratuitement, évoluez quand vous êtes prêt. Chaque formule inclut la propriété complète des données et une garantie de remboursement de 30 jours.</p>
+        </header>
+        <div class="pricing__grid">
+
+          <div class="p-card">
+            <div>
+              <h3 class="p-card__name">Débutant</h3>
+              <div class="p-card__price"><span class="p-card__amount">189DH</span></div>
+              <p class="p-card__desc">Pour les centres qui démarrent. Aucune carte bancaire requise.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Jusqu'à 50 élèves</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>5 comptes enseignants</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Planification de base</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Suivi des présences</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Assistance par e-mail</li>
+            </ul>
+            <a routerLink="/login" class="btn-pricing btn-pricing--outline">Commencer </a>
+          </div>
+
+          <div class="p-card p-card--popular">
+            <div class="p-card__badge">Le plus populaire</div>
+            <div>
+              <h3 class="p-card__name">Pro</h3>
+              <div class="p-card__price">
+                <span class="p-card__amount">289&nbsp;DH</span>
+                <span class="p-card__period">/mois</span>
+              </div>
+              <p class="p-card__desc">Pour les centres en croissance. Résiliez à tout moment.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Jusqu'à 300 élèves</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Comptes enseignants illimités</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Planification intelligente et détection de conflits</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Paiements et facturation</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Analyses avancées</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Assistance prioritaire</li>
+            </ul>
+            <a routerLink="/login" class="btn-pricing btn-pricing--filled">Essai gratuit 30 jours</a>
+          </div>
+
+          <div class="p-card">
+            <div>
+              <h3 class="p-card__name">Entreprise</h3>
+              <div class="p-card__price"><span class="p-card__amount" style="font-size:32px;">Sur devis</span></div>
+              <p class="p-card__desc">Pour les réseaux de centres avec des exigences complexes et un besoin d'accompagnement dédié.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Élèves et enseignants illimités</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Gestion multi-sites</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Intégrations personnalisées et API</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Responsable de compte dédié</li>
+              <li class="p-card__feature"><div class="p-card__check" aria-hidden="true"><svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg></div>Garantie SLA et disponibilité</li>
+            </ul>
+            <a routerLink="/login" class="btn-pricing btn-pricing--dark">Contacter l'équipe commerciale</a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section class="section faq" id="lp-faq" aria-labelledby="lp-faq-title">
+      <div class="section__inner">
+        <header class="section__header">
+          <p class="section__overline reveal">Questions fréquentes</p>
+          <h2 class="section__title reveal" id="lp-faq-title">Tout ce que vous devez savoir</h2>
+        </header>
+        <div class="faq__list">
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a1">
+              <span class="faq__question">Mes données sont-elles sécurisées ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a1"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. Toutes les données sont chiffrées au repos avec AES-256 et en transit via TLS 1.3. Des sauvegardes nocturnes automatisées sont stockées dans des emplacements géographiquement séparés. Moujtahid est entièrement conforme au RGPD et nous ne vendons ni ne partageons jamais vos données avec des tiers.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a2">
+              <span class="faq__question">Puis-je migrer depuis un autre système ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a2"><div class="faq__answer-inner">
+              <p class="faq__answer">Absolument. Notre équipe prend en charge la migration complète &mdash; dossiers d'élèves, historique des paiements et données de planning &mdash; sans frais supplémentaires pour toutes les formules payantes. Pour les comptes Débutant, nous fournissons des modèles d'import détaillés et une documentation complète.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a3">
+              <span class="faq__question">Combien de temps prend la configuration ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a3"><div class="faq__answer-inner">
+              <p class="faq__answer">La plupart des centres sont pleinement opérationnels en un seul après-midi. L'assistant d'intégration vous guide étape par étape pour ajouter vos matières, salles, enseignants et élèves. La durée moyenne de la première configuration est inférieure à deux heures &mdash; import de données existantes inclus.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a4">
+              <span class="faq__question">Y a-t-il une application mobile ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a4"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. Moujtahid est disponible sur iOS et Android. Les enseignants prennent les présences depuis leur téléphone, les parents reçoivent des alertes en temps réel et les administrateurs peuvent suivre le centre depuis n'importe où. La plateforme web est entièrement responsive sur tous les navigateurs.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a5">
+              <span class="faq__question">Puis-je essayer avant de m'engager sur une formule payante ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a5"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. La formule Débutant est gratuite à vie, sans carte bancaire requise. La formule Pro comprend un essai gratuit de 30 jours &mdash; toutes les fonctionnalités, sans restriction. Si vous n'êtes pas entièrement satisfait, nous remboursons intégralement dans les 30 jours, sans question posée.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a6">
+              <span class="faq__question">Que se passe-t-il si je dépasse ma limite d'élèves ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a6"><div class="faq__answer-inner">
+              <p class="faq__answer">Nous vous informons par e-mail lorsque vous atteignez 80 % de votre limite, afin que vous ayez le temps de planifier. La mise à niveau est instantanée &mdash; vos données ne sont jamais bloquées ni affectées. Nous ne couperons jamais l'accès sans avertissement préalable.</p>
+            </div></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== BANNIÈRE CTA ===================== -->
+    <section class="cta-banner" aria-labelledby="lp-cta-title">
+      <div class="cta-banner__inner reveal">
+        <h2 class="cta-banner__title" id="lp-cta-title">Votre centre mérite de meilleurs outils.</h2>
+        <p class="cta-banner__sub">Rejoignez des centaines de centres éducatifs qui utilisent déjà Moujtahid. Gratuit pour commencer, opérationnel en quelques heures.</p>
+        <a routerLink="/login" class="btn-primary--white">
+          Commencer gratuitement
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================== PIED DE PAGE ===================== -->
+  <footer class="footer" aria-label="Pied de page">
+    <div class="footer__inner">
+      <div class="footer__grid">
+        <div>
+          <a routerLink="/" class="footer__logo">Moujtahid<span>.</span></a>
+          <p class="footer__brand-desc">La plateforme tout-en-un pour la gestion de centres éducatifs. Conçu au Maroc, utilisé dans toute la région.</p>
+        </div>
+        <div>
+          <p class="footer__col-title">Produit</p>
+          <ul class="footer__links">
+            <li><a href="#lp-features" class="footer__link">Fonctionnalités</a></li>
+            <li><a href="#lp-pricing"  class="footer__link">Tarifs</a></li>
+            <li><a href="#"            class="footer__link">Nouveautés</a></li>
+            <li><a href="#"            class="footer__link">Feuille de route</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Entreprise</p>
+          <ul class="footer__links">
+            <li><a href="#" class="footer__link">À propos</a></li>
+            <li><a href="#" class="footer__link">Blog</a></li>
+            <li><a href="#" class="footer__link">Carrières</a></li>
+            <li><a href="#" class="footer__link">Presse</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="footer__col-title">Assistance</p>
+          <ul class="footer__links">
+            <li><a href="#"       class="footer__link">Centre d'aide</a></li>
+            <li><a href="#"       class="footer__link">Contact</a></li>
+            <li><a href="#"       class="footer__link">Statut</a></li>
+            <li><a href="#lp-faq" class="footer__link">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Moujtahid. Tous droits réservés.</p>
+        <div class="footer__legal">
+          <a href="#">Confidentialité</a>
+          <a href="#">Conditions</a>
+          <a href="#">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>

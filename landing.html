@@ -1,0 +1,2162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Moujtahid — The all-in-one education centre management platform. Scheduling, attendance, payments, and analytics in one place.">
+  <title>Moujtahid — Run Your Centre Smarter</title>
+  <style>
+    /* ===================== CSS CUSTOM PROPERTIES ===================== */
+    :root {
+      --color-white: #FFFFFF;
+      --color-black: #1D1D1F;
+      --color-blue: #0071E3;
+      --color-blue-dark: #0057B3;
+      --color-blue-light: rgba(0, 113, 227, 0.08);
+      --color-gray-50: #F5F5F7;
+      --color-gray-100: #E8E8ED;
+      --color-gray-200: #D2D2D7;
+      --color-gray-300: #AEAEB2;
+      --color-gray-500: #6E6E73;
+      --color-gray-700: #3D3D3F;
+      --color-success: #34C759;
+
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+      --space-12: 48px;
+      --space-16: 64px;
+      --space-20: 80px;
+      --space-24: 96px;
+      --space-32: 128px;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-xl: 20px;
+      --radius-2xl: 28px;
+      --radius-full: 9999px;
+
+      --font: system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+
+      --shadow-card: 0 1px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-hover: 0 8px 24px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.06);
+      --shadow-mockup: 0 48px 96px rgba(0,0,0,0.18), 0 16px 48px rgba(0,0,0,0.10);
+      --shadow-nav: 0 1px 0 rgba(0,0,0,0.08);
+
+      --ease-out: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --dur-fast: 150ms;
+      --dur-base: 250ms;
+      --dur-slow: 400ms;
+
+      --max-width: 1120px;
+      --nav-height: 52px;
+
+      --z-nav: 100;
+    }
+
+    /* ===================== RESET ===================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--color-white);
+      color: var(--color-black);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    img { display: block; max-width: 100%; }
+    a { color: inherit; text-decoration: none; }
+    button { cursor: pointer; border: none; background: none; font-family: inherit; }
+    ul, ol { list-style: none; }
+
+    :focus-visible {
+      outline: 2px solid var(--color-blue);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+
+    /* ===================== SKIP LINK ===================== */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: var(--space-4);
+      padding: var(--space-2) var(--space-4);
+      background: var(--color-blue);
+      color: var(--color-white);
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: var(--radius-md);
+      z-index: var(--z-nav);
+      transition: top var(--dur-fast) var(--ease-out);
+    }
+    .skip-link:focus { top: var(--space-4); }
+
+    /* ===================== NAV ===================== */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: var(--z-nav);
+      height: var(--nav-height);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-6);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      background: rgba(255, 255, 255, 0.72);
+      transition: box-shadow var(--dur-base) var(--ease-out);
+    }
+
+    .nav--scrolled { box-shadow: var(--shadow-nav); }
+
+    .nav__inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+    }
+
+    .nav__logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--color-black);
+      flex-shrink: 0;
+    }
+
+    .nav__logo span { color: var(--color-blue); }
+
+    .nav__links {
+      display: none;
+      align-items: center;
+      gap: var(--space-8);
+      flex: 1;
+      justify-content: center;
+    }
+
+    .nav__link {
+      font-size: 13px;
+      color: var(--color-black);
+      opacity: 0.8;
+      transition: opacity var(--dur-fast);
+    }
+
+    .nav__link:hover { opacity: 1; }
+
+    .nav__actions {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      margin-left: auto;
+    }
+
+    .nav__sign-in {
+      display: none;
+      font-size: 13px;
+      color: var(--color-black);
+      opacity: 0.8;
+      padding: var(--space-2) var(--space-4);
+      transition: opacity var(--dur-fast);
+    }
+
+    .nav__sign-in:hover { opacity: 1; }
+
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px var(--space-5);
+      background: var(--color-blue);
+      color: var(--color-white);
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      transition: background var(--dur-fast), transform var(--dur-fast);
+      white-space: nowrap;
+    }
+
+    .btn-nav:hover { background: var(--color-blue-dark); }
+    .btn-nav:active { transform: scale(0.97); }
+
+    .nav__hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      padding: var(--space-2);
+      margin-left: var(--space-2);
+      aria-label: "Menu";
+    }
+
+    .nav__hamburger span {
+      display: block;
+      width: 22px;
+      height: 1.5px;
+      background: var(--color-black);
+      border-radius: 2px;
+      transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base);
+    }
+
+    .nav__hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .nav__hamburger.open span:nth-child(2) { opacity: 0; }
+    .nav__hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .nav__mobile {
+      display: none;
+      position: fixed;
+      top: var(--nav-height);
+      left: 0; right: 0;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: var(--space-5) var(--space-6);
+      border-top: 1px solid var(--color-gray-100);
+      flex-direction: column;
+      gap: 0;
+      z-index: calc(var(--z-nav) - 1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+    }
+
+    .nav__mobile.open { display: flex; }
+
+    .nav__mobile-link {
+      font-size: 17px;
+      color: var(--color-black);
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--color-gray-100);
+      display: block;
+    }
+
+    .nav__mobile-link:last-of-type { border-bottom: none; }
+
+    @media (min-width: 768px) {
+      .nav__links { display: flex; }
+      .nav__sign-in { display: block; }
+      .nav__hamburger { display: none; }
+    }
+
+    /* ===================== HERO ===================== */
+    .hero {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: calc(var(--nav-height) + var(--space-20)) var(--space-6) var(--space-24);
+    }
+
+    .hero__overline {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 6px var(--space-4);
+      border: 1px solid var(--color-gray-100);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-gray-500);
+      margin-bottom: var(--space-8);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+    }
+
+    .hero__overline.visible { opacity: 1; transform: translateY(0); }
+
+    .hero__dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-success);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .hero__headline {
+      font-size: clamp(52px, 8vw, 96px);
+      font-weight: 700;
+      line-height: 1.03;
+      letter-spacing: -0.015em;
+      color: var(--color-black);
+      max-width: 820px;
+      margin-bottom: var(--space-6);
+    }
+
+    .hero__headline .word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s var(--ease-out), transform 0.5s var(--ease-out);
+    }
+
+    .hero__headline .word.visible { opacity: 1; transform: translateY(0); }
+    .hero__headline .accent { color: var(--color-blue); }
+
+    .hero__subhead {
+      font-size: 21px;
+      line-height: 1.6;
+      color: var(--color-gray-500);
+      max-width: 520px;
+      margin: 0 auto var(--space-10);
+      letter-spacing: 0.012em;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity var(--dur-slow) var(--ease-out) 0.4s, transform var(--dur-slow) var(--ease-out) 0.4s;
+    }
+
+    .hero__subhead.visible { opacity: 1; transform: translateY(0); }
+
+    .hero__ctas {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: var(--space-20);
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity var(--dur-slow) var(--ease-out) 0.56s, transform var(--dur-slow) var(--ease-out) 0.56s;
+    }
+
+    .hero__ctas.visible { opacity: 1; transform: translateY(0); }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 16px var(--space-8);
+      background: var(--color-blue);
+      color: var(--color-white);
+      font-size: 17px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      transition: background var(--dur-fast), transform var(--dur-fast);
+    }
+
+    .btn-primary:hover { background: var(--color-blue-dark); }
+    .btn-primary:active { transform: scale(0.97); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 15px var(--space-8);
+      background: transparent;
+      color: var(--color-blue);
+      font-size: 17px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      border: 1.5px solid rgba(0, 113, 227, 0.3);
+      transition: border-color var(--dur-fast), background var(--dur-fast), transform var(--dur-fast);
+    }
+
+    .btn-ghost:hover { border-color: var(--color-blue); background: var(--color-blue-light); }
+    .btn-ghost:active { transform: scale(0.97); }
+
+    .hero__mockup-wrap {
+      width: 100%;
+      max-width: 880px;
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--dur-slow) var(--ease-out) 0.72s, transform var(--dur-slow) var(--ease-out) 0.72s;
+      will-change: transform;
+    }
+
+    .hero__mockup-wrap.visible { opacity: 1; transform: translateY(0); }
+
+    /* ---- Browser Mockup ---- */
+    .mockup {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-mockup);
+      border: 1px solid var(--color-gray-100);
+      background: var(--color-white);
+    }
+
+    .mockup__bar {
+      background: var(--color-gray-50);
+      padding: 10px var(--space-4);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      border-bottom: 1px solid var(--color-gray-100);
+    }
+
+    .mockup__dots { display: flex; gap: 6px; }
+    .mockup__dot { width: 10px; height: 10px; border-radius: 50%; }
+    .mockup__dot:nth-child(1) { background: #FF5F57; }
+    .mockup__dot:nth-child(2) { background: #FFBD2E; }
+    .mockup__dot:nth-child(3) { background: #28C840; }
+
+    .mockup__url {
+      flex: 1;
+      background: var(--color-white);
+      border-radius: var(--radius-sm);
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--color-gray-500);
+      max-width: 320px;
+      margin: 0 auto;
+      border: 1px solid var(--color-gray-100);
+      letter-spacing: 0;
+    }
+
+    .mockup__content {
+      display: grid;
+      grid-template-columns: 196px 1fr;
+      background: var(--color-white);
+      height: 360px;
+    }
+
+    .mockup__sidebar {
+      background: var(--color-gray-50);
+      border-right: 1px solid var(--color-gray-100);
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-1);
+    }
+
+    .mockup__sidebar-label {
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-gray-300);
+      padding: var(--space-3) var(--space-3) var(--space-2);
+    }
+
+    .mockup__nav-item {
+      padding: 7px var(--space-3);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--color-gray-500);
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+
+    .mockup__nav-item--active {
+      background: var(--color-white);
+      color: var(--color-blue);
+      font-weight: 500;
+      box-shadow: var(--shadow-card);
+    }
+
+    .mockup__nav-icon {
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      background: currentColor;
+      opacity: 0.4;
+    }
+
+    .mockup__nav-item--active .mockup__nav-icon { opacity: 1; }
+
+    .mockup__main {
+      padding: var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      overflow: hidden;
+    }
+
+    .mockup__topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .mockup__page-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-black);
+    }
+
+    .mockup__badge {
+      font-size: 10px;
+      background: var(--color-blue-light);
+      color: var(--color-blue);
+      padding: 3px var(--space-3);
+      border-radius: var(--radius-full);
+      font-weight: 500;
+    }
+
+    .mockup__stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3);
+    }
+
+    .mockup__stat {
+      background: var(--color-gray-50);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      border: 1px solid var(--color-gray-100);
+    }
+
+    .mockup__stat-label {
+      font-size: 9px;
+      color: var(--color-gray-500);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mockup__stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--color-black);
+      letter-spacing: -0.02em;
+    }
+
+    .mockup__stat-change {
+      font-size: 9px;
+      color: var(--color-success);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .mockup__chart-area {
+      background: var(--color-gray-50);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-gray-100);
+      flex: 1;
+      padding: var(--space-3) var(--space-4);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      min-height: 0;
+    }
+
+    .mockup__chart-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-black);
+    }
+
+    .mockup__chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      flex: 1;
+    }
+
+    .mockup__bar-item {
+      flex: 1;
+      background: var(--color-blue);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .mockup__bar-item:nth-child(1) { height: 45%; opacity: 0.15; }
+    .mockup__bar-item:nth-child(2) { height: 62%; opacity: 0.2; }
+    .mockup__bar-item:nth-child(3) { height: 55%; opacity: 0.18; }
+    .mockup__bar-item:nth-child(4) { height: 80%; opacity: 0.55; }
+    .mockup__bar-item:nth-child(5) { height: 68%; opacity: 0.40; }
+    .mockup__bar-item:nth-child(6) { height: 91%; opacity: 0.80; }
+    .mockup__bar-item:nth-child(7) { height: 100%; opacity: 1; }
+
+    @media (max-width: 640px) {
+      .mockup__content { grid-template-columns: 1fr; }
+      .mockup__sidebar { display: none; }
+      .mockup__stats { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ===================== SOCIAL PROOF ===================== */
+    .social-proof {
+      border-top: 1px solid var(--color-gray-100);
+      border-bottom: 1px solid var(--color-gray-100);
+      padding: var(--space-10) var(--space-6);
+      overflow: hidden;
+    }
+
+    .social-proof__label {
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-gray-300);
+      margin-bottom: var(--space-8);
+    }
+
+    .social-proof__logos {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .social-proof__item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 var(--space-10);
+      flex: 1;
+      color: var(--color-gray-300);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      transition: color var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .social-proof__item:not(:last-child) {
+      border-right: 1px solid var(--color-gray-100);
+    }
+
+    .social-proof__item:hover { color: var(--color-gray-700); }
+
+    @media (max-width: 768px) {
+      .social-proof__logos {
+        animation: marquee 22s linear infinite;
+        width: max-content;
+        justify-content: flex-start;
+      }
+      .social-proof__item {
+        flex: 0 0 auto;
+        padding: 0 var(--space-8);
+        border-right: 1px solid var(--color-gray-100);
+      }
+    }
+
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    /* ===================== SECTION BASE ===================== */
+    .section { padding: var(--space-32) var(--space-6); }
+
+    .section__inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+    }
+
+    .section__header {
+      text-align: center;
+      margin-bottom: var(--space-16);
+    }
+
+    .section__overline {
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--color-blue);
+      margin-bottom: var(--space-4);
+    }
+
+    .section__title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.07;
+      color: var(--color-black);
+      margin-bottom: var(--space-5);
+    }
+
+    .section__body {
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--color-gray-500);
+      max-width: 540px;
+      margin: 0 auto;
+      letter-spacing: 0.012em;
+    }
+
+    /* Reveal */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+    }
+
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ===================== FEATURES BENTO ===================== */
+    .features { background: var(--color-gray-50); }
+
+    .bento {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 768px) {
+      .bento { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (min-width: 1024px) {
+      .bento { grid-template-columns: repeat(3, 1fr); }
+      .bento__card--wide { grid-column: span 2; }
+    }
+
+    .bento__card {
+      background: var(--color-white);
+      border-radius: var(--radius-2xl);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out), opacity var(--dur-slow) var(--ease-out);
+      opacity: 0;
+      transform: scale(0.97);
+    }
+
+    .bento__card.visible { opacity: 1; transform: scale(1); }
+    .bento__card:hover { transform: translateY(-2px) scale(1); box-shadow: var(--shadow-hover); }
+
+    .bento__icon {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-blue-light);
+      border-radius: var(--radius-lg);
+      color: var(--color-blue);
+      flex-shrink: 0;
+    }
+
+    .bento__title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      color: var(--color-black);
+    }
+
+    .bento__body {
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--color-gray-500);
+      flex: 1;
+    }
+
+    .bento__card--wide {
+      flex-direction: row;
+      align-items: center;
+      gap: var(--space-10);
+    }
+
+    .bento__card--wide .bento__text { flex: 1; display: flex; flex-direction: column; gap: var(--space-5); }
+
+    .bento__visual {
+      flex: 1;
+      min-height: 160px;
+      background: linear-gradient(135deg, var(--color-blue-light) 0%, rgba(0,113,227,0.03) 100%);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .schedule-preview {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 5px;
+      padding: var(--space-5);
+      width: 100%;
+      height: 160px;
+    }
+
+    .schedule-preview__cell {
+      border-radius: 4px;
+      background: rgba(0, 113, 227, 0.08);
+    }
+
+    .schedule-preview__cell--a { background: var(--color-blue); opacity: 0.85; }
+    .schedule-preview__cell--b { background: var(--color-blue); opacity: 0.55; }
+    .schedule-preview__cell--c { background: var(--color-blue); opacity: 0.35; }
+
+    @media (max-width: 768px) {
+      .bento__card--wide { flex-direction: column; }
+    }
+
+    /* ===================== STATEMENT ===================== */
+    .statement {
+      background: var(--color-black);
+      padding: var(--space-32) var(--space-6);
+    }
+
+    .statement__inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .statement__eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      margin-bottom: var(--space-8);
+    }
+
+    .statement__quote {
+      font-size: clamp(30px, 5vw, 52px);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+      color: var(--color-white);
+      margin-bottom: var(--space-8);
+    }
+
+    .statement__quote em {
+      font-style: normal;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .statement__source {
+      font-size: 15px;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ===================== HOW IT WORKS ===================== */
+    .how-it-works { background: var(--color-white); }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-10);
+    }
+
+    @media (min-width: 768px) {
+      .steps { flex-direction: row; gap: 0; align-items: flex-start; }
+    }
+
+    .step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      padding: 0 var(--space-6);
+    }
+
+    @media (min-width: 768px) {
+      .step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 20px;
+        left: calc(50% + 28px);
+        right: calc(-50% + 28px);
+        height: 1px;
+        background: linear-gradient(to right, var(--color-gray-200), var(--color-gray-100));
+      }
+    }
+
+    .step__number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1.5px solid var(--color-gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-blue);
+      background: var(--color-white);
+      margin-bottom: var(--space-6);
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    .step__title {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--color-black);
+      margin-bottom: var(--space-3);
+      letter-spacing: -0.005em;
+    }
+
+    .step__desc {
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--color-gray-500);
+    }
+
+    /* ===================== TESTIMONIALS ===================== */
+    .testimonials { background: var(--color-gray-50); }
+
+    .testimonials__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    @media (min-width: 768px) {
+      .testimonials__grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .t-card {
+      background: var(--color-white);
+      border-radius: var(--radius-2xl);
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base);
+    }
+
+    .t-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+
+    .t-card__stars { display: flex; gap: 3px; }
+
+    .t-card__star { color: var(--color-blue); font-size: 13px; }
+
+    .t-card__quote {
+      font-size: 16px;
+      line-height: 1.65;
+      color: var(--color-black);
+      font-style: italic;
+      flex: 1;
+    }
+
+    .t-card__author { display: flex; align-items: center; gap: var(--space-3); }
+
+    .t-card__avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-white);
+      flex-shrink: 0;
+    }
+
+    .av-blue   { background: var(--color-blue); }
+    .av-green  { background: #34C759; }
+    .av-purple { background: #AF52DE; }
+    .av-orange { background: #FF9500; }
+
+    .t-card__name { font-size: 14px; font-weight: 600; color: var(--color-black); }
+    .t-card__role { font-size: 13px; color: var(--color-gray-500); }
+
+    /* ===================== PRICING ===================== */
+    .pricing { background: var(--color-white); }
+
+    .pricing__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    @media (min-width: 768px) {
+      .pricing__grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .p-card {
+      border-radius: var(--radius-2xl);
+      border: 1px solid var(--color-gray-100);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-6);
+      position: relative;
+      transition: transform var(--dur-base) var(--ease-out);
+    }
+
+    .p-card:hover { transform: translateY(-2px); }
+    .p-card--popular { border-color: var(--color-blue); }
+
+    .p-card__badge {
+      position: absolute;
+      top: -13px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-blue);
+      color: var(--color-white);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 4px var(--space-4);
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+
+    .p-card__name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-black);
+    }
+
+    .p-card__price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+
+    .p-card__amount {
+      font-size: 48px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-black);
+    }
+
+    .p-card__period { font-size: 15px; color: var(--color-gray-500); }
+
+    .p-card__desc { font-size: 14px; color: var(--color-gray-500); line-height: 1.5; }
+
+    .p-card__divider { height: 1px; background: var(--color-gray-100); }
+
+    .p-card__features { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; }
+
+    .p-card__feature {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+      font-size: 14px;
+      color: var(--color-black);
+      line-height: 1.4;
+    }
+
+    .p-card__check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--color-blue-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .p-card__check svg { width: 10px; height: 10px; stroke: var(--color-blue); }
+
+    .btn-pricing {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      transition: all var(--dur-fast) var(--ease-out), transform var(--dur-fast);
+    }
+
+    .btn-pricing:active { transform: scale(0.97); }
+    .btn-pricing--outline { border: 1.5px solid var(--color-gray-200); color: var(--color-black); }
+    .btn-pricing--outline:hover { border-color: var(--color-gray-700); }
+    .btn-pricing--filled { background: var(--color-blue); color: var(--color-white); }
+    .btn-pricing--filled:hover { background: var(--color-blue-dark); }
+    .btn-pricing--dark { background: var(--color-black); color: var(--color-white); }
+    .btn-pricing--dark:hover { background: var(--color-gray-700); }
+
+    /* ===================== FAQ ===================== */
+    .faq { background: var(--color-gray-50); }
+
+    .faq__list {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .faq__item { border-bottom: 1px solid var(--color-gray-100); }
+    .faq__item:first-child { border-top: 1px solid var(--color-gray-100); }
+
+    .faq__trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      padding: var(--space-6) 0;
+      text-align: left;
+    }
+
+    .faq__question {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--color-black);
+      line-height: 1.4;
+    }
+
+    .faq__chevron {
+      width: 20px;
+      height: 20px;
+      color: var(--color-gray-300);
+      flex-shrink: 0;
+      transition: transform var(--dur-base) var(--ease-out), color var(--dur-base);
+    }
+
+    .faq__item--open .faq__chevron {
+      transform: rotate(180deg);
+      color: var(--color-blue);
+    }
+
+    .faq__answer-wrap {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows var(--dur-slow) var(--ease-out);
+    }
+
+    .faq__item--open .faq__answer-wrap { grid-template-rows: 1fr; }
+
+    .faq__answer-inner { overflow: hidden; }
+
+    .faq__answer {
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--color-gray-500);
+      padding-bottom: var(--space-6);
+    }
+
+    /* ===================== CTA BANNER ===================== */
+    .cta-banner {
+      background: var(--color-black);
+      padding: var(--space-32) var(--space-6);
+      text-align: center;
+    }
+
+    .cta-banner__inner { max-width: 600px; margin: 0 auto; }
+
+    .cta-banner__title {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.015em;
+      line-height: 1.06;
+      color: var(--color-white);
+      margin-bottom: var(--space-5);
+    }
+
+    .cta-banner__sub {
+      font-size: 19px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.55;
+      margin-bottom: var(--space-10);
+      letter-spacing: 0.012em;
+    }
+
+    .btn-primary--white {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 16px var(--space-10);
+      background: var(--color-white);
+      color: var(--color-black);
+      font-size: 17px;
+      font-weight: 500;
+      border-radius: var(--radius-full);
+      transition: background var(--dur-fast), transform var(--dur-fast);
+    }
+
+    .btn-primary--white:hover { background: var(--color-gray-100); }
+    .btn-primary--white:active { transform: scale(0.97); }
+
+    /* ===================== FOOTER ===================== */
+    .footer {
+      background: var(--color-black);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: var(--space-20) var(--space-6) var(--space-12);
+    }
+
+    .footer__inner { max-width: var(--max-width); margin: 0 auto; }
+
+    .footer__grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-12);
+      margin-bottom: var(--space-16);
+    }
+
+    @media (min-width: 640px) {
+      .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--space-8); }
+    }
+
+    .footer__logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--color-white);
+      display: block;
+      margin-bottom: var(--space-4);
+    }
+
+    .footer__logo span { color: var(--color-blue); }
+
+    .footer__brand-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.38);
+      line-height: 1.65;
+      max-width: 240px;
+    }
+
+    .footer__col-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: var(--space-5);
+    }
+
+    .footer__links { display: flex; flex-direction: column; gap: var(--space-3); }
+
+    .footer__link {
+      font-size: 14px;
+      color: rgba(255,255,255,0.55);
+      transition: color var(--dur-fast);
+    }
+
+    .footer__link:hover { color: var(--color-white); }
+
+    .footer__bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      padding-top: var(--space-8);
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .footer__copy { font-size: 13px; color: rgba(255,255,255,0.25); }
+
+    .footer__legal { display: flex; gap: var(--space-6); }
+
+    .footer__legal a {
+      font-size: 13px;
+      color: rgba(255,255,255,0.25);
+      transition: color var(--dur-fast);
+    }
+
+    .footer__legal a:hover { color: rgba(255,255,255,0.55); }
+  </style>
+</head>
+<body>
+
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <!-- ===================== NAV ===================== -->
+  <nav class="nav" id="nav" aria-label="Main navigation">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo" aria-label="Moujtahid home">Moujtahid<span>.</span></a>
+
+      <div class="nav__links" role="list">
+        <a href="#features" class="nav__link" role="listitem">Features</a>
+        <a href="#how-it-works" class="nav__link" role="listitem">How it works</a>
+        <a href="#pricing" class="nav__link" role="listitem">Pricing</a>
+        <a href="#faq" class="nav__link" role="listitem">FAQ</a>
+      </div>
+
+      <div class="nav__actions">
+        <a href="#" class="nav__sign-in">Sign in</a>
+        <a href="#" class="btn-nav">Get started</a>
+        <button class="nav__hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav__mobile" id="mobile-menu" role="dialog" aria-label="Mobile menu">
+      <a href="#features" class="nav__mobile-link">Features</a>
+      <a href="#how-it-works" class="nav__mobile-link">How it works</a>
+      <a href="#pricing" class="nav__mobile-link">Pricing</a>
+      <a href="#faq" class="nav__mobile-link">FAQ</a>
+      <a href="#" class="nav__mobile-link"></a>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" aria-label="Hero">
+      <p class="hero__overline" id="hero-overline">
+        <span class="hero__dot" aria-hidden="true"></span>
+        Now in Public Beta &middot; Free to start
+      </p>
+
+      <h1 class="hero__headline" id="hero-headline" aria-label="Run your centre with precision">
+        <!-- Words injected by JS -->
+      </h1>
+
+      <p class="hero__subhead" id="hero-subhead">
+        Moujtahid unifies scheduling, attendance, payments, and analytics &mdash; so you can focus on teaching, not administration.
+      </p>
+
+      <div class="hero__ctas" id="hero-ctas">
+        <a href="#" class="btn-primary" aria-label="Start for free">
+          Start for free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+        <a href="#how-it-works" class="btn-ghost">See how it works</a>
+      </div>
+
+      <div class="hero__mockup-wrap" id="hero-mockup" aria-hidden="true">
+        <div class="mockup" role="img" aria-label="Moujtahid dashboard preview">
+          <!-- Browser chrome -->
+          <div class="mockup__bar">
+            <div class="mockup__dots">
+              <div class="mockup__dot"></div>
+              <div class="mockup__dot"></div>
+              <div class="mockup__dot"></div>
+            </div>
+            <div class="mockup__url">app.moujtahid.ma/dashboard</div>
+          </div>
+
+          <!-- Dashboard layout -->
+          <div class="mockup__content">
+            <aside class="mockup__sidebar">
+              <span class="mockup__sidebar-label">Menu</span>
+              <div class="mockup__nav-item mockup__nav-item--active">
+                <div class="mockup__nav-icon" style="border-radius:50%"></div>
+                Dashboard
+              </div>
+              <div class="mockup__nav-item">
+                <div class="mockup__nav-icon"></div>
+                Schedule
+              </div>
+              <div class="mockup__nav-item">
+                <div class="mockup__nav-icon" style="border-radius:50%"></div>
+                Students
+              </div>
+              <div class="mockup__nav-item">
+                <div class="mockup__nav-icon"></div>
+                Attendance
+              </div>
+              <div class="mockup__nav-item">
+                <div class="mockup__nav-icon" style="border-radius:2px"></div>
+                Payments
+              </div>
+              <div class="mockup__nav-item">
+                <div class="mockup__nav-icon"></div>
+                Reports
+              </div>
+            </aside>
+
+            <div class="mockup__main">
+              <div class="mockup__topbar">
+                <span class="mockup__page-title">Overview &mdash; June 2025</span>
+                <span class="mockup__badge">All branches</span>
+              </div>
+
+              <div class="mockup__stats">
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Students</div>
+                  <div class="mockup__stat-value">248</div>
+                  <div class="mockup__stat-change">&#x25B2; 12 this month</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Attendance</div>
+                  <div class="mockup__stat-value">94%</div>
+                  <div class="mockup__stat-change">&#x25B2; 2.1%</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Revenue</div>
+                  <div class="mockup__stat-value" style="font-size:16px;">34.2K</div>
+                  <div class="mockup__stat-change">&#x25B2; MAD</div>
+                </div>
+                <div class="mockup__stat">
+                  <div class="mockup__stat-label">Teachers</div>
+                  <div class="mockup__stat-value">12</div>
+                  <div class="mockup__stat-change" style="color:var(--color-gray-300);">Active</div>
+                </div>
+              </div>
+
+              <div class="mockup__chart-area">
+                <div class="mockup__chart-title">Weekly attendance &mdash; last 7 weeks</div>
+                <div class="mockup__chart-bars" aria-hidden="true">
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                  <div class="mockup__bar-item"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SOCIAL PROOF ===================== -->
+    <div class="social-proof" aria-label="Trusted by education centres">
+      <p class="social-proof__label">Trusted by education centres across Morocco and beyond</p>
+      <div class="social-proof__logos" aria-hidden="true">
+        <!-- Duplicated for seamless marquee on mobile -->
+        <div class="social-proof__item">Académie Lumière</div>
+        <div class="social-proof__item">Atlas Prep</div>
+        <div class="social-proof__item">Étoile Formation</div>
+        <div class="social-proof__item">Centre Ibn Khaldoun</div>
+        <div class="social-proof__item">Dar Taalim</div>
+        <!-- Duplicate for loop -->
+        <div class="social-proof__item" aria-hidden="true">Académie Lumière</div>
+        <div class="social-proof__item" aria-hidden="true">Atlas Prep</div>
+        <div class="social-proof__item" aria-hidden="true">Étoile Formation</div>
+        <div class="social-proof__item" aria-hidden="true">Centre Ibn Khaldoun</div>
+        <div class="social-proof__item" aria-hidden="true">Dar Taalim</div>
+      </div>
+    </div>
+
+    <!-- ===================== FEATURES ===================== -->
+    <section class="section features" id="features" aria-labelledby="features-title">
+      <div class="section__inner">
+        <header class="section__header reveal">
+          <p class="section__overline">Everything you need</p>
+          <h2 class="section__title" id="features-title">Built for how centres actually work</h2>
+          <p class="section__body">Every feature was shaped by conversations with centre directors, teachers, and administrators who were tired of patching together spreadsheets.</p>
+        </header>
+
+        <div class="bento">
+
+          <!-- Wide card: Scheduling -->
+          <article class="bento__card bento__card--wide" aria-labelledby="feat-scheduling">
+            <div class="bento__text">
+              <div class="bento__icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="18" height="17" rx="3"/>
+                  <path d="M2 8h18M7 2v2M15 2v2"/>
+                </svg>
+              </div>
+              <h3 class="bento__title" id="feat-scheduling">Smart Scheduling</h3>
+              <p class="bento__body">Drag-and-drop timetabling that automatically resolves room conflicts, teacher overlaps, and student clashes. What used to take a full day now takes ten minutes.</p>
+            </div>
+            <div class="bento__visual" aria-hidden="true">
+              <div class="schedule-preview">
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--c"></div>
+                <div class="schedule-preview__cell"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--b"></div>
+                <div class="schedule-preview__cell schedule-preview__cell--a"></div>
+                <div class="schedule-preview__cell"></div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Attendance -->
+          <article class="bento__card" aria-labelledby="feat-attendance">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M2 20c0-4 3.1-7 7-7M17 14l-3 3 1.5 1.5L20 14"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-attendance">Attendance Tracking</h3>
+            <p class="bento__body">One tap per student to mark present or absent. Automated SMS alerts reach parents the moment their child doesn't show up. No more phone-call chains.</p>
+          </article>
+
+          <!-- Payments -->
+          <article class="bento__card" aria-labelledby="feat-payments">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="18" height="13" rx="2"/>
+                <path d="M2 10h18M6 14h2"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-payments">Payment Management</h3>
+            <p class="bento__body">Automated invoicing, online payment links, and real-time revenue tracking. Know exactly who has paid, who hasn't, and how much is coming next month.</p>
+          </article>
+
+          <!-- Analytics -->
+          <article class="bento__card" aria-labelledby="feat-analytics">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 17l4-6 4 3 4-8"/>
+                <circle cx="4" cy="17" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="8" cy="11" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="12" cy="14" r="1.5" fill="currentColor" stroke="none"/>
+                <circle cx="16" cy="6" r="1.5" fill="currentColor" stroke="none"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-analytics">Learning Analytics</h3>
+            <p class="bento__body">Per-student progress dashboards that highlight who is improving and who needs intervention. Insight your teachers will actually act on.</p>
+          </article>
+
+          <!-- Communication -->
+          <article class="bento__card" aria-labelledby="feat-comms">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 4h14a2 2 0 012 2v8a2 2 0 01-2 2H8l-4 3V6a2 2 0 012-2z"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-comms">Parent Communication</h3>
+            <p class="bento__body">Announcements, progress reports, and direct messages delivered in seconds. Parents stay informed, and your staff stops fielding repeat calls.</p>
+          </article>
+
+          <!-- Multi-branch -->
+          <article class="bento__card" aria-labelledby="feat-branch">
+            <div class="bento__icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="5" r="2"/>
+                <circle cx="4" cy="17" r="2"/>
+                <circle cx="18" cy="17" r="2"/>
+                <path d="M11 7v4m0 4l-5 2m10-2l-5-2"/>
+              </svg>
+            </div>
+            <h3 class="bento__title" id="feat-branch">Multi-Branch Support</h3>
+            <p class="bento__body">Manage every location from a single unified dashboard. Compare performance across branches, transfer students, and standardise processes centre-wide.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== STATEMENT ===================== */
+    <section class="statement" aria-label="Product promise">
+      <div class="statement__inner reveal">
+        <p class="statement__eyebrow">Our belief</p>
+        <h2 class="statement__quote">
+          Great education happens in the classroom.<br>
+          <em>Everything else should take care of itself.</em>
+        </h2>
+        <p class="statement__source">The principle behind every decision at Moujtahid.</p>
+      </div>
+    </section>
+
+    <!-- ===================== HOW IT WORKS ===================== -->
+    <section class="section how-it-works" id="how-it-works" aria-labelledby="hiw-title">
+      <div class="section__inner">
+        <header class="section__header reveal">
+          <p class="section__overline">Simple by design</p>
+          <h2 class="section__title" id="hiw-title">Up and running in an afternoon</h2>
+          <p class="section__body">No training sessions. No IT consultants. No migration headaches. Just a straightforward setup that gets out of your way.</p>
+        </header>
+
+        <div class="steps">
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">1</div>
+            <h3 class="step__title">Set up your centre</h3>
+            <p class="step__desc">Add your subjects, rooms, teachers, and students in minutes using our guided onboarding flow or bulk import.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">2</div>
+            <h3 class="step__title">Run your schedule</h3>
+            <p class="step__desc">Smart timetabling handles conflicts, substitutions, and room assignments automatically — with one click.</p>
+          </div>
+          <div class="step reveal">
+            <div class="step__number" aria-hidden="true">3</div>
+            <h3 class="step__title">Watch it thrive</h3>
+            <p class="step__desc">Real-time analytics keep you informed and parents engaged, session after session, month after month.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TESTIMONIALS ===================== -->
+    <section class="section testimonials" aria-labelledby="testimonials-title">
+      <div class="section__inner">
+        <header class="section__header reveal">
+          <p class="section__overline">From our customers</p>
+          <h2 class="section__title" id="testimonials-title">Centres that made the switch</h2>
+        </header>
+
+        <div class="testimonials__grid">
+
+          <article class="t-card reveal" aria-label="Testimonial from Fatima Zahra M.">
+            <div class="t-card__stars" aria-label="5 stars">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &ldquo;Moujtahid saved us twelve hours a week on scheduling alone. The attendance alerts are a game-changer &mdash; parents actually thank us for keeping them informed.&rdquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-blue" aria-hidden="true">FZ</div>
+              <div>
+                <div class="t-card__name">Fatima Zahra M.</div>
+                <div class="t-card__role">Director, Académie Lumière &mdash; Casablanca</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card reveal" aria-label="Testimonial from Youssef B.">
+            <div class="t-card__stars" aria-label="5 stars">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &ldquo;We went from paper registers to a real-time dashboard in a single afternoon. The onboarding was painless and the team was available every step of the way.&rdquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-green" aria-hidden="true">YB</div>
+              <div>
+                <div class="t-card__name">Youssef B.</div>
+                <div class="t-card__role">Principal, Atlas Prep Centre &mdash; Rabat</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card reveal" aria-label="Testimonial from Nadia O.">
+            <div class="t-card__stars" aria-label="5 stars">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &ldquo;Payment reconciliation used to occupy our accountant for an entire day. With Moujtahid it is automated, accurate to the dirham, and takes under five minutes to review.&rdquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-purple" aria-hidden="true">NO</div>
+              <div>
+                <div class="t-card__name">Nadia O.</div>
+                <div class="t-card__role">Manager, Étoile Formation &mdash; Marrakech</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="t-card reveal" aria-label="Testimonial from Omar K.">
+            <div class="t-card__stars" aria-label="5 stars">
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+              <span class="t-card__star" aria-hidden="true">&#9733;</span>
+            </div>
+            <blockquote class="t-card__quote">
+              &ldquo;The analytics gave us insights we never had before. We can now identify which students need extra support weeks before exam season &mdash; and actually do something about it.&rdquo;
+            </blockquote>
+            <div class="t-card__author">
+              <div class="t-card__avatar av-orange" aria-hidden="true">OK</div>
+              <div>
+                <div class="t-card__name">Omar K.</div>
+                <div class="t-card__role">Founder, Centre Avenir &mdash; Fès</div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== PRICING ===================== -->
+    <section class="section pricing" id="pricing" aria-labelledby="pricing-title">
+      <div class="section__inner">
+        <header class="section__header reveal">
+          <p class="section__overline">Transparent pricing</p>
+          <h2 class="section__title" id="pricing-title">No surprises. Ever.</h2>
+          <p class="section__body">Start free, scale when you&rsquo;re ready. Every plan includes full data ownership and a 30-day money-back guarantee.</p>
+        </header>
+
+        <div class="pricing__grid">
+
+          <div class="p-card reveal" aria-labelledby="plan-starter">
+            <div>
+              <h3 class="p-card__name" id="plan-starter">Starter</h3>
+              <div class="p-card__price">
+                <span class="p-card__amount">Free</span>
+              </div>
+              <p class="p-card__desc">For centres just getting started. No credit card required, ever.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Up to 50 students
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                5 teacher accounts
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Basic scheduling
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Attendance tracking
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Email support
+              </li>
+            </ul>
+            <a href="#" class="btn-pricing btn-pricing--outline">Get started free</a>
+          </div>
+
+          <div class="p-card p-card--popular reveal" aria-labelledby="plan-pro" aria-describedby="plan-pro-badge">
+            <div class="p-card__badge" id="plan-pro-badge">Most Popular</div>
+            <div>
+              <h3 class="p-card__name" id="plan-pro">Pro</h3>
+              <div class="p-card__price">
+                <span class="p-card__amount">$29</span>
+                <span class="p-card__period">/month</span>
+              </div>
+              <p class="p-card__desc">For growing centres that need the full picture. Billed monthly, cancel anytime.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Up to 300 students
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Unlimited teacher accounts
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Smart scheduling &amp; conflict detection
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Payments &amp; invoicing
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Advanced analytics
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Priority support
+              </li>
+            </ul>
+            <a href="#" class="btn-pricing btn-pricing--filled">Start 30-day trial</a>
+          </div>
+
+          <div class="p-card reveal" aria-labelledby="plan-enterprise">
+            <div>
+              <h3 class="p-card__name" id="plan-enterprise">Enterprise</h3>
+              <div class="p-card__price">
+                <span class="p-card__amount" style="font-size:32px;">Custom</span>
+              </div>
+              <p class="p-card__desc">For networks of centres with complex requirements and dedicated support needs.</p>
+            </div>
+            <div class="p-card__divider" aria-hidden="true"></div>
+            <ul class="p-card__features">
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Unlimited students &amp; teachers
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Multi-branch management
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Custom integrations &amp; API
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                Dedicated account manager
+              </li>
+              <li class="p-card__feature">
+                <div class="p-card__check" aria-hidden="true">
+                  <svg viewBox="0 0 10 10" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5l2.5 2.5L8 3"/></svg>
+                </div>
+                SLA &amp; uptime guarantee
+              </li>
+            </ul>
+            <a href="#" class="btn-pricing btn-pricing--dark">Contact sales</a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section class="section faq" id="faq" aria-labelledby="faq-title">
+      <div class="section__inner">
+        <header class="section__header reveal">
+          <p class="section__overline">Common questions</p>
+          <h2 class="section__title" id="faq-title">Everything you need to know</h2>
+        </header>
+
+        <div class="faq__list" role="list">
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-1-answer">
+              <span class="faq__question">Is my data secure?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-1-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">Yes. All data is encrypted at rest using AES-256 and in transit via TLS 1.3. We perform automated nightly backups and store them in geographically separated locations. Moujtahid is fully GDPR-compliant and we never sell or share your data with third parties.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-2-answer">
+              <span class="faq__question">Can I migrate from another system?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-2-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">Absolutely. Our onboarding team handles the full migration — student records, payment history, and schedule data — at no extra cost for all paid plans. For Starter accounts, we provide detailed import templates and documentation to make the process straightforward.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-3-answer">
+              <span class="faq__question">How long does setup take?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-3-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">Most centres are fully operational within a single afternoon. The guided onboarding flow walks you through adding your subjects, rooms, teachers, and students step by step. Average first-session setup time is under two hours — including importing existing data.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-4-answer">
+              <span class="faq__question">Is there a mobile app?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-4-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">Yes. Moujtahid is available on iOS and Android. Teachers take attendance directly from their phones, parents receive real-time reports and alerts, and administrators can monitor the centre from anywhere. The web platform is also fully responsive for any browser.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-5-answer">
+              <span class="faq__question">Can I try it before committing to a paid plan?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-5-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">Yes. The Starter plan is free forever with no credit card required. The Pro plan includes a 30-day free trial — full features, no restrictions, no billing until day 31. If you are not completely satisfied, we issue a full refund within 30 days, no questions asked.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="faq__item" role="listitem">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-6-answer">
+              <span class="faq__question">What happens if I exceed my student limit?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-6-answer" role="region">
+              <div class="faq__answer-inner">
+                <p class="faq__answer">We will notify you by email when you reach 80% of your limit so you have plenty of time to plan. Upgrading is instant — your data is never locked or affected. We will never cut off access without advance warning.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== CTA BANNER ===================== -->
+    <section class="cta-banner" aria-labelledby="cta-title">
+      <div class="cta-banner__inner reveal">
+        <h2 class="cta-banner__title" id="cta-title">Your centre deserves better tools.</h2>
+        <p class="cta-banner__sub">Join hundreds of education centres already running on Moujtahid. Free to start, ready in hours.</p>
+        <a href="#" class="btn-primary--white" aria-label="Start for free">
+          Start for free
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer__inner">
+      <div class="footer__grid">
+        <div>
+          <a href="#" class="footer__logo">Moujtahid<span>.</span></a>
+          <p class="footer__brand-desc">The all-in-one platform for education centre management. Built in Morocco, used across the region.</p>
+        </div>
+
+        <div>
+          <p class="footer__col-title">Product</p>
+          <ul class="footer__links">
+            <li><a href="#features" class="footer__link">Features</a></li>
+            <li><a href="#pricing" class="footer__link">Pricing</a></li>
+            <li><a href="#" class="footer__link">Changelog</a></li>
+            <li><a href="#" class="footer__link">Roadmap</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="footer__col-title">Company</p>
+          <ul class="footer__links">
+            <li><a href="#" class="footer__link">About</a></li>
+            <li><a href="#" class="footer__link">Blog</a></li>
+            <li><a href="#" class="footer__link">Careers</a></li>
+            <li><a href="#" class="footer__link">Press</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <p class="footer__col-title">Support</p>
+          <ul class="footer__links">
+            <li><a href="#" class="footer__link">Help Centre</a></li>
+            <li><a href="#" class="footer__link">Contact</a></li>
+            <li><a href="#" class="footer__link">Status</a></li>
+            <li><a href="#faq" class="footer__link">FAQ</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <p class="footer__copy">&copy; 2025 Moujtahid. All rights reserved.</p>
+        <div class="footer__legal">
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    /* ===================== MODULE: NAV ===================== */
+    (function () {
+      const nav = document.getElementById('nav');
+      const hamburger = document.getElementById('hamburger');
+      const mobileMenu = document.getElementById('mobile-menu');
+      let menuOpen = false;
+
+      /* Shadow on scroll */
+      const onScroll = () => {
+        nav.classList.toggle('nav--scrolled', window.scrollY > 80);
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      /* Hamburger toggle */
+      hamburger.addEventListener('click', () => {
+        menuOpen = !menuOpen;
+        hamburger.classList.toggle('open', menuOpen);
+        mobileMenu.classList.toggle('open', menuOpen);
+        hamburger.setAttribute('aria-expanded', String(menuOpen));
+      });
+
+      /* Close mobile menu on link click */
+      mobileMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+          menuOpen = false;
+          hamburger.classList.remove('open');
+          mobileMenu.classList.remove('open');
+          hamburger.setAttribute('aria-expanded', 'false');
+        });
+      });
+    })();
+
+    /* ===================== MODULE: HERO ANIMATE ===================== */
+    (function () {
+      const words = ['Run', 'your', 'centre', '\n', 'with', 'precision.'];
+      const headline = document.getElementById('hero-headline');
+
+      headline.innerHTML = words.map((w, i) => {
+        if (w === '\n') return '<br>';
+        const isAccent = w === 'precision.';
+        return `<span class="word${isAccent ? ' accent' : ''}" style="transition-delay:${i * 60}ms">${w}&nbsp;</span>`;
+      }).join('');
+
+      /* Trigger after short delay to ensure paint */
+      setTimeout(() => {
+        document.getElementById('hero-overline').classList.add('visible');
+
+        setTimeout(() => {
+          headline.querySelectorAll('.word').forEach(w => w.classList.add('visible'));
+        }, 80);
+
+        setTimeout(() => {
+          document.getElementById('hero-subhead').classList.add('visible');
+          document.getElementById('hero-ctas').classList.add('visible');
+          document.getElementById('hero-mockup').classList.add('visible');
+        }, 160);
+      }, 60);
+    })();
+
+    /* ===================== MODULE: INTERSECTION REVEAL ===================== */
+    (function () {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            const delay = entry.target.dataset.delay || 0;
+            setTimeout(() => {
+              entry.target.classList.add('visible');
+            }, Number(delay));
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12, rootMargin: '0px 0px -48px 0px' });
+
+      /* Stagger bento cards */
+      document.querySelectorAll('.bento__card').forEach((card, i) => {
+        card.dataset.delay = i * 80;
+        observer.observe(card);
+      });
+
+      /* All other reveal elements */
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        observer.observe(el);
+      });
+
+      /* Stagger steps */
+      document.querySelectorAll('.step').forEach((step, i) => {
+        step.dataset.delay = i * 100;
+        observer.observe(step);
+      });
+
+      /* Stagger testimonials */
+      document.querySelectorAll('.t-card').forEach((card, i) => {
+        card.dataset.delay = i * 80;
+        observer.observe(card);
+      });
+
+      /* Stagger pricing cards */
+      document.querySelectorAll('.p-card').forEach((card, i) => {
+        card.dataset.delay = i * 80;
+        observer.observe(card);
+      });
+    })();
+
+    /* ===================== MODULE: FAQ ACCORDION ===================== */
+    (function () {
+      document.querySelectorAll('.faq__trigger').forEach(trigger => {
+        trigger.addEventListener('click', () => {
+          const item = trigger.closest('.faq__item');
+          const isOpen = item.classList.contains('faq__item--open');
+
+          /* Close all */
+          document.querySelectorAll('.faq__item').forEach(i => {
+            i.classList.remove('faq__item--open');
+            i.querySelector('.faq__trigger').setAttribute('aria-expanded', 'false');
+          });
+
+          /* Open clicked if was closed */
+          if (!isOpen) {
+            item.classList.add('faq__item--open');
+            trigger.setAttribute('aria-expanded', 'true');
+          }
+        });
+      });
+    })();
+
+    /* ===================== MODULE: PARALLAX MOCKUP ===================== */
+    (function () {
+      const mockup = document.getElementById('hero-mockup');
+      if (!mockup) return;
+
+      let ticking = false;
+
+      const onScroll = () => {
+        if (!ticking) {
+          requestAnimationFrame(() => {
+            const drift = window.scrollY * 0.06;
+            mockup.style.transform = `translateY(${drift}px)`;
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+
+      /* Respect reduced-motion preference */
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      if (!mq.matches) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
+    })();
+  </script>
+
+</body>
+</html>

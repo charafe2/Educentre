@@ -6,7 +6,7 @@ import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
 export const routes: Routes = [
   {
     path: '',
-    loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
+    loadComponent: () => import('./pages/hero/hero.component').then(m => m.HeroComponent),
     pathMatch: 'full',
   },
 

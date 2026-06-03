@@ -149,11 +149,10 @@ export class GroupesComponent {
   }
 
   canDropInGroup(toGroupId: number): boolean {
-    const studentId = this.draggingStudentId();
-    const fromGroupId = this.draggingFromGroupId();
-    if (studentId === null || fromGroupId === null || fromGroupId === toGroupId) return false;
+    const ds = this.dragState();
+    if (!ds || ds.fromGroupId === toGroupId) return false;
 
-    const fromClasseId = this.groupsService.getClasseIdForGroup(fromGroupId);
+    const fromClasseId = this.groupsService.getClasseIdForGroup(ds.fromGroupId);
     const toClasseId   = this.groupsService.getClasseIdForGroup(toGroupId);
     if (fromClasseId === undefined || toClasseId === undefined) return false;
 
@@ -161,17 +160,14 @@ export class GroupesComponent {
     const toClasse   = this.classesService.getById(toClasseId);
     if (!fromClasse || !toClasse) return false;
 
-    // Block cross-level drops
     if (fromClasse.level !== toClasse.level) return false;
-
-    // Block cross-subject drops when student is already enrolled in target subject
-    if (fromClasseId !== toClasseId && this.isStudentInClasse(studentId, toClasseId)) return false;
+    if (fromClasseId !== toClasseId && this.isStudentInClasse(ds.studentId, toClasseId)) return false;
 
     return true;
   }
 
   isBlockedDragTarget(groupId: number): boolean {
-    return this.isDragging() && !this.isSameGroup(groupId) && !this.canDropInGroup(groupId);
+    return this.dragState() !== null && !this.isSameGroup(groupId) && !this.canDropInGroup(groupId);
   }
 
   getStudent(id: number): Student | undefined {
@@ -261,15 +257,10 @@ export class GroupesComponent {
 
   onDragOver(event: DragEvent, groupId: number): void {
     event.preventDefault();
-<<<<<<< HEAD
     const valid = this.canDropInGroup(groupId);
     event.dataTransfer!.dropEffect = valid ? 'move' : 'none';
     const next = valid ? groupId : null;
     if (this.dragOverGroupId() !== next) this.dragOverGroupId.set(next);
-=======
-    event.dataTransfer!.dropEffect = 'move';
-    this.dragOverGroupId.set(groupId);
->>>>>>> 6568720da86eb47ead3cfc5dedc29a94f79c387a
   }
 
   onDragLeave(event: DragEvent, groupId: number): void {
@@ -298,9 +289,8 @@ export class GroupesComponent {
 
     if (!ds || ds.fromGroupId === toGroupId) return;
 
-<<<<<<< HEAD
     if (!this.canDropInGroup(toGroupId)) {
-      const fromClasseId = this.groupsService.getClasseIdForGroup(fromGroupId);
+      const fromClasseId = this.groupsService.getClasseIdForGroup(ds.fromGroupId);
       const toClasseId   = this.groupsService.getClasseIdForGroup(toGroupId);
       const fromClasse   = fromClasseId ? this.classesService.getById(fromClasseId) : undefined;
       const toClasse     = toClasseId   ? this.classesService.getById(toClasseId)   : undefined;
@@ -312,11 +302,8 @@ export class GroupesComponent {
       return;
     }
 
-    const result = this.groupsService.moveStudent(studentId, fromGroupId, toGroupId);
-=======
     const toGroup = this.groupsService.groups().find(g => g.id === toGroupId);
     if (!toGroup) return;
->>>>>>> 6568720da86eb47ead3cfc5dedc29a94f79c387a
 
     if (toGroup.studentIds.length >= toGroup.maxCapacity) {
       const classeId = this.groupsService.getClasseIdForGroup(toGroupId);

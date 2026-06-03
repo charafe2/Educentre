@@ -61,7 +61,6 @@
         </div>
       </div>
 
-<<<<<<< HEAD
       <!-- Subject sections inside this level -->
       @if (!isLevelCollapsed(lv.level)) {
         <div class="level-body">
@@ -91,204 +90,125 @@
 
               <!-- Group cards -->
               @if (!isSubjectCollapsed(view.classe.id)) {
-              <div class="groups-row">
-                @for (group of view.groups; track group.id) {
-                  @let stats = getGroupPaymentStats(group, view.classe);
-=======
-      <!-- Group cards -->
-      <div class="groups-row">
-        @for (group of view.groups; track group.id) {
-          @let stats = getGroupPaymentStats(group, view.classe);
-          <div
-            class="group-card"
-            [class.drag-target]="isDragTarget(group.id)"
-            [class.drag-source]="isSameGroup(group.id)"
-            [class.group-full-drop]="isGroupFull(group) && dragState()"
-            (dragover)="onDragOver($event, group.id)"
-            (dragleave)="onDragLeave($event, group.id)"
-            (drop)="onDrop($event, group.id)"
-          >
-            <!-- Card header -->
-            <div class="card-head">
-              <div class="head-left">
-                <span class="group-title">Groupe {{ group.groupNumber }}</span>
-                @if (isGroupFull(group)) {
-                  <span class="tag-full">COMPLET</span>
-                }
-              </div>
+                <div class="groups-row">
+                  @for (group of view.groups; track group.id) {
+                    @let stats = getGroupPaymentStats(group, view.classe);
+                    <div
+                      class="group-card"
+                      [class.drag-target]="isDragTarget(group.id)"
+                      [class.drag-source]="isSameGroup(group.id)"
+                      [class.drag-blocked]="isBlockedDragTarget(group.id)"
+                      [class.group-full-drop]="isGroupFull(group) && dragState() && !isBlockedDragTarget(group.id)"
+                      (dragover)="onDragOver($event, group.id)"
+                      (dragleave)="onDragLeave($event, group.id)"
+                      (drop)="onDrop($event, group.id)"
+                    >
+                      <!-- Card header accent bar -->
+                      <div class="card-accent" [style.background]="view.classe.color"></div>
 
-              @if (editingCapacityGroupId() === group.id) {
-                <!-- Inline edit mode -->
-                <div class="capacity-edit">
-                  <span class="edit-current" [style.color]="view.classe.color">
-                    {{ group.studentIds.length }}/
-                  </span>
-                  <input
-                    class="capacity-input"
-                    type="number"
-                    min="1"
-                    [(ngModel)]="editingCapacityValue"
-                    (keydown)="onCapacityKey($event, group.id)"
-                    (blur)="confirmCapacity(group.id)"
-                    #capInput
-                  />
-                  <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
-                    <i class="fa-solid fa-check"></i>
-                  </button>
-                  <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-              } @else {
-                <!-- Normal ring — pencil shows on hover -->
-                <div class="capacity-ring-wrap">
-                  <div class="capacity-ring" [style.border-color]="view.classe.color" [style.color]="view.classe.color">
-                    {{ group.studentIds.length }}<span class="ring-sep">/</span>{{ group.maxCapacity }}
-                  </div>
-                  <button
-                    class="edit-cap-btn"
-                    title="Modifier la limite"
-                    (click)="startEditCapacity(group.id, group.maxCapacity, $event)"
-                  >
-                    <i class="fa-regular fa-pen-to-square"></i>
-                  </button>
-                </div>
-              }
-            </div>
+                      <!-- Card head -->
+                      <div class="card-head">
+                        <div class="head-left">
+                          <span class="group-title">Groupe {{ group.groupNumber }}</span>
+                          @if (isGroupFull(group)) {
+                            <span class="tag-full">COMPLET</span>
+                          }
+                        </div>
 
-            <!-- Payment progress bar -->
-            <div class="capacity-bar-track">
-              <div
-                class="capacity-bar-fill"
-                [style.width.%]="stats.total > 0 ? (stats.paid / stats.total) * 100 : 0"
-              ></div>
-            </div>
-
-            <!-- Students -->
-            <div class="student-list" [class.list-dragging]="dragState()">
-              @if (group.studentIds.length === 0) {
-                <div class="empty-group">Aucun élève</div>
-              }
-              @for (sid of group.studentIds; track sid) {
-                @let student = getStudent(sid);
-                @if (student) {
->>>>>>> 6568720da86eb47ead3cfc5dedc29a94f79c387a
-                  <div
-                    class="group-card"
-                    [class.drag-target]="isDragTarget(group.id)"
-                    [class.drag-source]="isSameGroup(group.id)"
-                    [class.drag-blocked]="isBlockedDragTarget(group.id)"
-                    [class.group-full-drop]="isGroupFull(group) && isDragging() && !isBlockedDragTarget(group.id)"
-                    (dragover)="onDragOver($event, group.id)"
-                    (dragleave)="onDragLeave($event, group.id)"
-                    (drop)="onDrop($event, group.id)"
-                  >
-                    <!-- Card header accent bar -->
-                    <div class="card-accent" [style.background]="view.classe.color"></div>
-
-                    <!-- Card head -->
-                    <div class="card-head">
-                      <div class="head-left">
-                        <span class="group-title">Groupe {{ group.groupNumber }}</span>
-                        @if (isGroupFull(group)) {
-                          <span class="tag-full">COMPLET</span>
+                        @if (editingCapacityGroupId() === group.id) {
+                          <div class="capacity-edit">
+                            <span class="edit-current" [style.color]="view.classe.color">
+                              {{ group.studentIds.length }}/
+                            </span>
+                            <input
+                              class="capacity-input"
+                              type="number"
+                              min="1"
+                              [(ngModel)]="editingCapacityValue"
+                              (keydown)="onCapacityKey($event, group.id)"
+                              (blur)="confirmCapacity(group.id)"
+                              #capInput
+                            />
+                            <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
+                              <i class="fa-solid fa-check"></i>
+                            </button>
+                            <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
+                              <i class="fa-solid fa-xmark"></i>
+                            </button>
+                          </div>
+                        } @else {
+                          <div class="capacity-ring-wrap">
+                            <div class="capacity-ring" [style.border-color]="view.classe.color" [style.color]="view.classe.color">
+                              {{ group.studentIds.length }}<span class="ring-sep">/</span>{{ group.maxCapacity }}
+                            </div>
+                            <button
+                              class="edit-cap-btn"
+                              title="Modifier la limite"
+                              (click)="startEditCapacity(group.id, group.maxCapacity, $event)"
+                            >
+                              <i class="fa-regular fa-pen-to-square"></i>
+                            </button>
+                          </div>
                         }
                       </div>
 
-                      @if (editingCapacityGroupId() === group.id) {
-                        <div class="capacity-edit">
-                          <span class="edit-current" [style.color]="view.classe.color">
-                            {{ group.studentIds.length }}/
-                          </span>
-                          <input
-                            class="capacity-input"
-                            type="number"
-                            min="1"
-                            [(ngModel)]="editingCapacityValue"
-                            (keydown)="onCapacityKey($event, group.id)"
-                            (blur)="confirmCapacity(group.id)"
-                            #capInput
-                          />
-                          <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
-                            <i class="fa-solid fa-check"></i>
-                          </button>
-                          <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
-                            <i class="fa-solid fa-xmark"></i>
-                          </button>
-                        </div>
-                      } @else {
-                        <div class="capacity-ring-wrap">
-                          <div class="capacity-ring" [style.border-color]="view.classe.color" [style.color]="view.classe.color">
-                            {{ group.studentIds.length }}<span class="ring-sep">/</span>{{ group.maxCapacity }}
-                          </div>
-                          <button
-                            class="edit-cap-btn"
-                            title="Modifier la limite"
-                            (click)="startEditCapacity(group.id, group.maxCapacity, $event)"
-                          >
-                            <i class="fa-regular fa-pen-to-square"></i>
-                          </button>
-                        </div>
-                      }
-                    </div>
+                      <!-- Payment progress bar -->
+                      <div class="capacity-bar-track">
+                        <div
+                          class="capacity-bar-fill"
+                          [style.width.%]="stats.total > 0 ? (stats.paid / stats.total) * 100 : 0"
+                        ></div>
+                      </div>
 
-                    <!-- Payment progress bar -->
-                    <div class="capacity-bar-track">
-                      <div
-                        class="capacity-bar-fill"
-                        [style.width.%]="stats.total > 0 ? (stats.paid / stats.total) * 100 : 0"
-                      ></div>
-                    </div>
-
-                    <!-- Students -->
-                    <div class="student-list" [class.list-dragging]="isDragging()">
-                      @if (group.studentIds.length === 0) {
-                        <div class="empty-group">Aucun élève</div>
-                      }
-                      @for (sid of group.studentIds; track sid) {
-                        @let student = getStudent(sid);
-                        @if (student) {
-                          <div
-                            class="student-row"
-                            [class.row-dragging]="isBeingDragged(sid)"
-                            draggable="true"
-                            (dragstart)="onDragStart($event, sid, group.id)"
-                            (dragend)="onDragEnd()"
-                          >
-                            <div class="s-avatar" [style.background]="student.avatarColor">
-                              {{ getInitials(student) }}
-                            </div>
-                            <div class="s-info">
-                              <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
-                              <span class="s-code">{{ student.code }}</span>
-                            </div>
-                            <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
-                              {{ absenceLabel(student) }}
-                            </span>
-                            <i class="fa-solid fa-grip-vertical s-grip"></i>
-                          </div>
+                      <!-- Students -->
+                      <div class="student-list" [class.list-dragging]="dragState()">
+                        @if (group.studentIds.length === 0) {
+                          <div class="empty-group">Aucun élève</div>
                         }
-                      }
-                    </div>
+                        @for (sid of group.studentIds; track sid) {
+                          @let student = getStudent(sid);
+                          @if (student) {
+                            <div
+                              class="student-row"
+                              [class.row-dragging]="isBeingDragged(sid)"
+                              draggable="true"
+                              (dragstart)="onDragStart($event, sid, group.id)"
+                              (dragend)="onDragEnd()"
+                            >
+                              <div class="s-avatar" [style.background]="student.avatarColor">
+                                {{ getInitials(student) }}
+                              </div>
+                              <div class="s-info">
+                                <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
+                                <span class="s-code">{{ student.code }}</span>
+                              </div>
+                              <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
+                                {{ absenceLabel(student) }}
+                              </span>
+                              <i class="fa-solid fa-grip-vertical s-grip"></i>
+                            </div>
+                          }
+                        }
+                      </div>
 
-                    <!-- Payment footer -->
-                    <div class="card-footer">
-                      <i class="fa-regular fa-credit-card footer-icon"></i>
-                      <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
-                      <span class="footer-sep">/</span>
-                      <span class="footer-total">{{ formatMoney(stats.total) }}</span>
+                      <!-- Payment footer -->
+                      <div class="card-footer">
+                        <i class="fa-regular fa-credit-card footer-icon"></i>
+                        <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
+                        <span class="footer-sep">/</span>
+                        <span class="footer-total">{{ formatMoney(stats.total) }}</span>
+                      </div>
                     </div>
-                  </div>
-                }
+                  }
 
-                <!-- Auto-create hint -->
-                @if (view.groups.length > 0 && isGroupFull(view.groups[view.groups.length - 1])) {
-                  <div class="new-group-hint">
-                    <i class="fa-solid fa-plus hint-icon"></i>
-                    <span>Nouveau groupe créé automatiquement au prochain ajout</span>
-                  </div>
-                }
-              </div>
+                  <!-- Auto-create hint -->
+                  @if (view.groups.length > 0 && isGroupFull(view.groups[view.groups.length - 1])) {
+                    <div class="new-group-hint">
+                      <i class="fa-solid fa-plus hint-icon"></i>
+                      <span>Nouveau groupe créé automatiquement au prochain ajout</span>
+                    </div>
+                  }
+                </div>
               }
 
             </div>

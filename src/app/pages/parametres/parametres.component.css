@@ -434,6 +434,105 @@ td { padding: 0.9rem 1rem; font-size: 0.875rem; color: var(--text-main); border-
   margin: 0.25rem 0;
 }
 
+/* ── Matières ── */
+.level-group {
+  margin-bottom: 1.75rem;
+}
+
+.level-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.level-group-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-main);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.level-group-count {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-light);
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+}
+
+.classe-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.classe-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-inactive { background: var(--border-color); color: var(--text-muted); }
+
+.matieres-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: var(--text-light);
+  font-size: 0.875rem;
+}
+.matieres-empty i { font-size: 2rem; }
+.matieres-empty p { margin: 0; }
+
+/* Modal form */
+.modal-grid { gap: 1rem; margin-bottom: 0; }
+.form-body { padding: 0 0 1rem; }
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+.required { color: var(--danger); }
+
+/* Color swatch picker */
+.color-presets {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s, border-color 0.12s;
+  padding: 0;
+  outline: none;
+}
+
+.color-swatch:hover { transform: scale(1.15); }
+
+.color-swatch.swatch-selected {
+  border-color: var(--text-main);
+  transform: scale(1.15);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px currentColor;
+}
+
+/* ── /Matières ── */
+
 .pw-error {
   display: flex; align-items: center; gap: 0.6rem;
   background: var(--danger-bg); color: var(--danger);
