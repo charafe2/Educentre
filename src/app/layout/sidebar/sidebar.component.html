@@ -6,7 +6,7 @@
       <i class="fa-solid fa-graduation-cap"></i>
       <span class="logo-text">Moujtahid</span>
     </div>
-    <button class="toggle-btn" (click)="toggle()" [title]="collapsed() ? 'Expand' : 'Collapse'">
+    <button class="toggle-btn" type="button" (click)="toggle()" [title]="collapsed() ? 'Développer le menu' : 'Réduire le menu'" [attr.aria-label]="collapsed() ? 'Développer le menu' : 'Réduire le menu'">
       <i class="fa-solid" [ngClass]="collapsed() ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
     </button>
   </div>
@@ -108,7 +108,7 @@
         <span class="user-name">{{ user()?.name ?? 'Admin' }}</span>
         <span class="user-role">{{ user()?.role ?? 'Administrateur' }}</span>
       </div>
-      <button class="logout-btn" title="Déconnexion" (click)="logout()">
+      <button class="logout-btn" type="button" title="Déconnexion" aria-label="Déconnexion" (click)="logout()">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>
     </div>

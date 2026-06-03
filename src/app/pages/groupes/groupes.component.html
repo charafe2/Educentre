@@ -1,31 +1,41 @@
 <div class="content-area">
 
   <!-- Page Header -->
-  <div class="page-header">
+  <div class="page-header groups-hero">
     <div class="page-title">
+      <span class="eyebrow">Organisation des groupes</span>
       <h1>Groupes</h1>
-      <p>Répartition automatique des élèves par matière et niveau</p>
+      <p>Déplacez les élèves entre groupes, ajustez les capacités et repérez les groupes pleins sans quitter le tableau.</p>
     </div>
     <div class="header-right">
       <div class="search-box">
         <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Rechercher une matière, un niveau…" (input)="onSearch($event)" />
+        <input type="text" placeholder="Matière, niveau, classe…" (input)="onSearch($event)" />
       </div>
     </div>
   </div>
 
-  <!-- Legend -->
-  <div class="legend-bar">
-    <span class="legend-item">
-      <i class="fa-solid fa-up-down-left-right legend-icon drag"></i>
-      Glisser-déposer pour déplacer un élève entre groupes
-    </span>
-    <span class="legend-item">
-      <i class="fa-solid fa-circle-exclamation legend-icon full"></i>
-      Groupe complet — nouveau groupe créé automatiquement
-    </span>
+  <div class="groups-dashboard">
+    <div class="metric-card primary">
+      <span class="metric-label">Élèves répartis</span>
+      <strong>{{ totalStudents() }}</strong>
+      <span class="metric-note">Sur {{ totalGroups() }} groupes</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-label">Niveaux</span>
+      <strong>{{ totalLevels() }}</strong>
+      <span class="metric-note">{{ totalSubjects() }} matières</span>
+    </div>
+    <div class="metric-card warning">
+      <span class="metric-label">Groupes pleins</span>
+      <strong>{{ fullGroups() }}</strong>
+      <span class="metric-note">Création auto disponible</span>
+    </div>
+    <div class="workflow-card">
+      <span><i class="fa-solid fa-grip-vertical"></i> Glissez un élève vers un groupe compatible</span>
+      <span><i class="fa-solid fa-circle-exclamation"></i> Les groupes complets demandent une confirmation</span>
+    </div>
   </div>
-
   @if (levelViews().length === 0) {
     <div class="empty-state">
       <i class="fa-solid fa-magnifying-glass-minus empty-icon"></i>
@@ -98,7 +108,7 @@
                       [class.drag-target]="isDragTarget(group.id)"
                       [class.drag-source]="isSameGroup(group.id)"
                       [class.drag-blocked]="isBlockedDragTarget(group.id)"
-                      [class.group-full-drop]="isGroupFull(group) && dragState() && !isBlockedDragTarget(group.id)"
+                      [class.group-full-drop]="isGroupFull(group) && isDragging() && !isBlockedDragTarget(group.id)"
                       (dragover)="onDragOver($event, group.id)"
                       (dragleave)="onDragLeave($event, group.id)"
                       (drop)="onDrop($event, group.id)"
@@ -149,6 +159,7 @@
                               <i class="fa-regular fa-pen-to-square"></i>
                             </button>
                           </div>
+
                         }
                       </div>
 

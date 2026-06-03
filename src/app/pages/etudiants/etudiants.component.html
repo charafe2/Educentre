@@ -1,14 +1,21 @@
 <div class="content-area">
   <!-- Page Header -->
-  <div class="page-header">
+  <div class="page-header students-hero">
     <div class="page-title">
+      <span class="eyebrow">Gestion scolaire</span>
       <h1>Étudiants</h1>
-      <p>Gérez les inscriptions et profils étudiants</p>
+      <p>Suivez les inscriptions, les groupes et les paiements depuis une vue claire et rapide.</p>
     </div>
-    <button class="btn-primary" (click)="openAdd()">
-      <i class="fa-solid fa-plus"></i>
-      Nouvel étudiant
-    </button>
+    <div class="hero-actions">
+      <div class="activity-pill">
+        <span class="status-dot dot-active"></span>
+        {{ activeCount() }} profils actifs
+      </div>
+      <button class="btn-primary" (click)="openAdd()">
+        <i class="fa-solid fa-plus"></i>
+        Nouvel étudiant
+      </button>
+    </div>
   </div>
 
   <!-- Stats Row -->
@@ -17,7 +24,8 @@
       <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
-        <span class="stat-label">Total Étudiants</span>
+        <span class="stat-label">Total étudiants</span>
+        <span class="stat-note">Profils enregistrés</span>
       </div>
     </div>
     <div class="stat-card stat-green">
@@ -25,20 +33,23 @@
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
         <span class="stat-label">Actifs</span>
+        <span class="stat-note">Suivi en cours</span>
       </div>
     </div>
     <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-solid fa-user-xmark"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ totalCount() - activeCount() }}</span>
+        <span class="stat-value">{{ inactiveCount() }}</span>
         <span class="stat-label">Inactifs</span>
+        <span class="stat-note">À réactiver</span>
       </div>
     </div>
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chart-line"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ activeCount() > 0 ? (activeCount() / totalCount() * 100).toFixed(0) + '%' : '0%' }}</span>
+        <span class="stat-value">{{ activeRate() }}%</span>
         <span class="stat-label">Taux actifs</span>
+        <span class="stat-note">{{ overduePaymentCount() }} impayé(s)</span>
       </div>
     </div>
   </div>

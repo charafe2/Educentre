@@ -119,7 +119,7 @@
         <label class="form-label">Classe</label>
         <select class="form-select" [(ngModel)]="formData.classeId">
           @for (c of classes(); track c.id) {
-            <option [value]="c.id">{{ c.name }}</option>
+            <option [ngValue]="c.id">{{ c.name }}</option>
           }
         </select>
       </div>
@@ -127,7 +127,7 @@
         <label class="form-label">Jour</label>
         <select class="form-select" [(ngModel)]="formData.day">
           @for (day of days; track $index) {
-            <option [value]="$index">{{ day }}</option>
+            <option [ngValue]="$index">{{ day }}</option>
           }
         </select>
       </div>
@@ -136,7 +136,7 @@
           <label class="form-label">Heure début</label>
           <select class="form-select" [(ngModel)]="formData.startHour">
             @for (h of hours; track h) {
-              <option [value]="h">{{ h }}:00</option>
+              <option [ngValue]="h">{{ h }}:00</option>
             }
           </select>
         </div>
@@ -144,7 +144,7 @@
           <label class="form-label">Heure fin</label>
           <select class="form-select" [(ngModel)]="formData.endHour">
             @for (h of hours; track h) {
-              <option [value]="h">{{ h }}:00</option>
+              <option [ngValue]="h">{{ h }}:00</option>
             }
           </select>
         </div>
@@ -152,14 +152,14 @@
     </div>
     <div class="form-footer">
       @if (editingSession()) {
-        <button class="btn-danger" style="margin-right:auto;" (click)="deleteSession(editingSession()!); showAddModal.set(false)">
+        <button class="btn-danger" style="margin-right:auto;" [disabled]="isSavingSession()" (click)="deleteSession(editingSession()!)">
           <i class="fa-regular fa-trash-can"></i> Supprimer
         </button>
       }
       <button class="btn-secondary" (click)="showAddModal.set(false)">Annuler</button>
-      <button class="btn-primary" (click)="submitSession()">
+      <button class="btn-primary" [disabled]="isSavingSession()" (click)="submitSession()">
         <i class="fa-solid fa-floppy-disk"></i>
-        {{ editingSession() ? 'Enregistrer' : 'Ajouter' }}
+        {{ isSavingSession() ? 'Enregistrement...' : (editingSession() ? 'Enregistrer' : 'Ajouter') }}
       </button>
     </div>
   </app-modal>
@@ -178,7 +178,7 @@
           Séance {{ days[session.day] }} {{ session.startHour }}h – {{ session.endHour }}h
         </span>
         @if (!session.isCancelled) {
-          <button class="btn-danger" style="font-size:0.8rem; padding:0.4rem 0.8rem;" (click)="cancelSession(session)">
+          <button class="btn-danger" style="font-size:0.8rem; padding:0.4rem 0.8rem;" [disabled]="isSavingSession()" (click)="cancelSession(session)">
             <i class="fa-solid fa-ban"></i> Annuler la séance
           </button>
         } @else {
@@ -209,9 +209,9 @@
     <div class="form-footer">
       <button class="btn-secondary" (click)="showAttendanceModal.set(null)">Fermer</button>
       @if (!session.isCancelled) {
-        <button class="btn-primary" (click)="saveAttendance()">
+        <button class="btn-primary" [disabled]="isLoadingAttendance() || isSavingAttendance() || getStudentsForSession(session).length === 0" (click)="saveAttendance()">
           <i class="fa-solid fa-floppy-disk"></i>
-          Enregistrer présences
+          {{ isSavingAttendance() ? 'Enregistrement...' : 'Enregistrer présences' }}
         </button>
       }
     </div>

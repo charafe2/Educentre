@@ -8,11 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-<<<<<<< HEAD
 use Illuminate\Support\Str;
-=======
 use App\Domains\Core\Models\Centre;
->>>>>>> 6568720da86eb47ead3cfc5dedc29a94f79c387a
 
 class Tenant extends Model
 {

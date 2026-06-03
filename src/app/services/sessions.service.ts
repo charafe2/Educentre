@@ -1,24 +1,32 @@
-import { Injectable, signal } from '@angular/core';
-import { Session } from '../models/session.model';
+import { Injectable, inject, signal } from "@angular/core";
+import { HttpClient, HttpParams } from "@angular/common/http";
+import { Observable, tap } from "rxjs";
+import { Session } from "../models/session.model";
+import { environment } from "../../environments/environment";
+import { ApiResponse } from "../models/api-response.model";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class SessionsService {
-  private nextId = signal(13);
+  private http = inject(HttpClient);
+  private readonly url = `${environment.apiUrl}/v1/sessions`;
 
-  sessions = signal<Session[]>([
-    { id: 1, classeId: 1, day: 0, startHour: 9, endHour: 11, isCancelled: false },
-    { id: 2, classeId: 2, day: 0, startHour: 14, endHour: 16, isCancelled: false },
-    { id: 3, classeId: 3, day: 1, startHour: 10, endHour: 12, isCancelled: false },
-    { id: 4, classeId: 4, day: 1, startHour: 15, endHour: 17, isCancelled: false },
-    { id: 5, classeId: 5, day: 2, startHour: 9, endHour: 11, isCancelled: false },
-    { id: 6, classeId: 1, day: 2, startHour: 14, endHour: 16, isCancelled: false },
-    { id: 7, classeId: 6, day: 3, startHour: 10, endHour: 12, isCancelled: false },
-    { id: 8, classeId: 2, day: 3, startHour: 15, endHour: 17, isCancelled: false },
-    { id: 9, classeId: 1, day: 4, startHour: 9, endHour: 11, isCancelled: false },
-    { id: 10, classeId: 4, day: 4, startHour: 14, endHour: 16, isCancelled: false },
-    { id: 11, classeId: 5, day: 5, startHour: 10, endHour: 12, isCancelled: false },
-    { id: 12, classeId: 3, day: 5, startHour: 14, endHour: 16, isCancelled: false },
-  ]);
+  sessions = signal<Session[]>([]);
+
+  constructor() {
+    this.loadSessions();
+  }
+
+  loadSessions(filters: { day?: number; classeId?: number } = {}): void {
+    let params = new HttpParams();
+    if (filters.day !== undefined) params = params.set("day", filters.day);
+    if (filters.classeId !== undefined) params = params.set("classeId", filters.classeId);
+
+    this.http.get<ApiResponse<Session[]>>(this.url, { params }).subscribe(res => {
+      if (res.success) {
+        this.sessions.set(res.data);
+      }
+    });
+  }
 
   getByDay(day: number): Session[] {
     return this.sessions().filter(s => s.day === day);
@@ -32,24 +40,43 @@ export class SessionsService {
     return this.sessions().filter(s => s.day === day && s.startHour === hour);
   }
 
-  add(data: Omit<Session, 'id'>): number {
-    const id = this.nextId();
-    this.sessions.update(list => [...list, { ...data, id }]);
-    this.nextId.update(n => n + 1);
-    return id;
+  add(data: Omit<Session, "id">): Observable<ApiResponse<Session>> {
+    return this.http.post<ApiResponse<Session>>(this.url, data).pipe(
+      tap(res => {
+        if (res.success) {
+          this.sessions.update(list => [...list, res.data]);
+        }
+      })
+    );
   }
 
-  update(id: number, data: Partial<Session>): void {
-    this.sessions.update(list => list.map(s => s.id === id ? { ...s, ...data } : s));
+  update(id: number, data: Partial<Session>): Observable<ApiResponse<Session>> {
+    return this.http.put<ApiResponse<Session>>(`${this.url}/${id}`, data).pipe(
+      tap(res => {
+        if (res.success) {
+          this.sessions.update(list => list.map(s => s.id === id ? res.data : s));
+        }
+      })
+    );
   }
 
-  delete(id: number): void {
-    this.sessions.update(list => list.filter(s => s.id !== id));
+  delete(id: number): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${this.url}/${id}`).pipe(
+      tap(res => {
+        if (res.success) {
+          this.sessions.update(list => list.filter(s => s.id !== id));
+        }
+      })
+    );
   }
 
-  cancel(id: number, reason: string): void {
-    this.sessions.update(list => list.map(s =>
-      s.id === id ? { ...s, isCancelled: true, cancelReason: reason } : s
-    ));
+  cancel(id: number, reason: string): Observable<ApiResponse<Session>> {
+    return this.http.post<ApiResponse<Session>>(`${this.url}/${id}/cancel`, { reason }).pipe(
+      tap(res => {
+        if (res.success) {
+          this.sessions.update(list => list.map(s => s.id === id ? res.data : s));
+        }
+      })
+    );
   }
 }

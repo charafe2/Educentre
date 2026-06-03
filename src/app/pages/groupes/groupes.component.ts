@@ -1,5 +1,4 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { NgClass, NgStyle } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ClassesService } from '../../services/classes.service';
@@ -26,7 +25,7 @@ interface LevelView {
 @Component({
   selector: 'app-groupes',
   standalone: true,
-  imports: [NgClass, NgStyle, FormsModule],
+  imports: [FormsModule],
   templateUrl: './groupes.component.html',
   styleUrl: './groupes.component.css',
 })
@@ -100,6 +99,7 @@ export class GroupesComponent {
       }));
   });
 
+
   levelViews = computed<LevelView[]>(() => {
     const map = new Map<string, SubjectView[]>();
     for (const v of this.subjectViews()) {
@@ -113,6 +113,12 @@ export class GroupesComponent {
       totalGroups: subjects.reduce((s, v) => s + v.groups.length, 0),
     }));
   });
+
+  totalLevels = computed(() => this.levelViews().length);
+  totalSubjects = computed(() => this.subjectViews().length);
+  totalGroups = computed(() => this.levelViews().reduce((sum, level) => sum + level.totalGroups, 0));
+  totalStudents = computed(() => this.levelViews().reduce((sum, level) => sum + level.totalStudents, 0));
+  fullGroups = computed(() => this.subjectViews().flatMap(view => view.groups).filter(group => this.isGroupFull(group)).length);
 
   collapsedLevels = signal<Set<string>>(new Set());
 
@@ -291,9 +297,9 @@ export class GroupesComponent {
 
     if (!this.canDropInGroup(toGroupId)) {
       const fromClasseId = this.groupsService.getClasseIdForGroup(ds.fromGroupId);
-      const toClasseId   = this.groupsService.getClasseIdForGroup(toGroupId);
-      const fromClasse   = fromClasseId ? this.classesService.getById(fromClasseId) : undefined;
-      const toClasse     = toClasseId   ? this.classesService.getById(toClasseId)   : undefined;
+      const toClasseId = this.groupsService.getClasseIdForGroup(toGroupId);
+      const fromClasse = fromClasseId !== undefined ? this.classesService.getById(fromClasseId) : undefined;
+      const toClasse = toClasseId !== undefined ? this.classesService.getById(toClasseId) : undefined;
       if (fromClasse && toClasse && fromClasse.level !== toClasse.level) {
         this.toast.show('Impossible : niveaux différents');
       } else {
@@ -364,6 +370,10 @@ export class GroupesComponent {
       },
       error: () => this.toast.show('Erreur lors de la création', 'error'),
     });
+  }
+
+  isDragging(): boolean {
+    return this.dragState() !== null;
   }
 
   isBeingDragged(studentId: number): boolean {

@@ -51,6 +51,12 @@ export class EtudiantsComponent {
 
   totalCount = computed(() => this.students().length);
   activeCount = computed(() => this.students().filter(s => s.status === 'active').length);
+  inactiveCount = computed(() => Math.max(this.totalCount() - this.activeCount(), 0));
+  overduePaymentCount = computed(() => this.students().filter(s => s.paymentStatus === 'overdue').length);
+  activeRate = computed(() => {
+    const total = this.totalCount();
+    return total > 0 ? Math.round((this.activeCount() / total) * 100) : 0;
+  });
 
   showModal = signal(false);
   editingStudent = signal<Student | null>(null);

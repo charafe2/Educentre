@@ -1,27 +1,36 @@
-import { Injectable, signal } from '@angular/core';
-import { Attendance, AttendanceStatus } from '../models/attendance.model';
+import { Injectable, inject, signal } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable, tap } from "rxjs";
+import { Attendance, AttendanceStatus } from "../models/attendance.model";
+import { environment } from "../../environments/environment";
+import { ApiResponse } from "../models/api-response.model";
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class AttendanceService {
-  private nextId = signal(16);
+  private http = inject(HttpClient);
+  private readonly sessionsUrl = `${environment.apiUrl}/v1/sessions`;
 
-  records = signal<Attendance[]>([
-    { id: 1, sessionId: 1, studentId: 1, status: 'present' },
-    { id: 2, sessionId: 1, studentId: 4, status: 'present' },
-    { id: 3, sessionId: 1, studentId: 7, status: 'absent' },
-    { id: 4, sessionId: 2, studentId: 1, status: 'present' },
-    { id: 5, sessionId: 2, studentId: 2, status: 'late' },
-    { id: 6, sessionId: 2, studentId: 4, status: 'present' },
-    { id: 7, sessionId: 2, studentId: 7, status: 'present' },
-    { id: 8, sessionId: 3, studentId: 2, status: 'present' },
-    { id: 9, sessionId: 3, studentId: 6, status: 'present' },
-    { id: 10, sessionId: 3, studentId: 8, status: 'excused' },
-    { id: 11, sessionId: 5, studentId: 3, status: 'present' },
-    { id: 12, sessionId: 5, studentId: 6, status: 'present' },
-    { id: 13, sessionId: 7, studentId: 3, status: 'absent' },
-    { id: 14, sessionId: 4, studentId: 5, status: 'present' },
-    { id: 15, sessionId: 6, studentId: 1, status: 'present' },
-  ]);
+  records = signal<Attendance[]>([]);
+
+  loadBySession(sessionId: number): Observable<ApiResponse<Attendance[]>> {
+    return this.http.get<ApiResponse<Attendance[]>>(`${this.sessionsUrl}/${sessionId}/attendance`).pipe(
+      tap(res => {
+        if (res.success) {
+          this.mergeSessionRecords(sessionId, res.data);
+        }
+      })
+    );
+  }
+
+  saveForSession(sessionId: number, records: Array<{ studentId: number; status: AttendanceStatus }>): Observable<ApiResponse<Attendance[]>> {
+    return this.http.post<ApiResponse<Attendance[]>>(`${this.sessionsUrl}/${sessionId}/attendance`, { records }).pipe(
+      tap(res => {
+        if (res.success) {
+          this.mergeSessionRecords(sessionId, res.data);
+        }
+      })
+    );
+  }
 
   getBySession(sessionId: number): Attendance[] {
     return this.records().filter(r => r.sessionId === sessionId);
@@ -31,7 +40,7 @@ export class AttendanceService {
     return this.records().filter(r => r.studentId === studentId);
   }
 
-  upsert(record: Omit<Attendance, 'id'>): void {
+  upsert(record: Omit<Attendance, "id">): void {
     const existing = this.records().find(
       r => r.sessionId === record.sessionId && r.studentId === record.studentId
     );
@@ -40,9 +49,8 @@ export class AttendanceService {
         r.id === existing.id ? { ...r, ...record } : r
       ));
     } else {
-      const id = this.nextId();
+      const id = this.nextLocalId();
       this.records.update(list => [...list, { ...record, id }]);
-      this.nextId.update(n => n + 1);
     }
   }
 
@@ -53,14 +61,26 @@ export class AttendanceService {
   getAttendanceRate(): number {
     const all = this.records();
     if (all.length === 0) return 0;
-    const positive = all.filter(r => r.status === 'present' || r.status === 'late').length;
+    const positive = all.filter(r => r.status === "present" || r.status === "late").length;
     return Math.round((positive / all.length) * 100 * 10) / 10;
   }
 
   getAttendanceRateForSession(sessionId: number): number {
     const session = this.records().filter(r => r.sessionId === sessionId);
     if (session.length === 0) return 0;
-    const positive = session.filter(r => r.status === 'present' || r.status === 'late').length;
+    const positive = session.filter(r => r.status === "present" || r.status === "late").length;
     return Math.round((positive / session.length) * 100);
+  }
+
+  private mergeSessionRecords(sessionId: number, records: Attendance[]): void {
+    this.records.update(list => [
+      ...list.filter(r => r.sessionId !== sessionId),
+      ...records,
+    ]);
+  }
+
+  private nextLocalId(): number {
+    const maxId = this.records().reduce((max, record) => Math.max(max, record.id), 0);
+    return maxId + 1;
   }
 }

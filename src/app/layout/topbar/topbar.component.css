@@ -1,12 +1,11 @@
 .topbar {
-  height: 80px;
+  min-height: 68px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 2.5rem;
   border-bottom: 1px solid var(--border-color);
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
+  background-color: var(--surface);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -29,7 +28,7 @@
 .search-input {
   width: 100%;
   padding: 0.7rem 3rem 0.7rem 2.8rem;
-  border-radius: 100px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background-color: var(--bg-color);
   font-size: 0.875rem;
@@ -56,7 +55,7 @@
   justify-content: center;
   background-color: var(--surface);
   border: 1px solid var(--border-dark);
-  border-radius: 100px;
+  border-radius: var(--radius-md);
   padding: 0.3rem 0.6rem;
   font-size: 0.7rem;
   color: var(--text-muted);
@@ -67,7 +66,7 @@
 .topbar-actions {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 0.75rem;
 }
 
 .icon-btn {
@@ -75,7 +74,7 @@
   border: 1px solid var(--border-color);
   width: 38px;
   height: 38px;
-  border-radius: 50%;
+  border-radius: var(--radius-md);
   color: var(--text-muted);
   font-size: 1.05rem;
   cursor: pointer;
@@ -90,7 +89,7 @@
   color: var(--text-main);
   border-color: var(--border-dark);
   background-color: var(--bg-color);
-  transform: scale(1.05);
+  transform: translateY(-1px);
 }
 
 .badge {
@@ -110,7 +109,7 @@
   gap: 0.75rem;
   cursor: pointer;
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
-  border-radius: 100px;
+  border-radius: var(--radius-md);
   transition: background-color 0.2s;
 }
 
@@ -130,4 +129,12 @@
   font-weight: 500;
   font-size: 0.8rem;
   box-shadow: var(--shadow-sm);
+}
+
+.icon-btn:active { transform: translateY(1px); }
+
+@media (max-width: 760px) {
+  .topbar { min-height: 60px; padding: 0 1rem; }
+  .search-container { width: min(100%, 300px); }
+  .search-shortcut, .user-profile { display: none; }
 }
