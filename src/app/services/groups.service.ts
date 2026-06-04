@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { Group } from '../models/group.model';
 import { environment } from '../../environments/environment';
 import { ApiResponse } from '../models/api-response.model';
@@ -37,15 +38,15 @@ export class GroupsService {
     return this.groups().find(g => g.id === groupId)?.classeId;
   }
 
-  addStudent(classeId: number, studentId: number): void {
+  addStudent(classeId: number, studentId: number): Observable<unknown> {
     const groups = this.getGroupsForClasse(classeId);
-    if (groups.some(g => g.studentIds.includes(studentId))) return;
+    if (groups.some(g => g.studentIds.includes(studentId))) return of(null);
     const target = groups.find(g => g.studentIds.length < g.maxCapacity);
     if (target) {
-      this.moveStudent(studentId, null, target.id).subscribe(() => this.loadGroups());
+      return this.moveStudent(studentId, null, target.id).pipe(tap(() => this.loadGroups()));
     } else {
       const nextGroupNumber = groups.length + 1;
-      this.createGroup(classeId, nextGroupNumber, studentId).subscribe(() => this.loadGroups());
+      return this.createGroup(classeId, nextGroupNumber, studentId).pipe(tap(() => this.loadGroups()));
     }
   }
 

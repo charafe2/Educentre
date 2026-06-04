@@ -1,13 +1,20 @@
 <div class="content-area">
-  <div class="page-header">
+  <div class="page-header professeurs-hero">
     <div class="page-title">
+      <span class="eyebrow">Gestion pédagogique</span>
       <h1>Professeurs</h1>
-      <p>Gérez l'équipe pédagogique</p>
+      <p>Gérez l'équipe pédagogique, les classes et la rémunération depuis une vue claire et rapide.</p>
     </div>
-    <button class="btn-primary" (click)="openAdd()">
-      <i class="fa-solid fa-plus"></i>
-      Nouveau professeur
-    </button>
+    <div class="hero-actions">
+      <div class="activity-pill">
+        <span class="status-dot dot-active"></span>
+        {{ activeCount() }} profils actifs
+      </div>
+      <button class="btn-primary" (click)="openAdd()">
+        <i class="fa-solid fa-plus"></i>
+        Nouveau professeur
+      </button>
+    </div>
   </div>
 
   <div class="stats-grid">
@@ -15,7 +22,8 @@
       <div class="stat-icon icon-blue"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
-        <span class="stat-label">Total Professeurs</span>
+        <span class="stat-label">Total professeurs</span>
+        <span class="stat-note">Profils enregistrés</span>
       </div>
     </div>
     <div class="stat-card stat-green">
@@ -23,13 +31,15 @@
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
         <span class="stat-label">Actifs</span>
+        <span class="stat-note">Enseignement en cours</span>
       </div>
     </div>
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-wallet"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ formatSalary(totalPayroll()) }}</span>
-        <span class="stat-label">Masse Salariale</span>
+        <span class="stat-label">Masse salariale</span>
+        <span class="stat-note">Paie mensuelle</span>
       </div>
     </div>
     <div class="stat-card stat-orange">
@@ -37,6 +47,7 @@
       <div class="stat-info">
         <span class="stat-value">{{ classes().length }}</span>
         <span class="stat-label">Classes actives</span>
+        <span class="stat-note">Groupes assignés</span>
       </div>
     </div>
   </div>
@@ -219,6 +230,27 @@
           <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" placeholder="0" />
         </div>
       }
+      <div class="form-group">
+        <label class="form-label">Classes assignÃ©es</label>
+        <div class="classes-checkbox-grid">
+          @for (cls of classes(); track cls.id) {
+            <label class="class-checkbox-item" [class.selected]="isClassSelected(cls.id)">
+              <input
+                type="checkbox"
+                [checked]="isClassSelected(cls.id)"
+                (change)="toggleClass(cls.id)"
+              />
+              <span class="class-color-dot" [style.background-color]="cls.color"></span>
+              <span class="class-checkbox-label">
+                <span class="class-checkbox-name">{{ cls.name }}</span>
+                <span class="class-checkbox-meta">{{ cls.subject }} Â· {{ cls.level }}</span>
+              </span>
+            </label>
+          } @empty {
+            <div class="empty-class-picker">Aucune classe disponible</div>
+          }
+        </div>
+      </div>
     </div>
     <div class="form-footer">
       <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>

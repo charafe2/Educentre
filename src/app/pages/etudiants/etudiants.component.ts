@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin, of } from 'rxjs';
 import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
 import { GroupsService } from '../../services/groups.service';
@@ -125,9 +126,15 @@ export class EtudiantsComponent {
     if (editing) {
       this.studentsService.update(editing.id, { ...this.formData, enrolledClassIds: this.selectedClassIds }).subscribe(() => {
         const added = this.selectedClassIds.filter(id => !editing.enrolledClassIds.includes(id));
-        added.forEach(id => this.groupsService.addStudent(id, editing.id));
-        this.toast.show('Étudiant mis à jour avec succès');
-        this.showModal.set(false);
+        const groupUpdates = forkJoin(
+          added.length ? added.map(id => this.groupsService.addStudent(id, editing.id)) : [of(null)]
+        );
+        groupUpdates.subscribe(() => {
+          this.classesService.loadClasses();
+          this.groupsService.loadGroups();
+          this.toast.show('Étudiant mis à jour avec succès');
+          this.showModal.set(false);
+        });
       });
     } else {
       this.studentsService.add({
@@ -136,9 +143,14 @@ export class EtudiantsComponent {
         paymentStatus: 'pending',
       }).subscribe(res => {
         const newId = res.data.id;
-        this.selectedClassIds.forEach(id => this.groupsService.addStudent(id, newId));
-        this.toast.show('Étudiant ajouté avec succès');
-        this.showModal.set(false);
+        const groupUpdates = forkJoin(
+          this.selectedClassIds.length ? this.selectedClassIds.map(id => this.groupsService.addStudent(id, newId)) : [of(null)]
+        );
+        groupUpdates.subscribe(() => {
+          this.classesService.loadClasses();
+          this.toast.show('Étudiant ajouté avec succès');
+          this.showModal.set(false);
+        });
       });
     }
   }

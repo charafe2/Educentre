@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
             $table->string('name');
             $table->integer('capacity')->default(0);
             $table->boolean('is_active')->default(true);

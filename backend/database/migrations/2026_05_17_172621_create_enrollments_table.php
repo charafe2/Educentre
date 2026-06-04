@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
             $table->timestamp('enrolled_at')->useCurrent();
             $table->string('status')->default('active'); // active, dropped, graduated
             $table->timestamps();

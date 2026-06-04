@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
-            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
             $table->unsignedTinyInteger('day');
             $table->unsignedTinyInteger('start_hour');
             $table->unsignedTinyInteger('end_hour');

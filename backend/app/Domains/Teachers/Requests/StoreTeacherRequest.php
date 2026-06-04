@@ -23,6 +23,8 @@ class StoreTeacherRequest extends FormRequest
             'ratePerStudent' => ['nullable', 'numeric', 'min:0'],
             'iban' => ['nullable', 'string', 'max:34'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
+            'classIds' => ['nullable', 'array'],
+            'classIds.*' => ['integer', 'exists:classes,id'],
         ];
     }
 

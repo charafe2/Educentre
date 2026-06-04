@@ -31,7 +31,7 @@ class TeacherController extends Controller
     {
         $teacher = $this->teacherService->create([
             ...$request->validated(),
-            'tenant_id' => 1,
+            'tenant_id' => $request->user()->tenant_id,
         ]);
         return $this->success(
             ['id' => $teacher->id],

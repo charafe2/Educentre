@@ -3,6 +3,7 @@
 namespace App\Domains\Teachers\Services;
 
 use App\Domains\Teachers\Models\Teacher;
+use App\Domains\Planning\Models\CourseClass;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +44,8 @@ class TeacherService
                 'is_active' => ($data['status'] ?? 'active') === 'active',
             ]);
 
+            $this->syncClasses($teacher, $data['classIds'] ?? []);
+
             return $teacher->load(['user', 'classes']);
         });
     }
@@ -68,6 +71,10 @@ class TeacherService
                 'is_active' => isset($data['status']) ? ($data['status'] === 'active') : $teacher->is_active,
             ]);
 
+            if (array_key_exists('classIds', $data)) {
+                $this->syncClasses($teacher, $data['classIds']);
+            }
+
             return $teacher->load(['user', 'classes']);
         });
     }
@@ -76,5 +83,21 @@ class TeacherService
     {
         $teacher = Teacher::findOrFail($id);
         $teacher->delete();
+    }
+
+    private function syncClasses(Teacher $teacher, array $classIds): void
+    {
+        CourseClass::where('tenant_id', $teacher->tenant_id)
+            ->where('teacher_id', $teacher->id)
+            ->whereNotIn('id', $classIds)
+            ->update(['teacher_id' => null]);
+
+        if ($classIds === []) {
+            return;
+        }
+
+        CourseClass::where('tenant_id', $teacher->tenant_id)
+            ->whereIn('id', $classIds)
+            ->update(['teacher_id' => $teacher->id]);
     }
 }

@@ -105,6 +105,24 @@ export class ProfesseursComponent {
     this.showModal.set(true);
   }
 
+  isClassSelected(classId: number): boolean {
+    return this.formData.classIds.includes(classId);
+  }
+
+  toggleClass(classId: number): void {
+    if (this.formData.classIds.includes(classId)) {
+      this.formData = {
+        ...this.formData,
+        classIds: this.formData.classIds.filter(id => id !== classId),
+      };
+    } else {
+      this.formData = {
+        ...this.formData,
+        classIds: [...this.formData.classIds, classId],
+      };
+    }
+  }
+
   submit(): void {
     const editing = this.editingTeacher();
     const payload = {
@@ -117,6 +135,7 @@ export class ProfesseursComponent {
       this.teachersService.update(editing.id, payload).subscribe({
         next: () => {
           this.toast.show('Professeur mis à jour');
+          this.classesService.loadClasses();
           this.showModal.set(false);
         },
         error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
@@ -125,6 +144,7 @@ export class ProfesseursComponent {
       this.teachersService.add(payload).subscribe({
         next: () => {
           this.toast.show('Professeur ajouté');
+          this.classesService.loadClasses();
           this.showModal.set(false);
         },
         error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
