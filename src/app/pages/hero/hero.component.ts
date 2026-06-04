@@ -4,18 +4,42 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+import { VideoHeroComponent } from './video-hero/video-hero.component';
+
+type IntroState = 'active' | 'dismissed';
 
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, VideoHeroComponent],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css',
   encapsulation: ViewEncapsulation.None,
+  animations: [
+    trigger('videoIntroSlide', [
+      state('active', style({ transform: 'translateY(0)' })),
+      state('dismissed', style({ transform: 'translateY(-100vh)' })),
+      transition('active => dismissed', [
+        animate('900ms cubic-bezier(0.76, 0, 0.24, 1)'),
+      ]),
+    ]),
+    trigger('landingSlide', [
+      state('active', style({ transform: 'translateY(100vh)' })),
+      state('dismissed', style({ transform: 'translateY(0)' })),
+      transition('active => dismissed', [
+        animate('900ms cubic-bezier(0.76, 0, 0.24, 1)'),
+      ]),
+    ]),
+  ],
 })
 export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
+  introState: IntroState = 'active';
+  showVideoIntro = true;
+
   private _savedBg = '';
   private _rafHandle = 0;
+  private _introDismissed = false;
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
@@ -43,6 +67,19 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     this._initCounters();
     this._initRippleButtons();
     this._initFaq();
+  }
+
+  proceedToLanding(): void {
+    if (this._introDismissed) return;
+
+    this._introDismissed = true;
+    this.introState = 'dismissed';
+  }
+
+  onIntroAnimationDone(): void {
+    if (this.introState !== 'dismissed') return;
+
+    this.showVideoIntro = false;
   }
 
   // ─── 1. Char-by-char ink reveal ─────────────────────────────────

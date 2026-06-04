@@ -1,3 +1,15 @@
+<div class="hero-shell">
+  @if (showVideoIntro) {
+    <div
+      class="hero-shell__video"
+      [@videoIntroSlide]="introState"
+      (@videoIntroSlide.done)="onIntroAnimationDone()"
+    >
+      <app-video-hero (commence)="proceedToLanding()"></app-video-hero>
+    </div>
+  }
+
+  <div class="hero-shell__landing" [@landingSlide]="introState">
 <div class="lp">
 
   <a href="#lp-main" class="skip-link">Aller au contenu</a>
@@ -617,4 +629,6 @@
     </div>
   </footer>
 
+</div>
+  </div>
 </div>

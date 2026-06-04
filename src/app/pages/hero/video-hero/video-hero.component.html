@@ -1,0 +1,30 @@
+<section class="video-hero" aria-label="Introduction Moujtahid">
+  <video
+    #introVideo
+    class="video-hero__media"
+    autoplay
+    muted
+    playsinline
+    preload="auto"
+    aria-hidden="true"
+    (ended)="onVideoEnded()"
+  >
+    <source src="assets/videos/7084636-uhd_3840_2160_25fps.mp4" type="video/mp4" />
+  </video>
+
+  <div class="video-hero__overlay" aria-hidden="true"></div>
+
+  <div class="video-hero__content">
+    <h1 class="video-hero__title" aria-live="polite">
+      {{ titleText }}<span class="video-hero__cursor" [class.video-hero__cursor--hidden]="!showCursor">|</span>
+    </h1>
+
+    <button
+      type="button"
+      class="video-hero__cta"
+      (click)="onCommence()"
+    >
+      Commencer
+    </button>
+  </div>
+</section>

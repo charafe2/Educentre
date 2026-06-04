@@ -1,3 +1,25 @@
+.hero-shell {
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+.hero-shell__video {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  width: 100%;
+  min-height: 100dvh;
+  will-change: transform;
+}
+
+.hero-shell__landing {
+  position: relative;
+  width: 100%;
+  min-height: 100dvh;
+  transform: translateY(100vh);
+  will-change: transform;
+}
+
 /* All custom properties defined on .lp so they scope within the component
    and override any conflicting values from styles.css (e.g. --radius-sm). */
 .lp {
