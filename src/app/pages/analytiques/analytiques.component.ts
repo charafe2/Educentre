@@ -1,10 +1,25 @@
-import { Component, signal, computed, inject } from '@angular/core';
-import { NgStyle, NgClass } from '@angular/common';
-import { StudentsService } from '../../services/students.service';
-import { TeachersService } from '../../services/teachers.service';
-import { ClassesService } from '../../services/classes.service';
-import { PaymentsService } from '../../services/payments.service';
-import { AttendanceService } from '../../services/attendance.service';
+import { Component, computed, inject, signal } from '@angular/core';
+import { NgClass, NgStyle } from '@angular/common';
+import { AnalyticsPeriod, AnalyticsReport } from '../../models/analytics.model';
+import { PaymentIssueStatus, StudentAttritionRisk, StudentAttritionRiskReport } from '../../models/retention-risk.model';
+import { AnalyticsService } from '../../services/analytics.service';
+import { RetentionService } from '../../services/retention.service';
+import { ToastService } from '../../services/toast.service';
+
+const EMPTY_REPORT: AnalyticsReport = {
+  period: { key: 'last_6_months', start: '', end: '' },
+  summary: { totalRevenue: 0, totalStudents: 0, activeStudents: 0, attendanceRate: 0, activeTeachers: 0 },
+  paymentDistribution: {
+    paid: { count: 0, pct: 0 },
+    pending: { count: 0, pct: 0 },
+    overdue: { count: 0, pct: 0 },
+    total: 0,
+  },
+  monthlyRevenues: [],
+  classAttendance: [],
+  enrollmentTrend: [],
+  teacherPerformance: [],
+};
 
 @Component({
   selector: 'app-analytiques',
@@ -13,124 +28,135 @@ import { AttendanceService } from '../../services/attendance.service';
   styleUrl: './analytiques.component.css'
 })
 export class AnalytiquesComponent {
-  private studentsService = inject(StudentsService);
-  private teachersService = inject(TeachersService);
-  private classesService = inject(ClassesService);
-  private paymentsService = inject(PaymentsService);
-  private attendanceService = inject(AttendanceService);
+  private analyticsService = inject(AnalyticsService);
+  private retentionService = inject(RetentionService);
+  private toast = inject(ToastService);
 
-  selectedPeriod = signal('6 derniers mois');
-  periods = ['3 derniers mois', '6 derniers mois', 'Cette année', 'Année dernière'];
+  periods: Array<{ key: AnalyticsPeriod; label: string }> = [
+    { key: 'last_3_months', label: '3 derniers mois' },
+    { key: 'last_6_months', label: '6 derniers mois' },
+    { key: 'this_year', label: 'Cette année' },
+    { key: 'last_year', label: 'Année dernière' },
+  ];
+  selectedPeriod = signal<AnalyticsPeriod>('last_6_months');
+  report = signal<AnalyticsReport>(EMPTY_REPORT);
+  riskReport = signal<StudentAttritionRiskReport | null>(null);
+  riskLoading = signal(true);
 
-  totalStudents = computed(() => this.studentsService.students().length);
-  activeStudents = computed(() => this.studentsService.students().filter(s => s.status === 'active').length);
-  totalRevenue = computed(() => this.paymentsService.getTotals().totalPaid);
-  attendanceRate = computed(() => this.attendanceService.getAttendanceRate());
+  totalStudents = computed(() => this.report().summary.totalStudents);
+  activeStudents = computed(() => this.report().summary.activeStudents);
+  totalRevenue = computed(() => this.report().summary.totalRevenue);
+  attendanceRate = computed(() => this.report().summary.attendanceRate);
+  activeTeachers = computed(() => this.report().summary.activeTeachers);
+  paymentDistribution = computed(() => this.report().paymentDistribution);
+  teacherPerformance = computed(() => this.report().teacherPerformance);
+  studentRisks = computed(() => this.riskReport()?.students ?? []);
+  riskCount = computed(() => this.studentRisks().length);
 
   monthlyRevenues = computed(() => {
-    const rawData = this.paymentsService.getMonthlyRevenue();
-    const monthNames: Record<string, string> = {
-      '2025-01': 'Jan', '2025-02': 'Fév', '2025-03': 'Mar',
-      '2025-04': 'Avr', '2025-05': 'Mai', '2025-06': 'Jun',
-      '2024-12': 'Déc',
-    };
-    const all = rawData.map(r => ({ month: monthNames[r.month] ?? r.month, amount: r.amount }));
-    const maxAmount = Math.max(...all.map(r => r.amount), 1000);
-    return all.map(r => ({ ...r, maxAmount }));
+    const revenues = this.report().monthlyRevenues;
+    const maxAmount = Math.max(...revenues.map(item => item.amount), 1);
+
+    return revenues.map(item => ({
+      ...item,
+      month: this.monthLabel(item.month, 'short'),
+      maxAmount,
+    }));
   });
 
   classAttendance = computed(() => {
-    return this.classesService.classes().map(c => ({
-      className: c.name,
-      rate: this.computeClassAttendanceRate(c.id),
-      color: c.color,
+    const colors = ['#0d9488', '#7c3aed', '#dc2626', '#d97706', '#059669', '#0891b2'];
+    return this.report().classAttendance.map((item, index) => ({
+      ...item,
+      color: colors[index % colors.length],
     }));
   });
 
-  private attendanceRates = [94, 89, 92, 91, 87, 85];
-  private avgGrades = [14.2, 13.8, 15.1, 14.6, 13.5, 14.0];
+  enrollmentTrend = computed(() => this.report().enrollmentTrend.map(item => item.total));
+  trendMonths = computed(() => this.report().enrollmentTrend.map(item => this.monthLabel(item.month, 'short')));
 
-  teacherPerformance = computed(() => {
-    return this.teachersService.teachers().map((t, i) => {
-      const classes = this.classesService.getByIds(t.classIds);
-      const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
-      return {
-        name: `${t.firstName} ${t.lastName}`,
-        classes: classes.length,
-        students: studentCount,
-        attendanceRate: this.attendanceRates[i] ?? 90,
-        avgGrade: this.avgGrades[i] ?? 14.0,
-      };
-    });
-  });
+  constructor() {
+    this.loadReport();
+    this.loadStudentRisks();
+  }
 
-  enrollmentTrend = [42, 58, 71, 89, 112, 134, 158, 187, 210, 231, 248, 248];
-  trendMonths = ['Juin', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar', 'Avr', 'Mai'];
-
-  paymentDistribution = computed(() => {
-    const students = this.studentsService.students();
-    const total = students.length || 1;
-    const paid    = students.filter(s => s.paymentStatus === 'paid').length;
-    const pending = students.filter(s => s.paymentStatus === 'pending').length;
-    const overdue = students.filter(s => s.paymentStatus === 'overdue').length;
-    return {
-      paid:    { count: paid,    pct: Math.round(paid    / total * 100) },
-      pending: { count: pending, pct: Math.round(pending / total * 100) },
-      overdue: { count: overdue, pct: Math.round(overdue / total * 100) },
-      total:   students.length,
-    };
-  });
+  selectPeriod(period: AnalyticsPeriod): void {
+    this.selectedPeriod.set(period);
+    this.loadReport();
+  }
 
   get svgPoints(): string {
-    const maxVal = Math.max(...this.enrollmentTrend);
-    const w = 540, h = 100;
-    return this.enrollmentTrend.map((v, i) => {
-      const x = (i / (this.enrollmentTrend.length - 1)) * w;
-      const y = h - (v / maxVal) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    }).join(' ');
+    return this.chartPoints().map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
   }
 
   get svgFillPath(): string {
-    const maxVal = Math.max(...this.enrollmentTrend);
-    const w = 540, h = 100;
-    const pts = this.enrollmentTrend.map((v, i) => {
-      const x = (i / (this.enrollmentTrend.length - 1)) * w;
-      const y = h - (v / maxVal) * h;
-      return `${x.toFixed(1)},${y.toFixed(1)}`;
-    });
-    return `M${pts.join(' L')} L${w},${h} L0,${h} Z`;
+    const points = this.chartPoints();
+    if (points.length === 0) {
+      return '';
+    }
+
+    return `M${points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' L')} L540,100 L0,100 Z`;
   }
 
   get svgDots(): { x: number; y: number; value: number }[] {
-    const maxVal = Math.max(...this.enrollmentTrend);
-    const w = 540, h = 100;
-    return this.enrollmentTrend.map((v, i) => ({
-      x: (i / (this.enrollmentTrend.length - 1)) * w,
-      y: h - (v / maxVal) * h,
-      value: v,
-    }));
-  }
-
-  private classDefaultRates: Record<number, number> = { 1: 96, 2: 89, 3: 93, 4: 91, 5: 87, 6: 85 };
-
-  private computeClassAttendanceRate(classeId: number): number {
-    const classe = this.classesService.getById(classeId);
-    if (!classe) return 0;
-    const allRecords = this.attendanceService.records();
-    const relevantRecords = allRecords.filter(r => {
-      return classe.enrolledStudentIds.includes(r.studentId);
-    });
-    if (relevantRecords.length === 0) return this.classDefaultRates[classeId] ?? 90;
-    const positive = relevantRecords.filter(r => r.status === 'present' || r.status === 'late').length;
-    return Math.round((positive / relevantRecords.length) * 100);
+    return this.chartPoints();
   }
 
   getBarHeight(amount: number, max: number): number {
     return Math.round((amount / max) * 100);
   }
 
-  onPeriodChange(event: Event): void {
-    this.selectedPeriod.set((event.target as HTMLSelectElement).value);
+  studentInitials(student: StudentAttritionRisk): string {
+    return student.studentName.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  paymentStatusLabel(status: PaymentIssueStatus): string {
+    return status === 'overdue' ? 'En retard' : 'En attente';
+  }
+
+  paymentPeriodLabel(period: string): string {
+    return this.monthLabel(period, 'long');
+  }
+
+  private loadReport(): void {
+    this.analyticsService.getReport(this.selectedPeriod()).subscribe({
+      next: response => {
+        if (response.success) {
+          this.report.set(response.data);
+        }
+      },
+      error: () => this.toast.show('Impossible de charger les analytiques', 'error'),
+    });
+  }
+
+  private loadStudentRisks(): void {
+    this.riskLoading.set(true);
+    this.retentionService.getStudentRisks().subscribe({
+      next: response => {
+        if (response.success) {
+          this.riskReport.set(response.data);
+        }
+        this.riskLoading.set(false);
+      },
+      error: () => {
+        this.riskLoading.set(false);
+        this.toast.show('Impossible de charger les risques de départ', 'error');
+      },
+    });
+  }
+
+  private chartPoints(): { x: number; y: number; value: number }[] {
+    const values = this.enrollmentTrend();
+    const maxValue = Math.max(...values, 1);
+
+    return values.map((value, index) => ({
+      x: values.length === 1 ? 270 : (index / (values.length - 1)) * 540,
+      y: 100 - (value / maxValue) * 100,
+      value,
+    }));
+  }
+
+  private monthLabel(month: string, style: 'short' | 'long'): string {
+    return new Intl.DateTimeFormat('fr-MA', { month: style }).format(new Date(`${month}-01`));
   }
 }

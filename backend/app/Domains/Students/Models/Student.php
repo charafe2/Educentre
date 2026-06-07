@@ -2,6 +2,8 @@
 
 namespace App\Domains\Students\Models;
 
+use App\Domains\Finance\Models\Payment;
+use App\Domains\Planning\Models\SessionAttendance;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -46,5 +48,15 @@ class Student extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(SessionAttendance::class);
     }
 }

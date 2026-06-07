@@ -8,6 +8,7 @@ use App\Domains\Students\Resources\StudentResource;
 use App\Domains\Students\Services\StudentService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
@@ -15,9 +16,10 @@ class StudentController extends Controller
         private readonly StudentService $studentService
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $students = $this->studentService->all();
+        $students = $this->studentService->all($request->user()->tenant_id);
+
         return $this->success(StudentResource::collection($students));
     }
 
@@ -27,6 +29,7 @@ class StudentController extends Controller
             ...$request->validated(),
             'tenant_id' => $request->user()->tenant_id,
         ]);
+
         return $this->success(
             ['id' => $student->id],
             'Étudiant créé avec succès.',
@@ -36,13 +39,15 @@ class StudentController extends Controller
 
     public function update(int $id, UpdateStudentRequest $request): JsonResponse
     {
-        $this->studentService->update($id, $request->validated());
+        $this->studentService->update($request->user()->tenant_id, $id, $request->validated());
+
         return $this->success(null, 'Étudiant mis à jour avec succès.');
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id, Request $request): JsonResponse
     {
-        $this->studentService->delete($id);
+        $this->studentService->delete($request->user()->tenant_id, $id);
+
         return $this->success(null, 'Étudiant supprimé avec succès.');
     }
 }

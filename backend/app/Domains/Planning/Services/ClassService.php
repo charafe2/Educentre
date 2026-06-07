@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ClassService
 {
-    public function all(): Collection
+    public function all(int $tenantId): Collection
     {
-        return CourseClass::with(['enrollments', 'teacher.user', 'room'])->get();
+        return CourseClass::query()->where('tenant_id', $tenantId)->with(['enrollments', 'teacher.user', 'room'])->get();
     }
 
-    public function find(int $id): CourseClass
+    public function find(int $tenantId, int $id): CourseClass
     {
-        return CourseClass::with(['enrollments', 'teacher.user', 'room'])->findOrFail($id);
+        return CourseClass::query()->where('tenant_id', $tenantId)->with(['enrollments', 'teacher.user', 'room'])->findOrFail($id);
     }
 
     public function create(array $data): CourseClass
@@ -34,9 +34,9 @@ class ClassService
         return $class->load(['enrollments', 'teacher.user', 'room']);
     }
 
-    public function update(int $id, array $data): CourseClass
+    public function update(int $tenantId, int $id, array $data): CourseClass
     {
-        $class = CourseClass::findOrFail($id);
+        $class = CourseClass::query()->where('tenant_id', $tenantId)->findOrFail($id);
         $class->update([
             'teacher_id' => array_key_exists('teacherId', $data) ? $data['teacherId'] : $class->teacher_id,
             'room_id' => $data['roomId'] ?? $class->room_id,
@@ -51,9 +51,9 @@ class ClassService
         return $class->load(['enrollments', 'teacher.user', 'room']);
     }
 
-    public function delete(int $id): void
+    public function delete(int $tenantId, int $id): void
     {
-        $class = CourseClass::findOrFail($id);
+        $class = CourseClass::query()->where('tenant_id', $tenantId)->findOrFail($id);
         $class->delete();
     }
 }

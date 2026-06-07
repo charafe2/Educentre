@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domains\Core\Models\Centre;
+use App\Domains\Finance\Models\Payment;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,7 +11,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use App\Domains\Core\Models\Centre;
 
 class Tenant extends Model
 {
@@ -50,5 +51,10 @@ class Tenant extends Model
     public function centre(): HasOne
     {
         return $this->hasOne(Centre::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Domains\Planning\Models;
 
-use App\Models\Tenant;
-use App\Domains\Teachers\Models\Teacher;
+use App\Domains\Finance\Models\Payment;
 use App\Domains\Students\Models\Enrollment;
+use App\Domains\Teachers\Models\Teacher;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -58,5 +59,10 @@ class CourseClass extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(ClassSession::class, 'class_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class, 'class_id');
     }
 }

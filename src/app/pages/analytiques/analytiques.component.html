@@ -7,12 +7,12 @@
       <p>Rapports de performance et statistiques</p>
     </div>
     <div class="period-tabs">
-      @for (p of periods; track p) {
+      @for (p of periods; track p.key) {
         <button
           class="period-tab"
-          [class.active]="selectedPeriod() === p"
-          (click)="selectedPeriod.set(p)"
-        >{{ p }}</button>
+          [class.active]="selectedPeriod() === p.key"
+          (click)="selectPeriod(p.key)"
+        >{{ p.label }}</button>
       }
     </div>
   </div>
@@ -46,7 +46,7 @@
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ teacherPerformance().length }}</span>
+        <span class="stat-value">{{ activeTeachers() }}</span>
         <span class="stat-label">Professeurs actifs</span>
         <span class="stat-trend neutral"><i class="fa-solid fa-star"></i> Équipe</span>
       </div>
@@ -82,6 +82,98 @@
       <div class="pay-bar-fill fill-overdue" [style.width.%]="paymentDistribution().overdue.pct"></div>
     </div>
   </div>
+
+  <!-- Student Attrition Risk -->
+  <section class="risk-panel" aria-labelledby="risk-title">
+    <div class="risk-header">
+      <div class="risk-heading">
+        <div class="risk-icon" [class.clear]="!riskLoading() && riskCount() === 0">
+          <i [class]="!riskLoading() && riskCount() === 0 ? 'fa-solid fa-shield-halved' : 'fa-solid fa-user-clock'"></i>
+        </div>
+        <div>
+          <div class="risk-title-row">
+            <h2 id="risk-title">Risque de départ</h2>
+            @if (!riskLoading()) {
+              <span class="risk-count" [class.clear]="riskCount() === 0">
+                {{ riskCount() }} {{ riskCount() === 1 ? 'élève détecté' : 'élèves détectés' }}
+              </span>
+            }
+          </div>
+          <p>Élèves à contacter en priorité selon leur assiduité et leur situation de paiement.</p>
+        </div>
+      </div>
+      <div class="risk-rule">
+        <i class="fa-solid fa-filter"></i>
+        <span>Absence ≥ {{ riskReport()?.rule?.absenceThreshold ?? 80 }}%</span>
+        <span class="rule-operator">+</span>
+        <span>paiement manqué ou retardé</span>
+        <small>{{ riskReport()?.rule?.lookbackDays ?? 15 }} derniers jours</small>
+      </div>
+    </div>
+
+    @if (riskLoading()) {
+      <div class="risk-skeleton" aria-label="Chargement des risques">
+        <span></span><span></span><span></span>
+      </div>
+    } @else if (studentRisks().length === 0) {
+      <div class="risk-empty">
+        <i class="fa-solid fa-circle-check"></i>
+        <div>
+          <strong>Aucun élève à risque détecté</strong>
+          <span>Les absences et paiements des 15 derniers jours ne signalent aucun départ probable.</span>
+        </div>
+      </div>
+    } @else {
+      <div class="risk-table-wrapper">
+        <table class="risk-table">
+          <thead>
+            <tr><th>Élève</th><th>Absences</th><th>Situation de paiement</th><th>Contact parent</th></tr>
+          </thead>
+          <tbody>
+            @for (student of studentRisks(); track student.studentUuid) {
+              <tr>
+                <td data-label="Élève">
+                  <div class="risk-student">
+                    <span class="risk-avatar">{{ studentInitials(student) }}</span>
+                    <div><strong>{{ student.studentName }}</strong><span>{{ student.studentCode }}</span></div>
+                  </div>
+                </td>
+                <td data-label="Absences">
+                  <div class="absence-cell">
+                    <div class="absence-value">
+                      <strong>{{ student.absenceRate }}%</strong>
+                      <span>{{ student.absenceCount }}/{{ student.attendanceCount }} séances</span>
+                    </div>
+                    <div class="risk-progress" aria-hidden="true"><span [style.width.%]="student.absenceRate"></span></div>
+                  </div>
+                </td>
+                <td data-label="Paiement">
+                  <div class="payment-risk">
+                    <span class="payment-risk-badge" [class.overdue]="student.paymentIssue.status === 'overdue'">
+                      {{ paymentStatusLabel(student.paymentIssue.status) }}
+                    </span>
+                    <span>{{ paymentPeriodLabel(student.paymentIssue.periodMonth) }} · {{ student.paymentIssue.amount.toLocaleString('fr-MA') }} Dhs</span>
+                    @if (student.paymentIssue.issueCount > 1) {
+                      <small>{{ student.paymentIssue.issueCount }} paiements concernés</small>
+                    }
+                  </div>
+                </td>
+                <td data-label="Contact parent">
+                  @if (student.parentPhone) {
+                    <a class="contact-button" [href]="'tel:' + student.parentPhone">
+                      <i class="fa-solid fa-phone"></i>{{ student.parentPhone }}
+                    </a>
+                  } @else {
+                    <span class="no-contact">Non renseigné</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
 
   <!-- Charts Row -->
   <div class="charts-row">
@@ -159,7 +251,7 @@
       </div>
       <span class="trend-total">
         <i class="fa-solid fa-arrow-trend-up" style="color:var(--accent)"></i>
-        {{ enrollmentTrend[enrollmentTrend.length - 1] }} étudiants
+        {{ enrollmentTrend().at(-1) ?? 0 }} étudiants
       </span>
     </div>
     <div class="trend-chart">
@@ -195,7 +287,7 @@
         }
       </svg>
       <div class="trend-months">
-        @for (m of trendMonths; track m) {
+        @for (m of trendMonths(); track m) {
           <span>{{ m }}</span>
         }
       </div>
@@ -218,7 +310,7 @@
             <th>Classes</th>
             <th>Étudiants</th>
             <th>Taux présence</th>
-            <th>Note moy.</th>
+            <th>Revenus encaissés</th>
           </tr>
         </thead>
         <tbody>
@@ -243,8 +335,8 @@
                 </div>
               </td>
               <td>
-                <span class="grade-badge" [ngClass]="t.avgGrade >= 14 ? 'grade-good' : 'grade-avg'">
-                  {{ t.avgGrade.toFixed(1) }}/20
+                <span class="grade-badge grade-good">
+                  {{ t.collectedRevenue.toLocaleString('fr-MA') }} Dhs
                 </span>
               </td>
             </tr>

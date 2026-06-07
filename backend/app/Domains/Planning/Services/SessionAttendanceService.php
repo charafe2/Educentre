@@ -11,20 +11,22 @@ use Illuminate\Validation\ValidationException;
 
 class SessionAttendanceService
 {
-    public function all(int $tenantId, int $sessionId): Collection
+    public function all(int $tenantId, int $sessionId, ?string $attendedOn = null): Collection
     {
         $this->findSession($tenantId, $sessionId);
 
         return SessionAttendance::query()
             ->where('tenant_id', $tenantId)
             ->where('class_session_id', $sessionId)
+            ->when($attendedOn !== null, fn ($query) => $query->whereDate('attended_on', $attendedOn))
             ->orderBy('student_id')
             ->get();
     }
 
-    public function upsertMany(int $tenantId, int $sessionId, array $records): Collection
+    public function upsertMany(int $tenantId, int $sessionId, array $records, ?string $attendedOn = null): Collection
     {
         $session = $this->findSession($tenantId, $sessionId);
+        $attendedOn ??= now()->toDateString();
 
         if ($session->is_cancelled) {
             throw ValidationException::withMessages([
@@ -47,15 +49,16 @@ class SessionAttendanceService
             ]);
         }
 
-        DB::transaction(function () use ($tenantId, $sessionId, $records): void {
+        DB::transaction(function () use ($tenantId, $sessionId, $attendedOn, $records): void {
             foreach ($records as $record) {
                 SessionAttendance::updateOrCreate(
                     [
+                        'tenant_id' => $tenantId,
                         'class_session_id' => $sessionId,
                         'student_id' => $record['studentId'],
+                        'attended_on' => $attendedOn,
                     ],
                     [
-                        'tenant_id' => $tenantId,
                         'status' => $record['status'],
                         'notes' => $record['notes'] ?? null,
                     ]
@@ -63,7 +66,7 @@ class SessionAttendanceService
             }
         });
 
-        return $this->all($tenantId, $sessionId);
+        return $this->all($tenantId, $sessionId, $attendedOn);
     }
 
     private function findSession(int $tenantId, int $sessionId): ClassSession

@@ -17,6 +17,7 @@ class StoreSessionAttendanceRequest extends FormRequest
         $tenantId = $this->user()?->tenant_id;
 
         return [
+            'attendedOn' => ['nullable', 'date', 'before_or_equal:today'],
             'records' => ['required', 'array', 'min:1'],
             'records.*.studentId' => [
                 'required',

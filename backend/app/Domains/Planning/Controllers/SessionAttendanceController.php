@@ -2,12 +2,12 @@
 
 namespace App\Domains\Planning\Controllers;
 
+use App\Domains\Planning\Requests\ListSessionAttendanceRequest;
 use App\Domains\Planning\Requests\StoreSessionAttendanceRequest;
 use App\Domains\Planning\Resources\SessionAttendanceResource;
 use App\Domains\Planning\Services\SessionAttendanceService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class SessionAttendanceController extends Controller
 {
@@ -15,11 +15,12 @@ class SessionAttendanceController extends Controller
         private readonly SessionAttendanceService $attendanceService
     ) {}
 
-    public function index(int $sessionId, Request $request): JsonResponse
+    public function index(int $sessionId, ListSessionAttendanceRequest $request): JsonResponse
     {
         $records = $this->attendanceService->all(
             $request->user()->tenant_id,
             $sessionId,
+            $request->string('date')->toString() ?: now()->toDateString(),
         );
 
         return $this->success(SessionAttendanceResource::collection($records));
@@ -31,6 +32,7 @@ class SessionAttendanceController extends Controller
             $request->user()->tenant_id,
             $sessionId,
             $request->validated('records'),
+            $request->validated('attendedOn'),
         );
 
         return $this->success(

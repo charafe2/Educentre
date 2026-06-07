@@ -2,17 +2,20 @@
 
 namespace App\Domains\Students\Services;
 
+use App\Domains\Students\Models\Enrollment;
 use App\Domains\Students\Models\Student;
 use App\Domains\Students\Models\StudentParent;
-use App\Domains\Students\Models\Enrollment;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
-    public function all(): Collection
+    public function all(int $tenantId): Collection
     {
-        return Student::with(['enrollments', 'parents'])->get();
+        return Student::query()
+            ->where('tenant_id', $tenantId)
+            ->with(['enrollments', 'parents', 'payments'])
+            ->get();
     }
 
     public function create(array $data): Student
@@ -22,7 +25,7 @@ class StudentService
 
             $student = Student::create([
                 'tenant_id' => $tenantId,
-                'student_code' => 'ETD-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                'student_code' => 'ETD-'.str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 'first_name' => $data['firstName'],
                 'last_name' => $data['lastName'],
                 'birth_date' => $data['birthDate'] ?? null,
@@ -32,7 +35,7 @@ class StudentService
                 'is_active' => ($data['status'] ?? 'active') === 'active',
             ]);
 
-            if (!empty($data['parentName']) || !empty($data['parentPhone'])) {
+            if (! empty($data['parentName']) || ! empty($data['parentPhone'])) {
                 $names = explode(' ', $data['parentName'] ?? '', 2);
                 StudentParent::create([
                     'tenant_id' => $tenantId,
@@ -45,7 +48,7 @@ class StudentService
                 ]);
             }
 
-            if (!empty($data['enrolledClassIds'])) {
+            if (! empty($data['enrolledClassIds'])) {
                 foreach ($data['enrolledClassIds'] as $classId) {
                     Enrollment::create([
                         'tenant_id' => $tenantId,
@@ -59,10 +62,10 @@ class StudentService
         });
     }
 
-    public function update(int $id, array $data): Student
+    public function update(int $tenantId, int $id, array $data): Student
     {
-        return DB::transaction(function () use ($id, $data) {
-            $student = Student::findOrFail($id);
+        return DB::transaction(function () use ($tenantId, $id, $data) {
+            $student = Student::query()->where('tenant_id', $tenantId)->findOrFail($id);
 
             $student->update([
                 'first_name' => $data['firstName'] ?? $student->first_name,
@@ -81,7 +84,7 @@ class StudentService
 
                 $existing = Enrollment::where('student_id', $id)->pluck('class_id')->toArray();
                 foreach ($data['enrolledClassIds'] as $classId) {
-                    if (!in_array($classId, $existing)) {
+                    if (! in_array($classId, $existing)) {
                         Enrollment::create([
                             'tenant_id' => $student->tenant_id,
                             'student_id' => $id,
@@ -95,9 +98,9 @@ class StudentService
         });
     }
 
-    public function delete(int $id): void
+    public function delete(int $tenantId, int $id): void
     {
-        $student = Student::findOrFail($id);
+        $student = Student::query()->where('tenant_id', $tenantId)->findOrFail($id);
         $student->delete();
     }
 }

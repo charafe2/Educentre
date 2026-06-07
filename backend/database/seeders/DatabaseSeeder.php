@@ -51,5 +51,6 @@ class DatabaseSeeder extends Seeder
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Francais', 'payment_mode' => 'fixed', 'is_active' => true]);
 
         $this->call(PlanningSeeder::class);
+        $this->call(MoroccanDemoSeeder::class);
     }
 }

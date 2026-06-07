@@ -1,16 +1,16 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PaymentsService } from '../../services/payments.service';
-import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
+import { Payment, PaymentMethod } from '../../models/payment.model';
+import { PaymentPayload, PaymentsService } from '../../services/payments.service';
+import { StudentsService } from '../../services/students.service';
 import { ToastService } from '../../services/toast.service';
 import { ModalComponent } from '../../components/modal/modal.component';
-import { Payment, PaymentMethod } from '../../models/payment.model';
 
 @Component({
   selector: 'app-finances',
-  imports: [NgClass, FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent],
   templateUrl: './finances.component.html',
   styleUrl: './finances.component.css'
 })
@@ -19,6 +19,7 @@ export class FinancesComponent {
   private studentsService = inject(StudentsService);
   private classesService = inject(ClassesService);
   private toast = inject(ToastService);
+  private currentMonth = new Date().toISOString().slice(0, 7);
 
   selectedMonth = signal('');
   selectedStatus = signal('');
@@ -27,98 +28,81 @@ export class FinancesComponent {
   students = this.studentsService.students;
   classes = this.classesService.classes;
 
-  months = ['2025-01', '2025-02', '2025-03', '2025-04', '2025-05'];
-  monthLabels: Record<string, string> = {
-    '2025-01': 'Janvier 2025', '2025-02': 'Février 2025', '2025-03': 'Mars 2025',
-    '2025-04': 'Avril 2025', '2025-05': 'Mai 2025',
-  };
+  months = Array.from({ length: 12 }, (_, index) => {
+    const date = new Date();
+    date.setMonth(date.getMonth() - index);
+    return date.toISOString().slice(0, 7);
+  });
+
+  monthLabels = Object.fromEntries(
+    this.months.map(month => [
+      month,
+      new Intl.DateTimeFormat('fr-MA', { month: 'long', year: 'numeric' }).format(new Date(`${month}-01`))
+    ])
+  );
 
   filteredPayments = computed(() => {
     const month = this.selectedMonth();
     const status = this.selectedStatus();
-    return this.payments().filter(p => {
-      const matchesMonth = !month || p.periodMonth === month;
-      const matchesStatus = !status || p.status === status;
-      return matchesMonth && matchesStatus;
-    });
+
+    return this.payments().filter(payment =>
+      (!month || payment.periodMonth === month) &&
+      (!status || payment.status === status)
+    );
   });
 
   totals = computed(() => this.paymentsService.getTotals());
-
   totalAll = computed(() => {
-    const t = this.totals();
-    return t.totalPaid + t.totalPending + t.totalOverdue;
+    const totals = this.totals();
+    return totals.totalPaid + totals.totalPending + totals.totalOverdue;
   });
 
-  paidPct = computed(() => {
-    const all = this.totalAll();
-    return all ? Math.round((this.totals().totalPaid / all) * 100) : 0;
-  });
-  pendingPct = computed(() => {
-    const all = this.totalAll();
-    return all ? Math.round((this.totals().totalPending / all) * 100) : 0;
-  });
-  overduePct = computed(() => {
-    const all = this.totalAll();
-    return all ? Math.round((this.totals().totalOverdue / all) * 100) : 0;
-  });
+  paidPct = computed(() => this.percentage(this.totals().totalPaid));
+  pendingPct = computed(() => this.percentage(this.totals().totalPending));
+  overduePct = computed(() => this.percentage(this.totals().totalOverdue));
 
-  paidCount    = computed(() => this.payments().filter(p => p.status === 'paid').length);
-  overdueCount = computed(() => this.payments().filter(p => p.status === 'overdue').length);
-  pendingCount = computed(() => this.payments().filter(p => p.status === 'pending').length);
-
-  recoveryRate = computed(() => {
-    const total = this.payments().length;
-    return total ? Math.round((this.paidCount() / total) * 100) : 0;
-  });
+  paidCount = computed(() => this.payments().filter(payment => payment.status === 'paid').length);
+  overdueCount = computed(() => this.payments().filter(payment => payment.status === 'overdue').length);
+  pendingCount = computed(() => this.payments().filter(payment => payment.status === 'pending').length);
+  recoveryRate = computed(() => this.payments().length
+    ? Math.round((this.paidCount() / this.payments().length) * 100)
+    : 0
+  );
 
   showModal = signal(false);
   editingPayment = signal<Payment | null>(null);
   showPayModal = signal<Payment | null>(null);
 
-  formData = {
-    studentId: 0,
-    classeId: 0,
-    periodMonth: '2025-05',
-    amount: 0,
-    status: 'pending' as 'paid' | 'pending' | 'overdue',
-    method: '' as PaymentMethod | '',
-    note: '',
-  };
-
+  formData = this.emptyForm();
   selectedPayMethod: PaymentMethod = 'Espèces';
 
   openAdd(): void {
     this.formData = {
+      ...this.emptyForm(),
       studentId: this.students()[0]?.id ?? 0,
       classeId: this.classes()[0]?.id ?? 0,
-      periodMonth: '2025-05',
-      amount: 0,
-      status: 'pending',
-      method: '',
-      note: '',
     };
     this.editingPayment.set(null);
     this.showModal.set(true);
   }
 
-  openEdit(p: Payment): void {
+  openEdit(payment: Payment): void {
     this.formData = {
-      studentId: p.studentId,
-      classeId: p.classeId,
-      periodMonth: p.periodMonth,
-      amount: p.amount,
-      status: p.status,
-      method: p.method ?? '',
-      note: p.note ?? '',
+      studentId: payment.studentId,
+      classeId: payment.classeId,
+      periodMonth: payment.periodMonth,
+      amount: payment.amount,
+      status: payment.status,
+      method: payment.method ?? '',
+      note: payment.note ?? '',
     };
-    this.editingPayment.set(p);
+    this.editingPayment.set(payment);
     this.showModal.set(true);
   }
 
   submit(): void {
     const editing = this.editingPayment();
-    const data = {
+    const data: PaymentPayload = {
       studentId: this.formData.studentId,
       classeId: this.formData.classeId,
       periodMonth: this.formData.periodMonth,
@@ -126,48 +110,61 @@ export class FinancesComponent {
       status: this.formData.status,
       method: this.formData.method || undefined,
       note: this.formData.note || undefined,
-      invoiceGenerated: false,
-    } as Omit<Payment, 'id'>;
+      invoiceGenerated: editing?.invoiceGenerated ?? false,
+    };
 
-    if (editing) {
-      this.paymentsService.update(editing.id, data);
-      this.toast.show('Paiement mis à jour');
-    } else {
-      this.paymentsService.add(data);
-      this.toast.show('Paiement ajouté');
-    }
-    this.showModal.set(false);
+    const request = editing
+      ? this.paymentsService.update(editing.id, data)
+      : this.paymentsService.add(data);
+
+    request.subscribe({
+      next: () => {
+        this.toast.show(editing ? 'Paiement mis à jour' : 'Paiement ajouté');
+        this.showModal.set(false);
+      },
+      error: () => this.toast.show('Impossible d’enregistrer le paiement', 'error'),
+    });
   }
 
-  openMarkPaid(p: Payment): void {
+  openMarkPaid(payment: Payment): void {
     this.selectedPayMethod = 'Espèces';
-    this.showPayModal.set(p);
+    this.showPayModal.set(payment);
   }
 
   confirmMarkPaid(): void {
-    const p = this.showPayModal();
-    if (p) {
-      this.paymentsService.markAsPaid(p.id, this.selectedPayMethod);
-      this.toast.show('Paiement marqué comme payé');
-      this.showPayModal.set(null);
+    const payment = this.showPayModal();
+    if (!payment) {
+      return;
     }
+
+    this.paymentsService.markAsPaid(payment.id, this.selectedPayMethod).subscribe({
+      next: () => {
+        this.toast.show('Paiement marqué comme payé');
+        this.showPayModal.set(null);
+      },
+      error: () => this.toast.show('Impossible de marquer le paiement comme payé', 'error'),
+    });
   }
 
-  deletePayment(p: Payment): void {
-    if (confirm('Supprimer ce paiement ?')) {
-      this.paymentsService.delete(p.id);
-      this.toast.show('Paiement supprimé', 'info');
+  deletePayment(payment: Payment): void {
+    if (!confirm('Supprimer ce paiement ?')) {
+      return;
     }
+
+    this.paymentsService.delete(payment.id).subscribe({
+      next: () => this.toast.show('Paiement supprimé', 'info'),
+      error: () => this.toast.show('Impossible de supprimer le paiement', 'error'),
+    });
   }
 
   getStudentName(studentId: number): string {
-    const s = this.studentsService.getById(studentId);
-    return s ? `${s.firstName} ${s.lastName}` : '—';
+    const student = this.studentsService.getById(studentId);
+    return student ? `${student.firstName} ${student.lastName}` : '—';
   }
 
   getStudentInitials(studentId: number): string {
-    const s = this.studentsService.getById(studentId);
-    return s ? (s.firstName[0] + s.lastName[0]).toUpperCase() : '?';
+    const student = this.studentsService.getById(studentId);
+    return student ? (student.firstName[0] + student.lastName[0]).toUpperCase() : '?';
   }
 
   getStudentColor(studentId: number): string {
@@ -175,24 +172,54 @@ export class FinancesComponent {
     return colors[studentId % colors.length];
   }
 
-  sendReminder(p: Payment): void {
-    this.toast.show(`Rappel envoyé à ${this.getStudentName(p.studentId)}`);
+  sendReminder(payment: Payment): void {
+    this.toast.show(`Rappel envoyé à ${this.getStudentName(payment.studentId)}`);
   }
 
   getClassName(classeId: number): string {
-    const c = this.classesService.getById(classeId);
-    return c ? c.name : '—';
+    return this.classesService.getById(classeId)?.name ?? '—';
   }
 
   getStatusLabel(status: string): string {
-    const map: Record<string, string> = { paid: 'Payé', pending: 'En attente', overdue: 'Impayé' };
-    return map[status] || status;
+    return ({ paid: 'Payé', pending: 'En attente', overdue: 'Impayé' } as Record<string, string>)[status] ?? status;
   }
 
   getPeriodLabel(period: string): string {
-    return this.monthLabels[period] ?? period;
+    return this.monthLabels[period] ?? new Intl.DateTimeFormat('fr-MA', {
+      month: 'long',
+      year: 'numeric',
+    }).format(new Date(`${period}-01`));
   }
 
-  onMonthChange(event: Event): void { this.selectedMonth.set((event.target as HTMLSelectElement).value); }
-  onStatusChange(event: Event): void { this.selectedStatus.set((event.target as HTMLSelectElement).value); }
+  onMonthChange(event: Event): void {
+    this.selectedMonth.set((event.target as HTMLSelectElement).value);
+  }
+
+  onStatusChange(event: Event): void {
+    this.selectedStatus.set((event.target as HTMLSelectElement).value);
+  }
+
+  private emptyForm(): {
+    studentId: number;
+    classeId: number;
+    periodMonth: string;
+    amount: number;
+    status: 'paid' | 'pending' | 'overdue';
+    method: PaymentMethod | '';
+    note: string;
+  } {
+    return {
+      studentId: 0,
+      classeId: 0,
+      periodMonth: this.currentMonth,
+      amount: 0,
+      status: 'pending',
+      method: '',
+      note: '',
+    };
+  }
+
+  private percentage(amount: number): number {
+    return this.totalAll() ? Math.round((amount / this.totalAll()) * 100) : 0;
+  }
 }

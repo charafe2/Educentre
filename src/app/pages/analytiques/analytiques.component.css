@@ -565,3 +565,68 @@ td {
 
 .grade-good { background: var(--success-bg); color: var(--success); }
 .grade-avg  { background: var(--warning-bg); color: var(--warning); }
+
+/* Student attrition risk */
+.risk-panel { background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: 1.5rem; overflow: hidden; }
+.risk-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; border-bottom: 1px solid var(--border-color); }
+.risk-heading, .risk-title-row, .risk-rule { display: flex; align-items: center; }
+.risk-heading { gap: 0.875rem; min-width: 0; }
+.risk-title-row { gap: 0.65rem; flex-wrap: wrap; }
+.risk-icon { width: 42px; height: 42px; border-radius: var(--radius-md); display: grid; place-items: center; flex-shrink: 0; color: var(--danger); background: var(--danger-bg); }
+.risk-icon.clear { color: var(--success); background: var(--success-bg); }
+.risk-heading h2 { margin: 0; color: var(--text-main); font-size: 1rem; font-weight: 700; }
+.risk-heading p { margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.8rem; }
+.risk-count { padding: 0.18rem 0.55rem; border-radius: 999px; color: var(--danger); background: var(--danger-bg); font-size: 0.7rem; font-weight: 700; }
+.risk-count.clear { color: var(--success); background: var(--success-bg); }
+.risk-rule { gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; }
+.risk-rule i { color: var(--accent); }
+.risk-rule small { padding: 0.18rem 0.5rem; border: 1px solid var(--border-dark); border-radius: 999px; color: var(--text-muted); background: var(--bg-color); font-size: 0.68rem; }
+.rule-operator { color: var(--danger); font-weight: 800; }
+.risk-table-wrapper { overflow-x: auto; }
+.risk-table th { background: var(--surface); }
+.risk-table td { padding-top: 1rem; padding-bottom: 1rem; }
+.risk-student { display: flex; align-items: center; gap: 0.7rem; min-width: 170px; }
+.risk-avatar { width: 34px; height: 34px; display: grid; place-items: center; flex-shrink: 0; border-radius: 50%; color: var(--danger); background: var(--danger-bg); font-size: 0.68rem; font-weight: 800; }
+.risk-student div, .payment-risk, .absence-cell { display: flex; flex-direction: column; }
+.risk-student span, .payment-risk span:not(.payment-risk-badge), .payment-risk small, .absence-value span { color: var(--text-muted); font-size: 0.72rem; }
+.absence-cell { gap: 0.45rem; min-width: 130px; }
+.absence-value { display: flex; align-items: baseline; gap: 0.45rem; }
+.absence-value strong { color: var(--danger); font-size: 0.95rem; }
+.risk-progress { width: 110px; height: 5px; overflow: hidden; border-radius: 999px; background: var(--danger-bg); }
+.risk-progress span { display: block; height: 100%; background: var(--danger); }
+.payment-risk { gap: 0.25rem; min-width: 170px; align-items: flex-start; }
+.payment-risk-badge { padding: 0.16rem 0.5rem; border-radius: 999px; color: var(--warning); background: var(--warning-bg); font-size: 0.68rem; font-weight: 700; }
+.payment-risk-badge.overdue { color: var(--danger); background: var(--danger-bg); }
+.contact-button { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.42rem 0.68rem; border: 1px solid var(--border-dark); border-radius: var(--radius-md); color: var(--text-main); background: var(--surface); font-size: 0.75rem; font-weight: 600; text-decoration: none; white-space: nowrap; transition: border-color 0.18s, color 0.18s, background 0.18s; }
+.contact-button:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+.no-contact { color: var(--text-light); font-size: 0.75rem; }
+.risk-empty { padding: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.75rem; color: var(--success); background: var(--success-bg); }
+.risk-empty div { display: flex; flex-direction: column; gap: 0.15rem; }
+.risk-empty strong { color: var(--text-main); font-size: 0.85rem; }
+.risk-empty span { color: var(--text-muted); font-size: 0.75rem; }
+.risk-skeleton { padding: 1.2rem 1.5rem; display: grid; gap: 0.65rem; }
+.risk-skeleton span { height: 36px; border-radius: var(--radius-md); background: linear-gradient(90deg, var(--bg-color), var(--border-color), var(--bg-color)); background-size: 200% 100%; animation: risk-loading 1.2s linear infinite; }
+@keyframes risk-loading { to { background-position: -200% 0; } }
+
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+  .risk-header { align-items: flex-start; flex-direction: column; }
+  .risk-rule { justify-content: flex-start; }
+}
+
+@media (max-width: 720px) {
+  .content-area { padding: 1.25rem; }
+  .stats-grid, .pay-dist-segments { grid-template-columns: 1fr; }
+  .period-tabs { width: 100%; overflow-x: auto; }
+  .risk-header { padding: 1rem; }
+  .risk-table-wrapper { overflow: visible; }
+  .risk-table thead { display: none; }
+  .risk-table, .risk-table tbody, .risk-table tr, .risk-table td { display: block; width: 100%; }
+  .risk-table tr { padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); }
+  .risk-table tr:last-child { border-bottom: 0; }
+  .risk-table td { padding: 0.45rem 0; border: 0; display: grid; grid-template-columns: 105px minmax(0, 1fr); align-items: center; gap: 0.75rem; }
+  .risk-table td::before { content: attr(data-label); color: var(--text-muted); font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .risk-student, .absence-cell, .payment-risk { min-width: 0; }
+  .risk-empty { justify-content: flex-start; align-items: flex-start; }
+}

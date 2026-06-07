@@ -13,13 +13,25 @@ class SessionAttendance extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $attendance) {
+            $attendance->attended_on ??= now()->toDateString();
+        });
+    }
+
     protected $fillable = [
         'tenant_id',
         'class_session_id',
         'student_id',
+        'attended_on',
         'uuid',
         'status',
         'notes',
+    ];
+
+    protected $casts = [
+        'attended_on' => 'date',
     ];
 
     public function tenant(): BelongsTo

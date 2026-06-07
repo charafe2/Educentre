@@ -13,6 +13,7 @@ class SessionAttendanceResource extends JsonResource
             'id' => $this->id,
             'sessionId' => $this->class_session_id,
             'studentId' => $this->student_id,
+            'attendedOn' => $this->attended_on?->format('Y-m-d'),
             'status' => $this->status,
             'notes' => $this->notes,
         ];
