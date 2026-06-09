@@ -6,6 +6,7 @@ use App\Domains\Students\Models\Enrollment;
 use App\Domains\Students\Models\Student;
 use App\Domains\Students\Models\StudentParent;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class StudentService
@@ -16,6 +17,29 @@ class StudentService
             ->where('tenant_id', $tenantId)
             ->with(['enrollments', 'parents', 'payments'])
             ->get();
+    }
+
+    public function paginate(int $tenantId, array $filters = []): LengthAwarePaginator
+    {
+        return $this->query($tenantId, $filters)
+            ->orderByDesc('created_at')
+            ->paginate(
+                perPage: $this->perPage($filters['per_page'] ?? null),
+                page: max(1, (int) ($filters['page'] ?? 1))
+            );
+    }
+
+    public function summary(int $tenantId): array
+    {
+        return [
+            'total' => Student::query()->where('tenant_id', $tenantId)->count(),
+            'active' => Student::query()->where('tenant_id', $tenantId)->where('is_active', true)->count(),
+            'inactive' => Student::query()->where('tenant_id', $tenantId)->where('is_active', false)->count(),
+            'overduePayments' => Student::query()
+                ->where('tenant_id', $tenantId)
+                ->whereHas('payments', fn ($query) => $query->where('status', 'overdue'))
+                ->count(),
+        ];
     }
 
     public function create(array $data): Student
@@ -102,5 +126,38 @@ class StudentService
     {
         $student = Student::query()->where('tenant_id', $tenantId)->findOrFail($id);
         $student->delete();
+    }
+
+    private function query(int $tenantId, array $filters)
+    {
+        return Student::query()
+            ->where('tenant_id', $tenantId)
+            ->with(['enrollments', 'parents', 'payments'])
+            ->when($filters['search'] ?? null, function ($query, string $search) {
+                $query->where(function ($query) use ($search) {
+                    $query->where('student_code', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('current_school', 'like', "%{$search}%");
+                });
+            })
+            ->when($filters['level'] ?? null, fn ($query, string $level) => $query->where('school_level', $level))
+            ->when($filters['status'] ?? null, function ($query, string $status) {
+                $query->where('is_active', $status === 'active');
+            })
+            ->when($filters['payment_status'] ?? null, function ($query, string $status) {
+                if ($status === 'paid') {
+                    $query->whereDoesntHave('payments', fn ($query) => $query->whereIn('status', ['pending', 'overdue']));
+
+                    return;
+                }
+
+                $query->whereHas('payments', fn ($query) => $query->where('status', $status));
+            });
+    }
+
+    private function perPage(mixed $value): int
+    {
+        return max(1, min(50, (int) ($value ?: 8)));
     }
 }

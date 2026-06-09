@@ -786,6 +786,59 @@ td {
   opacity: 1;
 }
 
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  padding: .95rem 1.25rem 1.05rem;
+  border-top: 1px solid rgba(216,225,225,.78);
+  background: rgba(250,252,252,.78);
+}
+
+.pagination-info {
+  color: var(--text-muted);
+  font-size: .82rem;
+  font-weight: 650;
+}
+
+.pagination-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+}
+
+.pagination-page {
+  min-width: 96px;
+  text-align: center;
+  color: var(--text-main);
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.pagination-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(216,225,225,.95);
+  border-radius: 10px;
+  background: rgba(255,255,255,.76);
+  color: var(--text-main);
+  cursor: pointer;
+  transition: transform .16s ease, border-color .16s ease, color .16s ease, background .16s ease;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  border-color: rgba(13,148,136,.45);
+  background: rgba(240,253,250,.78);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.pagination-btn:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
 @media (max-width:1180px) {
   .stats-grid {
     grid-template-columns: repeat(2,minmax(0,1fr));
@@ -835,5 +888,14 @@ td {
   .classes-checkbox-grid,
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .pagination-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .pagination-controls {
+    justify-content: space-between;
   }
 }

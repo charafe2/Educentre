@@ -24,7 +24,10 @@ export class FinancesComponent {
   selectedMonth = signal('');
   selectedStatus = signal('');
 
-  payments = this.paymentsService.payments;
+  payments = this.paymentsService.pagedPayments;
+  paymentPagination = this.paymentsService.pagination;
+  paymentSummary = this.paymentsService.summary;
+  loadingPayments = this.paymentsService.loadingPage;
   students = this.studentsService.students;
   classes = this.classesService.classes;
 
@@ -41,17 +44,9 @@ export class FinancesComponent {
     ])
   );
 
-  filteredPayments = computed(() => {
-    const month = this.selectedMonth();
-    const status = this.selectedStatus();
+  filteredPayments = computed(() => this.payments());
 
-    return this.payments().filter(payment =>
-      (!month || payment.periodMonth === month) &&
-      (!status || payment.status === status)
-    );
-  });
-
-  totals = computed(() => this.paymentsService.getTotals());
+  totals = computed(() => this.paymentSummary());
   totalAll = computed(() => {
     const totals = this.totals();
     return totals.totalPaid + totals.totalPending + totals.totalOverdue;
@@ -61,13 +56,18 @@ export class FinancesComponent {
   pendingPct = computed(() => this.percentage(this.totals().totalPending));
   overduePct = computed(() => this.percentage(this.totals().totalOverdue));
 
-  paidCount = computed(() => this.payments().filter(payment => payment.status === 'paid').length);
-  overdueCount = computed(() => this.payments().filter(payment => payment.status === 'overdue').length);
-  pendingCount = computed(() => this.payments().filter(payment => payment.status === 'pending').length);
-  recoveryRate = computed(() => this.payments().length
-    ? Math.round((this.paidCount() / this.payments().length) * 100)
+  paidCount = computed(() => this.paymentSummary().paidCount);
+  overdueCount = computed(() => this.paymentSummary().overdueCount);
+  pendingCount = computed(() => this.paymentSummary().pendingCount);
+  recoveryRate = computed(() => this.paymentSummary().totalCount
+    ? Math.round((this.paidCount() / this.paymentSummary().totalCount) * 100)
     : 0
   );
+  paymentRangeLabel = computed(() => {
+    const page = this.paymentPagination();
+    if (!page.total) return '0 resultat';
+    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+  });
 
   showModal = signal(false);
   editingPayment = signal<Payment | null>(null);
@@ -193,10 +193,35 @@ export class FinancesComponent {
 
   onMonthChange(event: Event): void {
     this.selectedMonth.set((event.target as HTMLSelectElement).value);
+    this.loadPaymentPage(1);
   }
 
   onStatusChange(event: Event): void {
     this.selectedStatus.set((event.target as HTMLSelectElement).value);
+    this.loadPaymentPage(1);
+  }
+
+  nextPaymentPage(): void {
+    const page = this.paymentPagination();
+    if (page.current_page < page.last_page) {
+      this.loadPaymentPage(page.current_page + 1);
+    }
+  }
+
+  previousPaymentPage(): void {
+    const page = this.paymentPagination();
+    if (page.current_page > 1) {
+      this.loadPaymentPage(page.current_page - 1);
+    }
+  }
+
+  private loadPaymentPage(page: number): void {
+    this.paymentsService.loadPaymentPage({
+      page,
+      perPage: 8,
+      month: this.selectedMonth(),
+      status: this.selectedStatus(),
+    });
   }
 
   private emptyForm(): {

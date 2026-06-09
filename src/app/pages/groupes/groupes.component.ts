@@ -76,12 +76,16 @@ export class GroupesComponent {
   }
 
   searchTerm = signal('');
+  selectedLevel = signal<string | null>(null);
+  selectedClasseId = signal<number | null>(null);
 
   dragState = signal<{ studentId: number; fromGroupId: number } | null>(null);
   dragOverGroupId = signal<number | null>(null);
 
   editingCapacityGroupId = signal<number | null>(null);
   editingCapacityValue = signal(0);
+  addingToGroupId = signal<number | null>(null);
+  studentPickerSearch = signal('');
 
   pendingFullDrop = signal<{
     studentId: number; fromGroupId: number; toGroupId: number;
@@ -119,6 +123,28 @@ export class GroupesComponent {
   totalGroups = computed(() => this.levelViews().reduce((sum, level) => sum + level.totalGroups, 0));
   totalStudents = computed(() => this.levelViews().reduce((sum, level) => sum + level.totalStudents, 0));
   fullGroups = computed(() => this.subjectViews().flatMap(view => view.groups).filter(group => this.isGroupFull(group)).length);
+  currentLevelView = computed<LevelView | null>(() => {
+    const levels = this.levelViews();
+    if (levels.length === 0) return null;
+    return levels.find(level => level.level === this.selectedLevel()) ?? levels[0];
+  });
+  currentSubjectView = computed<SubjectView | null>(() => {
+    const level = this.currentLevelView();
+    if (!level || level.subjects.length === 0) return null;
+    return level.subjects.find(subject => subject.classe.id === this.selectedClasseId()) ?? level.subjects[0];
+  });
+  currentGroups = computed(() => this.currentSubjectView()?.groups ?? []);
+  currentGroupsFull = computed(() => this.currentGroups().filter(group => this.isGroupFull(group)).length);
+  studentPickerContext = computed<{ group: Group; classe: Classe } | null>(() => {
+    const groupId = this.addingToGroupId();
+    if (groupId === null) return null;
+
+    const group = this.groupsService.groups().find(item => item.id === groupId);
+    const classeId = group ? this.groupsService.getClasseIdForGroup(group.id) : undefined;
+    const classe = classeId !== undefined ? this.classesService.getById(classeId) : undefined;
+
+    return group && classe ? { group, classe } : null;
+  });
 
   collapsedLevels = signal<Set<string>>(new Set());
 
@@ -154,6 +180,17 @@ export class GroupesComponent {
     return this.groupsService.getGroupsForClasse(classeId).some(g => g.studentIds.includes(studentId));
   }
 
+  private normalizeSubject(subject: string): string {
+    return subject.trim().toLowerCase();
+  }
+
+  private isSameSubjectAndLevel(fromClasse: Classe, toClasse: Classe): boolean {
+    return (
+      fromClasse.level === toClasse.level &&
+      this.normalizeSubject(fromClasse.subject) === this.normalizeSubject(toClasse.subject)
+    );
+  }
+
   canDropInGroup(toGroupId: number): boolean {
     const ds = this.dragState();
     if (!ds || ds.fromGroupId === toGroupId) return false;
@@ -167,6 +204,7 @@ export class GroupesComponent {
     if (!fromClasse || !toClasse) return false;
 
     if (fromClasse.level !== toClasse.level) return false;
+    if (this.isSameSubjectAndLevel(fromClasse, toClasse)) return true;
     if (fromClasseId !== toClasseId && this.isStudentInClasse(ds.studentId, toClasseId)) return false;
 
     return true;
@@ -186,6 +224,24 @@ export class GroupesComponent {
 
   isGroupFull(group: Group): boolean {
     return group.studentIds.length >= group.maxCapacity;
+  }
+
+  eligibleStudentsForGroup(group: Group, classe: Classe, term = ''): Student[] {
+    const normalizedTerm = term.trim().toLowerCase();
+
+    return this.studentsService.students()
+      .filter(student =>
+        student.status === 'active' &&
+        student.level === classe.level &&
+        student.enrolledClassIds.includes(classe.id) &&
+        !this.isStudentInClasse(student.id, classe.id) &&
+        (
+          !normalizedTerm ||
+          `${student.firstName} ${student.lastName}`.toLowerCase().includes(normalizedTerm) ||
+          student.code.toLowerCase().includes(normalizedTerm)
+        )
+      )
+      .sort((first, second) => `${first.firstName} ${first.lastName}`.localeCompare(`${second.firstName} ${second.lastName}`));
   }
 
   getGroupPaymentStats(group: Group, classe: Classe): { paid: number; total: number } {
@@ -218,6 +274,31 @@ export class GroupesComponent {
 
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.selectedLevel.set(null);
+    this.selectedClasseId.set(null);
+  }
+
+  selectLevel(level: string): void {
+    this.selectedLevel.set(level);
+    this.selectedClasseId.set(null);
+  }
+
+  selectSubject(classeId: number): void {
+    this.selectedClasseId.set(classeId);
+  }
+
+  createGroupForCurrentSubject(): void {
+    const subject = this.currentSubjectView();
+    if (!subject) return;
+
+    const nextGroupNumber = subject.groups.length + 1;
+    this.groupsService.createEmptyGroup(subject.classe.id, nextGroupNumber).subscribe({
+      next: () => {
+        this.groupsService.loadGroups();
+        this.toast.show('Nouveau groupe créé');
+      },
+      error: () => this.toast.show('Erreur lors de la création', 'error'),
+    });
   }
 
   startEditCapacity(groupId: number, current: number, event: Event): void {
@@ -241,6 +322,41 @@ export class GroupesComponent {
 
   cancelCapacity(): void {
     this.editingCapacityGroupId.set(null);
+  }
+
+  openStudentPicker(groupId: number): void {
+    this.addingToGroupId.set(groupId);
+    this.studentPickerSearch.set('');
+  }
+
+  closeStudentPicker(): void {
+    this.addingToGroupId.set(null);
+    this.studentPickerSearch.set('');
+  }
+
+  onStudentPickerSearch(event: Event): void {
+    this.studentPickerSearch.set((event.target as HTMLInputElement).value);
+  }
+
+  addStudentToGroup(studentId: number, group: Group): void {
+    if (group.studentIds.length >= group.maxCapacity) {
+      this.toast.show('Groupe complet', 'error');
+      return;
+    }
+
+    this.groupsService.groups.update(list =>
+      list.map(item => item.id === group.id ? { ...item, studentIds: [...item.studentIds, studentId] } : item)
+    );
+    this.groupsService.moveStudent(studentId, null, group.id).subscribe({
+      next: () => {
+        this.closeStudentPicker();
+        this.toast.show('Élève ajouté');
+      },
+      error: () => {
+        this.groupsService.loadGroups();
+        this.toast.show('Erreur lors de l\'ajout', 'error');
+      },
+    });
   }
 
   onCapacityKey(event: KeyboardEvent, groupId: number): void {
@@ -281,7 +397,12 @@ export class GroupesComponent {
     this.groupsService.groups.update(list =>
       list.map(g => {
         if (g.id === fromGroupId) return { ...g, studentIds: g.studentIds.filter(id => id !== studentId) };
-        if (g.id === toGroupId) return { ...g, studentIds: [...g.studentIds, studentId] };
+        if (g.id === toGroupId) {
+          return {
+            ...g,
+            studentIds: g.studentIds.includes(studentId) ? g.studentIds : [...g.studentIds, studentId],
+          };
+        }
         return g;
       })
     );
@@ -290,20 +411,28 @@ export class GroupesComponent {
   onDrop(event: DragEvent, toGroupId: number): void {
     event.preventDefault();
     const ds = this.dragState();
+
+    if (!ds || ds.fromGroupId === toGroupId) {
+      this.dragState.set(null);
+      this.dragOverGroupId.set(null);
+      return;
+    }
+
+    const canDrop = this.canDropInGroup(toGroupId);
     this.dragState.set(null);
     this.dragOverGroupId.set(null);
 
-    if (!ds || ds.fromGroupId === toGroupId) return;
-
-    if (!this.canDropInGroup(toGroupId)) {
+    if (!canDrop) {
       const fromClasseId = this.groupsService.getClasseIdForGroup(ds.fromGroupId);
       const toClasseId = this.groupsService.getClasseIdForGroup(toGroupId);
       const fromClasse = fromClasseId !== undefined ? this.classesService.getById(fromClasseId) : undefined;
       const toClasse = toClasseId !== undefined ? this.classesService.getById(toClasseId) : undefined;
       if (fromClasse && toClasse && fromClasse.level !== toClasse.level) {
         this.toast.show('Impossible : niveaux différents');
+      } else if (fromClasse && toClasse && !this.isSameSubjectAndLevel(fromClasse, toClasse)) {
+        this.toast.show('Élève déjà inscrit dans cette matière');
       } else {
-        this.toast.show('Élève déjà inscrit dans les deux matières');
+        this.toast.show('Déplacement impossible');
       }
       return;
     }

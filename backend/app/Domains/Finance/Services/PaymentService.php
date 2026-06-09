@@ -3,6 +3,7 @@
 namespace App\Domains\Finance\Services;
 
 use App\Domains\Finance\Models\Payment;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
@@ -15,6 +16,30 @@ class PaymentService
             ->orderByDesc('period_month')
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    public function paginate(int $tenantId, array $filters = []): LengthAwarePaginator
+    {
+        return $this->query($tenantId, $filters)
+            ->paginate(
+                perPage: $this->perPage($filters['per_page'] ?? null),
+                page: max(1, (int) ($filters['page'] ?? 1))
+            );
+    }
+
+    public function summary(int $tenantId, array $filters = []): array
+    {
+        $payments = $this->query($tenantId, $filters)->reorder();
+
+        return [
+            'totalPaid' => (float) (clone $payments)->where('status', 'paid')->sum('amount'),
+            'totalPending' => (float) (clone $payments)->where('status', 'pending')->sum('amount'),
+            'totalOverdue' => (float) (clone $payments)->where('status', 'overdue')->sum('amount'),
+            'paidCount' => (clone $payments)->where('status', 'paid')->count(),
+            'pendingCount' => (clone $payments)->where('status', 'pending')->count(),
+            'overdueCount' => (clone $payments)->where('status', 'overdue')->count(),
+            'totalCount' => (clone $payments)->count(),
+        ];
     }
 
     public function create(int $tenantId, array $data): Payment
@@ -52,6 +77,18 @@ class PaymentService
         return Payment::query()->where('tenant_id', $tenantId)->findOrFail($id);
     }
 
+    private function query(int $tenantId, array $filters)
+    {
+        return Payment::query()
+            ->where('tenant_id', $tenantId)
+            ->when($filters['month'] ?? null, function ($query, string $month) {
+                $query->whereDate('period_month', Carbon::createFromFormat('Y-m', $month)->startOfMonth());
+            })
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->orderByDesc('period_month')
+            ->orderByDesc('created_at');
+    }
+
     private function attributes(array $data, ?Payment $payment = null): array
     {
         $status = $data['status'] ?? $payment?->status ?? 'pending';
@@ -78,5 +115,10 @@ class PaymentService
             'note' => array_key_exists('note', $data) ? $data['note'] : $payment?->note,
             'invoice_generated' => $data['invoiceGenerated'] ?? $payment?->invoice_generated ?? false,
         ];
+    }
+
+    private function perPage(mixed $value): int
+    {
+        return max(1, min(50, (int) ($value ?: 8)));
     }
 }

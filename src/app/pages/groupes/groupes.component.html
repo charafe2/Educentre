@@ -1,239 +1,204 @@
-<div class="content-area">
-
-  <!-- Page Header -->
-  <div class="page-header groups-hero">
-    <div class="page-title">
-      <span class="eyebrow">Organisation des groupes</span>
-      <h1>Groupes</h1>
-      <p>Déplacez les élèves entre groupes, ajustez les capacités et repérez les groupes pleins sans quitter le tableau.</p>
-    </div>
-    <div class="header-right">
-      <div class="search-box">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" placeholder="Matière, niveau, classe…" (input)="onSearch($event)" />
+<div class="content-area groups-shell">
+  <div class="groups-board">
+    <section class="groups-overview" aria-label="Vue des groupes">
+      <div class="overview-copy">
+        <span class="eyebrow">Organisation</span>
+        <h1>Groupes</h1>
+        <p>Déplacez les élèves entre groupes, ajustez les capacités et repérez les groupes pleins sans quitter le tableau.</p>
       </div>
-    </div>
-  </div>
 
-  <div class="groups-dashboard">
-    <div class="metric-card primary">
-      <span class="metric-label">Élèves répartis</span>
-      <strong>{{ totalStudents() }}</strong>
-      <span class="metric-note">Sur {{ totalGroups() }} groupes</span>
-    </div>
-    <div class="metric-card">
-      <span class="metric-label">Niveaux</span>
-      <strong>{{ totalLevels() }}</strong>
-      <span class="metric-note">{{ totalSubjects() }} matières</span>
-    </div>
-    <div class="metric-card warning">
-      <span class="metric-label">Groupes pleins</span>
-      <strong>{{ fullGroups() }}</strong>
-      <span class="metric-note">Création auto disponible</span>
-    </div>
-    <div class="workflow-card">
-      <span><i class="fa-solid fa-grip-vertical"></i> Glissez un élève vers un groupe compatible</span>
-      <span><i class="fa-solid fa-circle-exclamation"></i> Les groupes complets demandent une confirmation</span>
-    </div>
-  </div>
-  @if (levelViews().length === 0) {
-    <div class="empty-state">
-      <i class="fa-solid fa-magnifying-glass-minus empty-icon"></i>
-      <p>Aucune matière trouvée.</p>
-    </div>
-  }
-
-  <!-- Level sections -->
-  @for (lv of levelViews(); track lv.level) {
-    <div class="level-section">
-
-      <!-- Level accordion header -->
-      <div class="level-header" (click)="toggleLevel(lv.level)">
-        <div class="level-header-left">
-          <div class="level-chevron-wrap" [class.collapsed]="isLevelCollapsed(lv.level)">
-            <i class="fa-solid fa-chevron-down"></i>
-          </div>
-          <span class="level-label">{{ lv.level }}</span>
-          <div class="level-pills">
-            <span class="level-pill subjects">
-              <i class="fa-solid fa-book"></i>
-              {{ lv.subjects.length }} matière{{ lv.subjects.length > 1 ? 's' : '' }}
-            </span>
-            <span class="level-pill groups">
-              <i class="fa-solid fa-layer-group"></i>
-              {{ lv.totalGroups }} groupe{{ lv.totalGroups > 1 ? 's' : '' }}
-            </span>
-            <span class="level-pill students">
-              <i class="fa-solid fa-user-graduate"></i>
-              {{ lv.totalStudents }} élève{{ lv.totalStudents > 1 ? 's' : '' }}
-            </span>
-          </div>
+      <div class="groups-dashboard">
+        <div class="metric-card primary">
+          <span class="metric-label">Élèves répartis</span>
+          <strong>{{ totalStudents() }}</strong>
+          <span class="metric-note">Sur {{ totalGroups() }} groupes</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Niveaux</span>
+          <strong>{{ totalLevels() }}</strong>
+          <span class="metric-note">{{ totalSubjects() }} matières</span>
+        </div>
+        <div class="metric-card warning">
+          <span class="metric-label">Groupes pleins</span>
+          <strong>{{ fullGroups() }}</strong>
+          <span class="metric-note">Création rapide disponible</span>
+        </div>
+        <div class="workflow-card">
+          <strong>À faire</strong>
+          <span>Glissez un élève vers un groupe compatible.</span>
         </div>
       </div>
+    </section>
 
-      <!-- Subject sections inside this level -->
-      @if (!isLevelCollapsed(lv.level)) {
-        <div class="level-body">
+    <section class="groups-workspace" aria-label="Gestion des groupes">
+      <aside class="level-rail">
+        <div class="rail-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Chercher..." (input)="onSearch($event)" />
+        </div>
 
-          @for (view of lv.subjects; track view.classe.id) {
-            <div class="subject-section">
-
-              <!-- Subject header -->
-              <div class="subject-header" (click)="toggleSubject(view.classe.id, $event)">
-                <div class="subject-chevron-wrap" [class.collapsed]="isSubjectCollapsed(view.classe.id)">
-                  <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <span class="subject-dot" [style.background]="view.classe.color"></span>
-                <div class="subject-info">
-                  <span class="subject-name">{{ view.classe.name }}</span>
-                  <span class="subject-meta">
-                    {{ view.classe.subject }} · {{ view.totalStudents }} élève(s)
-                  </span>
-                </div>
-                <div class="subject-badge" [style.background]="view.classe.bgColor" [style.color]="view.classe.color">
-                  {{ view.groups.length }} groupe(s)
-                </div>
-                <button class="btn-edit-class" (click)="openEditClasse(view.classe); $event.stopPropagation()" title="Modifier la classe">
-                  <i class="fa-solid fa-pen-to-square"></i>
-                </button>
-              </div>
-
-              <!-- Group cards -->
-              @if (!isSubjectCollapsed(view.classe.id)) {
-                <div class="groups-row">
-                  @for (group of view.groups; track group.id) {
-                    @let stats = getGroupPaymentStats(group, view.classe);
-                    <div
-                      class="group-card"
-                      [class.drag-target]="isDragTarget(group.id)"
-                      [class.drag-source]="isSameGroup(group.id)"
-                      [class.drag-blocked]="isBlockedDragTarget(group.id)"
-                      [class.group-full-drop]="isGroupFull(group) && isDragging() && !isBlockedDragTarget(group.id)"
-                      (dragover)="onDragOver($event, group.id)"
-                      (dragleave)="onDragLeave($event, group.id)"
-                      (drop)="onDrop($event, group.id)"
-                    >
-                      <!-- Card header accent bar -->
-                      <div class="card-accent" [style.background]="view.classe.color"></div>
-
-                      <!-- Card head -->
-                      <div class="card-head">
-                        <div class="head-left">
-                          <span class="group-title">Groupe {{ group.groupNumber }}</span>
-                          @if (isGroupFull(group)) {
-                            <span class="tag-full">COMPLET</span>
-                          }
-                        </div>
-
-                        @if (editingCapacityGroupId() === group.id) {
-                          <div class="capacity-edit">
-                            <span class="edit-current" [style.color]="view.classe.color">
-                              {{ group.studentIds.length }}/
-                            </span>
-                            <input
-                              class="capacity-input"
-                              type="number"
-                              min="1"
-                              [(ngModel)]="editingCapacityValue"
-                              (keydown)="onCapacityKey($event, group.id)"
-                              (blur)="confirmCapacity(group.id)"
-                              #capInput
-                            />
-                            <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
-                              <i class="fa-solid fa-check"></i>
-                            </button>
-                            <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
-                              <i class="fa-solid fa-xmark"></i>
-                            </button>
-                          </div>
-                        } @else {
-                          <div class="capacity-ring-wrap">
-                            <div class="capacity-ring" [style.border-color]="view.classe.color" [style.color]="view.classe.color">
-                              {{ group.studentIds.length }}<span class="ring-sep">/</span>{{ group.maxCapacity }}
-                            </div>
-                            <button
-                              class="edit-cap-btn"
-                              title="Modifier la limite"
-                              (click)="startEditCapacity(group.id, group.maxCapacity, $event)"
-                            >
-                              <i class="fa-regular fa-pen-to-square"></i>
-                            </button>
-                          </div>
-
-                        }
-                      </div>
-
-                      <!-- Payment progress bar -->
-                      <div class="capacity-bar-track">
-                        <div
-                          class="capacity-bar-fill"
-                          [style.width.%]="stats.total > 0 ? (stats.paid / stats.total) * 100 : 0"
-                        ></div>
-                      </div>
-
-                      <!-- Students -->
-                      <div class="student-list" [class.list-dragging]="dragState()">
-                        @if (group.studentIds.length === 0) {
-                          <div class="empty-group">Aucun élève</div>
-                        }
-                        @for (sid of group.studentIds; track sid) {
-                          @let student = getStudent(sid);
-                          @if (student) {
-                            <div
-                              class="student-row"
-                              [class.row-dragging]="isBeingDragged(sid)"
-                              draggable="true"
-                              (dragstart)="onDragStart($event, sid, group.id)"
-                              (dragend)="onDragEnd()"
-                            >
-                              <div class="s-avatar" [style.background]="student.avatarColor">
-                                {{ getInitials(student) }}
-                              </div>
-                              <div class="s-info">
-                                <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
-                                <span class="s-code">{{ student.code }}</span>
-                              </div>
-                              <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
-                                {{ absenceLabel(student) }}
-                              </span>
-                              <i class="fa-solid fa-grip-vertical s-grip"></i>
-                            </div>
-                          }
-                        }
-                      </div>
-
-                      <!-- Payment footer -->
-                      <div class="card-footer">
-                        <i class="fa-regular fa-credit-card footer-icon"></i>
-                        <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
-                        <span class="footer-sep">/</span>
-                        <span class="footer-total">{{ formatMoney(stats.total) }}</span>
-                      </div>
-                    </div>
-                  }
-
-                  <!-- Auto-create hint -->
-                  @if (view.groups.length > 0 && isGroupFull(view.groups[view.groups.length - 1])) {
-                    <div class="new-group-hint">
-                      <i class="fa-solid fa-plus hint-icon"></i>
-                      <span>Nouveau groupe créé automatiquement au prochain ajout</span>
-                    </div>
-                  }
-                </div>
-              }
-
-            </div>
+        <div class="rail-list">
+          @for (lv of levelViews(); track lv.level) {
+            <button type="button" class="rail-item" [class.active]="currentLevelView()?.level === lv.level" (click)="selectLevel(lv.level)">
+              <span class="rail-name">{{ lv.level }}</span>
+              <span class="rail-meta">{{ lv.subjects.length }} matières</span>
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          } @empty {
+            <div class="rail-empty">Aucun niveau</div>
           }
-
         </div>
-      }
+      </aside>
 
-    </div>
-  }
+      <aside class="subject-rail">
+        @if (currentLevelView(); as lv) {
+          <div class="rail-heading">
+            <span>{{ lv.level }}</span>
+            <strong>{{ lv.totalStudents }} élèves</strong>
+          </div>
 
+          <div class="subject-list">
+            @for (view of lv.subjects; track view.classe.id) {
+              <button type="button" class="subject-link" [class.active]="currentSubjectView()?.classe?.id === view.classe.id" (click)="selectSubject(view.classe.id)">
+                <span class="subject-mark" [style.background]="view.classe.color"></span>
+                <span class="subject-link-main">
+                  <strong>{{ view.classe.name }}</strong>
+                  <small>{{ view.classe.subject }} · {{ view.groups.length }} groupe(s)</small>
+                </span>
+                <span class="subject-count">{{ view.totalStudents }}</span>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="rail-empty">Aucune matière</div>
+        }
+      </aside>
+
+      <main class="group-detail">
+        @if (currentSubjectView(); as view) {
+          <div class="detail-header">
+            <div>
+              <span class="detail-kicker">{{ view.classe.level }}</span>
+              <h2>{{ view.classe.name }}</h2>
+              <p>{{ view.classe.subject }} · {{ view.totalStudents }} élève(s)</p>
+            </div>
+            <div class="detail-actions">
+              <span class="pill-info">{{ currentGroups().length }} groupe(s)</span>
+              <span class="pill-info danger" [class.muted]="currentGroupsFull() === 0">{{ currentGroupsFull() }} plein(s)</span>
+              <button class="btn-edit-class" (click)="openEditClasse(view.classe)" title="Modifier la classe">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="group-lanes">
+            @for (group of view.groups; track group.id) {
+              @let stats = getGroupPaymentStats(group, view.classe);
+              <section
+                class="group-card"
+                [class.drag-target]="isDragTarget(group.id)"
+                [class.drag-source]="isSameGroup(group.id)"
+                [class.drag-blocked]="isBlockedDragTarget(group.id)"
+                [class.group-full-drop]="isGroupFull(group) && isDragging() && !isBlockedDragTarget(group.id)"
+                (dragover)="onDragOver($event, group.id)"
+                (dragleave)="onDragLeave($event, group.id)"
+                (drop)="onDrop($event, group.id)"
+              >
+                <div class="card-head">
+                  <div class="head-left">
+                    <span class="group-title">{{ view.classe.subject }} - G{{ group.groupNumber }}</span>
+                    @if (isGroupFull(group)) {
+                      <span class="tag-full">Complet</span>
+                    }
+                  </div>
+
+                  @if (editingCapacityGroupId() === group.id) {
+                    <div class="capacity-edit">
+                      <span class="edit-current" [style.color]="view.classe.color">{{ group.studentIds.length }}/</span>
+                      <input
+                        class="capacity-input"
+                        type="number"
+                        min="1"
+                        [(ngModel)]="editingCapacityValue"
+                        (keydown)="onCapacityKey($event, group.id)"
+                        (blur)="confirmCapacity(group.id)"
+                      />
+                      <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                      <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </div>
+                  } @else {
+                    <button class="capacity-chip" (click)="startEditCapacity(group.id, group.maxCapacity, $event)" title="Modifier la limite">
+                      <span>{{ group.studentIds.length }}</span>/<span>{{ group.maxCapacity }}</span>
+                    </button>
+                  }
+                </div>
+
+                <div class="lane-meter">
+                  <span [style.width.%]="group.maxCapacity > 0 ? (group.studentIds.length / group.maxCapacity) * 100 : 0"></span>
+                </div>
+
+                <div class="student-list" [class.list-dragging]="dragState()">
+                  @if (group.studentIds.length === 0) {
+                    <div class="empty-group">
+                      <button type="button" class="empty-add-btn" (click)="openStudentPicker(group.id)">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>Ajouter étudiant</span>
+                      </button>
+                    </div>
+                  }
+                  @for (sid of group.studentIds; track sid) {
+                    @let student = getStudent(sid);
+                    @if (student) {
+                      <div
+                        class="student-row"
+                        [class.row-dragging]="isBeingDragged(sid)"
+                        draggable="true"
+                        (dragstart)="onDragStart($event, sid, group.id)"
+                        (dragend)="onDragEnd()"
+                      >
+                        <div class="s-avatar" [style.background]="student.avatarColor">
+                          {{ getInitials(student) }}
+                        </div>
+                        <div class="s-info">
+                          <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
+                          <span class="s-code">{{ student.code }}</span>
+                        </div>
+                        <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
+                          {{ absenceLabel(student) }}
+                        </span>
+                        <i class="fa-solid fa-grip-vertical s-grip"></i>
+                      </div>
+                    }
+                  }
+                </div>
+
+                <div class="card-footer">
+                  <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
+                  <span class="footer-total">/ {{ formatMoney(stats.total) }}</span>
+                </div>
+              </section>
+            }
+
+            <button type="button" class="new-group-card" (click)="createGroupForCurrentSubject()">
+              <i class="fa-solid fa-plus"></i>
+              <span>Nouveau groupe</span>
+            </button>
+          </div>
+        } @else {
+          <div class="empty-state">
+            <i class="fa-solid fa-magnifying-glass-minus empty-icon"></i>
+            <p>Aucune matière trouvée.</p>
+          </div>
+        }
+      </main>
+    </section>
+  </div>
 </div>
 
-<!-- Edit classe modal -->
 @if (editingClasse(); as ec) {
   <div class="modal-backdrop" (click)="closeEditClasse()">
     <div class="edit-modal" (click)="$event.stopPropagation()">
@@ -293,7 +258,7 @@
           <label>Professeur</label>
           <select [(ngModel)]="editForm.teacherId">
             @for (t of allTeachers(); track t.id) {
-              <option [value]="t.id">{{ t.firstName }} {{ t.lastName }} — {{ t.specialty }}</option>
+              <option [value]="t.id">{{ t.firstName }} {{ t.lastName }} - {{ t.specialty }}</option>
             }
           </select>
         </div>
@@ -312,7 +277,48 @@
   </div>
 }
 
-<!-- Full-group confirmation modal -->
+@if (studentPickerContext(); as picker) {
+  <div class="modal-backdrop" (click)="closeStudentPicker()">
+    <div class="student-picker-modal" (click)="$event.stopPropagation()">
+      <div class="student-picker-modal-header">
+        <div>
+          <span class="modal-kicker">{{ picker.classe.level }}</span>
+          <h3>Ajouter étudiant</h3>
+          <p>{{ picker.classe.subject }} - G{{ picker.group.groupNumber }}</p>
+        </div>
+        <button class="btn-close-modal" (click)="closeStudentPicker()" aria-label="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="student-picker-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          placeholder="Chercher par nom ou code..."
+          [value]="studentPickerSearch()"
+          (input)="onStudentPickerSearch($event)"
+          autofocus
+        />
+      </div>
+
+      <div class="student-picker-list modal-list">
+        @for (candidate of eligibleStudentsForGroup(picker.group, picker.classe, studentPickerSearch()); track candidate.id) {
+          <button type="button" class="student-pick-row" (click)="addStudentToGroup(candidate.id, picker.group)">
+            <span class="s-avatar" [style.background]="candidate.avatarColor">{{ getInitials(candidate) }}</span>
+            <span>
+              <strong>{{ candidate.firstName }} {{ candidate.lastName }}</strong>
+              <small>{{ candidate.code }} · {{ candidate.level }}</small>
+            </span>
+          </button>
+        } @empty {
+          <div class="student-picker-empty">Aucun élève disponible pour ce niveau.</div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
 @if (pendingFullDrop(); as pending) {
   <div class="modal-backdrop" (click)="keepInSameGroup()">
     <div class="confirm-modal" (click)="$event.stopPropagation()">

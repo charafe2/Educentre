@@ -60,6 +60,12 @@ export class GroupsService {
     });
   }
 
+  createEmptyGroup(classeId: number, groupNumber: number): Observable<ApiResponse<{id: number}>> {
+    return this.http.post<ApiResponse<{id: number}>>(`${environment.apiUrl}/v1/groups`, {
+      classeId, groupNumber, maxCapacity: DEFAULT_CAPACITY, studentIds: [],
+    });
+  }
+
   updateCapacity(groupId: number, newCapacity: number): Observable<ApiResponse<null>> {
     return this.http.put<ApiResponse<null>>(`${environment.apiUrl}/v1/groups/${groupId}/capacity`, { maxCapacity: newCapacity });
   }

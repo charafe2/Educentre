@@ -363,6 +363,16 @@
 .lp .p-card__price { display: flex; align-items: baseline; gap: 4px; }
 .lp .p-card__amount { font-size: 48px; font-weight: 700; letter-spacing: -0.02em; color: var(--color-black); }
 .lp .p-card__period { font-size: 15px; color: var(--color-gray-500); }
+.lp .p-card__per-student {
+  margin: var(--space-3) 0 var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid rgba(0,113,227,0.28);
+  color: var(--color-blue);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+}
 .lp .p-card__desc { font-size: 14px; color: var(--color-gray-500); line-height: 1.5; }
 .lp .p-card__divider { height: 1px; background: var(--color-gray-100); }
 .lp .p-card__features { display: flex; flex-direction: column; gap: var(--space-3); flex: 1; }

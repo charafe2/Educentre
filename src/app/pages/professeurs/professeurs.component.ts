@@ -40,21 +40,13 @@ export class ProfesseursComponent {
   searchTerm = signal('');
   statusFilter = signal('');
 
-  teachers = this.teachersService.teachers;
+  teachers = this.teachersService.pagedTeachers;
+  pagination = this.teachersService.pagination;
+  teacherSummary = this.teachersService.summary;
+  loadingPage = this.teachersService.loadingPage;
   classes = this.classesService.classes;
 
-  filteredTeachers = computed(() => {
-    const term = this.searchTerm().toLowerCase();
-    const status = this.statusFilter();
-    return this.teachers().filter(t => {
-      if (status && t.status !== status) return false;
-      if (!term) return true;
-      return t.firstName.toLowerCase().includes(term)
-        || t.lastName.toLowerCase().includes(term)
-        || t.email.toLowerCase().includes(term)
-        || t.specialty.toLowerCase().includes(term);
-    });
-  });
+  filteredTeachers = computed(() => this.teachers());
 
   teacherRows = computed<TeacherRow[]>(() => {
     const allClasses = this.classes();
@@ -70,9 +62,15 @@ export class ProfesseursComponent {
     });
   });
 
-  totalCount = computed(() => this.teachers().length);
-  activeCount = computed(() => this.teachers().filter(t => t.status === 'active').length);
-  totalPayroll = computed(() => this.teacherRows().reduce((s, r) => s + r.salary, 0));
+  totalCount = computed(() => this.teacherSummary().total);
+  activeCount = computed(() => this.teacherSummary().active);
+  totalPayroll = computed(() => this.teacherSummary().payroll);
+  resultCount = computed(() => this.pagination().total);
+  pageRangeLabel = computed(() => {
+    const page = this.pagination();
+    if (!page.total) return '0 resultat';
+    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+  });
 
   showModal = signal(false);
   editingTeacher = signal<Teacher | null>(null);
@@ -179,9 +177,34 @@ export class ProfesseursComponent {
 
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.loadPage(1);
   }
 
   onStatusFilter(event: Event): void {
     this.statusFilter.set((event.target as HTMLSelectElement).value);
+    this.loadPage(1);
+  }
+
+  nextPage(): void {
+    const page = this.pagination();
+    if (page.current_page < page.last_page) {
+      this.loadPage(page.current_page + 1);
+    }
+  }
+
+  previousPage(): void {
+    const page = this.pagination();
+    if (page.current_page > 1) {
+      this.loadPage(page.current_page - 1);
+    }
+  }
+
+  private loadPage(page: number): void {
+    this.teachersService.loadTeacherPage({
+      page,
+      perPage: 8,
+      search: this.searchTerm().trim(),
+      status: this.statusFilter(),
+    });
   }
 }

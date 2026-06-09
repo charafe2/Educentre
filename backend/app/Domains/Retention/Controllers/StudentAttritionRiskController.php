@@ -13,9 +13,17 @@ class StudentAttritionRiskController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $result = $this->riskService->paginate(
+            $request->user()->tenant_id,
+            max(1, $request->integer('page', 1)),
+            max(1, min(50, $request->integer('per_page', 8))),
+        );
+
         return $this->success([
             'rule' => $this->riskService->rule(),
-            'students' => $this->riskService->all($request->user()->tenant_id),
+            'students' => $result['students'],
+        ], meta: [
+            'pagination' => $result['pagination'],
         ]);
     }
 }

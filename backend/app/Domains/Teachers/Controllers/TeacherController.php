@@ -8,6 +8,7 @@ use App\Domains\Teachers\Resources\TeacherResource;
 use App\Domains\Teachers\Services\TeacherService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TeacherController extends Controller
 {
@@ -15,10 +16,35 @@ class TeacherController extends Controller
         private readonly TeacherService $teacherService
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $teachers = $this->teacherService->all();
-        return $this->success(TeacherResource::collection($teachers));
+        if ($request->boolean('all')) {
+            $teachers = $this->teacherService->all($request->user()->tenant_id);
+
+            return $this->success(TeacherResource::collection($teachers));
+        }
+
+        $teachers = $this->teacherService->paginate($request->user()->tenant_id, $request->only([
+            'page',
+            'per_page',
+            'search',
+            'status',
+        ]));
+
+        return $this->success(
+            TeacherResource::collection($teachers->items()),
+            meta: [
+                'pagination' => [
+                    'current_page' => $teachers->currentPage(),
+                    'per_page' => $teachers->perPage(),
+                    'total' => $teachers->total(),
+                    'last_page' => $teachers->lastPage(),
+                    'from' => $teachers->firstItem(),
+                    'to' => $teachers->lastItem(),
+                ],
+                'summary' => $this->teacherService->summary($request->user()->tenant_id),
+            ]
+        );
     }
 
     public function show(int $id): JsonResponse

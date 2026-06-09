@@ -30,33 +30,26 @@ export class EtudiantsComponent {
 
   levels = ['3ème Collège', 'Tronc Commun', '1ère Bac', '2ème Bac'];
 
-  students = this.studentsService.students;
+  students = this.studentsService.pagedStudents;
+  pagination = this.studentsService.pagination;
+  studentSummary = this.studentsService.summary;
+  loadingPage = this.studentsService.loadingPage;
 
-  filteredStudents = computed(() => {
-    const term = this.searchTerm().toLowerCase();
-    const level = this.selectedLevel();
-    const status = this.selectedStatus();
-    const payment = this.selectedPaymentStatus();
-    return this.students().filter(s => {
-      const matchesSearch = !term ||
-        s.firstName.toLowerCase().includes(term) ||
-        s.lastName.toLowerCase().includes(term) ||
-        s.code.toLowerCase().includes(term) ||
-        s.school.toLowerCase().includes(term);
-      const matchesLevel = !level || s.level === level;
-      const matchesStatus = !status || s.status === status;
-      const matchesPayment = !payment || s.paymentStatus === payment;
-      return matchesSearch && matchesLevel && matchesStatus && matchesPayment;
-    });
-  });
+  filteredStudents = computed(() => this.students());
 
-  totalCount = computed(() => this.students().length);
-  activeCount = computed(() => this.students().filter(s => s.status === 'active').length);
-  inactiveCount = computed(() => Math.max(this.totalCount() - this.activeCount(), 0));
-  overduePaymentCount = computed(() => this.students().filter(s => s.paymentStatus === 'overdue').length);
+  totalCount = computed(() => this.studentSummary().total);
+  activeCount = computed(() => this.studentSummary().active);
+  inactiveCount = computed(() => this.studentSummary().inactive);
+  overduePaymentCount = computed(() => this.studentSummary().overduePayments);
   activeRate = computed(() => {
     const total = this.totalCount();
     return total > 0 ? Math.round((this.activeCount() / total) * 100) : 0;
+  });
+  resultCount = computed(() => this.pagination().total);
+  pageRangeLabel = computed(() => {
+    const page = this.pagination();
+    if (!page.total) return '0 resultat';
+    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
   });
 
   showModal = signal(false);
@@ -192,18 +185,47 @@ export class EtudiantsComponent {
 
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.loadPage(1);
   }
 
   onLevelChange(event: Event): void {
     this.selectedLevel.set((event.target as HTMLSelectElement).value);
+    this.loadPage(1);
   }
 
   onStatusChange(event: Event): void {
     this.selectedStatus.set((event.target as HTMLSelectElement).value);
+    this.loadPage(1);
   }
 
   onPaymentStatusChange(event: Event): void {
     this.selectedPaymentStatus.set((event.target as HTMLSelectElement).value);
+    this.loadPage(1);
+  }
+
+  nextPage(): void {
+    const page = this.pagination();
+    if (page.current_page < page.last_page) {
+      this.loadPage(page.current_page + 1);
+    }
+  }
+
+  previousPage(): void {
+    const page = this.pagination();
+    if (page.current_page > 1) {
+      this.loadPage(page.current_page - 1);
+    }
+  }
+
+  private loadPage(page: number): void {
+    this.studentsService.loadStudentPage({
+      page,
+      perPage: 8,
+      search: this.searchTerm().trim(),
+      level: this.selectedLevel(),
+      status: this.selectedStatus(),
+      paymentStatus: this.selectedPaymentStatus(),
+    });
   }
 
   rappeler(s: Student): void {

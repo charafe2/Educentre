@@ -5,6 +5,16 @@ import { PaymentIssueStatus, StudentAttritionRisk, StudentAttritionRiskReport } 
 import { AnalyticsService } from '../../services/analytics.service';
 import { RetentionService } from '../../services/retention.service';
 import { ToastService } from '../../services/toast.service';
+import { PaginationMeta } from '../../models/api-response.model';
+
+const EMPTY_PAGINATION: PaginationMeta = {
+  current_page: 1,
+  per_page: 8,
+  total: 0,
+  last_page: 1,
+  from: null,
+  to: null,
+};
 
 const EMPTY_REPORT: AnalyticsReport = {
   period: { key: 'last_6_months', start: '', end: '' },
@@ -19,6 +29,7 @@ const EMPTY_REPORT: AnalyticsReport = {
   classAttendance: [],
   enrollmentTrend: [],
   teacherPerformance: [],
+  teacherPerformancePagination: EMPTY_PAGINATION,
 };
 
 @Component({
@@ -41,6 +52,9 @@ export class AnalytiquesComponent {
   selectedPeriod = signal<AnalyticsPeriod>('last_6_months');
   report = signal<AnalyticsReport>(EMPTY_REPORT);
   riskReport = signal<StudentAttritionRiskReport | null>(null);
+  riskPagination = signal<PaginationMeta>(EMPTY_PAGINATION);
+  teacherPage = signal(1);
+  riskPage = signal(1);
   riskLoading = signal(true);
 
   totalStudents = computed(() => this.report().summary.totalStudents);
@@ -50,8 +64,11 @@ export class AnalytiquesComponent {
   activeTeachers = computed(() => this.report().summary.activeTeachers);
   paymentDistribution = computed(() => this.report().paymentDistribution);
   teacherPerformance = computed(() => this.report().teacherPerformance);
+  teacherPerformancePagination = computed(() => this.report().teacherPerformancePagination);
   studentRisks = computed(() => this.riskReport()?.students ?? []);
-  riskCount = computed(() => this.studentRisks().length);
+  riskCount = computed(() => this.riskPagination().total);
+  teacherPerformanceRangeLabel = computed(() => this.rangeLabel(this.teacherPerformancePagination()));
+  riskRangeLabel = computed(() => this.rangeLabel(this.riskPagination()));
 
   monthlyRevenues = computed(() => {
     const revenues = this.report().monthlyRevenues;
@@ -82,6 +99,7 @@ export class AnalytiquesComponent {
 
   selectPeriod(period: AnalyticsPeriod): void {
     this.selectedPeriod.set(period);
+    this.teacherPage.set(1);
     this.loadReport();
   }
 
@@ -118,8 +136,40 @@ export class AnalytiquesComponent {
     return this.monthLabel(period, 'long');
   }
 
+  nextTeacherPerformancePage(): void {
+    const page = this.teacherPerformancePagination();
+    if (page.current_page < page.last_page) {
+      this.teacherPage.set(page.current_page + 1);
+      this.loadReport();
+    }
+  }
+
+  previousTeacherPerformancePage(): void {
+    const page = this.teacherPerformancePagination();
+    if (page.current_page > 1) {
+      this.teacherPage.set(page.current_page - 1);
+      this.loadReport();
+    }
+  }
+
+  nextRiskPage(): void {
+    const page = this.riskPagination();
+    if (page.current_page < page.last_page) {
+      this.riskPage.set(page.current_page + 1);
+      this.loadStudentRisks();
+    }
+  }
+
+  previousRiskPage(): void {
+    const page = this.riskPagination();
+    if (page.current_page > 1) {
+      this.riskPage.set(page.current_page - 1);
+      this.loadStudentRisks();
+    }
+  }
+
   private loadReport(): void {
-    this.analyticsService.getReport(this.selectedPeriod()).subscribe({
+    this.analyticsService.getReport(this.selectedPeriod(), this.teacherPage(), 8).subscribe({
       next: response => {
         if (response.success) {
           this.report.set(response.data);
@@ -131,10 +181,11 @@ export class AnalytiquesComponent {
 
   private loadStudentRisks(): void {
     this.riskLoading.set(true);
-    this.retentionService.getStudentRisks().subscribe({
+    this.retentionService.getStudentRisks(this.riskPage(), 8).subscribe({
       next: response => {
         if (response.success) {
           this.riskReport.set(response.data);
+          this.riskPagination.set(response.meta.pagination);
         }
         this.riskLoading.set(false);
       },
@@ -158,5 +209,10 @@ export class AnalytiquesComponent {
 
   private monthLabel(month: string, style: 'short' | 'long'): string {
     return new Intl.DateTimeFormat('fr-MA', { month: style }).format(new Date(`${month}-01`));
+  }
+
+  private rangeLabel(page: PaginationMeta): string {
+    if (!page.total) return '0 resultat';
+    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
   }
 }

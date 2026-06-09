@@ -40,7 +40,7 @@ class GroupService
 
     public function moveStudent(int $studentId, ?int $fromGroupId, int $toGroupId): void
     {
-        $toGroup = Group::findOrFail($toGroupId);
+        $toGroup = Group::with('courseClass')->findOrFail($toGroupId);
 
         $enrollment = Enrollment::where('student_id', $studentId)
             ->where('class_id', $toGroup->class_id)
@@ -48,6 +48,44 @@ class GroupService
 
         if ($enrollment) {
             $enrollment->update(['group_id' => $toGroupId]);
+
+            if ($fromGroupId !== null && $fromGroupId !== $toGroupId) {
+                Enrollment::where('student_id', $studentId)
+                    ->where('group_id', $fromGroupId)
+                    ->where('id', '!=', $enrollment->id)
+                    ->update(['group_id' => null]);
+            }
+
+            return;
         }
+
+        if ($fromGroupId === null || $fromGroupId === $toGroupId) {
+            return;
+        }
+
+        $fromGroup = Group::with('courseClass')->find($fromGroupId);
+        if (!$fromGroup || !$this->isSameSubjectAndLevel($fromGroup, $toGroup)) {
+            return;
+        }
+
+        Enrollment::where('student_id', $studentId)
+            ->where('group_id', $fromGroupId)
+            ->update([
+                'class_id' => $toGroup->class_id,
+                'group_id' => $toGroupId,
+            ]);
+    }
+
+    private function isSameSubjectAndLevel(Group $fromGroup, Group $toGroup): bool
+    {
+        $fromClass = $fromGroup->courseClass;
+        $toClass = $toGroup->courseClass;
+
+        if (!$fromClass || !$toClass) {
+            return false;
+        }
+
+        return $fromClass->level === $toClass->level
+            && mb_strtolower(trim($fromClass->subject)) === mb_strtolower(trim($toClass->subject));
     }
 }

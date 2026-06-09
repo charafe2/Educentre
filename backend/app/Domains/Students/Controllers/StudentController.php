@@ -18,9 +18,35 @@ class StudentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $students = $this->studentService->all($request->user()->tenant_id);
+        if ($request->boolean('all')) {
+            $students = $this->studentService->all($request->user()->tenant_id);
 
-        return $this->success(StudentResource::collection($students));
+            return $this->success(StudentResource::collection($students));
+        }
+
+        $students = $this->studentService->paginate($request->user()->tenant_id, $request->only([
+            'page',
+            'per_page',
+            'search',
+            'level',
+            'status',
+            'payment_status',
+        ]));
+
+        return $this->success(
+            StudentResource::collection($students->items()),
+            meta: [
+                'pagination' => [
+                    'current_page' => $students->currentPage(),
+                    'per_page' => $students->perPage(),
+                    'total' => $students->total(),
+                    'last_page' => $students->lastPage(),
+                    'from' => $students->firstItem(),
+                    'to' => $students->lastItem(),
+                ],
+                'summary' => $this->studentService->summary($request->user()->tenant_id),
+            ]
+        );
     }
 
     public function store(StoreStudentRequest $request): JsonResponse

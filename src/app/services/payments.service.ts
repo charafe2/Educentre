@@ -1,29 +1,89 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api-response.model';
+import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
 import { Payment, PaymentMethod } from '../models/payment.model';
 import { StudentsService } from './students.service';
 
 export type PaymentPayload = Omit<Payment, 'id' | 'paidAt'> & { paidAt?: string };
 
+export interface PaymentPageFilters {
+  page?: number;
+  perPage?: number;
+  month?: string;
+  status?: string;
+}
+
+export interface PaymentSummary {
+  totalPaid: number;
+  totalPending: number;
+  totalOverdue: number;
+  paidCount: number;
+  pendingCount: number;
+  overdueCount: number;
+  totalCount: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class PaymentsService {
   private http = inject(HttpClient);
   private studentsService = inject(StudentsService);
+  private pageCache = new Map<string, PaginatedApiResponse<Payment, PaymentSummary>>();
+  private lastPageFilters: PaymentPageFilters = { page: 1, perPage: 8 };
 
   payments = signal<Payment[]>([]);
+  pagedPayments = signal<Payment[]>([]);
+  pagination = signal<PaginationMeta>({ current_page: 1, per_page: 8, total: 0, last_page: 1, from: null, to: null });
+  summary = signal<PaymentSummary>({
+    totalPaid: 0,
+    totalPending: 0,
+    totalOverdue: 0,
+    paidCount: 0,
+    pendingCount: 0,
+    overdueCount: 0,
+    totalCount: 0,
+  });
+  loadingPage = signal(false);
 
   constructor() {
     this.loadPayments();
+    this.loadPaymentPage();
   }
 
   loadPayments(): void {
-    this.http.get<ApiResponse<Payment[]>>(`${environment.apiUrl}/v1/payments`).subscribe(res => {
+    this.http.get<ApiResponse<Payment[]>>(`${environment.apiUrl}/v1/payments`, {
+      params: new HttpParams().set('all', 'true'),
+    }).subscribe(res => {
       if (res.success) {
         this.payments.set(res.data);
       }
+    });
+  }
+
+  loadPaymentPage(filters: PaymentPageFilters = this.lastPageFilters): void {
+    const normalized = { page: 1, perPage: 8, ...filters };
+    this.lastPageFilters = normalized;
+    const key = this.cacheKey(normalized);
+    const cached = this.pageCache.get(key);
+
+    if (cached) {
+      this.applyPage(cached);
+      return;
+    }
+
+    this.loadingPage.set(true);
+    this.http.get<PaginatedApiResponse<Payment, PaymentSummary>>(`${environment.apiUrl}/v1/payments`, {
+      params: this.params(normalized),
+    }).subscribe({
+      next: res => {
+        if (res.success) {
+          this.pageCache.set(key, res);
+          this.applyPage(res);
+        }
+      },
+      complete: () => this.loadingPage.set(false),
+      error: () => this.loadingPage.set(false),
     });
   }
 
@@ -80,7 +140,36 @@ export class PaymentsService {
   }
 
   private refreshRelatedData(): void {
+    this.pageCache.clear();
     this.loadPayments();
+    this.loadPaymentPage(this.lastPageFilters);
     this.studentsService.loadStudents();
+    this.studentsService.loadStudentPage();
+  }
+
+  private applyPage(res: PaginatedApiResponse<Payment, PaymentSummary>): void {
+    this.pagedPayments.set(res.data);
+    this.pagination.set(res.meta.pagination);
+    this.summary.set(res.meta.summary ?? this.summary());
+  }
+
+  private params(filters: PaymentPageFilters): HttpParams {
+    let params = new HttpParams()
+      .set('page', String(filters.page ?? 1))
+      .set('per_page', String(filters.perPage ?? 8));
+
+    if (filters.month) params = params.set('month', filters.month);
+    if (filters.status) params = params.set('status', filters.status);
+
+    return params;
+  }
+
+  private cacheKey(filters: PaymentPageFilters): string {
+    return JSON.stringify({
+      page: filters.page ?? 1,
+      perPage: filters.perPage ?? 8,
+      month: filters.month ?? '',
+      status: filters.status ?? '',
+    });
   }
 }

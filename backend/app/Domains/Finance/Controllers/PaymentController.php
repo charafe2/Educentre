@@ -17,9 +17,29 @@ class PaymentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        return $this->success(PaymentResource::collection(
-            $this->paymentService->all($request->user()->tenant_id)
-        ));
+        if ($request->boolean('all')) {
+            return $this->success(PaymentResource::collection(
+                $this->paymentService->all($request->user()->tenant_id)
+            ));
+        }
+
+        $filters = $request->only(['page', 'per_page', 'month', 'status']);
+        $payments = $this->paymentService->paginate($request->user()->tenant_id, $filters);
+
+        return $this->success(
+            PaymentResource::collection($payments->items()),
+            meta: [
+                'pagination' => [
+                    'current_page' => $payments->currentPage(),
+                    'per_page' => $payments->perPage(),
+                    'total' => $payments->total(),
+                    'last_page' => $payments->lastPage(),
+                    'from' => $payments->firstItem(),
+                    'to' => $payments->lastItem(),
+                ],
+                'summary' => $this->paymentService->summary($request->user()->tenant_id, $filters),
+            ]
+        );
     }
 
     public function store(StorePaymentRequest $request): JsonResponse

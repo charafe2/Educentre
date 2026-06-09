@@ -172,6 +172,18 @@
           </tbody>
         </table>
       </div>
+      <div class="pagination-bar risk-pagination">
+        <span class="pagination-info">{{ riskRangeLabel() }}</span>
+        <div class="pagination-controls">
+          <button type="button" class="pagination-btn" [disabled]="riskPagination().current_page <= 1 || riskLoading()" (click)="previousRiskPage()">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <span class="pagination-page">Page {{ riskPagination().current_page }} / {{ riskPagination().last_page }}</span>
+          <button type="button" class="pagination-btn" [disabled]="riskPagination().current_page >= riskPagination().last_page || riskLoading()" (click)="nextRiskPage()">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     }
   </section>
 
@@ -299,7 +311,7 @@
     <div class="panel-header">
       <div class="panel-header-left">
         <h3 class="panel-title">Performance des professeurs</h3>
-        <span class="chart-chip">{{ teacherPerformance().length }} actifs</span>
+        <span class="chart-chip">{{ teacherPerformancePagination().total }} actifs</span>
       </div>
     </div>
     <div class="table-wrapper">
@@ -343,6 +355,18 @@
           }
         </tbody>
       </table>
+    </div>
+    <div class="pagination-bar">
+      <span class="pagination-info">{{ teacherPerformanceRangeLabel() }}</span>
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" [disabled]="teacherPerformancePagination().current_page <= 1" (click)="previousTeacherPerformancePage()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="pagination-page">Page {{ teacherPerformancePagination().current_page }} / {{ teacherPerformancePagination().last_page }}</span>
+        <button type="button" class="pagination-btn" [disabled]="teacherPerformancePagination().current_page >= teacherPerformancePagination().last_page" (click)="nextTeacherPerformancePage()">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
   </div>
 

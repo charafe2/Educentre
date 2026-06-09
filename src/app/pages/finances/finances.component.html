@@ -82,7 +82,7 @@
     <div class="panel table-panel">
       <div class="panel-header">
         <h3 class="panel-title">Paiements</h3>
-        <span class="results-count">{{ filteredPayments().length }} résultat(s)</span>
+        <span class="results-count">{{ paymentPagination().total }} résultat(s)</span>
       </div>
       <div class="table-wrapper">
         <table>
@@ -156,6 +156,19 @@
             }
           </tbody>
         </table>
+      </div>
+
+      <div class="pagination-bar">
+        <span class="pagination-info">{{ paymentRangeLabel() }}</span>
+        <div class="pagination-controls">
+          <button type="button" class="pagination-btn" [disabled]="paymentPagination().current_page <= 1 || loadingPayments()" (click)="previousPaymentPage()">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <span class="pagination-page">Page {{ paymentPagination().current_page }} / {{ paymentPagination().last_page }}</span>
+          <button type="button" class="pagination-btn" [disabled]="paymentPagination().current_page >= paymentPagination().last_page || loadingPayments()" (click)="nextPaymentPage()">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
       </div>
     </div>
 

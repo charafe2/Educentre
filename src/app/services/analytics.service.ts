@@ -10,9 +10,12 @@ export class AnalyticsService {
   private http = inject(HttpClient);
   private readonly url = `${environment.apiUrl}/v1/analytics/report`;
 
-  getReport(period: AnalyticsPeriod): Observable<ApiResponse<AnalyticsReport>> {
+  getReport(period: AnalyticsPeriod, teacherPage = 1, teacherPerPage = 8): Observable<ApiResponse<AnalyticsReport>> {
     return this.http.get<ApiResponse<AnalyticsReport>>(this.url, {
-      params: new HttpParams().set('period', period),
+      params: new HttpParams()
+        .set('period', period)
+        .set('teacher_page', String(teacherPage))
+        .set('teacher_per_page', String(teacherPerPage)),
     });
   }
 }

@@ -49,6 +49,28 @@ class StudentAttritionRiskService
             ->values();
     }
 
+    public function paginate(int $tenantId, int $page = 1, int $perPage = 8): array
+    {
+        $students = $this->all($tenantId);
+        $total = $students->count();
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $currentPage = min($page, $lastPage);
+        $from = $total === 0 ? null : (($currentPage - 1) * $perPage) + 1;
+        $to = $total === 0 ? null : min($from + $perPage - 1, $total);
+
+        return [
+            'students' => $students->forPage($currentPage, $perPage)->values(),
+            'pagination' => [
+                'current_page' => $currentPage,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
+            ],
+        ];
+    }
+
     private function riskFor(Student $student, CarbonImmutable $windowStart, CarbonImmutable $windowEnd): ?array
     {
         $attendanceCount = $student->attendances->count();

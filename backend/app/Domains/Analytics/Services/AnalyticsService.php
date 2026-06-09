@@ -15,7 +15,7 @@ use Illuminate\Support\Collection;
 
 class AnalyticsService
 {
-    public function report(int $tenantId, string $period): array
+    public function report(int $tenantId, string $period, int $teacherPage = 1, int $teacherPerPage = 8): array
     {
         [$start, $end] = $this->periodRange($period);
         $students = Student::query()->where('tenant_id', $tenantId)->get();
@@ -27,6 +27,8 @@ class AnalyticsService
             ->where('tenant_id', $tenantId)
             ->whereBetween('attended_on', [$start->toDateString(), $end->toDateString()])
             ->get();
+
+        $teacherPerformance = $this->teacherPerformance($tenantId, $start, $end);
 
         return [
             'period' => [
@@ -45,7 +47,8 @@ class AnalyticsService
             'monthlyRevenues' => $this->monthlyRevenues($payments, $start, $end),
             'classAttendance' => $this->classAttendance($tenantId, $start, $end),
             'enrollmentTrend' => $this->enrollmentTrend($tenantId, $start, $end),
-            'teacherPerformance' => $this->teacherPerformance($tenantId, $start, $end),
+            'teacherPerformance' => $teacherPerformance->forPage($teacherPage, $teacherPerPage)->values()->all(),
+            'teacherPerformancePagination' => $this->paginationMeta($teacherPerformance->count(), $teacherPage, $teacherPerPage),
         ];
     }
 
@@ -152,7 +155,7 @@ class AnalyticsService
         ])->all();
     }
 
-    private function teacherPerformance(int $tenantId, CarbonImmutable $start, CarbonImmutable $end): array
+    private function teacherPerformance(int $tenantId, CarbonImmutable $start, CarbonImmutable $end): Collection
     {
         return Teacher::query()
             ->where('tenant_id', $tenantId)
@@ -178,12 +181,28 @@ class AnalyticsService
                 ];
             })
             ->sortByDesc('attendanceRate')
-            ->values()
-            ->all();
+            ->values();
     }
 
     private function months(CarbonImmutable $start, CarbonImmutable $end): Collection
     {
         return collect(CarbonPeriod::create($start->startOfMonth(), '1 month', $end->startOfMonth()));
+    }
+
+    private function paginationMeta(int $total, int $page, int $perPage): array
+    {
+        $lastPage = max(1, (int) ceil($total / $perPage));
+        $currentPage = min($page, $lastPage);
+        $from = $total === 0 ? null : (($currentPage - 1) * $perPage) + 1;
+        $to = $total === 0 ? null : min($from + $perPage - 1, $total);
+
+        return [
+            'current_page' => $currentPage,
+            'per_page' => $perPage,
+            'total' => $total,
+            'last_page' => $lastPage,
+            'from' => $from,
+            'to' => $to,
+        ];
     }
 }

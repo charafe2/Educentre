@@ -59,7 +59,7 @@
     <div class="panel-header">
       <div class="panel-header-left">
         <h3 class="panel-title">Liste des étudiants</h3>
-        <span class="results-count">{{ filteredStudents().length }} étudiant(s)</span>
+        <span class="results-count">{{ resultCount() }} étudiant(s)</span>
       </div>
       <div class="filter-bar">
         <div class="search-wrapper">
@@ -183,6 +183,19 @@
           }
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination-bar">
+      <span class="pagination-info">{{ pageRangeLabel() }}</span>
+      <div class="pagination-controls">
+        <button type="button" class="pagination-btn" [disabled]="pagination().current_page <= 1 || loadingPage()" (click)="previousPage()">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <span class="pagination-page">Page {{ pagination().current_page }} / {{ pagination().last_page }}</span>
+        <button type="button" class="pagination-btn" [disabled]="pagination().current_page >= pagination().last_page || loadingPage()" (click)="nextPage()">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
     </div>
   </div>
 </div>

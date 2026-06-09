@@ -16,6 +16,8 @@ class AnalyticsController extends Controller
         return $this->success($this->analyticsService->report(
             $request->user()->tenant_id,
             $request->validated('period', 'last_6_months'),
+            max(1, $request->integer('teacher_page', 1)),
+            max(1, min(50, $request->integer('teacher_per_page', 8))),
         ));
     }
 }

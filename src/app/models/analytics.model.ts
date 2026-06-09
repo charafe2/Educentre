@@ -1,3 +1,5 @@
+import { PaginationMeta } from './api-response.model';
+
 export type AnalyticsPeriod = 'last_3_months' | 'last_6_months' | 'this_year' | 'last_year';
 
 export interface AnalyticsReport {
@@ -29,6 +31,7 @@ export interface AnalyticsReport {
     attendanceRate: number;
     collectedRevenue: number;
   }>;
+  teacherPerformancePagination: PaginationMeta;
 }
 
 interface AnalyticsDistributionItem {
