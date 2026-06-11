@@ -696,6 +696,153 @@
       </div>
     </section>
 
+    <!-- ===================== DEMANDE DE DÉMO ===================== -->
+    <section class="section demo-request" aria-labelledby="lp-demo-title">
+      <div class="section__inner demo-request__shell">
+        <div class="demo-request__content reveal">
+          <p class="demo-request__pill">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M19 3v4M17 5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+            Demandez votre démo gratuite
+          </p>
+          <h2 class="demo-request__title" id="lp-demo-title">
+            Faites passer votre<br>
+            centre au <span>niveau supérieur</span>
+          </h2>
+          <p class="demo-request__lead">
+            Remplissez ce formulaire et découvrez comment Moujtahid peut vous aider à mieux gérer votre centre au quotidien.
+          </p>
+
+          <ul class="demo-request__benefits">
+            <li>
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9 12 2 2 4-4"/></svg>
+              </span>
+              Démo personnalisée adaptée à vos besoins
+            </li>
+            <li>
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg>
+              </span>
+              Réponse rapide sous 24h
+            </li>
+            <li>
+              <span aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="6" y="10" width="12" height="9" rx="2"/><path d="M9 10V8a3 3 0 0 1 6 0v2"/><path d="M12 14v2"/></svg>
+              </span>
+              Vos informations sont 100% sécurisées
+            </li>
+          </ul>
+
+          <div class="demo-illustration" aria-hidden="true">
+            <div class="demo-illustration__halo"></div>
+            <div class="demo-illustration__screen">
+              <div class="demo-illustration__bar"></div>
+              <div class="demo-illustration__side"></div>
+              <div class="demo-illustration__panel demo-illustration__panel--a"><b>179</b><span>Étudiants Actifs</span></div>
+              <div class="demo-illustration__panel demo-illustration__panel--b"><b>103.240Dhs</b><span>Revenus Mensuels</span></div>
+              <div class="demo-illustration__panel demo-illustration__panel--c"><b>84</b><span>Impayés</span></div>
+              <div class="demo-illustration__chart"></div>
+              <div class="demo-illustration__donut"></div>
+            </div>
+            <div class="demo-illustration__books"></div>
+            <div class="demo-illustration__cap"></div>
+            <div class="demo-illustration__plant"></div>
+            <span class="demo-illustration__spark demo-illustration__spark--a"></span>
+            <span class="demo-illustration__spark demo-illustration__spark--b"></span>
+            <span class="demo-illustration__spark demo-illustration__spark--c"></span>
+          </div>
+        </div>
+
+        <form class="demo-form reveal" aria-label="Formulaire de demande de démo gratuite">
+          <header class="demo-form__header">
+            <span class="demo-form__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 10.5 12 5l8 5.5v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5v-8Z"/>
+                <path d="M8 20v-7h8v7M10 10h4M12 13v4"/>
+              </svg>
+            </span>
+            <div>
+              <h3>Informations sur votre centre</h3>
+              <p>Ces informations nous aideront à mieux vous accompagner.</p>
+            </div>
+          </header>
+
+          <label class="demo-field">
+            <span>Nom de votre centre de tutorat</span>
+            <span class="demo-field__control">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 21V7l6-4 6 4v14M9 21v-8h6v8M8 9h.01M12 9h.01M16 9h.01"/></svg>
+              <input type="text" placeholder="Ex : Centre Excel Mathématiques">
+            </span>
+          </label>
+
+          <label class="demo-field">
+            <span>Votre nom complet</span>
+            <span class="demo-field__control">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+              <input type="text" placeholder="Ex : Ahmed Benali">
+            </span>
+          </label>
+
+          <label class="demo-field">
+            <span>Taille de votre centre (nombre d'étudiants)</span>
+            <span class="demo-field__control demo-select" data-demo-select>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="10" r="2.5"/><path d="M3 20a6 6 0 0 1 12 0M14 20a5 5 0 0 1 7 0"/></svg>
+              <input type="hidden" name="centre-size">
+              <button class="demo-select__trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                <span class="demo-select__value demo-select__value--placeholder">Ex : 150</span>
+              </button>
+              <span class="demo-select__menu" role="listbox">
+                <button class="demo-select__option" type="button" role="option" data-value="Moins de 50">Moins de 50</button>
+                <button class="demo-select__option" type="button" role="option" data-value="50 - 150">50 - 150</button>
+                <button class="demo-select__option" type="button" role="option" data-value="150 - 300">150 - 300</button>
+                <button class="demo-select__option" type="button" role="option" data-value="Plus de 300">Plus de 300</button>
+              </span>
+            </span>
+          </label>
+
+          <div class="demo-form__row">
+            <label class="demo-field">
+              <span>Ville</span>
+              <span class="demo-field__control demo-select" data-demo-select>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-5.2 7-11a7 7 0 0 0-14 0c0 5.8 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                <input type="hidden" name="city">
+                <button class="demo-select__trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                  <span class="demo-select__value demo-select__value--placeholder">Ex : Casablanca</span>
+                </button>
+                <span class="demo-select__menu" role="listbox">
+                  <button class="demo-select__option" type="button" role="option" data-value="Casablanca">Casablanca</button>
+                  <button class="demo-select__option" type="button" role="option" data-value="Rabat">Rabat</button>
+                  <button class="demo-select__option" type="button" role="option" data-value="Marrakech">Marrakech</button>
+                  <button class="demo-select__option" type="button" role="option" data-value="Fès">Fès</button>
+                </span>
+              </span>
+            </label>
+
+            <label class="demo-field">
+              <span>Numéro de téléphone</span>
+              <span class="demo-field__control">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 4h3l1.5 4-2.1 1.2a11 11 0 0 0 5.8 5.8l1.2-2.1 4 1.5v3a2 2 0 0 1-2.2 2A15.8 15.8 0 0 1 4.6 6.2 2 2 0 0 1 6.6 4Z"/></svg>
+                <input type="tel" placeholder="Ex : 06 12 34 56 78">
+              </span>
+            </label>
+          </div>
+
+          <button class="demo-form__submit" type="button">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+            Demander une démo gratuite
+          </button>
+
+          <p class="demo-form__note">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.8 1.8 3.7-4"/></svg>
+            Aucune carte bancaire requise. Sans engagement.
+          </p>
+        </form>
+      </div>
+    </section>
+
     <!-- ===================== FAQ ===================== -->
     <section class="section faq" id="lp-faq" aria-labelledby="lp-faq-title">
       <div class="section__inner">

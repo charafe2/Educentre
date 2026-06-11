@@ -66,6 +66,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     this._initMockupParallax();
     this._initCounters();
     this._initRiskTechAnimations();
+    this._initDemoSelects();
     this._initRippleButtons();
     this._initFaq();
   }
@@ -212,6 +213,11 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       observer.observe(el);
     });
 
+    document.querySelectorAll('.lp .demo-request .reveal').forEach((el, i) => {
+      (el as HTMLElement).dataset['delay'] = String(i * 140);
+      observer.observe(el);
+    });
+
     // Testimonial cascade wave
     document.querySelectorAll('.lp .t-card').forEach((el, i) => {
       (el as HTMLElement).dataset['delay'] = String(i * 120);
@@ -352,6 +358,57 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, { threshold: 0.28, rootMargin: '0px 0px -80px 0px' });
 
     obs.observe(section);
+  }
+
+  private _initDemoSelects() {
+    const selects = Array.from(document.querySelectorAll<HTMLElement>('.lp [data-demo-select]'));
+    if (!selects.length) return;
+
+    const closeAll = (except?: HTMLElement) => {
+      selects.forEach(select => {
+        if (select === except) return;
+        select.classList.remove('is-open');
+        select.querySelector<HTMLButtonElement>('.demo-select__trigger')?.setAttribute('aria-expanded', 'false');
+      });
+    };
+
+    selects.forEach(select => {
+      const trigger = select.querySelector<HTMLButtonElement>('.demo-select__trigger');
+      const value = select.querySelector<HTMLElement>('.demo-select__value');
+      const input = select.querySelector<HTMLInputElement>('input[type="hidden"]');
+      const options = Array.from(select.querySelectorAll<HTMLButtonElement>('.demo-select__option'));
+      if (!trigger || !value || !input || !options.length) return;
+
+      trigger.addEventListener('click', event => {
+        event.stopPropagation();
+        const nextOpen = !select.classList.contains('is-open');
+        closeAll(select);
+        select.classList.toggle('is-open', nextOpen);
+        trigger.setAttribute('aria-expanded', String(nextOpen));
+      });
+
+      options.forEach(option => {
+        option.setAttribute('aria-selected', 'false');
+        option.addEventListener('click', event => {
+          event.stopPropagation();
+          const selected = option.dataset['value'] ?? option.textContent?.trim() ?? '';
+          input.value = selected;
+          value.textContent = selected;
+          value.classList.remove('demo-select__value--placeholder');
+          options.forEach(item => item.setAttribute('aria-selected', String(item === option)));
+          closeAll();
+        });
+      });
+
+      select.addEventListener('keydown', event => {
+        if (event.key === 'Escape') closeAll();
+      });
+    });
+
+    document.addEventListener('click', event => {
+      if (selects.some(select => select.contains(event.target as Node))) return;
+      closeAll();
+    });
   }
 
   // ─── 7. Liquid ripple on primary CTAs ───────────────────────────
