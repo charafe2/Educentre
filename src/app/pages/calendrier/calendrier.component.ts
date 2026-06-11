@@ -1,4 +1,4 @@
-import { Component, signal, inject } from "@angular/core";
+import { Component, computed, signal, inject } from "@angular/core";
 import { NgStyle } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { SessionsService } from "../../services/sessions.service";
@@ -26,7 +26,13 @@ export class CalendrierComponent {
 
   weekOffset = signal(0);
   days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
-  hours = Array.from({ length: 13 }, (_, i) => i + 8);
+  private readonly workHoursStorageKey = "moujtahid.calendar.workHours";
+  workStartHour = signal(8);
+  workEndHour = signal(21);
+  hours = computed(() => this.hourRange(this.workStartHour(), this.workEndHour() - 1));
+  workStartOptions = computed(() => this.hourRange(0, this.workEndHour() - 1));
+  workEndOptions = computed(() => this.hourRange(this.workStartHour() + 1, 23));
+  sessionStartOptions = computed(() => this.hourRange(this.workStartHour(), this.workEndHour() - 1));
 
   sessions = this.sessionsService.sessions;
   classes = this.classesService.classes;
@@ -53,9 +59,19 @@ export class CalendrierComponent {
     endHour: 11,
   };
 
+  constructor() {
+    this.loadWorkHours();
+  }
+
   // Session CRUD
   openAddSession(): void {
-    this.formData = { classeId: this.classes()[0]?.id ?? 1, day: 0, startHour: 9, endHour: 11 };
+    const startHour = Math.max(this.workStartHour(), Math.min(9, this.workEndHour() - 1));
+    this.formData = {
+      classeId: this.classes()[0]?.id ?? 1,
+      day: 0,
+      startHour,
+      endHour: Math.min(startHour + 2, this.workEndHour()),
+    };
     this.editingSession.set(null);
     this.showAddModal.set(true);
   }
@@ -69,6 +85,11 @@ export class CalendrierComponent {
   submitSession(): void {
     if (this.formData.endHour <= this.formData.startHour) {
       this.toast.show("L heure de fin doit etre apres l heure de debut", "info");
+      return;
+    }
+
+    if (this.formData.startHour < this.workStartHour() || this.formData.endHour > this.workEndHour()) {
+      this.toast.show("La séance doit rester dans la plage horaire du calendrier", "info");
       return;
     }
 
@@ -215,7 +236,7 @@ export class CalendrierComponent {
 
     if (id === null) return;
 
-    const maxHour = this.hours[this.hours.length - 1] + 1;
+    const maxHour = this.workEndHour();
     if (hour + duration > maxHour) {
       this.toast.show("Impossible : dépasse la plage horaire", "info");
       return;
@@ -245,6 +266,34 @@ export class CalendrierComponent {
 
   getSessionsForSlot(day: number, hour: number): Session[] {
     return this.sessionsService.getForSlot(day, hour);
+  }
+
+  onWorkStartChange(value: string | number): void {
+    const start = Number(value);
+    const end = Math.max(start + 1, this.workEndHour());
+    this.setWorkHours(start, end);
+  }
+
+  onWorkEndChange(value: string | number): void {
+    const end = Number(value);
+    const start = Math.min(this.workStartHour(), end - 1);
+    this.setWorkHours(start, end);
+  }
+
+  onSessionStartChange(value: string | number): void {
+    const startHour = Number(value);
+    this.formData.startHour = startHour;
+    if (this.formData.endHour <= startHour) {
+      this.formData.endHour = Math.min(startHour + 1, this.workEndHour());
+    }
+  }
+
+  onSessionEndChange(value: string | number): void {
+    this.formData.endHour = Number(value);
+  }
+
+  sessionEndOptions(): number[] {
+    return this.hourRange(this.formData.startHour + 1, this.workEndHour());
   }
 
   getSessionStyle(session: Session): Record<string, string> {
@@ -289,4 +338,48 @@ export class CalendrierComponent {
   prevWeek() { this.weekOffset.update(v => v - 1); }
   nextWeek() { this.weekOffset.update(v => v + 1); }
   thisWeek() { this.weekOffset.set(0); }
+
+  private setWorkHours(start: number, end: number): void {
+    const normalizedStart = this.clampHour(start, 0, 22);
+    const normalizedEnd = this.clampHour(end, normalizedStart + 1, 23);
+
+    this.workStartHour.set(normalizedStart);
+    this.workEndHour.set(normalizedEnd);
+    this.persistWorkHours();
+
+    if (this.showAddModal()) {
+      this.formData.startHour = this.clampHour(this.formData.startHour, normalizedStart, normalizedEnd - 1);
+      this.formData.endHour = this.clampHour(this.formData.endHour, this.formData.startHour + 1, normalizedEnd);
+    }
+  }
+
+  private loadWorkHours(): void {
+    const stored = localStorage.getItem(this.workHoursStorageKey);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as { start?: number; end?: number };
+      if (typeof parsed.start === "number" && typeof parsed.end === "number") {
+        this.setWorkHours(parsed.start, parsed.end);
+      }
+    } catch {
+      localStorage.removeItem(this.workHoursStorageKey);
+    }
+  }
+
+  private persistWorkHours(): void {
+    localStorage.setItem(this.workHoursStorageKey, JSON.stringify({
+      start: this.workStartHour(),
+      end: this.workEndHour(),
+    }));
+  }
+
+  private hourRange(start: number, end: number): number[] {
+    if (end < start) return [];
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }
+
+  private clampHour(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, Math.trunc(value)));
+  }
 }

@@ -268,6 +268,228 @@
       </div>
     </section>
 
+    <!-- ===================== TECHNOLOGIE RISQUE ===================== -->
+    <section class="section risk-tech" id="lp-risk-tech" aria-labelledby="lp-risk-tech-title">
+      <div class="section__inner risk-tech__inner">
+        <header class="section__header risk-tech__header">
+          <p class="risk-tech__pill reveal">Notre technologie</p>
+          <h2 class="risk-tech__title reveal" id="lp-risk-tech-title">
+            Comment nous calculons le
+            <span>risque d'abandon</span>
+          </h2>
+          <p class="risk-tech__lead reveal">
+            Notre algorithme analyse en continu plusieurs indicateurs cl&eacute;s pour attribuer
+            un score de risque pr&eacute;cis &agrave; chaque &eacute;tudiant.
+          </p>
+        </header>
+
+        <div class="risk-flow" aria-label="Processus de calcul du risque d'abandon">
+          <article class="risk-card risk-card--sources reveal" aria-labelledby="risk-data-title">
+            <h3 class="risk-card__title" id="risk-data-title">Donn&eacute;es collect&eacute;es</h3>
+            <div class="risk-source-list">
+              <div class="risk-source" style="--source-color: #4568ff; --source-bg: rgba(69, 104, 255, 0.12);">
+                <span class="risk-source__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 3v3M17 3v3M4.5 8.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v11A2.5 2.5 0 0 1 17.5 21h-11A2.5 2.5 0 0 1 4 18.5v-11A2.5 2.5 0 0 1 6.5 5Z"/>
+                    <path d="m8.5 14 2.2 2.2 4.8-5"/>
+                  </svg>
+                </span>
+                <span class="risk-source__copy">
+                  <strong>Pr&eacute;sence</strong>
+                  <span>Taux d'absences, retards et r&eacute;gularit&eacute;</span>
+                </span>
+              </div>
+              <div class="risk-source" style="--source-color: #22b58d; --source-bg: rgba(34, 181, 141, 0.13);">
+                <span class="risk-source__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3.5" y="6.5" width="17" height="11" rx="1.8"/>
+                    <path d="M7 10h.01M17 14h.01"/>
+                    <circle cx="12" cy="12" r="2.3"/>
+                  </svg>
+                </span>
+                <span class="risk-source__copy">
+                  <strong>Paiements</strong>
+                  <span>Retards de paiement, &eacute;ch&eacute;anciers impay&eacute;s</span>
+                </span>
+              </div>
+              <div class="risk-source" style="--source-color: #9b55e6; --source-bg: rgba(155, 85, 230, 0.13);">
+                <span class="risk-source__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 19V5M5 19h15"/>
+                    <path d="m8 15 4-4 3 2 4-6"/>
+                    <circle cx="8" cy="15" r="1"/>
+                    <circle cx="12" cy="11" r="1"/>
+                    <circle cx="15" cy="13" r="1"/>
+                    <circle cx="19" cy="7" r="1"/>
+                  </svg>
+                </span>
+                <span class="risk-source__copy">
+                  <strong>Performance</strong>
+                  <span>Notes, progression et r&eacute;sultats aux &eacute;valuations</span>
+                </span>
+              </div>
+              <div class="risk-source" style="--source-color: #eca72c; --source-bg: rgba(236, 167, 44, 0.15);">
+                <span class="risk-source__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="8" r="3"/>
+                    <path d="M5.5 20a6.5 6.5 0 0 1 13 0"/>
+                  </svg>
+                </span>
+                <span class="risk-source__copy">
+                  <strong>Engagement</strong>
+                  <span>Participation en classe, devoirs et interactions</span>
+                </span>
+              </div>
+              <div class="risk-source" style="--source-color: #3588f2; --source-bg: rgba(53, 136, 242, 0.13);">
+                <span class="risk-source__icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4.5 5.5h15v11h-5l-3.5 3-3.5-3h-3v-11Z"/>
+                    <path d="M8 10h8M8 13h5"/>
+                  </svg>
+                </span>
+                <span class="risk-source__copy">
+                  <strong>Comportement</strong>
+                  <span>Signalements, attitude et historique disciplinaire</span>
+                </span>
+              </div>
+            </div>
+          </article>
+
+          <div class="risk-connectors risk-connectors--left" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <article class="risk-card risk-card--analysis reveal" aria-labelledby="risk-analysis-title">
+            <h3 class="risk-card__title" id="risk-analysis-title">Analyse &amp; Pond&eacute;ration</h3>
+            <div class="risk-brain" aria-hidden="true">
+              <span class="risk-brain__orbit"></span>
+              <span class="risk-brain__orbit risk-brain__orbit--inner"></span>
+              <svg viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M59 28v64M61 28v64"/>
+                <path d="M57 34c-5-7-17-6-20 4-10 1-15 11-9 20-7 7-3 20 8 21 2 12 18 15 23 4"/>
+                <path d="M63 34c5-7 17-6 20 4 10 1 15 11 9 20 7 7 3 20-8 21-2 12-18 15-23 4"/>
+                <path d="M37 50c4 2 7 3 12 2M71 52c4 0 7-2 10-5M43 72c3 0 7 3 7 8M77 70c-4 1-7 5-7 10M32 61h16M72 61h16"/>
+              </svg>
+            </div>
+            <div class="risk-weights">
+              <div class="risk-weight" style="--weight: 25%; --weight-color: #4568ff;">
+                <span>Pr&eacute;sence</span><b></b><strong>25%</strong>
+              </div>
+              <div class="risk-weight" style="--weight: 25%; --weight-color: #22b58d;">
+                <span>Paiements</span><b></b><strong>25%</strong>
+              </div>
+              <div class="risk-weight" style="--weight: 25%; --weight-color: #9b55e6;">
+                <span>Performance</span><b></b><strong>25%</strong>
+              </div>
+              <div class="risk-weight" style="--weight: 15%; --weight-color: #eca72c;">
+                <span>Engagement</span><b></b><strong>15%</strong>
+              </div>
+              <div class="risk-weight" style="--weight: 10%; --weight-color: #9bc8fb;">
+                <span>Comportement</span><b></b><strong>10%</strong>
+              </div>
+            </div>
+          </article>
+
+          <div class="risk-connectors risk-connectors--middle" aria-hidden="true">
+            <span></span>
+          </div>
+
+          <article class="risk-model reveal" aria-label="Mod&egrave;le pr&eacute;dictif">
+            <svg class="risk-model__network" viewBox="0 0 76 60" fill="none" aria-hidden="true">
+              <path d="M16 42 30 19l19 31 8-42M30 19l27-11M16 42l33 8M30 19l19 4" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="16" cy="42" r="5" fill="currentColor"/>
+              <circle cx="30" cy="19" r="6" fill="currentColor"/>
+              <circle cx="49" cy="50" r="5" fill="currentColor"/>
+              <circle cx="57" cy="8" r="4" fill="currentColor"/>
+              <circle cx="49" cy="23" r="5" fill="currentColor"/>
+            </svg>
+            <h3>Mod&egrave;le pr&eacute;dictif</h3>
+            <p>Algorithmes statistiques et apprentissage automatique</p>
+          </article>
+
+          <div class="risk-connectors risk-connectors--right" aria-hidden="true">
+            <span></span>
+          </div>
+
+          <article class="risk-score reveal" aria-labelledby="risk-score-title">
+            <h3 id="risk-score-title">Score de risque</h3>
+            <div class="risk-gauge" aria-hidden="true">
+              <svg viewBox="0 0 220 128">
+                <defs>
+                  <linearGradient id="riskGaugeGradient" x1="22" y1="106" x2="198" y2="106" gradientUnits="userSpaceOnUse">
+                    <stop offset="0" stop-color="#36c8b3"/>
+                    <stop offset="0.42" stop-color="#c9e44d"/>
+                    <stop offset="0.68" stop-color="#ffb12d"/>
+                    <stop offset="1" stop-color="#ff435d"/>
+                  </linearGradient>
+                </defs>
+                <path class="risk-gauge__arc" d="M22 106a88 88 0 0 1 176 0"/>
+                <path class="risk-gauge__tick" d="M182 70 203 61"/>
+                <g class="risk-gauge__needle">
+                  <path d="M110 96 184 63" />
+                  <circle cx="110" cy="96" r="14"/>
+                  <circle cx="110" cy="96" r="4"/>
+                </g>
+              </svg>
+            </div>
+            <p class="risk-score__value" data-count="87" data-suffix="%">87%</p>
+            <p class="risk-score__label">Risque &eacute;lev&eacute;</p>
+            <div class="risk-alert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3 2.8 19h18.4L12 3Z"/>
+                <path d="M12 8v5M12 17h.01"/>
+              </svg>
+              <span>
+                <strong>Alerte pr&eacute;ventive</strong>
+                <small>Intervention recommand&eacute;e rapidement</small>
+              </span>
+            </div>
+          </article>
+        </div>
+
+        <div class="risk-update reveal" aria-label="Mise &agrave; jour continue du score">
+          <div class="risk-update__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3 5 6v5c0 4.5 2.9 8.4 7 10 4.1-1.6 7-5.5 7-10V6l-7-3Z"/>
+              <path d="M12 10v4M9.5 14h5M10 10a2 2 0 1 1 4 0"/>
+            </svg>
+          </div>
+          <div class="risk-update__copy">
+            <h3>Mise &agrave; jour continue</h3>
+            <p>Le score est recalcul&eacute; automatiquement &agrave; chaque nouvelle donn&eacute;e pour assurer une d&eacute;tection pr&eacute;coce et une intervention au bon moment.</p>
+          </div>
+          <div class="risk-update__spark" aria-hidden="true">
+            <span>Score mis &agrave; jour en temps r&eacute;el</span>
+            <svg viewBox="0 0 520 76" fill="none">
+              <path class="risk-update__area" d="M3 49c33-12 40 20 70 7 22-10 23-34 50-18 31 19 42 6 64-20 26-31 41 34 70 9 31-28 53-20 81 2 35 28 53-18 84-7 34 12 56 35 95 4"/>
+              <path class="risk-update__line" d="M3 49c33-12 40 20 70 7 22-10 23-34 50-18 31 19 42 6 64-20 26-31 41 34 70 9 31-28 53-20 81 2 35 28 53-18 84-7 34 12 56 35 95 4"/>
+              <circle cx="137" cy="37" r="4"/>
+              <circle cx="190" cy="18" r="4"/>
+              <circle cx="273" cy="28" r="4"/>
+              <circle cx="355" cy="24" r="4"/>
+              <circle cx="448" cy="58" r="4"/>
+              <circle cx="517" cy="26" r="5"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== EXCEL TO SMART PILOTING ===================== -->
+    <section class="section excel-shift" aria-label="Passez d'Excel au pilotage intelligent">
+      <div class="section__inner excel-shift__inner">
+        <figure class="excel-shift__image reveal">
+          <picture>
+            <source srcset="assets/photos/mobile.png" media="(max-width: 760px)">
+            <img
+              src="assets/photos/excel2.png"
+              alt="Comparaison entre une gestion dispers&eacute;e avec Excel et un pilotage intelligent centralis&eacute; avec Moujtahid"
+            >
+          </picture>
+        </figure>
+      </div>
+    </section>
+
     <!-- ===================== CONVICTION ===================== -->
     <section class="statement" aria-label="Notre conviction">
       <div class="statement__inner reveal">

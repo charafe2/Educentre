@@ -270,6 +270,44 @@
   flex-wrap: wrap;
 }
 
+.work-hours-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem;
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.work-hours-label,
+.work-hours-separator {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.work-hours-label {
+  padding-left: 0.35rem;
+}
+
+.work-hours-select {
+  min-height: 30px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-color);
+  color: var(--text-main);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.25rem 0.45rem;
+  outline: none;
+}
+
+.work-hours-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+}
+
 .btn-primary {
   display: inline-flex;
   align-items: center;

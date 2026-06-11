@@ -63,7 +63,7 @@ export class EtudiantsComponent {
     lastName: '',
     birthDate: '',
     school: '',
-    level: '2ème Bac',
+    level: '',
     status: 'active' as 'active' | 'inactive',
     parentName: '',
     parentPhone: '',
@@ -72,6 +72,13 @@ export class EtudiantsComponent {
 
   get availableClasses() {
     return this.classesService.classes();
+  }
+
+  get filteredAvailableClasses() {
+    const selectedLevel = this.formData.level;
+    if (!selectedLevel) return [];
+
+    return this.availableClasses.filter(cls => this.levelMatches(cls.level, selectedLevel));
   }
 
   isClassSelected(classId: number): boolean {
@@ -89,12 +96,20 @@ export class EtudiantsComponent {
   openAdd(): void {
     this.formData = {
       firstName: '', lastName: '', birthDate: '', school: '',
-      level: '2ème Bac', status: 'active',
+      level: '', status: 'active',
       parentName: '', parentPhone: '', parentWhatsapp: '',
     };
     this.selectedClassIds = [];
     this.editingStudent.set(null);
     this.showModal.set(true);
+  }
+
+  onFormLevelChange(level: string): void {
+    this.formData.level = level;
+    this.selectedClassIds = this.selectedClassIds.filter(classId => {
+      const classe = this.classesService.getById(classId);
+      return classe ? this.levelMatches(classe.level, level) : false;
+    });
   }
 
   openEdit(s: Student): void {
@@ -226,6 +241,23 @@ export class EtudiantsComponent {
       status: this.selectedStatus(),
       paymentStatus: this.selectedPaymentStatus(),
     });
+  }
+
+  private levelMatches(classLevel: string, selectedLevel: string): boolean {
+    const normalizedClassLevel = this.normalizeLevel(classLevel);
+    const normalizedSelectedLevel = this.normalizeLevel(selectedLevel);
+
+    return normalizedClassLevel === normalizedSelectedLevel
+      || normalizedClassLevel.startsWith(`${normalizedSelectedLevel} `);
+  }
+
+  private normalizeLevel(level: string): string {
+    return level
+      .trim()
+      .toLocaleLowerCase('fr-FR')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
   }
 
   rappeler(s: Student): void {

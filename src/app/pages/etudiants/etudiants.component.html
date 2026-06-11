@@ -231,7 +231,8 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Niveau</label>
-          <select class="form-select" [(ngModel)]="formData.level">
+          <select class="form-select" [(ngModel)]="formData.level" (ngModelChange)="onFormLevelChange($event)">
+            <option value="">Choisir un niveau</option>
             @for (level of levels; track level) {
               <option [value]="level">{{ level }}</option>
             }
@@ -247,22 +248,28 @@
       </div>
       <div class="form-group">
         <label class="form-label">Classes inscrites</label>
-        <div class="classes-checkbox-grid">
-          @for (cls of availableClasses; track cls.id) {
-            <label class="class-checkbox-item" [class.selected]="isClassSelected(cls.id)">
-              <input
-                type="checkbox"
-                [checked]="isClassSelected(cls.id)"
-                (change)="toggleClass(cls.id)"
-              />
-              <span class="class-color-dot" [style.background-color]="cls.color"></span>
-              <span class="class-checkbox-label">
-                <span class="class-checkbox-name">{{ cls.name }}</span>
-                <span class="class-checkbox-price">{{ cls.monthlyPrice }} Dhs/mois</span>
-              </span>
-            </label>
-          }
-        </div>
+        @if (formData.level) {
+          <div class="classes-checkbox-grid">
+            @for (cls of filteredAvailableClasses; track cls.id) {
+              <label class="class-checkbox-item" [class.selected]="isClassSelected(cls.id)">
+                <input
+                  type="checkbox"
+                  [checked]="isClassSelected(cls.id)"
+                  (change)="toggleClass(cls.id)"
+                />
+                <span class="class-color-dot" [style.background-color]="cls.color"></span>
+                <span class="class-checkbox-label">
+                  <span class="class-checkbox-name">{{ cls.name }}</span>
+                  <span class="class-checkbox-price">{{ cls.monthlyPrice }} Dhs/mois</span>
+                </span>
+              </label>
+            } @empty {
+              <div class="classes-empty">Aucune classe disponible pour ce niveau.</div>
+            }
+          </div>
+        } @else {
+          <div class="classes-empty">Choisissez d'abord un niveau pour afficher les classes.</div>
+        }
       </div>
       <div class="form-group">
         <label class="form-label">Nom du parent</label>

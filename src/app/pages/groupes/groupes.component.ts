@@ -76,6 +76,7 @@ export class GroupesComponent {
   }
 
   searchTerm = signal('');
+  groupSearchTerm = signal('');
   selectedLevel = signal<string | null>(null);
   selectedClasseId = signal<number | null>(null);
 
@@ -134,6 +135,26 @@ export class GroupesComponent {
     return level.subjects.find(subject => subject.classe.id === this.selectedClasseId()) ?? level.subjects[0];
   });
   currentGroups = computed(() => this.currentSubjectView()?.groups ?? []);
+  filteredCurrentGroups = computed(() => {
+    const term = this.groupSearchTerm().trim().toLowerCase();
+    const groups = this.currentGroups();
+    if (!term) return groups;
+
+    return groups.filter(group => {
+      const groupLabel = `g${group.groupNumber} groupe ${group.groupNumber}`.toLowerCase();
+      const students = group.studentIds
+        .map(id => this.studentsService.getById(id))
+        .filter((student): student is Student => !!student);
+
+      return (
+        groupLabel.includes(term) ||
+        students.some(student =>
+          `${student.firstName} ${student.lastName}`.toLowerCase().includes(term) ||
+          student.code.toLowerCase().includes(term)
+        )
+      );
+    });
+  });
   currentGroupsFull = computed(() => this.currentGroups().filter(group => this.isGroupFull(group)).length);
   studentPickerContext = computed<{ group: Group; classe: Classe } | null>(() => {
     const groupId = this.addingToGroupId();
@@ -274,6 +295,7 @@ export class GroupesComponent {
 
   onSearch(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
+    this.groupSearchTerm.set('');
     this.selectedLevel.set(null);
     this.selectedClasseId.set(null);
   }
@@ -281,10 +303,16 @@ export class GroupesComponent {
   selectLevel(level: string): void {
     this.selectedLevel.set(level);
     this.selectedClasseId.set(null);
+    this.groupSearchTerm.set('');
   }
 
   selectSubject(classeId: number): void {
     this.selectedClasseId.set(classeId);
+    this.groupSearchTerm.set('');
+  }
+
+  onGroupSearch(event: Event): void {
+    this.groupSearchTerm.set((event.target as HTMLInputElement).value);
   }
 
   createGroupForCurrentSubject(): void {

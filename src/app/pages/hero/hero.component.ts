@@ -65,6 +65,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     this._initMagneticCards();
     this._initMockupParallax();
     this._initCounters();
+    this._initRiskTechAnimations();
     this._initRippleButtons();
     this._initFaq();
   }
@@ -200,6 +201,17 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       observer.observe(el);
     });
 
+    // Risk technology flow
+    document.querySelectorAll('.lp .risk-flow > .reveal, .lp .risk-update').forEach((el, i) => {
+      (el as HTMLElement).dataset['delay'] = String(i * 130);
+      observer.observe(el);
+    });
+
+    document.querySelectorAll('.lp .excel-shift .reveal').forEach((el, i) => {
+      (el as HTMLElement).dataset['delay'] = String(i * 120);
+      observer.observe(el);
+    });
+
     // Testimonial cascade wave
     document.querySelectorAll('.lp .t-card').forEach((el, i) => {
       (el as HTMLElement).dataset['delay'] = String(i * 120);
@@ -325,6 +337,21 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       el.textContent = '0' + (el.dataset['suffix'] ?? '');
       obs.observe(el);
     });
+  }
+
+  private _initRiskTechAnimations() {
+    const section = document.querySelector<HTMLElement>('.lp .risk-tech');
+    if (!section) return;
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        section.classList.add('risk-tech--active');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.28, rootMargin: '0px 0px -80px 0px' });
+
+    obs.observe(section);
   }
 
   // ─── 7. Liquid ripple on primary CTAs ───────────────────────────

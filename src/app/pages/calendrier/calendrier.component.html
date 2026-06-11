@@ -6,6 +6,20 @@
       <p>Planning des séances et cours</p>
     </div>
     <div class="header-right">
+      <div class="work-hours-control" aria-label="Plage horaire visible">
+        <span class="work-hours-label">Plage horaire</span>
+        <select class="work-hours-select" [ngModel]="workStartHour()" (ngModelChange)="onWorkStartChange($event)">
+          @for (h of workStartOptions(); track h) {
+            <option [ngValue]="h">{{ h }}:00</option>
+          }
+        </select>
+        <span class="work-hours-separator">à</span>
+        <select class="work-hours-select" [ngModel]="workEndHour()" (ngModelChange)="onWorkEndChange($event)">
+          @for (h of workEndOptions(); track h) {
+            <option [ngValue]="h">{{ h }}:00</option>
+          }
+        </select>
+      </div>
       <div class="week-nav">
         <button class="nav-btn" (click)="prevWeek()">
           <i class="fa-solid fa-chevron-left"></i>
@@ -33,7 +47,7 @@
       }
 
       <!-- Time slots -->
-      @for (hour of hours; track hour) {
+      @for (hour of hours(); track hour) {
         <div class="time-label">{{ hour }}:00</div>
         @for (day of days; track day; let di = $index) {
           <div
@@ -134,16 +148,16 @@
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Heure début</label>
-          <select class="form-select" [(ngModel)]="formData.startHour">
-            @for (h of hours; track h) {
+          <select class="form-select" [(ngModel)]="formData.startHour" (ngModelChange)="onSessionStartChange($event)">
+            @for (h of sessionStartOptions(); track h) {
               <option [ngValue]="h">{{ h }}:00</option>
             }
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Heure fin</label>
-          <select class="form-select" [(ngModel)]="formData.endHour">
-            @for (h of hours; track h) {
+          <select class="form-select" [(ngModel)]="formData.endHour" (ngModelChange)="onSessionEndChange($event)">
+            @for (h of sessionEndOptions(); track h) {
               <option [ngValue]="h">{{ h }}:00</option>
             }
           </select>

@@ -83,6 +83,15 @@
               <p>{{ view.classe.subject }} · {{ view.totalStudents }} élève(s)</p>
             </div>
             <div class="detail-actions">
+              <label class="group-search-mini" aria-label="Chercher un groupe">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input
+                  type="text"
+                  placeholder="Groupe..."
+                  [value]="groupSearchTerm()"
+                  (input)="onGroupSearch($event)"
+                />
+              </label>
               <span class="pill-info">{{ currentGroups().length }} groupe(s)</span>
               <span class="pill-info danger" [class.muted]="currentGroupsFull() === 0">{{ currentGroupsFull() }} plein(s)</span>
               <button class="btn-edit-class" (click)="openEditClasse(view.classe)" title="Modifier la classe">
@@ -92,7 +101,7 @@
           </div>
 
           <div class="group-lanes">
-            @for (group of view.groups; track group.id) {
+            @for (group of filteredCurrentGroups(); track group.id) {
               @let stats = getGroupPaymentStats(group, view.classe);
               <section
                 class="group-card"
@@ -181,6 +190,11 @@
                   <span class="footer-total">/ {{ formatMoney(stats.total) }}</span>
                 </div>
               </section>
+            } @empty {
+              <div class="group-search-empty">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+                <span>Aucun groupe trouvé</span>
+              </div>
             }
 
             <button type="button" class="new-group-card" (click)="createGroupForCurrentSubject()">
