@@ -64,7 +64,6 @@ export class AuthService {
           this.http.post(`${environment.apiUrl}/v1/auth/logout`, {})
         );
       } catch {
-        // Swallow error — clear locally anyway
       }
     }
     localStorage.removeItem('auth_token');

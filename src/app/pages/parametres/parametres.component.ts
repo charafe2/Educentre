@@ -10,7 +10,9 @@ import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../auth/auth.service';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';
+import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../../services/receipt-customization.service';
 
 interface User {
   id: number;
@@ -23,7 +25,7 @@ interface User {
 
 @Component({
   selector: 'app-parametres',
-  imports: [NgClass, FormsModule, ModalComponent],
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent],
   templateUrl: './parametres.component.html',
   styleUrl: './parametres.component.css'
 })
@@ -35,11 +37,13 @@ export class ParametresComponent implements OnInit {
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private auth = inject(AuthService);
+  private receiptCustomization = inject(ReceiptCustomizationService);
 
   activeTab = signal('centre');
 
   tabs = [
     { id: 'centre', label: 'Informations du centre', icon: 'fa-solid fa-building' },
+    { id: 'receipt', label: 'Personnalisation du reçu', icon: 'fa-solid fa-receipt' },
     { id: 'matieres', label: 'Matières & Classes', icon: 'fa-solid fa-book-open' },
     { id: 'users', label: 'Utilisateurs', icon: 'fa-solid fa-users' },
     { id: 'securite', label: 'Sécurité', icon: 'fa-solid fa-lock' },
@@ -50,6 +54,8 @@ export class ParametresComponent implements OnInit {
 
   centreForm = { ...this.centreService.centreInfo() };
   saving = signal(false);
+  receiptSettings = this.receiptCustomization.settings;
+  receiptForm: ReceiptCustomizationSettings = { ...this.receiptCustomization.settings() };
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique'];
 
@@ -106,6 +112,37 @@ export class ParametresComponent implements OnInit {
 
   resetCentreForm(): void {
     this.centreForm = { ...this.centreService.centreInfo() };
+  }
+
+  getReceiptPreviewData() {
+    return this.receiptCustomization.sampleData(this.receiptForm);
+  }
+
+  onReceiptLogoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.receiptForm.logoDataUrl = String(reader.result || '');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  clearReceiptLogo(): void {
+    this.receiptForm.logoDataUrl = '';
+  }
+
+  saveReceiptSettings(): void {
+    this.receiptCustomization.save({ ...this.receiptForm });
+    this.receiptForm = { ...this.receiptCustomization.settings() };
+    this.toast.show('Personnalisation du reçu enregistrée');
+  }
+
+  resetReceiptSettings(): void {
+    this.receiptForm = this.receiptCustomization.reset();
+    this.toast.show('Modèle de reçu réinitialisé', 'info');
   }
 
   openAddUser(): void {

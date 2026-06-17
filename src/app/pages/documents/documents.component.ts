@@ -7,12 +7,14 @@ import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
 import { ToastService } from '../../services/toast.service';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Document } from '../../models/document.model';
 import { Payment } from '../../models/payment.model';
+import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
 
 @Component({
   selector: 'app-documents',
-  imports: [NgClass, FormsModule, ModalComponent],
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css'
 })
@@ -22,6 +24,7 @@ export class DocumentsComponent {
   private studentsService = inject(StudentsService);
   private classesService = inject(ClassesService);
   private toast = inject(ToastService);
+  private receiptCustomization = inject(ReceiptCustomizationService);
 
   searchTerm = signal('');
   selectedType = signal('');
@@ -53,6 +56,8 @@ export class DocumentsComponent {
   totalAmount  = computed(() => this.documents().reduce((sum, d) => sum + d.amount, 0));
 
   showGenerateModal = signal(false);
+  previewDocument = signal<Document | null>(null);
+  receiptSettings = this.receiptCustomization.settings;
   genSelectedStudentId = signal(0);
   genSelectedPaymentId = signal(0);
   genType = signal<'Reçu' | 'Relevé' | 'Attestation'>('Reçu');
@@ -101,8 +106,40 @@ export class DocumentsComponent {
     }
   }
 
-  downloadSimulated(): void {
-    this.toast.show('Téléchargement simulé (PDF)', 'info');
+  previewReceipt(doc: Document): void {
+    if (!this.isReceipt(doc)) {
+      this.toast.show('La prévisualisation est disponible pour les reçus', 'info');
+      return;
+    }
+    this.previewDocument.set(doc);
+  }
+
+  closeReceiptPreview(): void {
+    this.previewDocument.set(null);
+  }
+
+  async downloadReceipt(doc: Document): Promise<void> {
+    if (!this.isReceipt(doc)) {
+      this.toast.show('Téléchargement simulé (PDF)', 'info');
+      return;
+    }
+    try {
+      await this.receiptCustomization.downloadReceipt(this.getReceiptData(doc));
+      this.toast.show('Reçu PDF prêt à télécharger');
+    } catch {
+      this.toast.show('Impossible de générer le PDF du reçu', 'error');
+    }
+  }
+
+  getReceiptData(doc: Document) {
+    const student = this.studentsService.getById(doc.studentId);
+    const classe = this.classesService.getById(doc.classeId);
+    const payment = this.payments().find(p => p.id === doc.paymentId);
+    return this.receiptCustomization.fromDocument(doc, student, classe, payment);
+  }
+
+  isReceipt(doc: Document): boolean {
+    return (doc.type as string) === 'Reçu' || (doc.type as string) === 'ReÃ§u';
   }
 
   getStudentName(studentId: number): string {

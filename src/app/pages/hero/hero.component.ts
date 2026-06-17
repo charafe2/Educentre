@@ -39,6 +39,8 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private _savedBg = '';
   private _rafHandle = 0;
+  private _sectionRafHandle = 0;
+  private _sectionMotionAbort?: AbortController;
   private _introDismissed = false;
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
@@ -55,6 +57,8 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     document.body.style.backgroundColor = this._savedBg;
     document.documentElement.style.scrollBehavior = '';
     cancelAnimationFrame(this._rafHandle);
+    cancelAnimationFrame(this._sectionRafHandle);
+    this._sectionMotionAbort?.abort();
   }
 
   ngAfterViewInit() {
@@ -62,6 +66,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     this._initCharReveal();
     this._initNavBehavior();
     this._initScrollReveal();
+    this._initSectionHandoff();
     this._initMagneticCards();
     this._initMockupParallax();
     this._initCounters();
@@ -232,6 +237,69 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ─── 4. Magnetic hover on bento cards ───────────────────────────
+  private _initSectionHandoff() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '.lp main > section:not(.hero), .lp main > .social-proof'
+      )
+    );
+
+    if (!sections.length) return;
+
+    sections.forEach((section, index) => {
+      section.classList.add('section-handoff');
+      section.style.setProperty('--handoff-z', String(index + 1));
+    });
+
+    const clamp = (value: number, min = 0, max = 1) => Math.min(Math.max(value, min), max);
+    const easeOutQuint = (value: number) => 1 - Math.pow(1 - value, 5);
+
+    const update = () => {
+      const viewport = window.innerHeight || 1;
+
+      sections.forEach(section => {
+        const rect = section.getBoundingClientRect();
+        const enter = clamp((viewport - rect.top) / (viewport * 0.74));
+        const exit = clamp((rect.top + rect.height - viewport * 0.16) / (viewport * 0.84));
+        const presence = clamp(Math.min(enter, exit));
+        const easedPresence = easeOutQuint(presence);
+        const liftingIn = 1 - easedPresence;
+        const leaving = clamp((viewport * 0.12 - rect.bottom) / (viewport * 0.52));
+
+        const y = liftingIn * 54 - leaving * 36;
+        const scale = 0.955 + easedPresence * 0.045 - leaving * 0.018;
+        const opacity = 0.48 + easedPresence * 0.52 - leaving * 0.18;
+        const blur = liftingIn * 8 + leaving * 3;
+
+        section.style.setProperty('--handoff-y', `${y.toFixed(2)}px`);
+        section.style.setProperty('--handoff-scale', scale.toFixed(4));
+        section.style.setProperty('--handoff-opacity', clamp(opacity, 0.28, 1).toFixed(3));
+        section.style.setProperty('--handoff-blur', `${blur.toFixed(2)}px`);
+      });
+
+      this._sectionRafHandle = 0;
+    };
+
+    const requestUpdate = () => {
+      if (this._sectionRafHandle) return;
+      this._sectionRafHandle = requestAnimationFrame(update);
+    };
+
+    this._sectionMotionAbort = new AbortController();
+    window.addEventListener('scroll', requestUpdate, {
+      passive: true,
+      signal: this._sectionMotionAbort.signal,
+    });
+    window.addEventListener('resize', requestUpdate, {
+      passive: true,
+      signal: this._sectionMotionAbort.signal,
+    });
+
+    requestUpdate();
+  }
+
   private _initMagneticCards() {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 

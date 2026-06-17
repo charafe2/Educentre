@@ -87,6 +87,11 @@ export class GroupesComponent {
   editingCapacityValue = signal(0);
   addingToGroupId = signal<number | null>(null);
   studentPickerSearch = signal('');
+  allowOverCapacityGroupId = signal<number | null>(null);
+
+  pendingFullAddGroup = signal<{
+    groupId: number; groupLabel: string;
+  } | null>(null);
 
   pendingFullDrop = signal<{
     studentId: number; fromGroupId: number; toGroupId: number;
@@ -353,6 +358,16 @@ export class GroupesComponent {
   }
 
   openStudentPicker(groupId: number): void {
+    const group = this.groupsService.groups().find(item => item.id === groupId);
+    if (group && this.isGroupFull(group) && this.allowOverCapacityGroupId() !== groupId) {
+      const classe = this.classesService.getById(group.classeId);
+      this.pendingFullAddGroup.set({
+        groupId,
+        groupLabel: `${classe?.subject ?? 'Groupe'} - G${group.groupNumber}`,
+      });
+      return;
+    }
+
     this.addingToGroupId.set(groupId);
     this.studentPickerSearch.set('');
   }
@@ -360,6 +375,21 @@ export class GroupesComponent {
   closeStudentPicker(): void {
     this.addingToGroupId.set(null);
     this.studentPickerSearch.set('');
+    this.allowOverCapacityGroupId.set(null);
+  }
+
+  continueFullAdd(): void {
+    const pending = this.pendingFullAddGroup();
+    if (!pending) return;
+
+    this.pendingFullAddGroup.set(null);
+    this.allowOverCapacityGroupId.set(pending.groupId);
+    this.addingToGroupId.set(pending.groupId);
+    this.studentPickerSearch.set('');
+  }
+
+  cancelFullAdd(): void {
+    this.pendingFullAddGroup.set(null);
   }
 
   onStudentPickerSearch(event: Event): void {
@@ -367,8 +397,12 @@ export class GroupesComponent {
   }
 
   addStudentToGroup(studentId: number, group: Group): void {
-    if (group.studentIds.length >= group.maxCapacity) {
-      this.toast.show('Groupe complet', 'error');
+    if (group.studentIds.length >= group.maxCapacity && this.allowOverCapacityGroupId() !== group.id) {
+      const classe = this.classesService.getById(group.classeId);
+      this.pendingFullAddGroup.set({
+        groupId: group.id,
+        groupLabel: `${classe?.subject ?? 'Groupe'} - G${group.groupNumber}`,
+      });
       return;
     }
 

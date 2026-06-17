@@ -120,7 +120,12 @@
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" aria-label="Télécharger" title="Télécharger" (click)="downloadSimulated()">
+                  @if (isReceipt(doc)) {
+                    <button class="action-btn preview-btn" aria-label="Prévisualiser" title="Prévisualiser" (click)="previewReceipt(doc)">
+                      <i class="fa-regular fa-eye"></i>
+                    </button>
+                  }
+                  <button class="action-btn" aria-label="Télécharger" title="Télécharger" (click)="downloadReceipt(doc)">
                     <i class="fa-solid fa-download"></i>
                   </button>
                   @if (!doc.sentViaWhatsapp) {
@@ -150,6 +155,25 @@
     </div>
   </div>
 </div>
+
+<!-- Receipt Preview Modal -->
+@if (previewDocument(); as doc) {
+  <app-modal title="Prévisualiser le reçu" size="lg" (closed)="closeReceiptPreview()">
+    <div class="receipt-modal-body">
+      <app-receipt-preview
+        [settings]="receiptSettings()"
+        [data]="getReceiptData(doc)"
+      ></app-receipt-preview>
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="closeReceiptPreview()">Fermer</button>
+      <button class="btn-primary" (click)="downloadReceipt(doc)">
+        <i class="fa-solid fa-download"></i>
+        Télécharger
+      </button>
+    </div>
+  </app-modal>
+}
 
 <!-- Generate Document Modal -->
 @if (showGenerateModal()) {

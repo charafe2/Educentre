@@ -76,6 +76,92 @@
         </div>
       }
 
+      <!-- Receipt customization -->
+      @if (activeTab() === 'receipt') {
+        <div class="settings-section receipt-settings-section">
+          <div class="receipt-settings-heading">
+            <div>
+              <h3 class="section-title">Personnalisation du reçu</h3>
+              <p class="section-desc">Personnalisez l'apparence des reçus de paiement générés par votre centre.</p>
+            </div>
+            <span class="receipt-live-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Aperçu en direct</span>
+          </div>
+
+          <div class="receipt-settings-layout">
+            <div class="receipt-controls">
+              <div class="receipt-logo-control">
+                <div class="receipt-logo-preview" [style.borderColor]="receiptForm.accentColor">
+                  @if (receiptForm.logoDataUrl) {
+                    <img [src]="receiptForm.logoDataUrl" alt="">
+                  } @else {
+                    <i class="fa-solid fa-building-columns"></i>
+                  }
+                </div>
+                <div>
+                  <label class="btn-secondary receipt-upload-btn">
+                    <i class="fa-solid fa-upload"></i>
+                    Importer le logo
+                    <input type="file" accept="image/*" (change)="onReceiptLogoSelected($event)" hidden>
+                  </label>
+                  @if (receiptForm.logoDataUrl) {
+                    <button class="receipt-link-btn" type="button" (click)="clearReceiptLogo()">Retirer le logo</button>
+                  }
+                </div>
+              </div>
+
+              <div class="form-grid receipt-form-grid">
+                <div class="form-group form-full">
+                  <label class="form-label">Nom du centre</label>
+                  <input class="form-input" type="text" [(ngModel)]="receiptForm.centerName" placeholder="Centre Excel Mathématiques" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Couleur principale</label>
+                  <div class="receipt-color-field">
+                    <input type="color" [(ngModel)]="receiptForm.accentColor" aria-label="Couleur principale du reçu">
+                    <input class="form-input" type="text" [(ngModel)]="receiptForm.accentColor" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Téléphone</label>
+                  <input class="form-input" type="tel" [(ngModel)]="receiptForm.phone" placeholder="06 12 34 56 78" />
+                </div>
+
+                <div class="form-group form-full">
+                  <label class="form-label">Adresse du centre</label>
+                  <input class="form-input" type="text" [(ngModel)]="receiptForm.address" placeholder="123, Rue des Écoles, Casablanca" />
+                </div>
+
+                <div class="form-group form-full">
+                  <label class="form-label">Note de bas de reçu</label>
+                  <textarea class="form-input receipt-textarea" [(ngModel)]="receiptForm.footerNote" rows="3" placeholder="Merci pour votre confiance."></textarea>
+                </div>
+              </div>
+
+              <div class="form-actions receipt-actions">
+                <button class="btn-secondary" type="button" (click)="resetReceiptSettings()">
+                  <i class="fa-solid fa-rotate-left"></i>
+                  Réinitialiser
+                </button>
+                <button class="btn-primary" type="button" (click)="saveReceiptSettings()">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Enregistrer le modèle
+                </button>
+              </div>
+            </div>
+
+            <div class="receipt-preview-panel">
+              <app-receipt-preview
+                [settings]="receiptForm"
+                [data]="getReceiptPreviewData()"
+                [compact]="true"
+              ></app-receipt-preview>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Matières & Classes -->
       @if (activeTab() === 'matieres') {
         <div class="settings-section">

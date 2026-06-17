@@ -140,9 +140,14 @@
                       </button>
                     </div>
                   } @else {
-                    <button class="capacity-chip" (click)="startEditCapacity(group.id, group.maxCapacity, $event)" title="Modifier la limite">
-                      <span>{{ group.studentIds.length }}</span>/<span>{{ group.maxCapacity }}</span>
-                    </button>
+                    <div class="capacity-actions" aria-label="Capacite du groupe">
+                      <span class="capacity-chip">
+                        <span>{{ group.studentIds.length }}</span>/<span>{{ group.maxCapacity }}</span>
+                      </span>
+                      <button class="edit-capacity-btn" (click)="startEditCapacity(group.id, group.maxCapacity, $event)" title="Modifier la limite" aria-label="Modifier la limite">
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+                    </div>
                   }
                 </div>
 
@@ -186,8 +191,13 @@
                 </div>
 
                 <div class="card-footer">
-                  <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
-                  <span class="footer-total">/ {{ formatMoney(stats.total) }}</span>
+                  <div class="footer-money">
+                    <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
+                    <span class="footer-total">/ {{ formatMoney(stats.total) }}</span>
+                  </div>
+                  <button type="button" class="footer-add-student" (click)="openStudentPicker(group.id)" title="Ajouter des etudiants" aria-label="Ajouter des etudiants">
+                    <i class="fa-solid fa-plus"></i>
+                  </button>
                 </div>
               </section>
             } @empty {
@@ -328,6 +338,31 @@
         } @empty {
           <div class="student-picker-empty">Aucun élève disponible pour ce niveau.</div>
         }
+      </div>
+    </div>
+  </div>
+}
+
+@if (pendingFullAddGroup(); as pending) {
+  <div class="modal-backdrop" (click)="cancelFullAdd()">
+    <div class="confirm-modal" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="confirm-title">Groupe complet</h3>
+      <p class="confirm-body">
+        La limite du groupe <strong>{{ pending.groupLabel }}</strong> est atteinte.
+        <br>
+        ajouter quand meme?
+      </p>
+      <div class="confirm-actions">
+        <button class="btn-create" (click)="continueFullAdd()">
+          <i class="fa-solid fa-user-plus"></i>
+          Ajouter quand meme
+        </button>
+        <button class="btn-keep" (click)="cancelFullAdd()">
+          Annuler
+        </button>
       </div>
     </div>
   </div>

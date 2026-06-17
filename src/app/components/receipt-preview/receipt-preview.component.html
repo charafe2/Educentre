@@ -1,0 +1,106 @@
+<article
+  class="receipt-preview"
+  [class.receipt-preview--compact]="compact"
+  [style.--receipt-accent]="settings.accentColor"
+>
+  <header class="receipt-preview__header">
+    <div class="receipt-brand">
+      <span class="receipt-brand__logo">
+        @if (settings.logoDataUrl) {
+          <img [src]="settings.logoDataUrl" alt="">
+        } @else {
+          <span>{{ initials }}</span>
+        }
+      </span>
+      <div>
+        <h3>{{ settings.centerName }}</h3>
+        <p>Gestion intelligente de centre de soutien</p>
+      </div>
+    </div>
+
+    <div class="receipt-title">
+      <h2>REÇU DE PAIEMENT</h2>
+      <strong>N° {{ data.receiptNumber }}</strong>
+      <span><i class="fa-regular fa-calendar"></i>{{ data.dateTime }}</span>
+    </div>
+  </header>
+
+  <section class="receipt-info">
+    <div class="receipt-info__block">
+      <span class="receipt-icon"><i class="fa-solid fa-school"></i></span>
+      <div>
+        <b>Centre</b>
+        <h4>{{ data.centerName }}</h4>
+        <p><i class="fa-solid fa-location-dot"></i>{{ data.address || 'Adresse non renseignée' }}</p>
+        <p><i class="fa-solid fa-phone"></i>{{ data.phone || 'Téléphone non renseigné' }}</p>
+      </div>
+    </div>
+
+    <div class="receipt-info__block receipt-info__block--client">
+      <span class="receipt-icon"><i class="fa-regular fa-user"></i></span>
+      <div>
+        <b>Reçu de</b>
+        <h4>{{ data.parentName }}</h4>
+        <p><i class="fa-regular fa-user"></i>Parent de {{ data.studentName }}</p>
+        <p><i class="fa-solid fa-graduation-cap"></i>{{ data.levelGroup }}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="receipt-table">
+    <div class="receipt-table__head">
+      <span>DÉSIGNATION</span>
+      <span>PÉRIODE / RÉFÉRENCE</span>
+      <span>MONTANT</span>
+    </div>
+    <div class="receipt-table__row">
+      <span>
+        <i class="fa-solid fa-book-open"></i>
+        <span><strong>{{ data.designation }}</strong><small>{{ data.studentName }} · {{ data.levelGroup }}</small></span>
+      </span>
+      <span><strong>{{ data.period }}</strong><small>Réf : INV-{{ data.reference }}</small></span>
+      <strong>{{ amount(data.amount) }}</strong>
+    </div>
+    <div class="receipt-table__total">
+      <span>TOTAL PAYÉ</span>
+      <strong>{{ amount(data.amount) }}</strong>
+    </div>
+  </section>
+
+  <section class="receipt-summary">
+    <div>
+      <span class="receipt-icon receipt-icon--small"><i class="fa-regular fa-credit-card"></i></span>
+      <b>MODE DE PAIEMENT</b>
+      <strong>{{ data.paymentMethod }}</strong>
+    </div>
+    <div>
+      <span class="receipt-icon receipt-icon--small"><i class="fa-regular fa-circle-check"></i></span>
+      <b>STATUT</b>
+      <strong class="receipt-status">{{ data.status }}</strong>
+    </div>
+    <div>
+      <span class="receipt-icon receipt-icon--small"><i class="fa-regular fa-receipt"></i></span>
+      <b>REÇU PAR</b>
+      <strong>{{ data.receivedBy }}</strong>
+    </div>
+    <div>
+      <span class="receipt-icon receipt-icon--small"><i class="fa-solid fa-hashtag"></i></span>
+      <b>RÉFÉRENCE</b>
+      <strong>{{ data.reference }}</strong>
+    </div>
+  </section>
+
+  <footer class="receipt-footer">
+    <div class="receipt-note">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>
+        <strong>{{ settings.footerNote }}</strong>
+        <small>Ce reçu est une preuve de paiement.</small>
+      </span>
+    </div>
+    <div class="receipt-signature">
+      <b>SIGNATURE ET CACHET DU CENTRE</b>
+      <span>Signature</span>
+    </div>
+  </footer>
+</article>

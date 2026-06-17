@@ -289,6 +289,13 @@ td {
 }
 .action-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.05); }
 
+.preview-btn {
+  color: #2563eb;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+.preview-btn:hover { background: #2563eb !important; border-color: #2563eb !important; color: #fff !important; }
+
 .wa-btn { color: #16a34a; border-color: #86efac; background: #f0fdf4; }
 .wa-btn:hover { background: #16a34a !important; border-color: #16a34a !important; color: #fff !important; }
 
@@ -302,3 +309,57 @@ td {
 .empty-icon  { font-size: 2.25rem; color: var(--text-light); margin-bottom: 1rem; opacity: 0.6; }
 .empty-title { font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.35rem; }
 .empty-sub   { font-size: 0.82rem; color: var(--text-muted); }
+
+.receipt-modal-body {
+  max-width: 100%;
+  overflow: auto;
+  padding: 1.25rem;
+  background: #f8fafc;
+}
+
+.receipt-modal-body app-receipt-preview {
+  display: block;
+  width: 900px;
+  max-width: none;
+}
+
+.form-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.form-group {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 1rem;
+}
+
+.form-label {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.form-select {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  background: var(--bg-color);
+  color: var(--text-main);
+  outline: none;
+}
+
+.form-select:focus {
+  border-color: var(--accent);
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--surface);
+}
