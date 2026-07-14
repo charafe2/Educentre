@@ -49,15 +49,16 @@
 
     <!-- ===================== HERO ===================== -->
     <section class="hero" aria-label="Accroche principale">
-      
 
-      <!-- Headline built char-by-char by JS. aria-label provides accessible text. -->
+      <!-- Headline rebuilt char-by-char by JS for the ink reveal; this static
+           text is the SEO/no-JS fallback and the accessible name. -->
       <h1 class="hero__headline" id="lp-headline"
-          aria-label="Gérez votre centre avec précision"></h1>
+          aria-label="Gérez votre centre avec précision"><span class="hl-line">Gérez votre centre</span><br><span class="hl-line">avec <span class="accent">précision.</span></span></h1>
 
       <p class="hero__subhead" id="lp-subhead">
-        Moujtahid unifie planification, présences, paiements et analyses
-        pour que vous puissiez vous concentrer sur l'enseignement, pas sur l'administration.
+        Moujtahid est le logiciel de gestion des centres de soutien scolaire au Maroc :
+        planification, présences, paiements et analyses réunis, pour vous concentrer
+        sur l'enseignement, pas sur l'administration.
       </p>
 
       <div class="hero__ctas" id="lp-ctas">
@@ -70,6 +71,14 @@
         </a>
         <a href="#lp-hiw" class="btn-ghost">Voir comment ça marche</a>
       </div>
+
+      <p class="hero__trust" id="lp-trust">
+        <span>Essai gratuit 30 jours</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>Sans carte bancaire</span>
+        <span aria-hidden="true">&middot;</span>
+        <span>Opérationnel en un après-midi</span>
+      </p>
 
       <!-- Device Mockup -->
       <div class="hero__mockup-wrap" id="lp-mockup" aria-hidden="true">
@@ -162,8 +171,8 @@
       <div class="section__inner">
         <header class="section__header">
           <p class="section__overline reveal">Tout ce dont vous avez besoin</p>
-          <h2 class="section__title reveal" id="lp-features-title">Conçu pour la réalité des centres</h2>
-          <p class="section__body reveal">Chaque fonctionnalité naît de conversations avec des directeurs, enseignants et administrateurs qui en avaient assez de jongler avec des tableurs.</p>
+          <h2 class="section__title reveal" id="lp-features-title">Conçu pour la réalité des centres marocains</h2>
+          <p class="section__body reveal">Chaque fonctionnalité de notre logiciel de gestion naît de conversations avec des directeurs, enseignants et administrateurs de centres au Maroc qui en avaient assez de jongler avec des tableurs.</p>
         </header>
 
         <div class="bento">
@@ -273,9 +282,13 @@
       <div class="section__inner excel-shift__inner">
         <figure class="excel-shift__image reveal">
           <picture>
+            <source srcset="assets/photos/mobile.webp" type="image/webp" media="(max-width: 760px)">
             <source srcset="assets/photos/mobile.png" media="(max-width: 760px)">
+            <source srcset="assets/photos/excel2.webp" type="image/webp">
             <img
               src="assets/photos/excel2.png"
+              width="1667" height="944"
+              loading="lazy" decoding="async"
               alt="Comparaison entre une gestion dispers&eacute;e avec Excel et un pilotage intelligent centralis&eacute; avec Moujtahid"
             >
           </picture>
@@ -624,7 +637,11 @@
           </div>
 
           <div class="parent-phone">
-            <img src="assets/photos/phone.png" alt="">
+            <picture>
+              <source srcset="assets/photos/phone.webp" type="image/webp">
+              <img src="assets/photos/phone.png" alt=""
+                   width="408" height="612" loading="lazy" decoding="async">
+            </picture>
           </div>
 
           <div class="parent-schoolbag">
@@ -861,7 +878,20 @@
           </div>
         </div>
 
-        <form class="demo-form reveal" aria-label="Formulaire de demande de démo gratuite">
+        <form class="demo-form reveal" aria-label="Formulaire de demande de démo gratuite"
+              (submit)="onDemoSubmit($event)">
+          @if (demoSubmitted) {
+            <div class="demo-form__success" role="status">
+              <span class="demo-form__success-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.8-5"/>
+                </svg>
+              </span>
+              <h3>Demande envoyée&nbsp;!</h3>
+              <p>Merci pour votre confiance. Notre équipe vous recontactera sous 24&nbsp;heures pour organiser votre démo personnalisée.</p>
+            </div>
+          } @else {
           <header class="demo-form__header">
             <span class="demo-form__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
@@ -879,7 +909,8 @@
             <span>Nom de votre centre de tutorat</span>
             <span class="demo-field__control">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 21V7l6-4 6 4v14M9 21v-8h6v8M8 9h.01M12 9h.01M16 9h.01"/></svg>
-              <input type="text" placeholder="Ex : Centre Excel Mathématiques">
+              <input type="text" name="centre" required autocomplete="organization"
+                     placeholder="Ex : Centre Excel Mathématiques">
             </span>
           </label>
 
@@ -887,7 +918,8 @@
             <span>Votre nom complet</span>
             <span class="demo-field__control">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
-              <input type="text" placeholder="Ex : Ahmed Benali">
+              <input type="text" name="fullname" required autocomplete="name"
+                     placeholder="Ex : Ahmed Benali">
             </span>
           </label>
 
@@ -930,20 +962,22 @@
               <span>Numéro de téléphone</span>
               <span class="demo-field__control">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 4h3l1.5 4-2.1 1.2a11 11 0 0 0 5.8 5.8l1.2-2.1 4 1.5v3a2 2 0 0 1-2.2 2A15.8 15.8 0 0 1 4.6 6.2 2 2 0 0 1 6.6 4Z"/></svg>
-                <input type="tel" placeholder="Ex : 06 12 34 56 78">
+                <input type="tel" name="phone" required autocomplete="tel" inputmode="tel"
+                       placeholder="Ex : 06 12 34 56 78">
               </span>
             </label>
           </div>
 
-          <button class="demo-form__submit" type="button">
+          <button class="demo-form__submit" type="submit" [disabled]="demoSubmitting">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
-            Demander une démo gratuite
+            {{ demoSubmitting ? 'Envoi en cours…' : 'Demander une démo gratuite' }}
           </button>
 
           <p class="demo-form__note">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.8 1.8 3.7-4"/></svg>
             Aucune carte bancaire requise. Sans engagement.
           </p>
+          }
         </form>
       </div>
     </section>
@@ -1032,6 +1066,19 @@
             </button>
             <div class="faq__answer-wrap" id="faq-a6"><div class="faq__answer-inner">
               <p class="faq__answer">Nous vous informons par e-mail lorsque vous atteignez 80 % de votre limite, afin que vous ayez le temps de planifier. La mise à niveau est instantanée &mdash; vos données ne sont jamais bloquées ni affectées. Nous ne couperons jamais l'accès sans avertissement préalable.</p>
+            </div></div>
+          </div>
+
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a7">
+              <span class="faq__question">Moujtahid convient-il à tous les types de centres au Maroc ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a7"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. Moujtahid est un logiciel de gestion scolaire conçu au Maroc, pensé d'abord pour les centres de soutien scolaire, et adopté aussi par des écoles privées, centres de langues et centres de formation. Facturation en dirhams, villes marocaines intégrées et alertes SMS locales : tout est adapté au marché marocain.</p>
             </div></div>
           </div>
 

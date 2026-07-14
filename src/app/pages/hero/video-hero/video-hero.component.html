@@ -15,9 +15,10 @@
   <div class="video-hero__overlay" aria-hidden="true"></div>
 
   <div class="video-hero__content">
-    <h1 class="video-hero__title" aria-live="polite">
+    <!-- p, not h1: the landing page below owns the single h1 for SEO -->
+    <p class="video-hero__title" aria-live="polite">
       {{ titleText }}<span class="video-hero__cursor" [class.video-hero__cursor--hidden]="!showCursor">|</span>
-    </h1>
+    </p>
 
     <button
       type="button"

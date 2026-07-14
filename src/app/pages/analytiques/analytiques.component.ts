@@ -32,6 +32,15 @@ const EMPTY_REPORT: AnalyticsReport = {
   teacherPerformancePagination: EMPTY_PAGINATION,
 };
 
+interface TrendPoint {
+  x: number;
+  y: number;
+  value: number;
+  month: string;
+  monthLabel: string;
+  longMonthLabel: string;
+}
+
 @Component({
   selector: 'app-analytiques',
   imports: [NgStyle, NgClass],
@@ -56,6 +65,9 @@ export class AnalytiquesComponent {
   teacherPage = signal(1);
   riskPage = signal(1);
   riskLoading = signal(true);
+  attendanceExpanded = signal(false);
+  activeTrendIndex = signal<number | null>(null);
+  activeRevenueIndex = signal<number | null>(null);
 
   totalStudents = computed(() => this.report().summary.totalStudents);
   activeStudents = computed(() => this.report().summary.activeStudents);
@@ -74,11 +86,47 @@ export class AnalytiquesComponent {
     const revenues = this.report().monthlyRevenues;
     const maxAmount = Math.max(...revenues.map(item => item.amount), 1);
 
-    return revenues.map(item => ({
+    return revenues.map((item, index) => ({
       ...item,
+      monthKey: item.month,
       month: this.monthLabel(item.month, 'short'),
+      longMonth: this.monthLabel(item.month, 'long'),
       maxAmount,
+      isBest: item.amount === maxAmount,
+      index,
     }));
+  });
+  revenueLatest = computed(() => this.report().monthlyRevenues.at(-1)?.amount ?? 0);
+  revenuePrevious = computed(() => this.report().monthlyRevenues.at(-2)?.amount ?? 0);
+  revenueDelta = computed(() => this.revenueLatest() - this.revenuePrevious());
+  revenueGrowthPct = computed(() => {
+    const previous = this.revenuePrevious();
+    if (!previous) return 0;
+    return Math.round(((this.revenueLatest() - previous) / previous) * 1000) / 10;
+  });
+  revenueAverage = computed(() => {
+    const revenues = this.report().monthlyRevenues;
+    if (revenues.length === 0) return 0;
+    return Math.round(revenues.reduce((sum, item) => sum + item.amount, 0) / revenues.length);
+  });
+  bestRevenueMonth = computed(() => {
+    const revenues = this.report().monthlyRevenues;
+    const best = revenues.reduce((winner, item) => item.amount > winner.amount ? item : winner, revenues[0] ?? { month: '', amount: 0 });
+    return {
+      label: best.month ? this.monthLabel(best.month, 'long') : '—',
+      amount: best.amount,
+    };
+  });
+  revenueYAxisLabels = computed(() => {
+    const maxAmount = Math.max(...this.report().monthlyRevenues.map(item => item.amount), 1);
+    const top = Math.ceil(maxAmount / 5000) * 5000 || 5000;
+    return [top, top * 0.8, top * 0.6, top * 0.4, top * 0.2, 0].map(value => Math.round(value));
+  });
+  activeRevenue = computed(() => {
+    const revenues = this.monthlyRevenues();
+    if (revenues.length === 0) return null;
+    const index = this.activeRevenueIndex();
+    return index === null ? revenues.at(-1) ?? null : revenues[index] ?? revenues.at(-1) ?? null;
   });
 
   classAttendance = computed(() => {
@@ -88,9 +136,51 @@ export class AnalytiquesComponent {
       color: colors[index % colors.length],
     }));
   });
+  attendanceAverage = computed(() => {
+    const classes = this.classAttendance();
+    if (classes.length === 0) return this.attendanceRate();
+    const average = classes.reduce((sum, item) => sum + item.rate, 0) / classes.length;
+    return Math.round(average * 10) / 10;
+  });
 
   enrollmentTrend = computed(() => this.report().enrollmentTrend.map(item => item.total));
   trendMonths = computed(() => this.report().enrollmentTrend.map(item => this.monthLabel(item.month, 'short')));
+  trendMonthColumns = computed(() => `repeat(${Math.max(this.trendMonths().length, 1)}, minmax(42px, 1fr))`);
+  trendLatest = computed(() => this.report().enrollmentTrend.at(-1)?.total ?? 0);
+  trendPrevious = computed(() => this.report().enrollmentTrend.at(-2)?.total ?? 0);
+  newStudentsThisMonth = computed(() => Math.max(this.trendLatest() - this.trendPrevious(), 0));
+  enrollmentGrowthPct = computed(() => {
+    const previous = this.trendPrevious();
+    if (!previous) return 0;
+    return Math.round(((this.trendLatest() - previous) / previous) * 1000) / 10;
+  });
+  bestEnrollmentMonth = computed(() => {
+    const trend = this.report().enrollmentTrend;
+    const best = trend.reduce((winner, item) => item.total > winner.total ? item : winner, trend[0] ?? { month: '', total: 0 });
+    return {
+      label: best.month ? this.monthLabel(best.month, 'long') : '—',
+      total: best.total,
+    };
+  });
+  trendYAxisLabels = computed(() => {
+    const maxValue = Math.max(...this.enrollmentTrend(), 1);
+    const top = Math.ceil(maxValue / 50) * 50 || 50;
+    return Array.from({ length: 6 }, (_, index) => {
+      const value = Math.round((top / 5) * (5 - index));
+      return {
+        value,
+        y: 28 + index * 38,
+      };
+    });
+  });
+  trendGridLines = computed(() => this.trendYAxisLabels().map(item => item.y));
+  trendPoints = computed(() => this.chartPoints());
+  activeTrendPoint = computed(() => {
+    const points = this.trendPoints();
+    if (points.length === 0) return null;
+    const activeIndex = this.activeTrendIndex();
+    return activeIndex === null ? points.at(-1) ?? null : points[activeIndex] ?? points.at(-1) ?? null;
+  });
 
   constructor() {
     this.loadReport();
@@ -104,24 +194,32 @@ export class AnalytiquesComponent {
   }
 
   get svgPoints(): string {
-    return this.chartPoints().map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+    return this.trendPoints().map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
   }
 
   get svgFillPath(): string {
-    const points = this.chartPoints();
+    const points = this.trendPoints();
     if (points.length === 0) {
       return '';
     }
 
-    return `M${points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' L')} L540,100 L0,100 Z`;
+    return `M${points.map(point => `${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' L')} L948,218 L54,218 Z`;
   }
 
-  get svgDots(): { x: number; y: number; value: number }[] {
-    return this.chartPoints();
+  get svgDots(): TrendPoint[] {
+    return this.trendPoints();
+  }
+
+  get latestTrendDot(): TrendPoint | null {
+    return this.trendPoints().at(-1) ?? null;
   }
 
   getBarHeight(amount: number, max: number): number {
     return Math.round((amount / max) * 100);
+  }
+
+  formatDhs(amount: number): string {
+    return `${amount.toLocaleString('fr-MA')} Dhs`;
   }
 
   studentInitials(student: StudentAttritionRisk): string {
@@ -168,6 +266,32 @@ export class AnalytiquesComponent {
     }
   }
 
+  toggleAttendanceDetails(): void {
+    this.attendanceExpanded.update(value => !value);
+  }
+
+  setActiveTrendPoint(index: number): void {
+    this.activeTrendIndex.set(index);
+  }
+
+  clearActiveTrendPoint(): void {
+    this.activeTrendIndex.set(null);
+  }
+
+  setActiveRevenue(index: number): void {
+    this.activeRevenueIndex.set(index);
+  }
+
+  clearActiveRevenue(): void {
+    this.activeRevenueIndex.set(null);
+  }
+
+  trendTooltipTransform(point: TrendPoint): string {
+    const x = Math.min(Math.max(point.x - 40, 54), 868);
+    const y = Math.max(point.y - 88, 8);
+    return `translate(${x},${y})`;
+  }
+
   private loadReport(): void {
     this.analyticsService.getReport(this.selectedPeriod(), this.teacherPage(), 8).subscribe({
       next: response => {
@@ -196,14 +320,23 @@ export class AnalytiquesComponent {
     });
   }
 
-  private chartPoints(): { x: number; y: number; value: number }[] {
-    const values = this.enrollmentTrend();
+  private chartPoints(): TrendPoint[] {
+    const trend = this.report().enrollmentTrend;
+    const values = trend.map(item => item.total);
     const maxValue = Math.max(...values, 1);
+    const topValue = Math.ceil(maxValue / 50) * 50 || 50;
+    const chartLeft = 54;
+    const chartWidth = 894;
+    const chartTop = 28;
+    const chartHeight = 190;
 
-    return values.map((value, index) => ({
-      x: values.length === 1 ? 270 : (index / (values.length - 1)) * 540,
-      y: 100 - (value / maxValue) * 100,
-      value,
+    return trend.map((item, index) => ({
+      x: values.length === 1 ? chartLeft + chartWidth / 2 : chartLeft + (index / (values.length - 1)) * chartWidth,
+      y: chartTop + chartHeight - (item.total / topValue) * chartHeight,
+      value: item.total,
+      month: item.month,
+      monthLabel: this.monthLabel(item.month, 'short'),
+      longMonthLabel: this.monthLabel(item.month, 'long'),
     }));
   }
 

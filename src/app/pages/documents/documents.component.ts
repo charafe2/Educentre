@@ -11,6 +11,7 @@ import { ReceiptPreviewComponent } from '../../components/receipt-preview/receip
 import { Document } from '../../models/document.model';
 import { Payment } from '../../models/payment.model';
 import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
+import { Student } from '../../models/student.model';
 
 @Component({
   selector: 'app-documents',
@@ -29,16 +30,31 @@ export class DocumentsComponent {
   searchTerm = signal('');
   selectedType = signal('');
 
-  documents = this.documentsService.documents;
+  storedDocuments = this.documentsService.documents;
   students = this.studentsService.students;
   payments = this.paymentsService.payments;
+
+  documents = computed(() => {
+    const payments = this.payments();
+    const hasLiveData = this.students().length > 0 || payments.length > 0;
+    const paymentById = new Map(payments.map(payment => [payment.id, payment]));
+    const enrichedStoredDocuments = this.storedDocuments()
+      .map(doc => this.withPaymentData(doc, paymentById.get(doc.paymentId)))
+      .filter(doc => !hasLiveData || this.hasStudent(doc.studentId));
+    const usedPaymentIds = new Set(enrichedStoredDocuments.map(doc => doc.paymentId));
+    const generatedPaymentDocuments = payments
+      .filter(payment => (payment.invoiceGenerated || payment.status === 'paid') && !usedPaymentIds.has(payment.id))
+      .map((payment, index) => this.documentFromPayment(payment, index));
+
+    return [...generatedPaymentDocuments, ...enrichedStoredDocuments]
+      .sort((first, second) => second.generatedAt.localeCompare(first.generatedAt));
+  });
 
   filteredDocuments = computed(() => {
     const term = this.searchTerm().toLowerCase();
     const type = this.selectedType();
     return this.documents().filter(d => {
-      const student = this.studentsService.getById(d.studentId);
-      const studentName = student ? `${student.firstName} ${student.lastName}` : '';
+      const studentName = this.getStudentName(d.studentId);
       const classe = this.classesService.getById(d.classeId);
       const className = classe?.name ?? '';
       const matchesSearch = !term ||
@@ -144,7 +160,28 @@ export class DocumentsComponent {
 
   getStudentName(studentId: number): string {
     const s = this.studentsService.getById(studentId);
-    return s ? `${s.firstName} ${s.lastName}` : '—';
+    return s ? this.formatStudentName(s) : `Étudiant #${studentId}`;
+  }
+
+  getStudentInitials(studentId: number): string {
+    const s = this.studentsService.getById(studentId);
+    if (!s) return String(studentId).slice(-2).padStart(2, '0');
+    return `${s.firstName?.[0] ?? ''}${s.lastName?.[0] ?? ''}`.toUpperCase() || 'ET';
+  }
+
+  getStudentColor(studentId: number): string {
+    return this.studentsService.getById(studentId)?.avatarColor || '#078c78';
+  }
+
+  getStudentSubtitle(doc: Document): string {
+    const classe = this.classesService.getById(doc.classeId);
+    const student = this.studentsService.getById(doc.studentId);
+    if (classe) return classe.name;
+    return student?.level || 'Classe non chargée';
+  }
+
+  private formatStudentName(student: Student): string {
+    return `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || `Étudiant #${student.id}`;
   }
 
   getClassName(classeId: number): string {
@@ -162,4 +199,35 @@ export class DocumentsComponent {
 
   onSearch(event: Event): void { this.searchTerm.set((event.target as HTMLInputElement).value); }
   onTypeChange(event: Event): void { this.selectedType.set((event.target as HTMLSelectElement).value); }
+
+  private withPaymentData(doc: Document, payment?: Payment): Document {
+    if (!payment) return doc;
+    return {
+      ...doc,
+      studentId: payment.studentId,
+      classeId: payment.classeId,
+      periodMonth: payment.periodMonth,
+      amount: payment.amount,
+    };
+  }
+
+  private documentFromPayment(payment: Payment, index: number): Document {
+    const suffix = String(payment.id).padStart(4, '0');
+    return {
+      id: -payment.id,
+      invoiceNumber: `FAC-${payment.periodMonth.slice(0, 4)}-${suffix}`,
+      paymentId: payment.id,
+      studentId: payment.studentId,
+      classeId: payment.classeId,
+      periodMonth: payment.periodMonth,
+      amount: payment.amount,
+      type: 'Reçu',
+      sentViaWhatsapp: false,
+      generatedAt: payment.paidAt || `${payment.periodMonth}-01`,
+    };
+  }
+
+  private hasStudent(studentId: number): boolean {
+    return this.studentsService.getById(studentId) !== undefined;
+  }
 }
