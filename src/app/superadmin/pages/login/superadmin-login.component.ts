@@ -27,7 +27,7 @@ export class SuperadminLoginComponent {
     this.loading.set(true);
     this.error.set('');
     await new Promise(r => setTimeout(r, 700));
-    const ok = this.auth.login(this.email, this.password);
+    const ok = await this.auth.login(this.email, this.password);
     this.loading.set(false);
     if (ok) {
       this.router.navigate(['/superadmin/dashboard']);

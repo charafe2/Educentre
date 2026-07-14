@@ -1,27 +1,70 @@
 <div class="sa-shell" [class.collapsed]="sidebarCollapsed()">
-
-  <!-- Sidebar -->
-  <aside class="sa-sidebar">
+  <aside class="sa-sidebar" aria-label="Navigation super-admin">
     <div class="sa-sidebar-header">
-      <div class="sa-brand">
-        <i class="fa-solid fa-graduation-cap"></i>
-        <span class="sa-brand-name">Moujtahid</span>
+      <div class="sa-brand" aria-label="Moujtahid super-admin">
+        <span class="sa-brand-sigil" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img">
+            <path d="M5.4 18V6h3.2l3.4 5.8L15.4 6h3.2v12h-2.5v-7.7l-3.2 5.2h-1.8l-3.2-5.2V18H5.4Z" />
+          </svg>
+        </span>
+        <span class="sa-brand-copy">
+          <span class="sa-brand-name">Moujtahid</span>
+          <span class="sa-brand-kicker">Super admin</span>
+        </span>
       </div>
-      <button class="sa-collapse-btn" (click)="sidebarCollapsed.update(v => !v)">
-        <i class="fa-solid" [class.fa-chevron-left]="!sidebarCollapsed()" [class.fa-chevron-right]="sidebarCollapsed()"></i>
+      <button class="sa-icon-button sa-collapse-btn" (click)="sidebarCollapsed.update(v => !v)" title="Réduire la navigation" type="button">
+        <svg class="sa-action-icon" [class.is-collapsed]="sidebarCollapsed()" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 6 9 12l6 6" />
+        </svg>
       </button>
     </div>
 
-    <div class="sa-nav-label">Gestion</div>
-
     <nav class="sa-nav">
+      <div class="sa-nav-section">Pilotage</div>
       <a routerLink="/superadmin/dashboard" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Vue d'ensemble">
-        <i class="fa-solid fa-chart-pie"></i>
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4.5 19.5h15" />
+          <path d="M7.2 16V9.5" />
+          <path d="M12 16V5.5" />
+          <path d="M16.8 16v-4.5" />
+        </svg>
         <span>Vue d'ensemble</span>
       </a>
-      <a routerLink="/superadmin/clients" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Clients">
-        <i class="fa-solid fa-buildings"></i>
-        <span>Clients</span>
+      <a routerLink="/superadmin/clients" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Centres">
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 20V8.6l7-4 7 4V20" />
+          <path d="M9 20v-5h6v5" />
+          <path d="M8.4 10.8h.1" />
+          <path d="M12 10.8h.1" />
+          <path d="M15.6 10.8h.1" />
+        </svg>
+        <span>Centres</span>
+      </a>
+      <a routerLink="/superadmin/invoices" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Factures centres">
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7.2 4h9.6A1.8 1.8 0 0 1 18.6 5.8v14l-2.2-1.3-2.2 1.3-2.2-1.3-2.2 1.3-2.4-1.5V5.8A1.8 1.8 0 0 1 7.2 4Z" />
+          <path d="M9.7 8.4h4.8" />
+          <path d="M9.7 12h4.8" />
+          <path d="M9.7 15.6h3" />
+        </svg>
+        <span>Factures</span>
+      </a>
+
+      <div class="sa-nav-section">Configuration</div>
+      <a routerLink="/superadmin/packages" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Packages">
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m12 4.2 7.6 4-7.6 4-7.6-4 7.6-4Z" />
+          <path d="m4.4 12.1 7.6 4 7.6-4" />
+          <path d="m4.4 15.8 7.6 4 7.6-4" />
+        </svg>
+        <span>Packages</span>
+      </a>
+      <a routerLink="/superadmin/accounts" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Comptes super-admin">
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3.8 18.2 6v5.3c0 4-2.4 7.2-6.2 8.9-3.8-1.7-6.2-4.9-6.2-8.9V6L12 3.8Z" />
+          <path d="M9.5 12.2 11.2 14l3.4-4" />
+        </svg>
+        <span>Comptes</span>
       </a>
     </nav>
 
@@ -30,29 +73,34 @@
         <div class="sa-user-avatar">SA</div>
         <div class="sa-user-info">
           <span class="sa-user-name">Super Admin</span>
-          <span class="sa-user-role">Accès total</span>
+          <span class="sa-user-role">Accès plateforme</span>
         </div>
       </div>
-      <button class="sa-logout-btn" (click)="logout()" title="Déconnexion">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      <button class="sa-icon-button sa-logout-btn" (click)="logout()" title="Déconnexion" type="button">
+        <svg class="sa-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9.5 5.5H6.8A1.8 1.8 0 0 0 5 7.3v9.4a1.8 1.8 0 0 0 1.8 1.8h2.7" />
+          <path d="M14.5 8.2 18.3 12l-3.8 3.8" />
+          <path d="M18 12H9.5" />
+        </svg>
       </button>
     </div>
   </aside>
 
-  <!-- Main -->
   <div class="sa-main">
     <header class="sa-topbar">
       <div class="sa-topbar-left">
         <div class="sa-restricted-badge">
-          <i class="fa-solid fa-shield-halved"></i>
-          Panneau Super Administration
+          <span class="badge-dot"></span>
+          Console Super Administration
         </div>
+      </div>
+      <div class="sa-topbar-right">
+        <span class="sa-system-chip">API connectée</span>
       </div>
     </header>
 
-    <div class="sa-content">
+    <main class="sa-content">
       <router-outlet />
-    </div>
+    </main>
   </div>
-
 </div>

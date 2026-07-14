@@ -16,6 +16,8 @@ class AnalyticsReportRequest extends FormRequest
     {
         return [
             'period' => ['nullable', Rule::in(['last_3_months', 'last_6_months', 'this_year', 'last_year'])],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'perPage' => ['nullable', 'integer', 'min:5', 'max:100'],
         ];
     }
 }

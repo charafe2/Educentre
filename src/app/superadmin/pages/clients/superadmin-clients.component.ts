@@ -1,20 +1,7 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-
-export interface ClientAccount {
-  id: number;
-  centreName: string;
-  centreType: string;
-  city: string;
-  ownerName: string;
-  email: string;
-  phone: string;
-  plan: 'Basique' | 'Pro' | 'Enterprise';
-  status: 'active' | 'suspended' | 'trial';
-  createdAt: string;
-  studentsCount: number;
-}
+import { ClientAccount, SuperadminApiService } from '../../superadmin-api.service';
 
 @Component({
   selector: 'app-superadmin-clients',
@@ -22,15 +9,12 @@ export interface ClientAccount {
   templateUrl: './superadmin-clients.component.html',
   styleUrl: './superadmin-clients.component.css'
 })
-export class SuperadminClientsComponent {
+export class SuperadminClientsComponent implements OnInit {
+  private api = inject(SuperadminApiService);
 
-  clients = signal<ClientAccount[]>([
-    { id: 1, centreName: 'Centre Al Moujtahid', centreType: 'Soutien scolaire', city: 'Casablanca', ownerName: 'Ahmed Berrada', email: 'admin@moujtahid.ma', phone: '+212 6 12 34 56 78', plan: 'Pro', status: 'active', createdAt: '12/01/2025', studentsCount: 148 },
-    { id: 2, centreName: 'École de Langue Avenir', centreType: 'Langue', city: 'Rabat', ownerName: 'Fatima Zahra El Idrissi', email: 'f.elidrissi@avenir.ma', phone: '+212 6 98 76 54 32', plan: 'Basique', status: 'active', createdAt: '03/03/2025', studentsCount: 64 },
-    { id: 3, centreName: 'TechKids Marrakech', centreType: 'Informatique', city: 'Marrakech', ownerName: 'Youssef Bennani', email: 'y.bennani@techkids.ma', phone: '+212 6 55 44 33 22', plan: 'Pro', status: 'trial', createdAt: '28/04/2025', studentsCount: 32 },
-    { id: 4, centreName: 'Art & Culture Fès', centreType: 'Artistique', city: 'Fès', ownerName: 'Nadia Chraibi', email: 'n.chraibi@artculture.ma', phone: '+212 6 77 88 99 00', plan: 'Enterprise', status: 'active', createdAt: '15/02/2025', studentsCount: 210 },
-    { id: 5, centreName: 'Centre Atlas', centreType: 'Soutien scolaire', city: 'Agadir', ownerName: 'Rachid Ouali', email: 'r.ouali@atlascentre.ma', phone: '+212 6 11 22 33 44', plan: 'Basique', status: 'suspended', createdAt: '20/01/2025', studentsCount: 89 },
-  ]);
+  clients = signal<ClientAccount[]>([]);
+  loading = signal(false);
+  pageError = signal('');
 
   searchQuery = signal('');
   filterStatus = signal<'all' | 'active' | 'trial' | 'suspended'>('all');
@@ -56,8 +40,10 @@ export class SuperadminClientsComponent {
 
   // Modal state
   showModal = signal(false);
+  editingClientId = signal<number | null>(null);
   showPassword = signal(false);
   formError = signal('');
+  saving = signal(false);
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique', 'Musique', 'Sport'];
   plans: ClientAccount['plan'][] = ['Basique', 'Pro', 'Enterprise'];
@@ -68,59 +54,113 @@ export class SuperadminClientsComponent {
     password: string; plan: ClientAccount['plan'];
   } = this.emptyForm();
 
+  ngOnInit(): void {
+    void this.loadClients();
+  }
+
+  async loadClients(): Promise<void> {
+    this.loading.set(true);
+    this.pageError.set('');
+    try {
+      this.clients.set(await this.api.getCentres());
+    } catch {
+      this.pageError.set('Impossible de charger les centres.');
+    } finally {
+      this.loading.set(false);
+    }
+  }
+
   emptyForm() {
     return { centreName: '', centreType: 'Soutien scolaire', city: '', ownerName: '', email: '', phone: '', password: '', plan: 'Pro' as ClientAccount['plan'] };
   }
 
   openCreate() {
+    this.editingClientId.set(null);
     this.form = this.emptyForm();
     this.formError.set('');
     this.showPassword.set(false);
     this.showModal.set(true);
   }
 
-  submitCreate() {
+  openEdit(client: ClientAccount) {
+    this.editingClientId.set(client.id);
+    this.form = {
+      centreName: client.centreName,
+      centreType: client.centreType,
+      city: client.city,
+      ownerName: client.ownerName,
+      email: client.email,
+      phone: client.phone,
+      password: '',
+      plan: client.plan,
+    };
+    this.formError.set('');
+    this.showPassword.set(false);
+    this.showModal.set(true);
+  }
+
+  async submitSave() {
     const { centreName, ownerName, email, password } = this.form;
-    if (!centreName || !ownerName || !email || !password) {
+    const editingId = this.editingClientId();
+    if (!centreName || !ownerName || !email || (!editingId && !password)) {
       this.formError.set('Les champs marqués * sont obligatoires.');
       return;
     }
-    if (password.length < 6) {
+    if (!editingId && password.length < 6) {
       this.formError.set('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
-    if (this.clients().some(c => c.email === email)) {
+    if (this.clients().some(c => c.email === email && c.id !== editingId)) {
       this.formError.set('Cet e-mail est déjà utilisé.');
       return;
     }
-    const id = Math.max(...this.clients().map(c => c.id)) + 1;
-    const today = new Date().toLocaleDateString('fr-FR');
-    this.clients.update(list => [...list, {
-      id,
-      centreName: this.form.centreName,
-      centreType: this.form.centreType,
-      city: this.form.city,
-      ownerName: this.form.ownerName,
-      email: this.form.email,
-      phone: this.form.phone,
-      plan: this.form.plan,
-      status: 'trial',
-      createdAt: today,
-      studentsCount: 0,
-    }]);
-    this.showModal.set(false);
+
+    this.saving.set(true);
+    this.formError.set('');
+    try {
+      const payload = {
+        centreName: this.form.centreName,
+        centreType: this.form.centreType,
+        city: this.form.city,
+        ownerName: this.form.ownerName,
+        email: this.form.email,
+        phone: this.form.phone,
+        password: this.form.password || undefined,
+        plan: this.form.plan,
+      };
+
+      if (editingId) {
+        const updated = await this.api.updateCentre(editingId, payload);
+        this.clients.update(list => list.map(c => c.id === editingId ? updated : c));
+      } else {
+        const created = await this.api.createCentre(payload);
+        this.clients.update(list => [created, ...list]);
+      }
+
+      this.showModal.set(false);
+    } catch {
+      this.formError.set('Enregistrement impossible. Vérifiez les champs et réessayez.');
+    } finally {
+      this.saving.set(false);
+    }
   }
 
-  toggleStatus(client: ClientAccount) {
-    this.clients.update(list => list.map(c =>
-      c.id === client.id
-        ? { ...c, status: c.status === 'suspended' ? 'active' : 'suspended' }
-        : c
-    ));
+  async toggleStatus(client: ClientAccount) {
+    try {
+      const updated = await this.api.toggleCentreStatus(client.id);
+      this.clients.update(list => list.map(c => c.id === client.id ? updated : c));
+    } catch {
+      this.pageError.set('Impossible de modifier le statut du centre.');
+    }
   }
 
-  deleteClient(client: ClientAccount) {
+  async deleteClient(client: ClientAccount) {
     if (!confirm(`Supprimer le compte de "${client.centreName}" ? Cette action est irréversible.`)) return;
-    this.clients.update(list => list.filter(c => c.id !== client.id));
+    try {
+      await this.api.deleteCentre(client.id);
+      this.clients.update(list => list.filter(c => c.id !== client.id));
+    } catch {
+      this.pageError.set('Impossible de supprimer ce centre.');
+    }
   }
 }

@@ -3,8 +3,8 @@
   <!-- Page header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Comptes clients</h1>
-      <p class="page-subtitle">Gérez les centres et leurs propriétaires</p>
+      <h1 class="page-title">Centres</h1>
+      <p class="page-subtitle">CRUD statique des centres, propriétaires, statuts et packages</p>
     </div>
     <button class="btn-create" (click)="openCreate()">
       <i class="fa-solid fa-plus"></i>
@@ -44,6 +44,13 @@
     </div>
   </div>
 
+  @if (pageError()) {
+    <div class="page-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ pageError() }}
+    </div>
+  }
+
   <!-- Toolbar -->
   <div class="toolbar">
     <div class="search-wrap">
@@ -82,6 +89,9 @@
         </tr>
       </thead>
       <tbody>
+        @if (loading()) {
+          <tr><td colspan="8" class="empty-row">Chargement des centres...</td></tr>
+        } @else {
         @for (client of filteredClients(); track client.id) {
           <tr>
             <td>
@@ -113,6 +123,9 @@
             <td class="date-cell">{{ client.createdAt }}</td>
             <td>
               <div class="actions">
+                <button class="action-btn action-edit" title="Modifier" (click)="openEdit(client)">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
                 <button
                   class="action-btn"
                   [class.action-suspend]="client.status !== 'suspended'"
@@ -137,13 +150,14 @@
             </td>
           </tr>
         }
+        }
       </tbody>
     </table>
   </div>
 
 </div>
 
-<!-- Create account modal -->
+<!-- Create/edit account modal -->
 @if (showModal()) {
   <div class="modal-overlay" (click)="showModal.set(false)">
     <div class="modal" (click)="$event.stopPropagation()">
@@ -152,8 +166,8 @@
         <div class="modal-header-left">
           <div class="modal-icon"><i class="fa-solid fa-user-plus"></i></div>
           <div>
-            <h2 class="modal-title">Créer un compte propriétaire</h2>
-            <p class="modal-subtitle">Le client recevra ses identifiants de connexion</p>
+            <h2 class="modal-title">{{ editingClientId() ? 'Modifier le centre' : 'Créer un compte propriétaire' }}</h2>
+            <p class="modal-subtitle">{{ editingClientId() ? 'Mettez à jour les informations du centre' : 'Le client recevra ses identifiants de connexion' }}</p>
           </div>
         </div>
         <button class="modal-close" (click)="showModal.set(false)">
@@ -205,9 +219,9 @@
             <input class="form-input" type="tel" [(ngModel)]="form.phone" placeholder="+212 6 00 00 00 00" />
           </div>
           <div class="form-group">
-            <label class="form-label">Mot de passe <span class="req">*</span></label>
+            <label class="form-label">Mot de passe @if (!editingClientId()) { <span class="req">*</span> }</label>
             <div class="pw-wrap">
-              <input class="form-input" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password" placeholder="Min. 6 caractères" />
+              <input class="form-input" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password" [placeholder]="editingClientId() ? 'Laisser vide pour conserver' : 'Min. 6 caractères'" />
               <button type="button" class="pw-toggle" (click)="showPassword.update(v => !v)">
                 <i class="fa-regular" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
               </button>
@@ -227,9 +241,9 @@
 
       <div class="modal-footer">
         <button class="btn-cancel" (click)="showModal.set(false)">Annuler</button>
-        <button class="btn-confirm" (click)="submitCreate()">
-          <i class="fa-solid fa-user-plus"></i>
-          Créer le compte
+        <button class="btn-confirm" (click)="submitSave()" [disabled]="saving()">
+          <i class="fa-solid" [class.fa-user-plus]="!editingClientId()" [class.fa-floppy-disk]="editingClientId()"></i>
+          {{ saving() ? 'Enregistrement...' : (editingClientId() ? 'Enregistrer' : 'Créer le compte') }}
         </button>
       </div>
 

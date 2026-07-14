@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domains\Core\Models\Centre;
+use App\Domains\Core\Models\Subscription;
 use App\Domains\Finance\Models\Payment;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -56,5 +57,10 @@ class Tenant extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
     }
 }

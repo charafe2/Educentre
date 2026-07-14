@@ -1,7 +1,9 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const token = localStorage.getItem('auth_token');
+  const token = req.url.includes('/v1/superadmin')
+    ? localStorage.getItem('superadmin_token')
+    : localStorage.getItem('auth_token');
 
   if (token) {
     const cloned = req.clone({

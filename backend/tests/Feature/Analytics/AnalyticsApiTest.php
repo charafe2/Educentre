@@ -73,7 +73,8 @@ class AnalyticsApiTest extends TestCase
             ->assertJsonPath('data.summary.activeTeachers', 1)
             ->assertJsonPath('data.summary.attendanceRate', 100)
             ->assertJsonPath('data.teacherPerformance.0.name', $teacher->user->name)
-            ->assertJsonPath('data.teacherPerformance.0.collectedRevenue', 350);
+            ->assertJsonPath('data.teacherPerformance.0.collectedRevenue', 350)
+            ->assertJsonPath('data.teacherPerformancePagination.perPage', 5);
     }
 
     public function test_report_rejects_unknown_period(): void
@@ -83,6 +84,33 @@ class AnalyticsApiTest extends TestCase
         $this->actingAs($user)
             ->getJson('/api/v1/analytics/report?period=invalid')
             ->assertUnprocessable();
+    }
+
+    public function test_teacher_performance_uses_number_pagination(): void
+    {
+        [$tenant, $user] = $this->analyticsContext();
+
+        for ($index = 0; $index < 5; $index++) {
+            Teacher::create([
+                'tenant_id' => $tenant->id,
+                'user_id' => User::factory()->for($tenant)->create()->id,
+                'is_active' => true,
+            ]);
+        }
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/v1/analytics/report?period=last_3_months&perPage=5')
+            ->assertOk()
+            ->assertJsonCount(5, 'data.teacherPerformance')
+            ->assertJsonPath('data.teacherPerformancePagination.currentPage', 1)
+            ->assertJsonPath('data.teacherPerformancePagination.lastPage', 2)
+            ->assertJsonPath('data.teacherPerformancePagination.total', 6);
+
+        $this->actingAs($user)
+            ->getJson('/api/v1/analytics/report?period=last_3_months&perPage=5&page=2')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.teacherPerformance')
+            ->assertJsonPath('data.teacherPerformancePagination.currentPage', 2);
     }
 
     private function analyticsContext(): array

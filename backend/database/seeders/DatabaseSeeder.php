@@ -46,6 +46,15 @@ class DatabaseSeeder extends Seeder
             'status' => 'active',
         ]);
 
+        User::factory()->create([
+            'tenant_id' => $tenant->id,
+            'name' => 'Super Administrateur',
+            'email' => 'superadmin@moujtahid.ma',
+            'password' => Hash::make('superadmin2024'),
+            'role' => 'superadmin',
+            'status' => 'active',
+        ]);
+
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Mathematiques', 'payment_mode' => 'fixed', 'is_active' => true]);
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $manager->id, 'specialty' => 'Physique-Chimie', 'payment_mode' => 'fixed', 'is_active' => true]);
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Francais', 'payment_mode' => 'fixed', 'is_active' => true]);

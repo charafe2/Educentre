@@ -85,6 +85,69 @@ class PaymentApiTest extends TestCase
             ->assertNotFound();
     }
 
+    public function test_payments_are_number_paginated_with_tenant_summary(): void
+    {
+        [$tenant, $user, $student, $courseClass] = $this->financeContext();
+
+        foreach (range(1, 7) as $index) {
+            Payment::create([
+                'tenant_id' => $tenant->id,
+                'student_id' => $student->id,
+                'class_id' => $courseClass->id,
+                'period_month' => sprintf('2026-%02d-01', $index),
+                'amount' => 100,
+                'status' => $index <= 4 ? 'paid' : 'pending',
+            ]);
+        }
+
+        $response = $this->actingAs($user)
+            ->getJson('/api/v1/payments?perPage=5')
+            ->assertOk()
+            ->assertJsonCount(5, 'data')
+            ->assertJsonPath('summary.totalPaid', 400)
+            ->assertJsonPath('summary.totalPending', 300)
+            ->assertJsonPath('summary.totalCount', 7)
+            ->assertJsonPath('pagination.currentPage', 1)
+            ->assertJsonPath('pagination.lastPage', 2)
+            ->assertJsonPath('pagination.perPage', 5)
+            ->assertJsonPath('pagination.total', 7);
+
+        $this->actingAs($user)
+            ->getJson('/api/v1/payments?perPage=5&page=2')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('pagination.currentPage', 2);
+    }
+
+    public function test_payments_are_filtered_before_pagination(): void
+    {
+        [$tenant, $user, $student, $courseClass] = $this->financeContext();
+
+        Payment::create([
+            'tenant_id' => $tenant->id,
+            'student_id' => $student->id,
+            'class_id' => $courseClass->id,
+            'period_month' => '2026-06-01',
+            'amount' => 350,
+            'status' => 'overdue',
+        ]);
+        Payment::create([
+            'tenant_id' => $tenant->id,
+            'student_id' => $student->id,
+            'class_id' => $courseClass->id,
+            'period_month' => '2026-05-01',
+            'amount' => 350,
+            'status' => 'paid',
+        ]);
+
+        $this->actingAs($user)
+            ->getJson('/api/v1/payments?perPage=5&periodMonth=2026-06&status=overdue')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.status', 'overdue')
+            ->assertJsonPath('data.0.periodMonth', '2026-06');
+    }
+
     private function financeContext(): array
     {
         $tenant = Tenant::factory()->create();
