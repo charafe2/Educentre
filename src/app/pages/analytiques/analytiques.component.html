@@ -191,92 +191,33 @@
   <div class="charts-row">
 
     <!-- Revenue Bar Chart -->
-    <div class="panel chart-panel revenue-panel">
-      <div class="revenue-header">
-        <div>
-          <div class="panel-header-left">
-            <h3 class="panel-title">Revenus mensuels</h3>
-            <span class="chart-chip">Paiements encaissés</span>
-          </div>
-          <p>Suivi des revenus sur les {{ monthlyRevenues().length || 6 }} derniers mois</p>
-        </div>
-        <div class="revenue-total">
-          <span class="revenue-total-icon"><i class="fa-solid fa-chart-line"></i></span>
-          <strong>{{ formatDhs(revenueLatest()) }}</strong>
-          <small [class.negative]="revenueGrowthPct() < 0">
-            {{ revenueGrowthPct() >= 0 ? '+' : '' }}{{ revenueGrowthPct() }}% ce mois-ci
-            <i class="fa-solid fa-arrow-trend-up"></i>
-          </small>
+    <div class="panel chart-panel">
+      <div class="panel-header">
+        <div class="panel-header-left">
+          <h3 class="panel-title">Revenus Mensuels</h3>
+          <span class="chart-chip">Paiements encaissés</span>
         </div>
       </div>
-
       @if (monthlyRevenues().length > 0) {
-        <div class="revenue-kpis">
-          <div class="revenue-kpi">
-            <span class="revenue-kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
-            <strong>{{ revenueDelta() >= 0 ? '+' : '' }}{{ formatDhs(revenueDelta()) }}</strong>
-            <span>encaissés</span>
-            <small>vs mois précédent</small>
+        <div class="bar-chart">
+          <div class="bar-grid">
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
+            <div class="grid-line"></div>
           </div>
-          <div class="revenue-kpi">
-            <span class="revenue-kpi-icon"><i class="fa-solid fa-star"></i></span>
-            <strong>{{ bestRevenueMonth().label }}</strong>
-            <span>Meilleur mois</span>
-            <small>{{ formatDhs(bestRevenueMonth().amount) }}</small>
-          </div>
-          <div class="revenue-kpi">
-            <span class="revenue-kpi-icon"><i class="fa-solid fa-chart-simple"></i></span>
-            <strong>{{ formatDhs(revenueAverage()) }}</strong>
-            <span>Moyenne mensuelle</span>
-            <small>sur {{ monthlyRevenues().length }} mois</small>
-          </div>
-        </div>
-
-        <div class="revenue-chart" (mouseleave)="clearActiveRevenue()">
-          <div class="revenue-axis-title">Montant (Dhs)</div>
-          <div class="revenue-plot">
-            <div class="revenue-y-axis">
-              @for (label of revenueYAxisLabels(); track label) {
-                <span>{{ label >= 1000 ? (label / 1000) + 'k' : label }}</span>
-              }
-            </div>
-            <div class="revenue-bars-area">
-              <div class="revenue-grid">
-                @for (label of revenueYAxisLabels(); track label) {
-                  <span></span>
-                }
-              </div>
-              <div class="revenue-bars">
-                @for (item of monthlyRevenues(); track item.monthKey; let i = $index) {
-                  <button
-                    type="button"
-                    class="revenue-bar-item"
-                    [class.best]="item.isBest"
-                    [class.active]="activeRevenue()?.monthKey === item.monthKey"
-                    (mouseenter)="setActiveRevenue(i)"
-                    (focus)="setActiveRevenue(i)"
-                  >
-                    <span class="revenue-bar-value">{{ formatDhs(item.amount) }}</span>
-                    <span class="revenue-bar-wrap">
-                      <span class="revenue-bar" [style.height.%]="getBarHeight(item.amount, item.maxAmount)"></span>
-                    </span>
-                    <span class="revenue-bar-label">{{ item.month }}</span>
-                  </button>
-                }
-              </div>
-              @if (activeRevenue(); as revenue) {
-                <div class="revenue-tooltip" [style.left.%]="monthlyRevenues().length <= 1 ? 50 : (revenue.index / (monthlyRevenues().length - 1)) * 100">
-                  <strong>{{ revenue.longMonth }}</strong>
-                  <span>{{ formatDhs(revenue.amount) }}</span>
+          <div class="bars-row">
+            @for (item of monthlyRevenues(); track item.month) {
+              <div class="bar-col">
+                <div class="bar-wrap">
+                  <div class="bar-rect" [ngStyle]="{'height': getBarHeight(item.amount, item.maxAmount) + '%'}">
+                    <span class="bar-tooltip">{{ item.amount.toLocaleString() }} Dhs</span>
+                  </div>
                 </div>
-              }
-            </div>
+                <span class="bar-label">{{ item.month }}</span>
+              </div>
+            }
           </div>
-        </div>
-
-        <div class="revenue-note">
-          <i class="fa-solid fa-circle-info"></i>
-          <span>Les revenus incluent tous les paiements validés.</span>
         </div>
       } @else {
         <div class="chart-empty">
@@ -294,161 +235,71 @@
           <span class="chart-chip">Taux d'assiduité</span>
         </div>
       </div>
-      <div class="attendance-overview">
-        <button
-          type="button"
-          class="attendance-ring-button"
-          [class.open]="attendanceExpanded()"
-          [style.--attendance-rate]="attendanceAverage() + '%'"
-          (click)="toggleAttendanceDetails()"
-          aria-label="Afficher le détail de présence par classe"
-        >
-          <span class="attendance-ring">
-            <span class="attendance-ring-inner">
-              <strong>{{ attendanceAverage() }}<small>%</small></strong>
-              <span>Taux moyen</span>
-            </span>
-          </span>
-          <span class="attendance-expand-hint">
-            Détail par matière
-            <i class="fa-solid fa-chevron-down"></i>
-          </span>
-        </button>
-
-        @if (attendanceExpanded()) {
-          <div class="attendance-list attendance-list--expanded">
-            @for (cls of classAttendance(); track cls.className) {
-              <div class="attendance-item">
-                <div class="att-header">
-                  <div class="att-name-row">
-                    <span class="att-color-dot" [style.background]="cls.color"></span>
-                    <span class="att-name">{{ cls.className }}</span>
-                  </div>
-                  <span class="att-rate" [style.color]="cls.color">{{ cls.rate }}%</span>
-                </div>
-                <div class="progress-track">
-                  <div class="progress-fill" [ngStyle]="{'width': cls.rate + '%', 'background-color': cls.color}"></div>
-                </div>
+      <div class="attendance-list">
+        @for (cls of classAttendance(); track cls.className) {
+          <div class="attendance-item">
+            <div class="att-header">
+              <div class="att-name-row">
+                <span class="att-color-dot" [style.background]="cls.color"></span>
+                <span class="att-name">{{ cls.className }}</span>
               </div>
-            } @empty {
-              <div class="chart-empty chart-empty--compact">
-                <i class="fa-regular fa-calendar-check"></i>
-                <span>Aucune donnée de présence</span>
-              </div>
-            }
+              <span class="att-rate" [style.color]="cls.color">{{ cls.rate }}%</span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" [ngStyle]="{'width': cls.rate + '%', 'background-color': cls.color}"></div>
+            </div>
           </div>
         }
-
-        <div class="attendance-note">
-          <i class="fa-solid fa-circle-info"></i>
-          <span>Le taux moyen résume les présences enregistrées sur les classes suivies.</span>
-        </div>
       </div>
     </div>
   </div>
 
   <!-- Enrollment Trend -->
   <div class="panel trend-panel">
-    <div class="trend-hero-header">
-      <div>
-        <div class="panel-header-left">
-          <h3 class="panel-title">Évolution des inscriptions</h3>
-          <span class="chart-chip">12 derniers mois</span>
-        </div>
-        <p>Suivez l'évolution du nombre d'étudiants inscrits sur les 12 derniers mois.</p>
+    <div class="panel-header">
+      <div class="panel-header-left">
+        <h3 class="panel-title">Évolution des inscriptions</h3>
+        <span class="chart-chip">12 derniers mois</span>
       </div>
-      <div class="trend-total-card">
-        <i class="fa-solid fa-arrow-trend-up"></i>
-        <strong>{{ trendLatest() }}</strong>
-        <span>étudiants</span>
-        <small [class.negative]="enrollmentGrowthPct() < 0">
-          {{ enrollmentGrowthPct() >= 0 ? '+' : '' }}{{ enrollmentGrowthPct() }}% vs 11 derniers mois
-        </small>
-        <em>Croissance globale</em>
-      </div>
+      <span class="trend-total">
+        <i class="fa-solid fa-arrow-trend-up" style="color:var(--accent)"></i>
+        {{ enrollmentTrend().at(-1) ?? 0 }} étudiants
+      </span>
     </div>
-
-    <div class="trend-kpis">
-      <div class="trend-kpi">
-        <span class="trend-kpi-icon"><i class="fa-solid fa-user"></i></span>
-        <strong>+{{ newStudentsThisMonth() }}</strong>
-        <span>nouveaux étudiants</span>
-        <small>Ce mois-ci</small>
-      </div>
-      <div class="trend-kpi">
-        <span class="trend-kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
-        <strong>{{ enrollmentGrowthPct() >= 0 ? '+' : '' }}{{ enrollmentGrowthPct() }}%</strong>
-        <span>croissance</span>
-        <small>vs 11 derniers mois</small>
-      </div>
-      <div class="trend-kpi">
-        <span class="trend-kpi-icon"><i class="fa-solid fa-star"></i></span>
-        <strong>{{ bestEnrollmentMonth().label }}</strong>
-        <span>Meilleur mois</span>
-        <small>{{ bestEnrollmentMonth().total }} inscriptions</small>
-      </div>
-    </div>
-
-    <div class="trend-chart-shell">
-      <span class="trend-axis-title">Nombre d'étudiants</span>
-      <svg viewBox="0 0 1000 260" class="trend-svg" preserveAspectRatio="none" (mouseleave)="clearActiveTrendPoint()">
+    <div class="trend-chart">
+      <svg viewBox="0 0 540 110" class="trend-svg" preserveAspectRatio="none">
         <defs>
           <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/>
-            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0.03"/>
+            <stop offset="0%"   stop-color="var(--accent)" stop-opacity="0.20"/>
+            <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        @for (line of trendGridLines(); track line) {
-          <line x1="54" x2="948" [attr.y1]="line" [attr.y2]="line" class="trend-grid-line"></line>
-        }
-        @for (label of trendYAxisLabels(); track label.value) {
-          <text x="30" [attr.y]="label.y + 4" class="trend-y-label">{{ label.value }}</text>
-        }
+        <!-- Fill area -->
         <path [attr.d]="svgFillPath" fill="url(#trendGrad)" />
+        <!-- Line -->
         <polyline
           [attr.points]="svgPoints"
           fill="none"
           stroke="var(--accent)"
-          stroke-width="4"
+          stroke-width="2.5"
           stroke-linejoin="round"
           stroke-linecap="round"
         />
-        @for (dot of svgDots; track dot.month; let i = $index) {
-          <g
-            class="trend-point"
-            [class.active]="activeTrendIndex() === i || (activeTrendIndex() === null && i === svgDots.length - 1)"
-            (mouseenter)="setActiveTrendPoint(i)"
-            (focus)="setActiveTrendPoint(i)"
-            tabindex="0"
-          >
-            <text [attr.x]="dot.x" [attr.y]="dot.y - 13" class="trend-point-label">{{ dot.value }}</text>
-            <circle
-              [attr.cx]="dot.x"
-              [attr.cy]="dot.y"
-              r="18"
-              class="trend-hit-area"
-            />
-            <circle
-              [attr.cx]="dot.x"
-              [attr.cy]="dot.y"
-              r="6"
-              fill="var(--accent)"
-              stroke="var(--surface)"
-              stroke-width="3"
-              class="trend-dot"
-            />
-          </g>
-        }
-        @if (activeTrendPoint(); as point) {
-          <g class="trend-tooltip" [attr.transform]="trendTooltipTransform(point)">
-            <rect width="80" height="50" rx="7"></rect>
-            <text x="40" y="19">{{ point.longMonthLabel }}</text>
-            <text x="40" y="37">{{ point.value }} étudiants</text>
-          </g>
+        <!-- Dots -->
+        @for (dot of svgDots; track dot.x) {
+          <circle
+            [attr.cx]="dot.x"
+            [attr.cy]="dot.y"
+            r="3.5"
+            fill="var(--accent)"
+            stroke="#fff"
+            stroke-width="1.5"
+            class="trend-dot"
+          />
         }
       </svg>
-      <div class="trend-months" [style.grid-template-columns]="trendMonthColumns()">
-        @for (m of trendMonths(); track $index) {
+      <div class="trend-months">
+        @for (m of trendMonths(); track m) {
           <span>{{ m }}</span>
         }
       </div>

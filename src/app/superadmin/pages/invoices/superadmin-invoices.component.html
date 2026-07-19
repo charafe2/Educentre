@@ -1,0 +1,93 @@
+<div class="premium-page reveal-in">
+  <section class="premium-hero invoice-hero">
+    <div>
+      <span class="eyebrow">Facturation centres</span>
+      <h1>Créer les factures des centres</h1>
+      <p>Émettez une facture liée au centre et au package, puis suivez son règlement depuis le panneau global.</p>
+    </div>
+    <div class="hero-ledger">
+      <span><small>À encaisser</small><strong>{{ pendingAmount() }} MAD</strong></span>
+      <span><small>Payé</small><strong>{{ paidAmount() }} MAD</strong></span>
+    </div>
+  </section>
+
+  @if (error()) { <div class="premium-alert">{{ error() }}</div> }
+
+  <section class="invoice-grid">
+    <div class="double-shell form-shell">
+      <form class="inner-core invoice-form" (ngSubmit)="createInvoice()">
+        <div class="editor-title"><span class="eyebrow">Nouvelle facture</span><h2>Émission</h2></div>
+
+        <label>Centre
+          <select [(ngModel)]="form.centreId" name="centreId">
+            <option [ngValue]="0">Sélectionner un centre</option>
+            @for (centre of centres(); track centre.id) {
+              <option [ngValue]="centre.id">{{ centre.centreName }} · {{ centre.city }}</option>
+            }
+          </select>
+        </label>
+
+        <label>Package
+          <select [ngModel]="form.packagePlanId" name="packagePlanId" (ngModelChange)="applyPackage($event)">
+            <option [ngValue]="null">Sélectionner un package</option>
+            @for (plan of packages(); track plan.id) {
+              <option [ngValue]="plan.id">{{ plan.name }} · {{ plan.monthlyPrice }} MAD</option>
+            }
+          </select>
+        </label>
+
+        <div class="split-fields">
+          <label>Montant MAD<input type="number" min="0" [(ngModel)]="form.amount" name="amount" /></label>
+          <label>Statut
+            <select [(ngModel)]="form.status" name="status">
+              <option value="pending">À encaisser</option>
+              <option value="paid">Payée</option>
+              <option value="late">En retard</option>
+              <option value="cancelled">Annulée</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="split-fields">
+          <label>Émission<input type="date" [(ngModel)]="form.issuedAt" name="issuedAt" /></label>
+          <label>Échéance<input type="date" [(ngModel)]="form.dueDate" name="dueDate" /></label>
+        </div>
+
+        <label>Note<textarea rows="3" [(ngModel)]="form.notes" name="notes"></textarea></label>
+
+        <button class="pill-action primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Création' : 'Créer la facture' }}
+          <span>↗</span>
+        </button>
+      </form>
+    </div>
+
+    <div class="double-shell ledger-shell">
+      <div class="inner-core ledger-core">
+        <div class="panel-head"><div><strong>{{ invoices().length }}</strong><small>factures</small></div><button class="ghost-button" (click)="load()">Actualiser</button></div>
+        <div class="invoice-list">
+          @if (loading()) {
+            <div class="empty-line">Chargement...</div>
+          } @else {
+            @for (invoice of invoices(); track invoice.id) {
+              <article class="invoice-item">
+                <div>
+                  <span class="invoice-number">{{ invoice.invoiceNumber }}</span>
+                  <strong>{{ invoice.centreName }}</strong>
+                  <small>{{ invoice.packageName }} · {{ invoice.dueDate | date:'dd/MM/yyyy' }}</small>
+                </div>
+                <div class="invoice-actions">
+                  <span [ngClass]="['invoice-status', invoice.status]">{{ statusLabel(invoice.status) }}</span>
+                  <strong>{{ invoice.amount }} MAD</strong>
+                  <button class="ghost-button" (click)="markPaid(invoice)" [disabled]="invoice.status === 'paid'">Payée</button>
+                  <button class="ghost-button danger" (click)="remove(invoice)">Supprimer</button>
+                </div>
+              </article>
+            }
+            @empty { <div class="empty-line">Aucune facture centre pour le moment.</div> }
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

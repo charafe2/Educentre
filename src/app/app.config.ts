@@ -6,11 +6,20 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { authInterceptor } from './auth/auth.interceptor';
 
+import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
+    provideAngularQuery(new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 5 * 60 * 1000,
+        },
+      },
+    })),
   ]
 };

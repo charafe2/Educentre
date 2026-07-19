@@ -51,6 +51,9 @@ export const routes: Routes = [
         children: [
           { path: 'dashboard', loadComponent: () => import('./superadmin/pages/overview/superadmin-overview.component').then(m => m.SuperadminOverviewComponent) },
           { path: 'clients',   loadComponent: () => import('./superadmin/pages/clients/superadmin-clients.component').then(m => m.SuperadminClientsComponent) },
+          { path: 'packages',  loadComponent: () => import('./superadmin/pages/packages/superadmin-packages.component').then(m => m.SuperadminPackagesComponent) },
+          { path: 'accounts',  loadComponent: () => import('./superadmin/pages/accounts/superadmin-accounts.component').then(m => m.SuperadminAccountsComponent) },
+          { path: 'invoices',  loadComponent: () => import('./superadmin/pages/invoices/superadmin-invoices.component').then(m => m.SuperadminInvoicesComponent) },
         ],
       },
     ],

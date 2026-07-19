@@ -1,0 +1,112 @@
+<div class="overview-page">
+  <section class="hero-band">
+    <div>
+      <p class="eyebrow">Super administration</p>
+      <h1>Vue générale des paiements centres</h1>
+      <p class="intro">Suivi des factures octroyées aux centres, statuts d'encaissement et répartition des packages.</p>
+    </div>
+    <div class="hero-actions">
+      <a routerLink="/superadmin/clients" class="secondary-link">
+        <i class="fa-solid fa-buildings"></i>
+        Centres
+      </a>
+      <a routerLink="/superadmin/packages" class="primary-link">
+        <i class="fa-solid fa-layer-group"></i>
+        Packages
+      </a>
+    </div>
+  </section>
+
+  @if (error()) {
+    <div class="inline-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <section class="metric-grid" aria-label="Indicateurs facturation">
+    <article class="metric-panel">
+      <span class="metric-label">Facturé ce mois</span>
+      <strong>{{ totalRevenue() | number:'1.0-0' }} MAD</strong>
+      <small>{{ invoices().length }} factures centres</small>
+    </article>
+    <article class="metric-panel">
+      <span class="metric-label">À encaisser</span>
+      <strong>{{ pendingAmount() | number:'1.0-0' }} MAD</strong>
+      <small>Relances prévues cette semaine</small>
+    </article>
+    <article class="metric-panel warning">
+      <span class="metric-label">Retards</span>
+      <strong>{{ lateAmount() | number:'1.0-0' }} MAD</strong>
+      <small>1 centre à vérifier</small>
+    </article>
+    <article class="metric-panel success">
+      <span class="metric-label">Factures payées</span>
+      <strong>{{ paidCount() }}</strong>
+      <small>Paiements confirmés</small>
+    </article>
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="panel invoices-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Factures centres</h2>
+          <p>Dernières factures émises par package</p>
+        </div>
+        <button class="icon-command" title="Exporter">
+          <i class="fa-solid fa-download"></i>
+        </button>
+      </div>
+
+      <div class="invoice-list">
+        @if (loading()) {
+          <article class="invoice-row skeleton-row"><div></div><div></div></article>
+          <article class="invoice-row skeleton-row"><div></div><div></div></article>
+        } @else {
+        @for (invoice of invoices(); track invoice.id) {
+          <article class="invoice-row">
+            <div class="invoice-main">
+              <span class="invoice-id">{{ invoice.id }}</span>
+              <strong>{{ invoice.centre }}</strong>
+              <small>{{ invoice.city }} · Package {{ invoice.packageName }}</small>
+            </div>
+            <div class="invoice-side">
+              <strong>{{ invoice.amount | number:'1.0-0' }} MAD</strong>
+              <span [ngClass]="['status-pill', 'status-' + invoice.status]">{{ statusLabel(invoice.status) }}</span>
+              <small>Échéance {{ invoice.dueDate }}</small>
+            </div>
+          </article>
+        }
+        @empty {
+          <article class="empty-state">Aucune facture centre disponible.</article>
+        }
+        }
+      </div>
+    </div>
+
+    <aside class="panel packages-panel">
+      <div class="panel-header compact">
+        <div>
+          <h2>Packages actifs</h2>
+          <p>Répartition des centres</p>
+        </div>
+      </div>
+
+      <div class="package-stack">
+        @for (item of packageMix(); track item.name) {
+          <div class="package-line">
+            <div class="package-topline">
+              <span class="package-name">{{ item.name }}</span>
+              <strong>{{ item.revenue | number:'1.0-0' }} MAD</strong>
+            </div>
+            <div class="bar-track">
+              <span [ngClass]="['bar-fill', 'bar-' + item.tone]" [style.width.%]="item.centres * 2"></span>
+            </div>
+            <small>{{ item.centres }} centres abonnés</small>
+          </div>
+        }
+      </div>
+    </aside>
+  </section>
+</div>

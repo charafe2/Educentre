@@ -98,12 +98,9 @@
               </td>
               <td>
                 <div class="student-cell">
-                  <span class="student-avatar" [style.background]="getStudentColor(doc.studentId)">
-                    {{ getStudentInitials(doc.studentId) }}
-                  </span>
                   <div class="student-info">
                     <span class="student-name">{{ getStudentName(doc.studentId) }}</span>
-                    <span class="student-class">{{ getStudentSubtitle(doc) }}</span>
+                    <span class="student-class">{{ getClassName(doc.classeId) }}</span>
                   </div>
                 </div>
               </td>

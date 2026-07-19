@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Domains\Core\Traits\BelongsToTenant;
+
 class StudentParent extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $table = 'parents';
 
@@ -31,10 +33,7 @@ class StudentParent extends Model
         'is_primary' => 'boolean',
     ];
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    
 
     public function student(): BelongsTo
     {

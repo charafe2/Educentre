@@ -12,9 +12,11 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Domains\Core\Traits\BelongsToTenant;
+
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
+    /** @use BelongsToTenant, HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
     protected static function booted(): void
@@ -54,10 +56,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    
 
     public function centre(): HasOne
     {
