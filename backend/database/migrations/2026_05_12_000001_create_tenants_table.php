@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tenants', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique();
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('domain')->nullable();

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
-            $table->uuid('uuid')->unique();
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
             $table->integer('group_number')->default(1);
             $table->integer('max_capacity')->default(2);
             $table->timestamps();

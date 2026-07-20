@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_session_id')->constrained('class_sessions')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->unique();
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
             $table->string('status', 20)->default('present');
             $table->string('notes')->nullable();
             $table->timestamps();

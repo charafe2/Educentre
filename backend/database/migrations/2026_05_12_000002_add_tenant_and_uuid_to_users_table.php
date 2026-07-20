@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('tenant_id')->after('id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->after('id')->unique();
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->after('id')->unique();
             $table->string('role', 50)->after('email')->default('admin');
             $table->string('status', 50)->after('password')->default('active');
             $table->timestamp('last_login_at')->nullable()->after('remember_token');
