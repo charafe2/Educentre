@@ -74,8 +74,20 @@ jobs:
             git checkout develop
             git reset --hard origin/develop
             
+            # Debug what files are on the VPS
+            echo "=== VPS HOST FILES ==="
+            ls -la
+            echo "=== DOCKER COMPOSE FILES ==="
+            cat docker-compose*.yml
+            echo "======================"
+            
             # Rebuild and restart the Docker stack
             docker compose up -d --build
+            
+            # Debug container mounts
+            echo "=== CONTAINER MOUNTS ==="
+            docker inspect saas-php-fpm --format='{{json .Mounts}}'
+            echo "======================"
             
             # Debug logs
             sleep 3
