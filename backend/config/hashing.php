@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'driver' => 'argon2id',
+    'driver' => 'bcrypt',
     'argon' => [
         'memory' => 65536,
         'time' => 4,
