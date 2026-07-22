@@ -1,6 +1,12 @@
 #!/bin/sh
 set -e
 
+echo "=== DEBUG INFO ==="
+ls -la /var/www/html/
+echo "=== VENDOR DIR ==="
+ls -la /var/www/html/vendor/ || echo "Vendor dir missing!"
+echo "=================="
+
 if [ ! -f /var/www/html/.env ]; then
     cp /var/www/html/.env.example /var/www/html/.env
     php /var/www/html/artisan key:generate --force

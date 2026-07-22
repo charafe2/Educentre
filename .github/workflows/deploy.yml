@@ -77,6 +77,10 @@ jobs:
             # Rebuild and restart the Docker stack
             docker compose up -d --build
             
+            # Debug logs
+            sleep 3
+            docker compose logs php-fpm
+            
             # Run database migrations
             # We add --force to bypass the production confirmation prompt
             docker compose exec -T php-fpm php artisan migrate --force
