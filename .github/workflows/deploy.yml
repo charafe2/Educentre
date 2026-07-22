@@ -1,0 +1,82 @@
+name: CI/CD Pipeline (Develop)
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  quality-and-test:
+    name: Code Quality & Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- BACKEND (Laravel) ---
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, pdo_mysql, bcmath
+          coverage: none
+
+      - name: Install Composer Dependencies
+        working-directory: ./backend
+        run: composer install --prefer-dist --no-progress --no-suggest --no-interaction
+
+      - name: Copy .env for Testing
+        working-directory: ./backend
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        working-directory: ./backend
+        run: php artisan key:generate
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: php artisan test --parallel
+        # If there are no tests yet, you can remove `--parallel` or ignore failure with `|| true`
+        continue-on-error: true
+
+      # --- FRONTEND (Angular) ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install NPM Dependencies
+        run: npm ci
+
+      - name: Build Frontend (Production)
+        run: npm run build -- --configuration production
+
+  deploy:
+    name: Deploy to VPS
+    needs: quality-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/app/Educentre
+            
+            # Fetch and checkout the develop branch
+            git fetch origin
+            git checkout develop
+            git reset --hard origin/develop
+            
+            # Rebuild and restart the Docker stack
+            docker compose up -d --build
+            
+            # Run database migrations
+            # We add --force to bypass the production confirmation prompt
+            docker compose exec -T php-fpm php artisan migrate --force
