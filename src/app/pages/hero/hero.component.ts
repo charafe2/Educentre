@@ -3,7 +3,6 @@ import {
   ViewEncapsulation, PLATFORM_ID, Inject,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
@@ -38,32 +37,16 @@ type IntroState = 'active' | 'dismissed';
 export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   introState: IntroState = 'active';
   showVideoIntro = true;
-  demoSubmitting = false;
-  demoSubmitted = false;
 
   private _savedBg = '';
   private _rafHandle = 0;
   private _sectionRafHandle = 0;
   private _sectionMotionAbort?: AbortController;
-  private _listenerAbort = new AbortController();
-  private _observers: IntersectionObserver[] = [];
   private _introDismissed = false;
 
-  constructor(
-    @Inject(PLATFORM_ID) private platformId: object,
-    private title: Title,
-    private meta: Meta,
-  ) {}
+  constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   ngOnInit() {
-    this.title.setTitle('Logiciel de gestion scolaire au Maroc | Moujtahid');
-    this.meta.updateTag({
-      name: 'description',
-      content: 'Moujtahid, logiciel de gestion des centres de soutien scolaire au Maroc : '
-        + 'planning intelligent, présences, paiements en dirhams, application parents. '
-        + 'Essai gratuit 30 jours.',
-    });
-
     if (!isPlatformBrowser(this.platformId)) return;
     this._savedBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = '#ffffff';
@@ -77,9 +60,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     cancelAnimationFrame(this._rafHandle);
     cancelAnimationFrame(this._sectionRafHandle);
     this._sectionMotionAbort?.abort();
-    this._listenerAbort.abort();
-    this._observers.forEach(o => o.disconnect());
-    this._observers = [];
   }
 
   ngAfterViewInit() {
@@ -140,7 +120,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       document.getElementById('lp-subhead')?.classList.add('visible');
       document.getElementById('lp-ctas')?.classList.add('visible');
-      document.getElementById('lp-trust')?.classList.add('visible');
       document.getElementById('lp-mockup')?.classList.add('visible');
     }, reduced ? 80 : 520);
   }
@@ -165,7 +144,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
         });
       });
     }, { threshold: 0.35 });
-    this._observers.push(sectionObs);
 
     document.querySelectorAll('.lp section[id]').forEach(s => sectionObs.observe(s));
 
@@ -175,7 +153,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       nav.classList.toggle('nav--scrolled', sy > 80);
       nav.classList.toggle('nav--compact', sy > 80 && sy > prevY);
       prevY = sy;
-    }, { passive: true, signal: this._listenerAbort.signal });
+    }, { passive: true });
 
     // Hamburger
     const closeMenu = () => {
@@ -205,7 +183,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
         observer.unobserve(el);
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -48px 0px' });
-    this._observers.push(observer);
 
     // Section headers - each child staggers independently
     document.querySelectorAll('.lp .section__header .reveal').forEach((el, i) => {
@@ -363,6 +340,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // ─── 5. Layered mockup parallax with lerp ───────────────────────
   private _initMockupParallax() {
     const wrap  = document.getElementById('lp-mockup');
     const inner = wrap?.querySelector<HTMLElement>('.mockup__content');
@@ -371,7 +349,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     let tY = 0, cY = 0;
     let tR = 0, cR = 0;
     let tIY = 0, cIY = 0;
-    const L = 0.08;  
+    const L = 0.08;  // lerp factor
 
     const tick = () => {
       // Batch reads before writes (no layout thrash)
@@ -390,7 +368,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       tY  = sy * 0.15;
       tR  = -Math.min((sy / 400) * 3, 3);
       tIY = -(sy * 0.07);  // inner drifts opposite → depth illusion
-    }, { passive: true, signal: this._listenerAbort.signal });
+    }, { passive: true });
 
     // Start after initial fade-in animation completes
     setTimeout(() => {
@@ -402,17 +380,10 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   // ─── 6. Number counter - easeOutExpo via RAF ────────────────────
   private _initCounters() {
     const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const runCounter = (el: HTMLElement) => {
       const target   = parseFloat(el.dataset['count']!);
       const suffix   = el.dataset['suffix'] ?? '';
-
-      if (reduced) {
-        el.textContent = target.toLocaleString('fr-FR') + suffix;
-        return;
-      }
-
       const inHero   = !!el.closest('#lp-mockup');
       const delay    = inHero ? 900 : 0;
       const duration = 1800;
@@ -436,7 +407,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
         obs.unobserve(e.target);
       });
     }, { threshold: 0.5 });
-    this._observers.push(obs);
 
     document.querySelectorAll<HTMLElement>('.lp [data-count]').forEach(el => {
       el.textContent = '0' + (el.dataset['suffix'] ?? '');
@@ -455,7 +425,6 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
         obs.unobserve(entry.target);
       });
     }, { threshold: 0.28, rootMargin: '0px 0px -80px 0px' });
-    this._observers.push(obs);
 
     obs.observe(section);
   }
@@ -508,22 +477,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     document.addEventListener('click', event => {
       if (selects.some(select => select.contains(event.target as Node))) return;
       closeAll();
-    }, { signal: this._listenerAbort.signal });
-  }
-
-  // ─── Demo form - validation handled natively via `required` ─────
-  onDemoSubmit(event: Event): void {
-    event.preventDefault();
-    if (this.demoSubmitting || this.demoSubmitted) return;
-
-    this.demoSubmitting = true;
-
-    // TODO: brancher l'API d'envoi des demandes de démo.
-    // Les champs sont accessibles via new FormData(event.target as HTMLFormElement).
-    setTimeout(() => {
-      this.demoSubmitting = false;
-      this.demoSubmitted = true;
-    }, 700);
+    });
   }
 
   // ─── 7. Liquid ripple on primary CTAs ───────────────────────────
@@ -542,6 +496,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // ─── 8. FAQ spring accordion ────────────────────────────────────
   private _initFaq() {
     document.querySelectorAll('.lp .faq__trigger').forEach(trigger => {
       trigger.addEventListener('click', () => {

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('teacher_id')->constrained()->cascadeOnDelete();
             $table->foreignId('room_id')->nullable()->constrained()->nullOnDelete();
-            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
             $table->string('name');
             $table->string('subject');
             $table->string('level')->nullable();
@@ -31,3 +31,4 @@ return new class extends Migration
         Schema::dropIfExists('classes');
     }
 };
+

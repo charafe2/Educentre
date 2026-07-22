@@ -1,0 +1,109 @@
+name: CI/CD Pipeline (Develop)
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  quality-and-test:
+    name: Code Quality & Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # --- BACKEND (Laravel) ---
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_pgsql, pdo_mysql, bcmath
+          coverage: none
+
+      - name: Install Composer Dependencies
+        working-directory: ./backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Copy .env for Testing
+        working-directory: ./backend
+        run: cp .env.example .env
+
+      - name: Generate Application Key
+        working-directory: ./backend
+        run: php artisan key:generate
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: php artisan test --parallel
+        continue-on-error: true
+
+      # --- FRONTEND (Angular) ---
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: ./frontend/package-lock.json
+
+      - name: Install NPM Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build Frontend (Production)
+        working-directory: ./frontend
+        run: npm run build -- --configuration production
+
+  deploy:
+    name: Deploy to VPS
+    needs: quality-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /var/www/app/Educentre
+
+            # Fetch and checkout the develop branch
+            git fetch origin
+            git checkout develop
+            git reset --hard origin/develop
+
+            # Rebuild and restart the Docker stack
+            docker compose up -d --build --remove-orphans
+
+            # Wait for php-fpm to actually be ready instead of a fixed sleep
+            echo "Waiting for php-fpm to be healthy..."
+            for i in $(seq 1 30); do
+              if docker compose exec -T php-fpm php -v > /dev/null 2>&1; then
+                echo "php-fpm is up."
+                break
+              fi
+              sleep 2
+            done
+
+            # Safety net: guarantee vendor/ exists inside the running container
+            # regardless of any bind mount shadowing the image's build output
+            docker compose exec -T php-fpm composer install \
+              --no-dev --prefer-dist --no-interaction --optimize-autoloader
+
+            # Run database migrations
+            docker compose exec -T php-fpm php artisan migrate --force
+
+            # Rebuild Laravel's caches for production
+            docker compose exec -T php-fpm php artisan config:cache
+            docker compose exec -T php-fpm php artisan route:cache
+            docker compose exec -T php-fpm php artisan view:cache
+
+            # Restart queue workers so they pick up new code
+            docker compose exec -T php-fpm php artisan queue:restart
+
+            # Debug logs (kept at the end so they reflect the final state)
+            docker compose logs --tail=50 php-fpm

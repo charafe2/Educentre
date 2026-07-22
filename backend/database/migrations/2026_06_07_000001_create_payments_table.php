@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('student_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_id')->constrained('classes')->cascadeOnDelete();
-            $table->uuid('uuid')->unique();
+            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
             $table->date('period_month');
             $table->decimal('amount', 10, 2);
             $table->string('status')->default('pending');
@@ -38,3 +38,4 @@ return new class extends Migration
         Schema::dropIfExists('payments');
     }
 };
+

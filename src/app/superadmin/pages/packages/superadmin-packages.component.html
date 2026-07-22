@@ -1,0 +1,132 @@
+<div class="packages-page">
+  <div class="page-header">
+    <div>
+      <p class="eyebrow">Configuration commerciale</p>
+      <h1>Modification des packages</h1>
+      <p>Gérez les offres que vous attribuez aux centres et les limites visibles côté facturation.</p>
+    </div>
+    <button class="btn-secondary" (click)="duplicateSelected()" [disabled]="saving() || loading()">
+      <i class="fa-regular fa-copy"></i>
+      Dupliquer
+    </button>
+  </div>
+
+  @if (error()) {
+    <div class="page-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <section class="summary-row">
+    <article>
+      <span>Packages actifs</span>
+      <strong>{{ activePackages() }}</strong>
+    </article>
+    <article>
+      <span>Revenu catalogue</span>
+      <strong>{{ projectedRevenue() }} MAD</strong>
+    </article>
+    <article>
+      <span>Package sélectionné</span>
+      <strong>{{ selectedPackage().name }}</strong>
+    </article>
+  </section>
+
+  <section class="workbench">
+    <aside class="plan-list" aria-label="Liste des packages">
+      @if (loading()) {
+        <div class="plan-loading">Chargement...</div>
+      } @else {
+      @for (plan of packages(); track plan.id) {
+        <button class="plan-item" [class.selected]="selectedId() === plan.id" (click)="selectPackage(plan.id)">
+          <span class="plan-title">{{ plan.name }}</span>
+          <span class="plan-meta">{{ plan.monthlyPrice }} MAD/mois · {{ plan.studentsLimit }} étudiants</span>
+          <span [ngClass]="['status-pill', 'status-' + plan.status]">{{ plan.status === 'active' ? 'Actif' : plan.status === 'draft' ? 'Brouillon' : 'Archivé' }}</span>
+        </button>
+      }
+      }
+    </aside>
+
+    <div class="editor-panel">
+      <div class="editor-header">
+        <div>
+          <h2>{{ selectedPackage().name }}</h2>
+          <p>Les modifications sont enregistrées via l'API super-admin.</p>
+        </div>
+        <div class="editor-actions">
+          <button class="btn-secondary" (click)="saveSelected()" [disabled]="saving() || !selectedPackage().id">
+            <i class="fa-solid fa-floppy-disk"></i>
+            {{ saving() ? 'Sauvegarde...' : 'Enregistrer' }}
+          </button>
+          <button class="btn-danger" (click)="archiveSelected()" [disabled]="saving() || !selectedPackage().id">
+          <i class="fa-solid fa-box-archive"></i>
+          {{ selectedPackage().status === 'archived' ? 'Restaurer' : 'Archiver' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Nom du package
+          <input type="text" [ngModel]="selectedPackage().name" (ngModelChange)="updateSelected('name', $event)" />
+        </label>
+        <label>
+          Prix mensuel MAD
+          <input type="number" min="0" [ngModel]="selectedPackage().monthlyPrice" (ngModelChange)="updateSelected('monthlyPrice', +$event)" />
+        </label>
+        <label>
+          Utilisateurs inclus
+          <input type="number" min="1" [ngModel]="selectedPackage().usersLimit" (ngModelChange)="updateSelected('usersLimit', +$event)" />
+        </label>
+        <label>
+          Étudiants inclus
+          <input type="number" min="1" [ngModel]="selectedPackage().studentsLimit" (ngModelChange)="updateSelected('studentsLimit', +$event)" />
+        </label>
+        <label>
+          Stockage GB
+          <input type="number" min="1" [ngModel]="selectedPackage().storageGb" (ngModelChange)="updateSelected('storageGb', +$event)" />
+        </label>
+        <label>
+          Support
+          <select [ngModel]="selectedPackage().supportLevel" (ngModelChange)="updateSelected('supportLevel', $event)">
+            <option value="Standard">Standard</option>
+            <option value="Prioritaire">Prioritaire</option>
+            <option value="Dédié">Dédié</option>
+          </select>
+        </label>
+        <label>
+          Statut
+          <select [ngModel]="selectedPackage().status" (ngModelChange)="updateSelected('status', $event)">
+            <option value="active">Actif</option>
+            <option value="draft">Brouillon</option>
+            <option value="archived">Archivé</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="features-block">
+        <div class="features-header">
+          <h3>Fonctionnalités incluses</h3>
+          <div class="feature-add">
+            <input type="text" [(ngModel)]="featureDraft" placeholder="Ajouter une fonctionnalité" (keyup.enter)="addFeature()" />
+            <button class="icon-btn" (click)="addFeature()" title="Ajouter">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="feature-list">
+          @for (feature of selectedPackage().features; track feature) {
+            <span class="feature-chip">
+              {{ feature }}
+              <button (click)="removeFeature(feature)" title="Retirer">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

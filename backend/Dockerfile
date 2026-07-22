@@ -1,7 +1,3 @@
-FROM composer:latest AS composer
-WORKDIR /app
-COPY backend/composer.json backend/composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress --no-scripts
 
 FROM node:22-alpine AS node
 WORKDIR /app
@@ -45,10 +41,11 @@ COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
 WORKDIR /var/www/html
 
 COPY backend/ .
-COPY --from=composer /app/vendor vendor
 COPY --from=node /app/public/build public/build
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN set -eux \
+  && composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
   && mkdir -p storage/framework/cache/data \
     storage/framework/sessions \
     storage/framework/views \
