@@ -1,0 +1,29 @@
+<div class="teacher-card" [class.is-paid]="row.paid">
+  <div class="teacher-card-top">
+    <div class="avatar" [style.background-color]="row.avatarColor">{{ initials }}</div>
+    @if (row.paid) {
+      <span class="status-pill status-paid"><i class="fa-solid fa-circle-check"></i> {{ 'monthlyReview.salaries.paid' | t }}</span>
+    } @else {
+      <span class="status-pill status-due">{{ 'monthlyReview.salaries.due' | t }}</span>
+    }
+  </div>
+
+  <h3 class="teacher-name">{{ row.firstName }} {{ row.lastName }}</h3>
+  <p class="teacher-specialty">{{ row.specialty || ('monthlyReview.salaries.teacher' | t) }}</p>
+
+  <div class="teacher-amount">
+    <span class="amount-label">{{ 'monthlyReview.salaries.amountOwed' | t }}</span>
+    <span class="amount-value">{{ formattedAmount }}</span>
+  </div>
+
+  <div class="teacher-actions">
+    @if (!row.paid) {
+      <button type="button" class="btn-mark-paid" (click)="markPaid.emit()">
+        <i class="fa-solid fa-check"></i> {{ 'monthlyReview.salaries.markPaid' | t }}
+      </button>
+    }
+    <button type="button" class="btn-view-details" (click)="viewDetails.emit()">
+      {{ 'common.details' | t }}
+    </button>
+  </div>
+</div>

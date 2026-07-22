@@ -2,12 +2,14 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, font, spacing } from '../../theme';
-import { Card, EmptyState, ProgressBar, SectionTitle } from '../../components/ui';
+import { Card, ChildSwitchBack, EmptyState, ProgressBar, SectionTitle } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { formatDateFR, studentAverage, studentGrades } from '../../data/selectors';
 
 export default function NotesScreen() {
-  const { parentStudent: student } = useAuth();
+  const { parentStudent: student, parentChildren, switchChild } = useAuth();
+  const { t } = useI18n();
   if (!student) return null;
 
   const gradesList = studentGrades(student.id);
@@ -23,21 +25,28 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: spacing.base }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Notes</Text>
-        <Text style={styles.subtitle}>Résultats de {student.firstName}</Text>
+      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
+      <ScrollView
+        contentContainerStyle={[
+          { padding: spacing.base },
+          parentChildren.length > 1 && { paddingTop: spacing.xxl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>{t('notes.title')}</Text>
+        <Text style={styles.subtitle}>{t('notes.subtitle', { name: student.firstName })}</Text>
 
         <Card style={styles.heroCard}>
-          <Text style={styles.heroLabel}>Moyenne générale</Text>
-          <Text style={styles.heroValue}>{average !== null ? `${average}` : '—'}<Text style={styles.heroMax}>/20</Text></Text>
+          <Text style={styles.heroLabel}>{t('notes.average')}</Text>
+          <Text style={styles.heroValue}>{average !== null ? `${average}` : '-'}<Text style={styles.heroMax}>/20</Text></Text>
           {average !== null ? (
             <Text style={styles.heroHint}>
-              {average >= 14 ? 'Excellent travail, continuez ainsi !' : average >= 10 ? 'En bonne voie — encore un effort.' : 'Un accompagnement est recommandé.'}
+              {average >= 14 ? t('notes.excellent') : average >= 10 ? t('notes.good') : t('notes.support')}
             </Text>
           ) : null}
         </Card>
 
-        <SectionTitle title="Par matière" />
+        <SectionTitle title={t('notes.bySubject')} />
         <Card style={{ gap: spacing.md }}>
           {[...bySubject.entries()].map(([subject, v]) => {
             const avg = Math.round((v.total / v.count) * 10) / 10;
@@ -53,9 +62,9 @@ export default function NotesScreen() {
           })}
         </Card>
 
-        <SectionTitle title="Dernières évaluations" />
+        <SectionTitle title={t('notes.lastEvals')} />
         {gradesList.length === 0 ? (
-          <EmptyState icon="ribbon-outline" title="Aucune note" body="Les évaluations apparaîtront ici." />
+          <EmptyState icon="ribbon-outline" title={t('notes.empty')} body={t('notes.emptyBody')} />
         ) : (
           <Card style={{ padding: 0 }}>
             {gradesList.map((g, i) => (

@@ -1,18 +1,18 @@
 <div class="content-area">
   <div class="page-header professeurs-hero">
     <div class="page-title">
-      <span class="eyebrow">Gestion pédagogique</span>
-      <h1>Professeurs</h1>
-      <p>Gérez l'équipe pédagogique, les classes et la rémunération depuis une vue claire et rapide.</p>
+      <span class="eyebrow">{{ 'teachers.eyebrow' | t }}</span>
+      <h1>{{ 'teachers.title' | t }}</h1>
+      <p>{{ 'teachers.subtitle' | t }}</p>
     </div>
     <div class="hero-actions">
       <div class="activity-pill">
         <span class="status-dot dot-active"></span>
-        {{ activeCount() }} profils actifs
+        {{ 'teachers.activeProfiles' | t: { count: activeCount() } }}
       </div>
       <button class="btn-primary" (click)="openAdd()">
         <i class="fa-solid fa-plus"></i>
-        Nouveau professeur
+        {{ 'teachers.newTeacher' | t }}
       </button>
     </div>
   </div>
@@ -22,32 +22,32 @@
       <div class="stat-icon icon-blue"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
-        <span class="stat-label">Total professeurs</span>
-        <span class="stat-note">Profils enregistrés</span>
+        <span class="stat-label">{{ 'teachers.totalTeachers' | t }}</span>
+        <span class="stat-note">{{ 'teachers.registeredProfiles' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-circle-check"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
-        <span class="stat-label">Actifs</span>
-        <span class="stat-note">Enseignement en cours</span>
+        <span class="stat-label">{{ 'teachers.active' | t }}</span>
+        <span class="stat-note">{{ 'teachers.teaching' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-wallet"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ formatSalary(totalPayroll()) }}</span>
-        <span class="stat-label">Masse salariale</span>
-        <span class="stat-note">Paie mensuelle</span>
+        <span class="stat-label">{{ 'teachers.payroll' | t }}</span>
+        <span class="stat-note">{{ 'teachers.monthlyPay' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-solid fa-graduation-cap"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ classes().length }}</span>
-        <span class="stat-label">Classes actives</span>
-        <span class="stat-note">Groupes assignés</span>
+        <span class="stat-label">{{ 'teachers.activeClasses' | t }}</span>
+        <span class="stat-note">{{ 'teachers.assignedGroups' | t }}</span>
       </div>
     </div>
   </div>
@@ -55,18 +55,18 @@
   <div class="panel table-panel">
     <div class="panel-header">
       <div class="panel-header-left">
-        <h3 class="panel-title">Équipe pédagogique</h3>
-        <span class="results-count">{{ resultCount() }} professeur(s)</span>
+        <h3 class="panel-title">{{ 'teachers.teamTitle' | t }}</h3>
+        <span class="results-count">{{ 'teachers.resultsCount' | t: { count: resultCount() } }}</span>
       </div>
       <div class="filter-bar">
         <div class="search-wrapper">
           <i class="fa-solid fa-magnifying-glass search-icon"></i>
-          <input type="text" class="search-input" placeholder="Rechercher..." (input)="onSearch($event)" />
+          <input type="text" class="search-input" [placeholder]="'teachers.searchPlaceholder' | t" (input)="onSearch($event)" />
         </div>
         <select class="filter-select" (change)="onStatusFilter($event)">
-          <option value="">Tous les statuts</option>
-          <option value="active">Actifs</option>
-          <option value="inactive">Inactifs</option>
+          <option value="">{{ 'teachers.allStatuses' | t }}</option>
+          <option value="active">{{ 'teachers.statusActive' | t }}</option>
+          <option value="inactive">{{ 'teachers.statusInactive' | t }}</option>
         </select>
       </div>
     </div>
@@ -75,13 +75,13 @@
       <table>
         <thead>
           <tr>
-            <th>Professeur</th>
-            <th>Spécialité</th>
-            <th>Paiement</th>
-            <th>Classes</th>
-            <th>Étudiants</th>
-            <th>Salaire</th>
-            <th>Statut</th>
+            <th>{{ 'teachers.colTeacher' | t }}</th>
+            <th>{{ 'teachers.colSpecialty' | t }}</th>
+            <th>{{ 'teachers.colPayment' | t }}</th>
+            <th>{{ 'teachers.colClasses' | t }}</th>
+            <th>{{ 'teachers.colStudents' | t }}</th>
+            <th>{{ 'teachers.colSalary' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
             <th></th>
           </tr>
         </thead>
@@ -104,7 +104,7 @@
                 <span [ngClass]="['mode-badge', row.teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
                   {{ getPaymentModeLabel(row.teacher.paymentMode) }}
                   @if (row.teacher.paymentMode === 'per_student') {
-                    <span class="rate-detail">{{ row.teacher.ratePerStudent }} Dhs/ét.</span>
+                    <span class="rate-detail">{{ 'teachers.perStudentRate' | t: { rate: row.teacher.ratePerStudent ?? 0 } }}</span>
                   }
                 </span>
               </td>
@@ -123,7 +123,7 @@
                     </div>
                   }
                   @if (row.classes.length === 0) {
-                    <span class="text-muted">—</span>
+                    <span class="text-muted">-</span>
                   }
                 </div>
               </td>
@@ -132,15 +132,15 @@
               <td>
                 <div [ngClass]="['status-badge', row.teacher.status === 'active' ? 'status-active' : 'status-inactive']">
                   <span [ngClass]="['status-dot', row.teacher.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
-                  {{ row.teacher.status === 'active' ? 'Actif' : 'Inactif' }}
+                  {{ (row.teacher.status === 'active' ? 'common.active' : 'common.inactive') | t }}
                 </div>
               </td>
               <td>
                 <div class="action-btns">
-                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(row.teacher)">
+                  <button class="action-btn" [attr.aria-label]="'common.edit' | t" [title]="'common.edit' | t" (click)="openEdit(row.teacher)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteTeacher(row.teacher)">
+                  <button class="action-btn danger-btn" [attr.aria-label]="'common.delete' | t" [title]="'common.delete' | t" (click)="deleteTeacher(row.teacher)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
@@ -151,8 +151,8 @@
               <td colspan="8">
                 <div class="empty-state">
                   <i class="fa-solid fa-chalkboard-user empty-icon"></i>
-                  <p class="empty-title">Aucun professeur trouvé</p>
-                  <p class="empty-sub">Modifiez votre recherche ou ajoutez un nouveau professeur.</p>
+                  <p class="empty-title">{{ 'teachers.emptyTitle' | t }}</p>
+                  <p class="empty-sub">{{ 'teachers.emptySub' | t }}</p>
                 </div>
               </td>
             </tr>
@@ -167,7 +167,7 @@
         <button type="button" class="pagination-btn" [disabled]="pagination().current_page <= 1 || loadingPage()" (click)="previousPage()">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <span class="pagination-page">Page {{ pagination().current_page }} / {{ pagination().last_page }}</span>
+        <span class="pagination-page">{{ 'teachers.page' | t: { current: pagination().current_page, total: pagination().last_page } }}</span>
         <button type="button" class="pagination-btn" [disabled]="pagination().current_page >= pagination().last_page || loadingPage()" (click)="nextPage()">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
@@ -178,73 +178,73 @@
 
 @if (showModal()) {
   <app-modal
-    [title]="editingTeacher() ? 'Modifier le professeur' : 'Nouveau professeur'"
+    [title]="(editingTeacher() ? 'teachers.modalEdit' : 'teachers.modalNew') | t"
     size="lg"
     (closed)="showModal.set(false)"
   >
     <div class="form-body">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Prénom</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.firstName" placeholder="Prénom" />
+          <label class="form-label">{{ 'teachers.firstName' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.firstName" [placeholder]="'teachers.firstName' | t" />
         </div>
         <div class="form-group">
-          <label class="form-label">Nom</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.lastName" placeholder="Nom de famille" />
+          <label class="form-label">{{ 'teachers.lastName' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.lastName" [placeholder]="'teachers.lastNamePlaceholder' | t" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Email</label>
+          <label class="form-label">{{ 'teachers.email' | t }}</label>
           <input class="form-input" type="email" [(ngModel)]="formData.email" placeholder="email@centre.ma" />
         </div>
         <div class="form-group">
-          <label class="form-label">Téléphone</label>
+          <label class="form-label">{{ 'teachers.phone' | t }}</label>
           <input class="form-input" type="tel" [(ngModel)]="formData.phone" placeholder="0661234567" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Spécialité</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.specialty" placeholder="Mathématiques, Physique..." />
+          <label class="form-label">{{ 'teachers.colSpecialty' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.specialty" [placeholder]="'teachers.specialtyPlaceholder' | t" />
         </div>
         <div class="form-group">
-          <label class="form-label">Statut</label>
+          <label class="form-label">{{ 'common.status' | t }}</label>
           <select class="form-select" [(ngModel)]="formData.status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'common.active' | t }}</option>
+            <option value="inactive">{{ 'common.inactive' | t }}</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Mode de paiement</label>
+        <label class="form-label">{{ 'teachers.paymentMode' | t }}</label>
         <div class="payment-mode-picker">
           <label class="mode-option" [class.selected]="formData.paymentMode === 'fixed'">
             <input type="radio" [(ngModel)]="formData.paymentMode" value="fixed" />
             <i class="fa-solid fa-money-bill-wave"></i>
-            <span>Salaire fixe</span>
+            <span>{{ 'teachers.fixedSalaryOption' | t }}</span>
           </label>
           <label class="mode-option" [class.selected]="formData.paymentMode === 'per_student'">
             <input type="radio" [(ngModel)]="formData.paymentMode" value="per_student" />
             <i class="fa-solid fa-users"></i>
-            <span>Par étudiant</span>
+            <span>{{ 'teachers.perStudentOption' | t }}</span>
           </label>
         </div>
       </div>
       @if (formData.paymentMode === 'fixed') {
         <div class="form-group">
-          <label class="form-label">Salaire fixe (Dhs)</label>
+          <label class="form-label">{{ 'teachers.fixedSalaryLabel' | t }}</label>
           <input class="form-input" type="number" [(ngModel)]="formData.fixedSalary" min="0" placeholder="0" />
         </div>
       }
       @if (formData.paymentMode === 'per_student') {
         <div class="form-group">
-          <label class="form-label">Taux par étudiant (Dhs)</label>
+          <label class="form-label">{{ 'teachers.perStudentLabel' | t }}</label>
           <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" placeholder="0" />
         </div>
       }
       <div class="form-group">
-        <label class="form-label">Classes assignÃ©es</label>
+        <label class="form-label">{{ 'teachers.assignedClasses' | t }}</label>
         <div class="classes-checkbox-grid">
           @for (cls of classes(); track cls.id) {
             <label class="class-checkbox-item" [class.selected]="isClassSelected(cls.id)">
@@ -256,20 +256,20 @@
               <span class="class-color-dot" [style.background-color]="cls.color"></span>
               <span class="class-checkbox-label">
                 <span class="class-checkbox-name">{{ cls.name }}</span>
-                <span class="class-checkbox-meta">{{ cls.subject }} Â· {{ cls.level }}</span>
+                <span class="class-checkbox-meta">{{ cls.subject }} · {{ cls.level }}</span>
               </span>
             </label>
           } @empty {
-            <div class="empty-class-picker">Aucune classe disponible</div>
+            <div class="empty-class-picker">{{ 'teachers.noClassAvailable' | t }}</div>
           }
         </div>
       </div>
     </div>
     <div class="form-footer">
-      <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
+      <button class="btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | t }}</button>
       <button class="btn-primary" (click)="submit()">
         <i class="fa-solid fa-floppy-disk"></i>
-        {{ editingTeacher() ? 'Enregistrer' : 'Ajouter' }}
+        {{ (editingTeacher() ? 'common.save' : 'common.add') | t }}
       </button>
     </div>
   </app-modal>

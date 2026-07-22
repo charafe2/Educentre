@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AuthUser } from '../types';
 
-// Même backend que l'application web Angular (Laravel — /api/v1/*).
+// Même backend que l'application web Angular (Laravel - /api/v1/*).
 // DEMO_MODE = true : l'app fonctionne sans serveur, avec les données de src/data/demo.ts.
 // Pour brancher le vrai backend : passer DEMO_MODE à false et renseigner API_URL
 // (adresse IP locale de votre machine, pas "localhost", pour un appareil physique).

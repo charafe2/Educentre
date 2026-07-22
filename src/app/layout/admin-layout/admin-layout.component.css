@@ -1,6 +1,6 @@
 .app-shell {
   display: flex;
-  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   background-color: var(--bg-color);
   position: relative;
@@ -16,7 +16,8 @@
   margin: 0.5rem 0.5rem 0.5rem 0;
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-color);
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   z-index: 1;
 }

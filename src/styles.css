@@ -190,6 +190,29 @@ html, body {
   font-size: 14px;
 }
 
+/* ── RTL support (Arabic) ─────────────────────────────────────────
+   TranslationService sets <html dir="rtl" lang="ar">. Layout is built
+   mostly with fl/logical properties, so the browser mirrors most of it
+   automatically. These rules fix the few things that don't flip on their
+   own (icon-only rotations, hard-coded left/right nudges). */
+[dir='rtl'] {
+  text-align: right;
+}
+
+[dir='rtl'] .fa-arrow-right-from-bracket,
+[dir='rtl'] .fa-arrow-up-right-from-square {
+  transform: scaleX(-1);
+}
+
+/* Sparkline / chart SVGs are drawn left-to-right by design — keep them LTR. */
+[dir='rtl'] svg {
+  direction: ltr;
+}
+
+/* Sidebar collapse chevrons point the other way when the menu sits on the right. */
+[dir='rtl'] .toggle-btn .fa-chevron-left { transform: scaleX(-1); }
+[dir='rtl'] .toggle-btn .fa-chevron-right { transform: scaleX(-1); }
+
 button,
 a,
 input,

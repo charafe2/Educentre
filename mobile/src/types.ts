@@ -1,4 +1,4 @@
-// Models — mirror src/app/models of the Angular web app so both clients
+// Models - mirror src/app/models of the Angular web app so both clients
 // can talk to the same API (/api/v1/*).
 
 export interface Student {
@@ -16,6 +16,9 @@ export interface Student {
   parentName?: string;
   parentPhone?: string;
   parentWhatsapp?: string;
+  // Démo uniquement : mot de passe de l'espace parent (fourni par le centre).
+  // Plusieurs enfants peuvent partager le même parentPhone (fratrie).
+  parentPassword?: string;
   absenceCount: number;
   totalSessions: number;
   createdAt: string;

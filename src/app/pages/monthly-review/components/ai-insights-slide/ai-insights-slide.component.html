@@ -1,0 +1,32 @@
+<div class="slide-inner">
+  <div class="slide-header">
+    <div>
+      <h2 class="slide-title">{{ 'monthlyReview.insights.title' | t }}</h2>
+      <p class="slide-subtitle">{{ 'monthlyReview.insights.subtitle' | t: { month: monthLabel } }}</p>
+    </div>
+  </div>
+
+  <div class="insight-card">
+    <div class="insight-card-glow" aria-hidden="true"></div>
+    <div class="insight-card-header">
+      <div class="insight-card-icon"><i class="fa-solid fa-sparkles"></i></div>
+      <div>
+        <span class="insight-card-eyebrow">{{ 'monthlyReview.insights.eyebrow' | t }}</span>
+        <h3>{{ 'monthlyReview.insights.heading' | t }}</h3>
+      </div>
+    </div>
+
+    @if (insights().length === 0) {
+      <p class="insight-empty">{{ 'monthlyReview.insights.empty' | t }}</p>
+    } @else {
+      <ul class="insight-list">
+        @for (item of insights(); track item.text) {
+          <li>
+            <i [class]="item.icon"></i>
+            <span>{{ item.text }}</span>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

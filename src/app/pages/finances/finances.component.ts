@@ -7,10 +7,12 @@ import { PaymentPayload, PaymentsService } from '../../services/payments.service
 import { StudentsService } from '../../services/students.service';
 import { ToastService } from '../../services/toast.service';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-finances',
-  imports: [FormsModule, ModalComponent],
+  imports: [FormsModule, ModalComponent, TranslatePipe],
   templateUrl: './finances.component.html',
   styleUrl: './finances.component.css'
 })
@@ -19,6 +21,8 @@ export class FinancesComponent {
   private studentsService = inject(StudentsService);
   private classesService = inject(ClassesService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
   private currentMonth = new Date().toISOString().slice(0, 7);
 
   selectedMonth = signal('');
@@ -65,8 +69,8 @@ export class FinancesComponent {
   );
   paymentRangeLabel = computed(() => {
     const page = this.paymentPagination();
-    if (!page.total) return '0 resultat';
-    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+    if (!page.total) return this.t('students.noResult');
+    return this.t('students.rangeLabel', { from: page.from ?? 0, to: page.to ?? 0, total: page.total });
   });
 
   showModal = signal(false);
@@ -119,10 +123,10 @@ export class FinancesComponent {
 
     request.subscribe({
       next: () => {
-        this.toast.show(editing ? 'Paiement mis à jour' : 'Paiement ajouté');
+        this.toast.show(editing ? this.t('finances.toastUpdated') : this.t('finances.toastAdded'));
         this.showModal.set(false);
       },
-      error: () => this.toast.show('Impossible d’enregistrer le paiement', 'error'),
+      error: () => this.toast.show(this.t('finances.toastSaveError'), 'error'),
     });
   }
 
@@ -139,27 +143,27 @@ export class FinancesComponent {
 
     this.paymentsService.markAsPaid(payment.id, this.selectedPayMethod).subscribe({
       next: () => {
-        this.toast.show('Paiement marqué comme payé');
+        this.toast.show(this.t('finances.toastMarkedPaid'));
         this.showPayModal.set(null);
       },
-      error: () => this.toast.show('Impossible de marquer le paiement comme payé', 'error'),
+      error: () => this.toast.show(this.t('finances.toastMarkPaidError'), 'error'),
     });
   }
 
   deletePayment(payment: Payment): void {
-    if (!confirm('Supprimer ce paiement ?')) {
+    if (!confirm(this.t('finances.confirmDeletePayment'))) {
       return;
     }
 
     this.paymentsService.delete(payment.id).subscribe({
-      next: () => this.toast.show('Paiement supprimé', 'info'),
-      error: () => this.toast.show('Impossible de supprimer le paiement', 'error'),
+      next: () => this.toast.show(this.t('finances.toastDeleted'), 'info'),
+      error: () => this.toast.show(this.t('finances.toastDeleteError'), 'error'),
     });
   }
 
   getStudentName(studentId: number): string {
     const student = this.studentsService.getById(studentId);
-    return student ? `${student.firstName} ${student.lastName}` : '—';
+    return student ? `${student.firstName} ${student.lastName}` : '-';
   }
 
   getStudentInitials(studentId: number): string {
@@ -173,15 +177,19 @@ export class FinancesComponent {
   }
 
   sendReminder(payment: Payment): void {
-    this.toast.show(`Rappel envoyé à ${this.getStudentName(payment.studentId)}`);
+    this.toast.show(this.t('finances.reminderSentTo', { name: this.getStudentName(payment.studentId) }));
   }
 
   getClassName(classeId: number): string {
-    return this.classesService.getById(classeId)?.name ?? '—';
+    return this.classesService.getById(classeId)?.name ?? '-';
   }
 
   getStatusLabel(status: string): string {
-    return ({ paid: 'Payé', pending: 'En attente', overdue: 'Impayé' } as Record<string, string>)[status] ?? status;
+    return ({
+      paid: this.t('finances.paidLabel'),
+      pending: this.t('finances.pendingLabel'),
+      overdue: this.t('finances.overdueLabel'),
+    } as Record<string, string>)[status] ?? status;
   }
 
   getPeriodLabel(period: string): string {

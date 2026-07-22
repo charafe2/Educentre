@@ -344,7 +344,7 @@
   }
 }
 
-/* Reveal — base (instant for reduced-motion) */
+/* Reveal - base (instant for reduced-motion) */
 .lp .reveal { opacity: 0; }
 .lp .reveal.visible { opacity: 1; }
 
@@ -1896,12 +1896,12 @@
 
 
 /* =====================================================================
-   ANIMATIONS — wrapped in prefers-reduced-motion: no-preference
+   ANIMATIONS - wrapped in prefers-reduced-motion: no-preference
    GPU-composited properties only: transform and opacity.
    ===================================================================== */
 @media (prefers-reduced-motion: no-preference) {
 
-  /* ── 10. Ambient gradient breathe — hero background ── */
+  /* ── 10. Ambient gradient breathe - hero background ── */
   .lp .hero::before {
     content: '';
     position: absolute; inset: 0;
@@ -1934,7 +1934,7 @@
     to { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
   }
 
-  /* ── Hero supporting elements — enhanced motion ── */
+  /* ── Hero supporting elements - enhanced motion ── */
   .lp .hero__overline {
     transform: translateY(16px);
   }
@@ -1953,7 +1953,7 @@
   }
   .lp .hero__mockup-wrap.visible { transform: translateY(0); }
 
-  /* ── 2. Section reveals — cinematic entrance ── */
+  /* ── 2. Section reveals - cinematic entrance ── */
   .lp .reveal {
     transform: translateY(28px);
     will-change: transform, opacity;
@@ -1961,7 +1961,7 @@
   }
   .lp .reveal.visible { transform: translateY(0); }
 
-  /* ── Bento cards — scale entrance ── */
+  /* ── Bento cards - scale entrance ── */
   .lp .bento__card {
     transform: scale(0.97) translateY(16px);
     will-change: transform, opacity;
@@ -1969,7 +1969,7 @@
   }
   .lp .bento__card.visible { transform: scale(1) translateY(0); }
 
-  /* ── Testimonials — cascade scale + translate ── */
+  /* ── Testimonials - cascade scale + translate ── */
   .lp .t-card {
     transform: translateY(32px) scale(0.96);
     will-change: transform, opacity;
@@ -2161,7 +2161,7 @@
 }
 .lp .hero__trust.visible { opacity: 1; }
 
-/* ═══════════════ Demo form — states ═══════════════ */
+/* ═══════════════ Demo form - states ═══════════════ */
 .lp .demo-form__submit:disabled {
   opacity: 0.65;
   cursor: default;

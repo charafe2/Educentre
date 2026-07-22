@@ -61,7 +61,7 @@ export default function DashboardScreen() {
           />
         </View>
 
-        <SectionTitle title="Présences — 7 dernières semaines" />
+        <SectionTitle title="Présences - 7 dernières semaines" />
         <Card>
           <View style={styles.chartRow} accessibilityLabel={`Présences hebdomadaires, dernière semaine ${weeklyAttendance[weeklyAttendance.length - 1]} pour cent`}>
             {weeklyAttendance.map((v, i) => (
@@ -79,7 +79,7 @@ export default function DashboardScreen() {
           </View>
         </Card>
 
-        <SectionTitle title={`Séances du jour — ${DAYS_FR[today]}`} />
+        <SectionTitle title={`Séances du jour - ${DAYS_FR[today]}`} />
         <Card style={{ padding: 0 }}>
           {todaySessions.map((s, i) => (
             <View key={s.id} style={[styles.sessionRow, i > 0 && styles.rowBorder]}>

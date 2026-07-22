@@ -12,10 +12,12 @@ import { Document } from '../../models/document.model';
 import { Payment } from '../../models/payment.model';
 import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
 import { Student } from '../../models/student.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-documents',
-  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent],
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe],
   templateUrl: './documents.component.html',
   styleUrl: './documents.component.css'
 })
@@ -26,6 +28,8 @@ export class DocumentsComponent {
   private classesService = inject(ClassesService);
   private toast = inject(ToastService);
   private receiptCustomization = inject(ReceiptCustomizationService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   searchTerm = signal('');
   selectedType = signal('');
@@ -96,35 +100,35 @@ export class DocumentsComponent {
     const paymentId = this.genSelectedPaymentId();
     const payment = this.payments().find(p => p.id === paymentId);
     if (!payment) {
-      this.toast.show('Sélectionnez un paiement', 'error');
+      this.toast.show(this.t('documents.selectAPayment'), 'error');
       return;
     }
     this.documentsService.generateFromPayment(payment, this.genType());
-    this.toast.show('Document généré avec succès');
+    this.toast.show(this.t('documents.toastGenerated'));
     this.showGenerateModal.set(false);
   }
 
   markSentWhatsapp(doc: Document): void {
     this.documentsService.markSentWhatsapp(doc.id);
-    this.toast.show('Marqué comme envoyé via WhatsApp');
+    this.toast.show(this.t('documents.toastMarkedSent'));
   }
 
   bulkSendWhatsapp(): void {
     const unsent = this.documents().filter(d => !d.sentViaWhatsapp);
     unsent.forEach(d => this.documentsService.markSentWhatsapp(d.id));
-    this.toast.show(`${unsent.length} document(s) marqué(s) comme envoyés`);
+    this.toast.show(this.t('documents.toastBulkSent', { count: unsent.length }));
   }
 
   deleteDocument(doc: Document): void {
-    if (confirm('Supprimer ce document ?')) {
+    if (confirm(this.t('documents.confirmDelete'))) {
       this.documentsService.delete(doc.id);
-      this.toast.show('Document supprimé', 'info');
+      this.toast.show(this.t('documents.toastDeleted'), 'info');
     }
   }
 
   previewReceipt(doc: Document): void {
     if (!this.isReceipt(doc)) {
-      this.toast.show('La prévisualisation est disponible pour les reçus', 'info');
+      this.toast.show(this.t('documents.previewOnlyReceipts'), 'info');
       return;
     }
     this.previewDocument.set(doc);
@@ -136,14 +140,14 @@ export class DocumentsComponent {
 
   async downloadReceipt(doc: Document): Promise<void> {
     if (!this.isReceipt(doc)) {
-      this.toast.show('Téléchargement simulé (PDF)', 'info');
+      this.toast.show(this.t('documents.simulatedDownload'), 'info');
       return;
     }
     try {
       await this.receiptCustomization.downloadReceipt(this.getReceiptData(doc));
-      this.toast.show('Reçu PDF prêt à télécharger');
+      this.toast.show(this.t('documents.receiptReady'));
     } catch {
-      this.toast.show('Impossible de générer le PDF du reçu', 'error');
+      this.toast.show(this.t('documents.pdfError'), 'error');
     }
   }
 
@@ -160,7 +164,7 @@ export class DocumentsComponent {
 
   getStudentName(studentId: number): string {
     const s = this.studentsService.getById(studentId);
-    return s ? this.formatStudentName(s) : `Étudiant #${studentId}`;
+    return s ? this.formatStudentName(s) : this.t('documents.studentFallback', { id: studentId });
   }
 
   getStudentInitials(studentId: number): string {
@@ -177,16 +181,16 @@ export class DocumentsComponent {
     const classe = this.classesService.getById(doc.classeId);
     const student = this.studentsService.getById(doc.studentId);
     if (classe) return classe.name;
-    return student?.level || 'Classe non chargée';
+    return student?.level || this.t('documents.classNotLoaded');
   }
 
   private formatStudentName(student: Student): string {
-    return `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || `Étudiant #${student.id}`;
+    return `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || this.t('documents.studentFallback', { id: student.id });
   }
 
   getClassName(classeId: number): string {
     const c = this.classesService.getById(classeId);
-    return c ? c.name : '—';
+    return c ? c.name : '-';
   }
 
   getPeriodLabel(period: string): string {

@@ -10,10 +10,12 @@ import { ModalComponent } from "../../components/modal/modal.component";
 import { Session } from "../../models/session.model";
 import { Classe } from "../../models/classe.model";
 import { AttendanceStatus } from "../../models/attendance.model";
+import { TranslatePipe } from "../../i18n/translate.pipe";
+import { TranslationService } from "../../i18n/translation.service";
 
 @Component({
   selector: "app-calendrier",
-  imports: [NgStyle, FormsModule, ModalComponent],
+  imports: [NgStyle, FormsModule, ModalComponent, TranslatePipe],
   templateUrl: "./calendrier.component.html",
   styleUrl: "./calendrier.component.css"
 })
@@ -23,9 +25,14 @@ export class CalendrierComponent {
   private attendanceService = inject(AttendanceService);
   private studentsService = inject(StudentsService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   weekOffset = signal(0);
+  // Fixed internal day order (index 0-5 = Mon-Sat) for logic/indexing;
+  // display labels come from `dayLabels()` so they translate.
   days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
+  dayLabels = computed(() => this.i18n.translateArray('calendar.days'));
   private readonly workHoursStorageKey = "moujtahid.calendar.workHours";
   workStartHour = signal(8);
   workEndHour = signal(21);
@@ -84,12 +91,12 @@ export class CalendrierComponent {
 
   submitSession(): void {
     if (this.formData.endHour <= this.formData.startHour) {
-      this.toast.show("L heure de fin doit etre apres l heure de debut", "info");
+      this.toast.show(this.t("calendar.endBeforeStart"), "info");
       return;
     }
 
     if (this.formData.startHour < this.workStartHour() || this.formData.endHour > this.workEndHour()) {
-      this.toast.show("La séance doit rester dans la plage horaire du calendrier", "info");
+      this.toast.show(this.t("calendar.outsideRange"), "info");
       return;
     }
 
@@ -102,24 +109,24 @@ export class CalendrierComponent {
 
     request.subscribe({
       next: () => {
-        this.toast.show(editing ? "Séance mise à jour" : "Séance ajoutée");
+        this.toast.show(editing ? this.t("calendar.toastSessionUpdated") : this.t("calendar.toastSessionAdded"));
         this.showAddModal.set(false);
       },
-      error: () => { this.toast.show("Impossible d enregistrer la séance", "info"); this.isSavingSession.set(false); },
+      error: () => { this.toast.show(this.t("calendar.toastSessionSaveError"), "info"); this.isSavingSession.set(false); },
       complete: () => this.isSavingSession.set(false),
     });
   }
 
   deleteSession(s: Session): void {
-    if (!confirm("Supprimer cette séance ?")) return;
+    if (!confirm(this.t("calendar.confirmDeleteSession"))) return;
 
     this.isSavingSession.set(true);
     this.sessionsService.delete(s.id).subscribe({
       next: () => {
-        this.toast.show("Séance supprimée", "info");
+        this.toast.show(this.t("calendar.toastSessionDeleted"), "info");
         this.showAddModal.set(false);
       },
-      error: () => { this.toast.show("Impossible de supprimer la séance", "info"); this.isSavingSession.set(false); },
+      error: () => { this.toast.show(this.t("calendar.toastSessionDeleteError"), "info"); this.isSavingSession.set(false); },
       complete: () => this.isSavingSession.set(false),
     });
   }
@@ -143,7 +150,7 @@ export class CalendrierComponent {
         this.attendanceMap.set(map);
       },
       error: () => {
-        this.toast.show("Impossible de charger les présences", "info");
+        this.toast.show(this.t("calendar.toastAttendanceLoadError"), "info");
         this.showAttendanceModal.set(null);
         this.isLoadingAttendance.set(false);
       },
@@ -163,10 +170,10 @@ export class CalendrierComponent {
     this.isSavingAttendance.set(true);
     this.attendanceService.saveForSession(session.id, records).subscribe({
       next: () => {
-        this.toast.show("Présences enregistrées");
+        this.toast.show(this.t("calendar.toastAttendanceSaved"));
         this.showAttendanceModal.set(null);
       },
-      error: () => { this.toast.show("Impossible d enregistrer les présences", "info"); this.isSavingAttendance.set(false); },
+      error: () => { this.toast.show(this.t("calendar.toastAttendanceSaveError"), "info"); this.isSavingAttendance.set(false); },
       complete: () => this.isSavingAttendance.set(false),
     });
   }
@@ -176,16 +183,16 @@ export class CalendrierComponent {
   }
 
   cancelSession(s: Session): void {
-    const reason = prompt("Raison de l annulation :");
+    const reason = prompt(this.t("calendar.cancelReasonPrompt"));
     if (reason === null) return;
 
     this.isSavingSession.set(true);
     this.sessionsService.cancel(s.id, reason).subscribe({
       next: () => {
         this.showAttendanceModal.set(null);
-        this.toast.show("Séance annulée", "info");
+        this.toast.show(this.t("calendar.toastSessionCancelled"), "info");
       },
-      error: () => { this.toast.show("Impossible d annuler la séance", "info"); this.isSavingSession.set(false); },
+      error: () => { this.toast.show(this.t("calendar.toastSessionCancelError"), "info"); this.isSavingSession.set(false); },
       complete: () => this.isSavingSession.set(false),
     });
   }
@@ -238,13 +245,13 @@ export class CalendrierComponent {
 
     const maxHour = this.workEndHour();
     if (hour + duration > maxHour) {
-      this.toast.show("Impossible : dépasse la plage horaire", "info");
+      this.toast.show(this.t("calendar.toastOutsideRange"), "info");
       return;
     }
 
     this.sessionsService.update(id, { day, startHour: hour, endHour: hour + duration }).subscribe({
-      next: () => this.toast.show("Séance déplacée"),
-      error: () => this.toast.show("Impossible de déplacer la séance", "info"),
+      next: () => this.toast.show(this.t("calendar.toastSessionMoved")),
+      error: () => this.toast.show(this.t("calendar.toastSessionMoveError"), "info"),
     });
   }
 
@@ -331,7 +338,8 @@ export class CalendrierComponent {
     monday.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1) + this.weekOffset() * 7);
     const saturday = new Date(monday);
     saturday.setDate(monday.getDate() + 5);
-    const fmt = (d: Date) => d.toLocaleDateString("fr-MA", { day: "2-digit", month: "short" });
+    const locale = { fr: "fr-MA", ar: "ar-MA", en: "en-GB" }[this.i18n.lang()];
+    const fmt = (d: Date) => d.toLocaleDateString(locale, { day: "2-digit", month: "short" });
     return `${fmt(monday)} - ${fmt(saturday)}`;
   }
 

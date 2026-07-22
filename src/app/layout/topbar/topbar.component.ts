@@ -1,6 +1,8 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { LanguageSwitcherComponent } from '../../i18n/language-switcher/language-switcher.component';
 
 type NotificationItem = {
   id: number;
@@ -13,7 +15,7 @@ type NotificationItem = {
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink],
+  imports: [RouterLink, TranslatePipe, LanguageSwitcherComponent],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.css'
 })

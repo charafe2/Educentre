@@ -2,30 +2,30 @@
   <div class="groups-board">
     <section class="groups-overview" aria-label="Vue des groupes">
       <div class="overview-copy">
-        <span class="eyebrow">Organisation</span>
-        <h1>Groupes</h1>
-        <p>Déplacez les élèves entre groupes, ajustez les capacités et repérez les groupes pleins sans quitter le tableau.</p>
+        <span class="eyebrow">{{ 'groups.eyebrow' | t }}</span>
+        <h1>{{ 'groups.title' | t }}</h1>
+        <p>{{ 'groups.subtitle' | t }}</p>
       </div>
 
       <div class="groups-dashboard">
         <div class="metric-card primary">
-          <span class="metric-label">Élèves répartis</span>
+          <span class="metric-label">{{ 'groups.studentsSpread' | t }}</span>
           <strong>{{ totalStudents() }}</strong>
-          <span class="metric-note">Sur {{ totalGroups() }} groupes</span>
+          <span class="metric-note">{{ 'groups.onGroups' | t: { count: totalGroups() } }}</span>
         </div>
         <div class="metric-card">
-          <span class="metric-label">Niveaux</span>
+          <span class="metric-label">{{ 'groups.levels' | t }}</span>
           <strong>{{ totalLevels() }}</strong>
-          <span class="metric-note">{{ totalSubjects() }} matières</span>
+          <span class="metric-note">{{ 'groups.subjectsCount' | t: { count: totalSubjects() } }}</span>
         </div>
         <div class="metric-card warning">
-          <span class="metric-label">Groupes pleins</span>
+          <span class="metric-label">{{ 'groups.fullGroups' | t }}</span>
           <strong>{{ fullGroups() }}</strong>
-          <span class="metric-note">Création rapide disponible</span>
+          <span class="metric-note">{{ 'groups.quickCreate' | t }}</span>
         </div>
         <div class="workflow-card">
-          <strong>À faire</strong>
-          <span>Glissez un élève vers un groupe compatible.</span>
+          <strong>{{ 'groups.todo' | t }}</strong>
+          <span>{{ 'groups.todoHint' | t }}</span>
         </div>
       </div>
     </section>
@@ -34,18 +34,18 @@
       <aside class="level-rail">
         <div class="rail-search">
           <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" placeholder="Chercher..." (input)="onSearch($event)" />
+          <input type="text" [placeholder]="'groups.searchPlaceholder' | t" (input)="onSearch($event)" />
         </div>
 
         <div class="rail-list">
           @for (lv of levelViews(); track lv.level) {
             <button type="button" class="rail-item" [class.active]="currentLevelView()?.level === lv.level" (click)="selectLevel(lv.level)">
               <span class="rail-name">{{ lv.level }}</span>
-              <span class="rail-meta">{{ lv.subjects.length }} matières</span>
+              <span class="rail-meta">{{ 'groups.subjectsCount' | t: { count: lv.subjects.length } }}</span>
               <i class="fa-solid fa-chevron-right"></i>
             </button>
           } @empty {
-            <div class="rail-empty">Aucun niveau</div>
+            <div class="rail-empty">{{ 'groups.noLevel' | t }}</div>
           }
         </div>
       </aside>
@@ -54,7 +54,7 @@
         @if (currentLevelView(); as lv) {
           <div class="rail-heading">
             <span>{{ lv.level }}</span>
-            <strong>{{ lv.totalStudents }} élèves</strong>
+            <strong>{{ 'groups.studentsShort' | t: { count: lv.totalStudents } }}</strong>
           </div>
 
           <div class="subject-list">
@@ -63,14 +63,14 @@
                 <span class="subject-mark" [style.background]="view.classe.color"></span>
                 <span class="subject-link-main">
                   <strong>{{ view.classe.name }}</strong>
-                  <small>{{ view.classe.subject }} · {{ view.groups.length }} groupe(s)</small>
+                  <small>{{ view.classe.subject }} · {{ 'groups.subjectGroups' | t: { count: view.groups.length } }}</small>
                 </span>
                 <span class="subject-count">{{ view.totalStudents }}</span>
               </button>
             }
           </div>
         } @else {
-          <div class="rail-empty">Aucune matière</div>
+          <div class="rail-empty">{{ 'groups.noSubject' | t }}</div>
         }
       </aside>
 
@@ -80,21 +80,21 @@
             <div>
               <span class="detail-kicker">{{ view.classe.level }}</span>
               <h2>{{ view.classe.name }}</h2>
-              <p>{{ view.classe.subject }} · {{ view.totalStudents }} élève(s)</p>
+              <p>{{ view.classe.subject }} · {{ 'groups.studentsParenthesis' | t: { count: view.totalStudents } }}</p>
             </div>
             <div class="detail-actions">
-              <label class="group-search-mini" aria-label="Chercher un groupe">
+              <label class="group-search-mini" [attr.aria-label]="'groups.groupSearch' | t">
                 <i class="fa-solid fa-magnifying-glass"></i>
                 <input
                   type="text"
-                  placeholder="Groupe..."
+                  [placeholder]="'groups.groupSearch' | t"
                   [value]="groupSearchTerm()"
                   (input)="onGroupSearch($event)"
                 />
               </label>
-              <span class="pill-info">{{ currentGroups().length }} groupe(s)</span>
-              <span class="pill-info danger" [class.muted]="currentGroupsFull() === 0">{{ currentGroupsFull() }} plein(s)</span>
-              <button class="btn-edit-class" (click)="openEditClasse(view.classe)" title="Modifier la classe">
+              <span class="pill-info">{{ 'groups.subjectGroups' | t: { count: currentGroups().length } }}</span>
+              <span class="pill-info danger" [class.muted]="currentGroupsFull() === 0">{{ 'groups.pleinShort' | t: { count: currentGroupsFull() } }}</span>
+              <button class="btn-edit-class" (click)="openEditClasse(view.classe)" [title]="'groups.editClass' | t">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
             </div>
@@ -117,7 +117,7 @@
                   <div class="head-left">
                     <span class="group-title">{{ view.classe.subject }} - G{{ group.groupNumber }}</span>
                     @if (isGroupFull(group)) {
-                      <span class="tag-full">Complet</span>
+                      <span class="tag-full">{{ 'groups.tagFull' | t }}</span>
                     }
                   </div>
 
@@ -132,10 +132,10 @@
                         (keydown)="onCapacityKey($event, group.id)"
                         (blur)="confirmCapacity(group.id)"
                       />
-                      <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" title="Confirmer">
+                      <button class="cap-confirm" (mousedown)="confirmCapacity(group.id)" [title]="'common.confirm' | t">
                         <i class="fa-solid fa-check"></i>
                       </button>
-                      <button class="cap-cancel" (mousedown)="cancelCapacity()" title="Annuler">
+                      <button class="cap-cancel" (mousedown)="cancelCapacity()" [title]="'common.cancel' | t">
                         <i class="fa-solid fa-xmark"></i>
                       </button>
                     </div>
@@ -144,7 +144,7 @@
                       <span class="capacity-chip">
                         <span>{{ group.studentIds.length }}</span>/<span>{{ group.maxCapacity }}</span>
                       </span>
-                      <button class="edit-capacity-btn" (click)="startEditCapacity(group.id, group.maxCapacity, $event)" title="Modifier la limite" aria-label="Modifier la limite">
+                      <button class="edit-capacity-btn" (click)="startEditCapacity(group.id, group.maxCapacity, $event)" [title]="'groups.editLimit' | t" [attr.aria-label]="'groups.editLimit' | t">
                         <i class="fa-solid fa-pen"></i>
                       </button>
                     </div>
@@ -160,7 +160,7 @@
                     <div class="empty-group">
                       <button type="button" class="empty-add-btn" (click)="openStudentPicker(group.id)">
                         <i class="fa-solid fa-plus"></i>
-                        <span>Ajouter étudiant</span>
+                        <span>{{ 'groups.addStudent' | t }}</span>
                       </button>
                     </div>
                   }
@@ -181,7 +181,7 @@
                           <span class="s-name">{{ student.firstName }} {{ student.lastName }}</span>
                           <span class="s-code">{{ student.code }}</span>
                         </div>
-                        <span class="s-absence" [class]="absenceClass(student)" [title]="getAbsenceRate(student) + '% d\'absences'">
+                        <span class="s-absence" [class]="absenceClass(student)" [title]="'groups.absencesTooltip' | t: { rate: getAbsenceRate(student) }">
                           {{ absenceLabel(student) }}
                         </span>
                         <i class="fa-solid fa-grip-vertical s-grip"></i>
@@ -195,7 +195,7 @@
                     <span class="footer-paid">{{ formatMoney(stats.paid) }}</span>
                     <span class="footer-total">/ {{ formatMoney(stats.total) }}</span>
                   </div>
-                  <button type="button" class="footer-add-student" (click)="openStudentPicker(group.id)" title="Ajouter des etudiants" aria-label="Ajouter des etudiants">
+                  <button type="button" class="footer-add-student" (click)="openStudentPicker(group.id)" [title]="'groups.addStudent' | t" [attr.aria-label]="'groups.addStudent' | t">
                     <i class="fa-solid fa-plus"></i>
                   </button>
                 </div>
@@ -203,19 +203,19 @@
             } @empty {
               <div class="group-search-empty">
                 <i class="fa-solid fa-magnifying-glass-minus"></i>
-                <span>Aucun groupe trouvé</span>
+                <span>{{ 'groups.noGroupFound' | t }}</span>
               </div>
             }
 
             <button type="button" class="new-group-card" (click)="createGroupForCurrentSubject()">
               <i class="fa-solid fa-plus"></i>
-              <span>Nouveau groupe</span>
+              <span>{{ 'groups.createGroup' | t }}</span>
             </button>
           </div>
         } @else {
           <div class="empty-state">
             <i class="fa-solid fa-magnifying-glass-minus empty-icon"></i>
-            <p>Aucune matière trouvée.</p>
+            <p>{{ 'groups.noSubjectFound' | t }}</p>
           </div>
         }
       </main>
@@ -230,7 +230,7 @@
       <div class="edit-modal-header">
         <div class="edit-modal-title">
           <span class="subject-dot" [style.background]="ec.color"></span>
-          <h3>Modifier la classe</h3>
+          <h3>{{ 'groups.editClass' | t }}</h3>
         </div>
         <button class="btn-close-modal" (click)="closeEditClasse()">
           <i class="fa-solid fa-xmark"></i>
@@ -241,45 +241,45 @@
 
         <div class="edit-field-row">
           <div class="edit-field">
-            <label>Nom de la classe</label>
+            <label>{{ 'groups.className' | t }}</label>
             <input type="text" [(ngModel)]="editForm.name" placeholder="Ex : Maths 2Bac A" />
           </div>
           <div class="edit-field">
-            <label>Matière</label>
+            <label>{{ 'groups.subject' | t }}</label>
             <input type="text" [(ngModel)]="editForm.subject" placeholder="Ex : Mathématiques" />
           </div>
         </div>
 
         <div class="edit-field-row">
           <div class="edit-field">
-            <label>Niveau</label>
+            <label>{{ 'groups.level' | t }}</label>
             <input type="text" [(ngModel)]="editForm.level" placeholder="Ex : 2ème Bac" />
           </div>
           <div class="edit-field">
-            <label>Statut</label>
+            <label>{{ 'common.status' | t }}</label>
             <select [(ngModel)]="editForm.status">
-              <option value="active">Actif</option>
-              <option value="inactive">Inactif</option>
+              <option value="active">{{ 'common.active' | t }}</option>
+              <option value="inactive">{{ 'common.inactive' | t }}</option>
             </select>
           </div>
         </div>
 
         <div class="edit-field-row">
           <div class="edit-field">
-            <label>Prix mensuel (dh)</label>
+            <label>{{ 'groups.monthlyPrice' | t }}</label>
             <div class="input-prefix-wrap">
               <span class="input-prefix">dh</span>
               <input type="number" [(ngModel)]="editForm.monthlyPrice" min="0" placeholder="350" />
             </div>
           </div>
           <div class="edit-field">
-            <label>Capacité max</label>
+            <label>{{ 'groups.maxCapacity' | t }}</label>
             <input type="number" [(ngModel)]="editForm.maxCapacity" min="1" placeholder="15" />
           </div>
         </div>
 
         <div class="edit-field">
-          <label>Professeur</label>
+          <label>{{ 'groups.teacher' | t }}</label>
           <select [(ngModel)]="editForm.teacherId">
             @for (t of allTeachers(); track t.id) {
               <option [value]="t.id">{{ t.firstName }} {{ t.lastName }} - {{ t.specialty }}</option>
@@ -290,10 +290,10 @@
       </div>
 
       <div class="edit-modal-footer">
-        <button class="btn-cancel-edit" (click)="closeEditClasse()">Annuler</button>
+        <button class="btn-cancel-edit" (click)="closeEditClasse()">{{ 'common.cancel' | t }}</button>
         <button class="btn-save-edit" (click)="saveEditClasse()">
           <i class="fa-solid fa-floppy-disk"></i>
-          Enregistrer
+          {{ 'common.save' | t }}
         </button>
       </div>
 
@@ -307,10 +307,10 @@
       <div class="student-picker-modal-header">
         <div>
           <span class="modal-kicker">{{ picker.classe.level }}</span>
-          <h3>Ajouter étudiant</h3>
+          <h3>{{ 'groups.addStudent' | t }}</h3>
           <p>{{ picker.classe.subject }} - G{{ picker.group.groupNumber }}</p>
         </div>
-        <button class="btn-close-modal" (click)="closeStudentPicker()" aria-label="Fermer">
+        <button class="btn-close-modal" (click)="closeStudentPicker()" [attr.aria-label]="'common.close' | t">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -319,7 +319,7 @@
         <i class="fa-solid fa-magnifying-glass"></i>
         <input
           type="text"
-          placeholder="Chercher par nom ou code..."
+          [placeholder]="'groups.pickerSearchPlaceholder' | t"
           [value]="studentPickerSearch()"
           (input)="onStudentPickerSearch($event)"
           autofocus
@@ -336,7 +336,7 @@
             </span>
           </button>
         } @empty {
-          <div class="student-picker-empty">Aucun élève disponible pour ce niveau.</div>
+          <div class="student-picker-empty">{{ 'groups.noStudentForLevel' | t }}</div>
         }
       </div>
     </div>
@@ -349,19 +349,17 @@
       <div class="confirm-icon">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 class="confirm-title">Groupe complet</h3>
+      <h3 class="confirm-title">{{ 'groups.groupFullTitle' | t }}</h3>
       <p class="confirm-body">
-        La limite du groupe <strong>{{ pending.groupLabel }}</strong> est atteinte.
-        <br>
-        ajouter quand meme?
+        {{ 'groups.fullAddBody' | t: { group: pending.groupLabel } }}
       </p>
       <div class="confirm-actions">
         <button class="btn-create" (click)="continueFullAdd()">
           <i class="fa-solid fa-user-plus"></i>
-          Ajouter quand meme
+          {{ 'groups.addAnyway' | t }}
         </button>
         <button class="btn-keep" (click)="cancelFullAdd()">
-          Annuler
+          {{ 'common.cancel' | t }}
         </button>
       </div>
     </div>
@@ -374,20 +372,18 @@
       <div class="confirm-icon">
         <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      <h3 class="confirm-title">Groupe complet</h3>
+      <h3 class="confirm-title">{{ 'groups.groupFullTitle' | t }}</h3>
       <p class="confirm-body">
-        Le groupe cible est plein. Que voulez-vous faire avec
-        <strong>{{ pending.studentName }}</strong>
-        dans <strong>{{ pending.className }}</strong> ?
+        {{ 'groups.dropFullBody' | t: { name: pending.studentName, className: pending.className } }}
       </p>
       <div class="confirm-actions">
         <button class="btn-keep" (click)="addAnyway()">
           <i class="fa-solid fa-user-plus"></i>
-          Ajouter quand même
+          {{ 'groups.addAnyway' | t }}
         </button>
         <button class="btn-create" (click)="confirmCreateNewGroup()">
           <i class="fa-solid fa-circle-plus"></i>
-          Créer un nouveau groupe
+          {{ 'groups.createNewGroup' | t }}
         </button>
       </div>
     </div>

@@ -10,10 +10,12 @@ import { Group } from '../../models/group.model';
 import { Classe } from '../../models/classe.model';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { Student } from '../../models/student.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-etudiants',
-  imports: [NgClass, FormsModule, ModalComponent],
+  imports: [NgClass, FormsModule, ModalComponent, TranslatePipe],
   templateUrl: './etudiants.component.html',
   styleUrl: './etudiants.component.css'
 })
@@ -22,6 +24,8 @@ export class EtudiantsComponent {
   private classesService = inject(ClassesService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   searchTerm = signal('');
   selectedLevel = signal('');
@@ -48,8 +52,8 @@ export class EtudiantsComponent {
   resultCount = computed(() => this.pagination().total);
   pageRangeLabel = computed(() => {
     const page = this.pagination();
-    if (!page.total) return '0 resultat';
-    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+    if (!page.total) return this.t('students.noResult');
+    return this.t('students.rangeLabel', { from: page.from ?? 0, to: page.to ?? 0, total: page.total });
   });
 
   showModal = signal(false);
@@ -140,7 +144,7 @@ export class EtudiantsComponent {
         groupUpdates.subscribe(() => {
           this.classesService.loadClasses();
           this.groupsService.loadGroups();
-          this.toast.show('Étudiant mis à jour avec succès');
+          this.toast.show(this.t('students.toastUpdated'));
           this.showModal.set(false);
         });
       });
@@ -156,7 +160,7 @@ export class EtudiantsComponent {
         );
         groupUpdates.subscribe(() => {
           this.classesService.loadClasses();
-          this.toast.show('Étudiant ajouté avec succès');
+          this.toast.show(this.t('students.toastAdded'));
           this.showModal.set(false);
         });
       });
@@ -164,10 +168,10 @@ export class EtudiantsComponent {
   }
 
   deleteStudent(s: Student): void {
-    if (confirm(`Supprimer l'étudiant ${s.firstName} ${s.lastName} ?`)) {
+    if (confirm(this.t('students.confirmDelete', { name: `${s.firstName} ${s.lastName}` }))) {
       this.studentsService.delete(s.id).subscribe(() => {
         if (this.showDetailPanel()?.id === s.id) this.showDetailPanel.set(null);
-        this.toast.show('Étudiant supprimé', 'info');
+        this.toast.show(this.t('students.toastDeleted'), 'info');
       });
     }
   }
@@ -194,7 +198,11 @@ export class EtudiantsComponent {
   }
 
   getPaymentLabel(status: string): string {
-    const map: Record<string, string> = { paid: 'Payé', pending: 'En attente', overdue: 'Impayé' };
+    const map: Record<string, string> = {
+      paid: this.t('students.paidLabel'),
+      pending: this.t('students.pendingLabel'),
+      overdue: this.t('students.overdueLabel'),
+    };
     return map[status] || status;
   }
 
@@ -263,14 +271,18 @@ export class EtudiantsComponent {
   rappeler(s: Student): void {
     const raw = s.parentWhatsapp || s.parentPhone;
     if (!raw) {
-      this.toast.show('Aucun numéro de contact enregistré', 'error');
+      this.toast.show(this.t('students.noContact'), 'error');
       return;
     }
     // Normalize Moroccan number: 06XXXXXXXX → +2126XXXXXXXX
     const digits = raw.replace(/\D/g, '');
     const intl = digits.startsWith('212') ? digits : '212' + digits.replace(/^0/, '');
     const label = this.getPaymentLabel(s.paymentStatus);
-    const msg = `Bonjour ${s.parentName || 'cher(e) parent'},\n\nNous vous rappelons que le paiement de *${s.firstName} ${s.lastName}* est actuellement *${label.toLowerCase()}*.\n\nMerci de bien vouloir régulariser la situation.\n\nCordialement,\nL'équipe du centre.`;
+    const msg = this.t('students.whatsappMessage', {
+      parent: s.parentName || this.t('students.dearParent'),
+      name: `${s.firstName} ${s.lastName}`,
+      status: label.toLowerCase(),
+    });
     window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, '_blank');
   }
 }

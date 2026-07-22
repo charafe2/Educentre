@@ -1,6 +1,6 @@
 # Moujtahid Mobile
 
-Application mobile React Native (Expo) de Moujtahid — le pendant mobile de l'application web Angular du dépôt parent.
+Application mobile React Native (Expo) de Moujtahid - le pendant mobile de l'application web Angular du dépôt parent.
 
 ## Deux espaces
 
@@ -28,13 +28,13 @@ Pour brancher le vrai backend (le même que l'app web, `/api/v1/*`) :
 
 1. Ouvrir `src/api/client.ts`
 2. Passer `DEMO_MODE` à `false`
-3. Renseigner `API_URL` avec l'adresse IP locale de votre machine (pas `localhost` — un appareil physique ne peut pas y accéder), ex : `http://192.168.1.10:8000/api`
+3. Renseigner `API_URL` avec l'adresse IP locale de votre machine (pas `localhost` - un appareil physique ne peut pas y accéder), ex : `http://192.168.1.10:8000/api`
 
 ## Structure
 
 ```
 src/
-  theme.ts             Design tokens (couleurs/espacements — mêmes valeurs que le web)
+  theme.ts             Design tokens (couleurs/espacements - mêmes valeurs que le web)
   types.ts             Modèles (miroir de src/app/models de l'app Angular)
   api/client.ts        Client API (Bearer token, AsyncStorage) + mode démo
   data/demo.ts         Données de démonstration

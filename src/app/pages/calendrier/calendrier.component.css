@@ -176,7 +176,7 @@
   pointer-events: none;
 }
 
-/* Drag handle icon — visible, no pointer interference */
+/* Drag handle icon - visible, no pointer interference */
 .drag-handle {
   float: right;
   font-size: 0.7rem;

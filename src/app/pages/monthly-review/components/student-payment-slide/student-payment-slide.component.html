@@ -1,0 +1,64 @@
+<div class="slide-inner">
+  <div class="slide-header">
+    <div>
+      <h2 class="slide-title">{{ 'monthlyReview.payments.title' | t }}</h2>
+      <p class="slide-subtitle">{{ 'monthlyReview.payments.subtitle' | t }}</p>
+    </div>
+    @if (!allPaid()) {
+      <div class="slide-stat">
+        <span class="slide-stat-value">{{ totalDue().toLocaleString('fr-MA') }} {{ 'common.currency' | t }}</span>
+        <span class="slide-stat-label">{{ 'monthlyReview.payments.pending' | t: { count: filteredRows().length } }}</span>
+      </div>
+    }
+  </div>
+
+  @if (allPaid()) {
+    <div class="success-state">
+      <div class="success-icon"><i class="fa-solid fa-champagne-glasses"></i></div>
+      <h3>{{ 'monthlyReview.payments.allPaidTitle' | t }}</h3>
+      <p>{{ 'monthlyReview.payments.allPaidBody' | t }}</p>
+    </div>
+  } @else {
+    <div class="filters-row">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="search"
+          [attr.placeholder]="'monthlyReview.payments.searchPlaceholder' | t"
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <select class="filter-select" [ngModel]="classeFilter()" (ngModelChange)="classeFilter.set($event)">
+        <option [ngValue]="''">{{ 'monthlyReview.payments.allClasses' | t }}</option>
+        @for (c of classes(); track c.id) {
+          <option [ngValue]="c.id">{{ c.name }}</option>
+        }
+      </select>
+      <select class="filter-select" [ngModel]="teacherFilter()" (ngModelChange)="teacherFilter.set($event)">
+        <option [ngValue]="''">{{ 'monthlyReview.payments.allTeachers' | t }}</option>
+        @for (t of teachers(); track t.id) {
+          <option [ngValue]="t.id">{{ t.firstName }} {{ t.lastName }}</option>
+        }
+      </select>
+    </div>
+
+    @if (filteredRows().length === 0) {
+      <div class="empty-state">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        <p>{{ 'monthlyReview.payments.noResults' | t }}</p>
+      </div>
+    } @else {
+      <div class="payment-list">
+        @for (row of filteredRows(); track row.paymentId) {
+          <app-student-payment-card
+            [row]="row"
+            (markPaid)="markPaid(row)"
+            (contactParent)="contactParent(row)"
+            (viewStudent)="viewStudent(row)"
+          />
+        }
+      </div>
+    }
+  }
+</div>

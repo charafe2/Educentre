@@ -12,7 +12,7 @@ export const authGuard: CanActivateFn = () => {
 
   const token = localStorage.getItem('auth_token');
   if (token) {
-    // Token exists but user not loaded yet — auth service will load it
+    // Token exists but user not loaded yet - auth service will load it
     return true;
   }
 

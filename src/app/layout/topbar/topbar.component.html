@@ -1,7 +1,7 @@
 <header class="topbar">
   <div class="search-container">
     <i class="fa-solid fa-magnifying-glass"></i>
-    <input type="search" class="search-input" aria-label="Rechercher" placeholder="Rechercher des élèves, transactions...">
+    <input type="search" class="search-input" [attr.aria-label]="'common.search' | t" [attr.placeholder]="'topbar.searchPlaceholder' | t">
     <div class="search-shortcut">
       <span>Ctrl</span>
       <span>K</span>
@@ -9,14 +9,12 @@
   </div>
 
   <div class="topbar-actions">
-    <button class="icon-btn" type="button" aria-label="Actions rapides">
-      <i class="fa-solid fa-bolt"></i>
-    </button>
+    <app-language-switcher />
     <div class="notification-wrapper" (click)="$event.stopPropagation()">
       <button
         class="icon-btn notification-trigger"
         type="button"
-        aria-label="Notifications"
+        [attr.aria-label]="'topbar.notifications' | t"
         aria-haspopup="menu"
         [attr.aria-expanded]="isNotificationsOpen"
         (click)="toggleNotifications($event)"
@@ -28,11 +26,11 @@
       </button>
 
       @if (isNotificationsOpen) {
-        <section class="notifications-panel" role="menu" aria-label="Notifications">
+        <section class="notifications-panel" role="menu" [attr.aria-label]="'topbar.notifications' | t">
           <header class="notifications-header">
-            <h2>Notifications</h2>
+            <h2>{{ 'topbar.notifications' | t }}</h2>
             <button type="button" class="mark-read-btn" (click)="markAllAsRead($event)">
-              Mark all as read
+              {{ 'topbar.markAllRead' | t }}
             </button>
           </header>
 
@@ -60,7 +58,7 @@
       <button
         class="user-profile"
         type="button"
-        aria-label="Menu utilisateur"
+        [attr.aria-label]="'topbar.userMenu' | t"
         aria-haspopup="menu"
         [attr.aria-expanded]="isProfileOpen"
         (click)="toggleProfile($event)"
@@ -69,26 +67,26 @@
       </button>
 
       @if (isProfileOpen) {
-        <section class="profile-menu" role="menu" aria-label="Menu utilisateur">
+        <section class="profile-menu" role="menu" [attr.aria-label]="'topbar.userMenu' | t">
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-regular fa-user"></i>
-            <span>Profile</span>
+            <span>{{ 'common.profile' | t }}</span>
           </a>
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-regular fa-credit-card"></i>
-            <span>Subscription</span>
+            <span>{{ 'common.subscription' | t }}</span>
             <span class="profile-menu__pill">PRO</span>
           </a>
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-solid fa-gear"></i>
-            <span>Settings</span>
+            <span>{{ 'common.settings' | t }}</span>
           </a>
 
           <div class="profile-menu__divider" aria-hidden="true"></div>
 
           <button type="button" class="profile-menu__item profile-menu__item--danger" role="menuitem" (click)="logout($event)">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>Sign Out</span>
+            <span>{{ 'common.signOut' | t }}</span>
           </button>
         </section>
       }

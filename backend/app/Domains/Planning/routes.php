@@ -5,6 +5,7 @@ use App\Domains\Planning\Controllers\ClassController;
 use App\Domains\Planning\Controllers\GroupController;
 use App\Domains\Planning\Controllers\SessionController;
 use App\Domains\Planning\Controllers\SessionAttendanceController;
+use App\Domains\Planning\Controllers\SubjectController;
 
 Route::middleware('auth:sanctum')->prefix('classes')->group(function () {
     Route::get('/', [ClassController::class, 'index']);
@@ -12,6 +13,13 @@ Route::middleware('auth:sanctum')->prefix('classes')->group(function () {
     Route::post('/', [ClassController::class, 'store']);
     Route::put('/{id}', [ClassController::class, 'update']);
     Route::delete('/{id}', [ClassController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->prefix('subjects')->group(function () {
+    Route::get('/', [SubjectController::class, 'index']);
+    Route::post('/', [SubjectController::class, 'store']);
+    Route::put('/{id}', [SubjectController::class, 'update']);
+    Route::delete('/{id}', [SubjectController::class, 'destroy']);
 });
 
 Route::middleware('auth:sanctum')->prefix('groups')->group(function () {

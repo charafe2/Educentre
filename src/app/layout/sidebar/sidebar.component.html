@@ -6,89 +6,98 @@
       <i class="fa-solid fa-graduation-cap"></i>
       <span class="logo-text">Moujtahid</span>
     </div>
-    <button class="toggle-btn" type="button" (click)="toggle()" [title]="collapsed() ? 'Développer le menu' : 'Réduire le menu'" [attr.aria-label]="collapsed() ? 'Développer le menu' : 'Réduire le menu'">
+    <button class="toggle-btn" type="button" (click)="toggle()" [title]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | t" [attr.aria-label]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | t">
       <i class="fa-solid" [ngClass]="collapsed() ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
     </button>
   </div>
 
   <nav>
     <ul class="nav-menu">
-      <li class="nav-label">Menu Principal</li>
+      <li class="nav-label">{{ 'nav.section_main' | t }}</li>
       <li>
-        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" title="Vue d'ensemble">
+        <a routerLink="/dashboard" routerLinkActive="active" class="nav-item" [title]="'nav.overview' | t">
           <div class="nav-item-left">
             <i class="fa-solid fa-layer-group"></i>
-            <span class="nav-text">Vue d'ensemble</span>
+            <span class="nav-text">{{ 'nav.overview' | t }}</span>
           </div>
         </a>
       </li>
       <li>
-        <a routerLink="/etudiants" routerLinkActive="active" class="nav-item" title="Étudiants">
+        <a routerLink="/revue-mensuelle" routerLinkActive="active" class="nav-item" [title]="'nav.monthlyReview' | t">
+          <div class="nav-item-left">
+            <i class="fa-solid fa-clipboard-check"></i>
+            <span class="nav-text">{{ 'nav.monthlyReview' | t }}</span>
+          </div>
+          <span class="shortcut shortcut-new">{{ 'nav.new' | t }}</span>
+        </a>
+      </li>
+      <li>
+        <a routerLink="/etudiants" routerLinkActive="active" class="nav-item" [title]="'nav.students' | t">
           <div class="nav-item-left">
             <i class="fa-regular fa-user"></i>
-            <span class="nav-text">Étudiants</span>
+            <span class="nav-text">{{ 'nav.students' | t }}</span>
           </div>
           <span class="shortcut">G E</span>
         </a>
       </li>
       <li>
-        <a routerLink="/groupes" routerLinkActive="active" class="nav-item" title="Groupes">
+        <a routerLink="/groupes" routerLinkActive="active" class="nav-item" [title]="'nav.groups' | t">
           <div class="nav-item-left">
             <i class="fa-solid fa-people-group"></i>
-            <span class="nav-text">Groupes</span>
+            <span class="nav-text">{{ 'nav.groups' | t }}</span>
           </div>
         </a>
       </li>
       <li>
-        <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" title="Professeurs">
+        <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" [title]="'nav.teachers' | t">
           <div class="nav-item-left">
             <i class="fa-solid fa-chalkboard-user"></i>
-            <span class="nav-text">Professeurs</span>
+            <span class="nav-text">{{ 'nav.teachers' | t }}</span>
           </div>
         </a>
       </li>
       <li>
-        <a routerLink="/finances" routerLinkActive="active" class="nav-item" title="Finances">
+        <a routerLink="/finances" routerLinkActive="active" class="nav-item" [title]="'nav.finances' | t">
           <div class="nav-item-left">
             <i class="fa-regular fa-credit-card"></i>
-            <span class="nav-text">Finances</span>
+            <span class="nav-text">{{ 'nav.finances' | t }}</span>
           </div>
         </a>
       </li>
       <li>
-        <a routerLink="/calendrier" routerLinkActive="active" class="nav-item" title="Calendrier">
+        <a routerLink="/calendrier" routerLinkActive="active" class="nav-item" [title]="'nav.calendar' | t">
           <div class="nav-item-left">
             <i class="fa-regular fa-calendar"></i>
-            <span class="nav-text">Calendrier</span>
+            <span class="nav-text">{{ 'nav.calendar' | t }}</span>
           </div>
           <span class="shortcut">G C</span>
         </a>
       </li>
 
-      <li class="nav-label">Rapports</li>
+      <li class="nav-label">{{ 'nav.section_reports' | t }}</li>
       <li>
-        <a routerLink="/analytiques" routerLinkActive="active" class="nav-item" title="Analytiques">
+        <a routerLink="/analytiques" routerLinkActive="active" class="nav-item" [title]="'nav.analytics' | t">
           <div class="nav-item-left">
             <i class="fa-solid fa-chart-line"></i>
-            <span class="nav-text">Analytiques</span>
+            <span class="nav-text">{{ 'nav.analytics' | t }}</span>
           </div>
         </a>
       </li>
       <li>
-        <a routerLink="/documents" routerLinkActive="active" class="nav-item" title="Documents">
+        <a routerLink="/documents" routerLinkActive="active" class="nav-item" [title]="'nav.documents' | t">
           <div class="nav-item-left">
             <i class="fa-regular fa-file-lines"></i>
-            <span class="nav-text">Documents</span>
+            <span class="nav-text">{{ 'nav.documents' | t }}</span>
           </div>
         </a>
       </li>
 
-      <li class="nav-label">Système</li>
+      <li class="nav-label">{{ 'nav.section_system' | t }}</li>
       <li>
-        <a routerLink="/parametres" routerLinkActive="active" class="nav-item" title="Paramètres">
+        <a routerLink="/parametres" routerLinkActive="active" class="nav-item" [title]="'nav.settings' | t">
           <div class="nav-item-left">
             <i class="fa-solid fa-gear"></i>
-            <span class="nav-text">Paramètres</span>
+            <span class="nav-text">{{ 'nav.settings' | t }}</span>
           </div>
         </a>
       </li>
@@ -97,18 +106,13 @@
 
   <!-- User profile pinned at bottom -->
   <div class="sidebar-footer">
-    <a href="/parent/login" target="_blank" class="parent-link" title="Vue Parents">
-      <i class="fa-solid fa-mobile-screen"></i>
-      <span class="nav-text">Vue Parents</span>
-      <i class="fa-solid fa-arrow-up-right-from-square parent-link-ext"></i>
-    </a>
     <div class="user-card">
       <div class="user-avatar">{{ user()?.name?.slice(0,2)?.toUpperCase() ?? 'AD' }}</div>
       <div class="user-info">
         <span class="user-name">{{ user()?.name ?? 'Admin' }}</span>
         <span class="user-role">{{ user()?.role ?? 'Administrateur' }}</span>
       </div>
-      <button class="logout-btn" type="button" title="Déconnexion" aria-label="Déconnexion" (click)="logout()">
+      <button class="logout-btn" type="button" [title]="'common.logout' | t" [attr.aria-label]="'common.logout' | t" (click)="logout()">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>
     </div>

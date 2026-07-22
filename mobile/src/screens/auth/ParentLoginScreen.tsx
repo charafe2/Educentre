@@ -7,18 +7,20 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors, font, radius, spacing } from '../../theme';
 import { Button, Field } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 
 export default function ParentLoginScreen() {
   const { loginParent } = useAuth();
-  const [code, setCode] = useState('');
+  const { t } = useI18n();
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const submit = () => {
     setError('');
-    const ok = loginParent(code, phone);
+    const ok = loginParent(phone, password);
     if (!ok) {
-      setError('Code élève introuvable ou téléphone invalide. Exemple de code : ETU-001.');
+      setError(t('parentLogin.error'));
     }
   };
 
@@ -32,35 +34,36 @@ export default function ParentLoginScreen() {
           <View style={styles.iconWrap}>
             <Ionicons name="people-outline" size={26} color={colors.teal} />
           </View>
-          <Text style={styles.title}>Espace Parents</Text>
+          <Text style={styles.title}>{t('parentLogin.title')}</Text>
           <Text style={styles.sub}>
-            Entrez le code élève fourni par votre centre et votre numéro de téléphone.
+            {t('parentLogin.subtitle')}
           </Text>
 
           <Field
-            label="Code élève"
-            placeholder="Ex : ETU-001"
-            autoCapitalize="characters"
-            value={code}
-            onChangeText={setCode}
-          />
-          <Field
-            label="Votre numéro de téléphone"
-            placeholder="Ex : 06 12 34 56 78"
+            label={t('parentLogin.phoneLabel')}
+            placeholder={t('parentLogin.phonePlaceholder')}
             keyboardType="phone-pad"
             autoComplete="tel"
             value={phone}
             onChangeText={setPhone}
+          />
+          <Field
+            label={t('parentLogin.passwordLabel')}
+            placeholder="••••••••"
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="password"
+            value={password}
+            onChangeText={setPassword}
             error={error || undefined}
           />
 
-          <Button title="Accéder au suivi" onPress={submit} style={{ marginTop: spacing.sm }} />
+          <Button title={t('parentLogin.submit')} onPress={submit} style={{ marginTop: spacing.sm }} />
 
           <View style={styles.demoNote}>
             <Ionicons name="shield-checkmark-outline" size={16} color={colors.gray500} />
             <Text style={styles.demoText}>
-              Vos données et celles de vos enfants sont 100% sécurisées.
-              Mode démo : essayez ETU-001 avec n'importe quel numéro.
+              {t('parentLogin.secure')} {t('parentLogin.demoHint')}
             </Text>
           </View>
         </ScrollView>

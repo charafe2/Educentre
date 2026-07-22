@@ -1,0 +1,55 @@
+.filters-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-box i {
+  position: absolute;
+  left: 0.9rem;
+  color: var(--text-light);
+  font-size: 0.8rem;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.2s;
+}
+
+.search-box input:focus {
+  background-color: var(--surface);
+  border-color: var(--border-dark);
+}
+
+.filter-select {
+  padding: 0.65rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  font-size: 0.83rem;
+  color: var(--text-main);
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}

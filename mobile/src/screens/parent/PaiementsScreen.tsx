@@ -3,12 +3,14 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, formatMAD, spacing } from '../../theme';
-import { Badge, Button, Card, EmptyState, SectionTitle } from '../../components/ui';
+import { Badge, Button, Card, ChildSwitchBack, EmptyState, SectionTitle } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { formatMonthFR, studentPayments } from '../../data/selectors';
 
 export default function PaiementsScreen() {
-  const { parentStudent: student, logout } = useAuth();
+  const { parentStudent: student, parentChildren, switchChild, logout } = useAuth();
+  const { t } = useI18n();
   if (!student) return null;
 
   const list = studentPayments(student.id);
@@ -17,9 +19,16 @@ export default function PaiementsScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: spacing.base }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Paiements</Text>
-        <Text style={styles.subtitle}>Situation de {student.firstName}</Text>
+      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
+      <ScrollView
+        contentContainerStyle={[
+          { padding: spacing.base },
+          parentChildren.length > 1 && { paddingTop: spacing.xxl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>{t('paiements.title')}</Text>
+        <Text style={styles.subtitle}>{t('paiements.subtitle', { name: student.firstName })}</Text>
 
         <Card style={[
           styles.dueCard,
@@ -29,24 +38,26 @@ export default function PaiementsScreen() {
             <View style={styles.dueRow}>
               <Ionicons name="checkmark-circle" size={26} color={colors.success} />
               <View style={{ flex: 1 }}>
-                <Text style={styles.dueTitle}>Tout est à jour !</Text>
-                <Text style={styles.dueMeta}>Aucun paiement en attente. Merci pour votre confiance.</Text>
+                <Text style={styles.dueTitle}>{t('paiements.upToDate')}</Text>
+                <Text style={styles.dueMeta}>{t('paiements.upToDateBody')}</Text>
               </View>
             </View>
           ) : (
             <View>
-              <Text style={styles.dueLabel}>Montant à régler</Text>
+              <Text style={styles.dueLabel}>{t('paiements.toPay')}</Text>
               <Text style={styles.dueValue}>{formatMAD(dueTotal)}</Text>
               <Text style={styles.dueMeta}>
-                {due.length} échéance{due.length > 1 ? 's' : ''} en attente de règlement au centre.
+                {due.length > 1
+                  ? t('paiements.dueMany', { count: due.length })
+                  : t('paiements.dueOne', { count: due.length })}
               </Text>
             </View>
           )}
         </Card>
 
-        <SectionTitle title="Historique" />
+        <SectionTitle title={t('paiements.history')} />
         {list.length === 0 ? (
-          <EmptyState icon="wallet-outline" title="Aucun paiement" body="L'historique apparaîtra ici." />
+          <EmptyState icon="wallet-outline" title={t('paiements.empty')} body={t('paiements.emptyBody')} />
         ) : (
           <Card style={{ padding: 0 }}>
             {list.map((p, i) => (
@@ -67,7 +78,7 @@ export default function PaiementsScreen() {
         )}
 
         <View style={{ marginTop: spacing.xxl }}>
-          <Button title="Se déconnecter" variant="ghost" onPress={logout} />
+          <Button title={t('paiements.logout')} variant="ghost" onPress={logout} />
         </View>
         <View style={{ height: spacing.xl }} />
       </ScrollView>

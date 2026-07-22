@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, radius, shadow, spacing, statusMeta, StatusKey } from '../theme';
+import { useI18n } from '../i18n/I18nContext';
 
 export function Card({ children, style }: { children: React.ReactNode; style?: StyleProp<ViewStyle> }) {
   return <View style={[styles.card, style]}>{children}</View>;
@@ -55,10 +56,11 @@ export function Avatar({ name, color, size = 42 }: { name: string; color: string
 
 export function Badge({ status }: { status: StatusKey }) {
   const meta = statusMeta[status];
+  const { t } = useI18n();
   return (
     <View style={[styles.badge, { backgroundColor: meta.bg }]}>
       <View style={[styles.badgeDot, { backgroundColor: meta.color }]} />
-      <Text style={[styles.badgeText, { color: meta.color }]}>{meta.label}</Text>
+      <Text style={[styles.badgeText, { color: meta.color }]}>{t(`status.${status}`)}</Text>
     </View>
   );
 }
@@ -126,6 +128,22 @@ export function ProgressBar({ ratio, color = colors.blue, height = 6 }: {
   );
 }
 
+// Bouton retour discret, style natif iOS, pour revenir au choix d'enfant
+// (espace parent multi-enfants) sans se déconnecter.
+export function ChildSwitchBack({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel="Changer d'enfant"
+      hitSlop={10}
+      style={({ pressed }) => [styles.childBack, pressed && { opacity: 0.5 }]}
+    >
+      <Ionicons name="chevron-back" size={22} color={colors.gray300} />
+    </Pressable>
+  );
+}
+
 export function EmptyState({ icon, title, body }: {
   icon: keyof typeof Ionicons.glyphMap; title: string; body?: string;
 }) {
@@ -188,6 +206,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   fieldError: { fontSize: font.tiny, color: colors.danger, marginTop: 4 },
+  childBack: {
+    position: 'absolute', top: spacing.sm, left: spacing.sm, zIndex: 10,
+    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
+  },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl },
   emptyIcon: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: colors.gray50,

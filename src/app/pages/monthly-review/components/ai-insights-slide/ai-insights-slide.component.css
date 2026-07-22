@@ -1,0 +1,114 @@
+.slide-inner {
+  max-width: 720px;
+}
+
+.insight-card {
+  position: relative;
+  background: linear-gradient(155deg, #0f172a 0%, #1e293b 55%, #0f172a 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem 2.25rem;
+  overflow: hidden;
+  color: #f1f5f9;
+  box-shadow: var(--shadow-lg);
+}
+
+.insight-card-glow {
+  position: absolute;
+  inset: -40% -20% auto auto;
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(13, 148, 136, 0.35) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.insight-card-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.insight-card-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #14b8a6, #0891b2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(20, 184, 166, 0.35);
+}
+
+.insight-card-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #5eead4;
+}
+
+.insight-card-header h3 {
+  margin: 0.15rem 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.insight-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  position: relative;
+  z-index: 1;
+}
+
+.insight-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  animation: insight-item-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.insight-list li:nth-child(1) { animation-delay: 0.05s; }
+.insight-list li:nth-child(2) { animation-delay: 0.12s; }
+.insight-list li:nth-child(3) { animation-delay: 0.19s; }
+.insight-list li:nth-child(4) { animation-delay: 0.26s; }
+.insight-list li:nth-child(5) { animation-delay: 0.33s; }
+.insight-list li:nth-child(6) { animation-delay: 0.4s; }
+
+@keyframes insight-item-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.insight-list i {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #5eead4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.insight-empty {
+  position: relative;
+  z-index: 1;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  margin: 0;
+}

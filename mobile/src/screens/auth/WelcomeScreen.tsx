@@ -5,40 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { colors, font, radius, shadow, spacing } from '../../theme';
 import { AuthStackParamList } from '../../navigation/types';
+import { useI18n } from '../../i18n/I18nContext';
+import { LanguageSwitcher } from '../../i18n/LanguageSwitcher';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
 
 export default function WelcomeScreen({ navigation }: Props) {
+  const { t } = useI18n();
   return (
     <SafeAreaView style={styles.root}>
+      <LanguageSwitcher style={{ marginTop: spacing.md }} />
       <View style={styles.hero}>
         <Text style={styles.logo}>
           Moujtahid<Text style={{ color: colors.blue }}>.</Text>
         </Text>
         <Text style={styles.tagline}>
-          Gérez votre centre avec <Text style={{ color: colors.blue }}>précision.</Text>
+          {t('welcome.tagline')} <Text style={{ color: colors.blue }}>{t('welcome.taglineAccent')}</Text>
         </Text>
         <Text style={styles.sub}>
-          Planification, présences, paiements et analyses — dans votre poche.
+          {t('welcome.sub')}
         </Text>
       </View>
 
       <View style={styles.cards}>
         <RoleCard
           icon="business-outline"
-          title="Espace Directeur"
-          body="Tableau de bord, élèves, groupes, finances et analyses de votre centre."
+          title={t('welcome.directorTitle')}
+          body={t('welcome.directorBody')}
           onPress={() => navigation.navigate('AdminLogin')}
         />
         <RoleCard
           icon="people-outline"
-          title="Espace Parents"
-          body="Suivez les cours, présences, notes et paiements de votre enfant."
+          title={t('welcome.parentTitle')}
+          body={t('welcome.parentBody')}
           onPress={() => navigation.navigate('ParentLogin')}
         />
       </View>
 
-      <Text style={styles.footer}>Conçu au Maroc 🇲🇦 pour les centres éducatifs</Text>
+      <Text style={styles.footer}>{t('welcome.footer')}</Text>
     </SafeAreaView>
   );
 }

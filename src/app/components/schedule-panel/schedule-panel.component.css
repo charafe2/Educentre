@@ -75,7 +75,7 @@
   background-color: var(--bg-color);
 }
 
-/* Active item — highlighted row */
+/* Active item - highlighted row */
 .timeline-item.active {
   background-color: var(--accent-light);
   border-color: rgba(13, 148, 136, 0.2);
@@ -113,7 +113,7 @@
   color: var(--border-dark);
 }
 
-/* Active icon — pulsing ring */
+/* Active icon - pulsing ring */
 .timeline-icon.active {
   border-color: var(--accent);
   color: var(--accent);

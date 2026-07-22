@@ -2,13 +2,15 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, font, formatMAD, radius, spacing } from '../../theme';
-import { Card, EmptyState, SectionTitle } from '../../components/ui';
+import { Card, ChildSwitchBack, EmptyState, SectionTitle } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { DAYS_FR } from '../../data/demo';
 import { studentClasses, studentSessions } from '../../data/selectors';
 
 export default function CoursScreen() {
-  const { parentStudent: student } = useAuth();
+  const { parentStudent: student, parentChildren, switchChild } = useAuth();
+  const { t } = useI18n();
   if (!student) return null;
 
   const classesList = studentClasses(student);
@@ -16,14 +18,23 @@ export default function CoursScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: spacing.base }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Cours</Text>
+      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
+      <ScrollView
+        contentContainerStyle={[
+          { padding: spacing.base },
+          parentChildren.length > 1 && { paddingTop: spacing.xxl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={styles.title}>{t('cours.title')}</Text>
         <Text style={styles.subtitle}>
-          {classesList.length} cours suivi{classesList.length > 1 ? 's' : ''} par {student.firstName}
+          {classesList.length > 1
+            ? t('cours.countMany', { count: classesList.length, name: student.firstName })
+            : t('cours.countOne', { count: classesList.length, name: student.firstName })}
         </Text>
 
         {classesList.length === 0 ? (
-          <EmptyState icon="book-outline" title="Aucun cours" body="Les inscriptions apparaîtront ici." />
+          <EmptyState icon="book-outline" title={t('cours.empty')} body={t('cours.emptyBody')} />
         ) : (
           classesList.map(c => (
             <Card key={c.id} style={{ marginTop: spacing.md }}>
@@ -31,15 +42,15 @@ export default function CoursScreen() {
                 <View style={[styles.tag, { backgroundColor: c.bgColor }]}>
                   <Text style={[styles.tagText, { color: c.color }]}>{c.subject}</Text>
                 </View>
-                <Text style={styles.price}>{formatMAD(c.monthlyPrice)}/mois</Text>
+                <Text style={styles.price}>{formatMAD(c.monthlyPrice)}{t('cours.perMonth')}</Text>
               </View>
               <Text style={styles.className}>{c.name}</Text>
-              <Text style={styles.classMeta}>Avec {c.teacherName} · {c.roomName}</Text>
+              <Text style={styles.classMeta}>{t('cours.with')} {c.teacherName} · {c.roomName}</Text>
             </Card>
           ))
         )}
 
-        <SectionTitle title="Emploi du temps" />
+        <SectionTitle title={t('cours.schedule')} />
         <Card style={{ padding: 0 }}>
           {sessionsList.map((s, i) => (
             <View key={s.id} style={[styles.sessionRow, i > 0 && styles.rowBorder, s.isCancelled && { opacity: 0.5 }]}>
@@ -47,7 +58,7 @@ export default function CoursScreen() {
               <View style={[styles.dot, { backgroundColor: s.classe.color }]} />
               <Text style={styles.subject}>{s.classe.subject}</Text>
               <Text style={styles.time}>
-                {s.isCancelled ? 'Annulé' : `${s.startHour}h–${s.endHour}h`}
+                {s.isCancelled ? t('cours.cancelled') : `${s.startHour}h–${s.endHour}h`}
               </Text>
             </View>
           ))}

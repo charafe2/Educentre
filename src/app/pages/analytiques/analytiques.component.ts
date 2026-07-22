@@ -6,6 +6,8 @@ import { AnalyticsService } from '../../services/analytics.service';
 import { RetentionService } from '../../services/retention.service';
 import { ToastService } from '../../services/toast.service';
 import { PaginationMeta } from '../../models/api-response.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 const EMPTY_PAGINATION: PaginationMeta = {
   current_page: 1,
@@ -43,7 +45,7 @@ interface TrendPoint {
 
 @Component({
   selector: 'app-analytiques',
-  imports: [NgStyle, NgClass],
+  imports: [NgStyle, NgClass, TranslatePipe],
   templateUrl: './analytiques.component.html',
   styleUrl: './analytiques.component.css'
 })
@@ -51,12 +53,15 @@ export class AnalytiquesComponent {
   private analyticsService = inject(AnalyticsService);
   private retentionService = inject(RetentionService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
+  // `label` holds a translation key, resolved in the template via `| t`.
   periods: Array<{ key: AnalyticsPeriod; label: string }> = [
-    { key: 'last_3_months', label: '3 derniers mois' },
-    { key: 'last_6_months', label: '6 derniers mois' },
-    { key: 'this_year', label: 'Cette année' },
-    { key: 'last_year', label: 'Année dernière' },
+    { key: 'last_3_months', label: 'analytics.period3m' },
+    { key: 'last_6_months', label: 'analytics.period6m' },
+    { key: 'this_year', label: 'analytics.periodYear' },
+    { key: 'last_year', label: 'analytics.periodLastYear' },
   ];
   selectedPeriod = signal<AnalyticsPeriod>('last_6_months');
   report = signal<AnalyticsReport>(EMPTY_REPORT);
@@ -113,7 +118,7 @@ export class AnalytiquesComponent {
     const revenues = this.report().monthlyRevenues;
     const best = revenues.reduce((winner, item) => item.amount > winner.amount ? item : winner, revenues[0] ?? { month: '', amount: 0 });
     return {
-      label: best.month ? this.monthLabel(best.month, 'long') : '—',
+      label: best.month ? this.monthLabel(best.month, 'long') : '-',
       amount: best.amount,
     };
   });
@@ -158,7 +163,7 @@ export class AnalytiquesComponent {
     const trend = this.report().enrollmentTrend;
     const best = trend.reduce((winner, item) => item.total > winner.total ? item : winner, trend[0] ?? { month: '', total: 0 });
     return {
-      label: best.month ? this.monthLabel(best.month, 'long') : '—',
+      label: best.month ? this.monthLabel(best.month, 'long') : '-',
       total: best.total,
     };
   });
@@ -219,7 +224,7 @@ export class AnalytiquesComponent {
   }
 
   formatDhs(amount: number): string {
-    return `${amount.toLocaleString('fr-MA')} Dhs`;
+    return `${amount.toLocaleString('fr-MA')} ${this.t('common.currency')}`;
   }
 
   studentInitials(student: StudentAttritionRisk): string {
@@ -227,7 +232,7 @@ export class AnalytiquesComponent {
   }
 
   paymentStatusLabel(status: PaymentIssueStatus): string {
-    return status === 'overdue' ? 'En retard' : 'En attente';
+    return status === 'overdue' ? this.t('analytics.paymentOverdue') : this.t('analytics.paymentPending');
   }
 
   paymentPeriodLabel(period: string): string {
@@ -299,7 +304,7 @@ export class AnalytiquesComponent {
           this.report.set(response.data);
         }
       },
-      error: () => this.toast.show('Impossible de charger les analytiques', 'error'),
+      error: () => this.toast.show(this.t('analytics.loadReportError'), 'error'),
     });
   }
 
@@ -315,7 +320,7 @@ export class AnalytiquesComponent {
       },
       error: () => {
         this.riskLoading.set(false);
-        this.toast.show('Impossible de charger les risques de départ', 'error');
+        this.toast.show(this.t('analytics.loadRiskError'), 'error');
       },
     });
   }
@@ -341,11 +346,12 @@ export class AnalytiquesComponent {
   }
 
   private monthLabel(month: string, style: 'short' | 'long'): string {
-    return new Intl.DateTimeFormat('fr-MA', { month: style }).format(new Date(`${month}-01`));
+    const locale = { fr: 'fr-MA', ar: 'ar-MA', en: 'en-GB' }[this.i18n.lang()];
+    return new Intl.DateTimeFormat(locale, { month: style }).format(new Date(`${month}-01`));
   }
 
   private rangeLabel(page: PaginationMeta): string {
-    if (!page.total) return '0 resultat';
-    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+    if (!page.total) return this.t('students.noResult');
+    return this.t('students.rangeLabel', { from: page.from ?? 0, to: page.to ?? 0, total: page.total });
   }
 }

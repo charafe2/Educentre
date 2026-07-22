@@ -13,27 +13,29 @@ export const teachers: Teacher[] = [
 ];
 
 export const classes: Classe[] = [
-  { id: 1, name: 'Maths — 2ème Bac SM', subject: 'Mathématiques', level: '2ème Bac', teacherId: 1, teacherName: 'Karim Alaoui', roomId: 1, roomName: 'Salle 1', maxCapacity: 20, monthlyPrice: 350, enrolledStudentIds: [1, 2, 3, 4, 5], status: 'active', color: '#4568FF', bgColor: 'rgba(69,104,255,0.12)' },
-  { id: 2, name: 'Maths — 1ère Bac SE', subject: 'Mathématiques', level: '1ère Bac', teacherId: 1, teacherName: 'Karim Alaoui', roomId: 2, roomName: 'Salle 2', maxCapacity: 18, monthlyPrice: 320, enrolledStudentIds: [6, 7, 8], status: 'active', color: '#3588F2', bgColor: 'rgba(53,136,242,0.13)' },
-  { id: 3, name: 'Physique — 2ème Bac PC', subject: 'Physique-Chimie', level: '2ème Bac', teacherId: 2, teacherName: 'Salma Bennis', roomId: 1, roomName: 'Salle 1', maxCapacity: 20, monthlyPrice: 350, enrolledStudentIds: [1, 2, 9, 10], status: 'active', color: '#22B58D', bgColor: 'rgba(34,181,141,0.13)' },
-  { id: 4, name: 'Français — Tronc commun', subject: 'Français', level: 'Tronc commun', teacherId: 3, teacherName: 'Youssef Tazi', roomId: 3, roomName: 'Salle 3', maxCapacity: 24, monthlyPrice: 250, enrolledStudentIds: [11, 12, 6], status: 'active', color: '#9B55E6', bgColor: 'rgba(155,85,230,0.13)' },
-  { id: 5, name: 'Anglais — 3ème Collège', subject: 'Anglais', level: '3ème Collège', teacherId: 4, teacherName: 'Imane Chraibi', roomId: 2, roomName: 'Salle 2', maxCapacity: 16, monthlyPrice: 220, enrolledStudentIds: [3, 4, 11], status: 'active', color: '#ECA72C', bgColor: 'rgba(236,167,44,0.15)' },
-  { id: 6, name: 'Anglais — Bac International', subject: 'Anglais', level: '2ème Bac', teacherId: 4, teacherName: 'Imane Chraibi', roomId: 3, roomName: 'Salle 3', maxCapacity: 16, monthlyPrice: 280, enrolledStudentIds: [5, 9], status: 'active', color: '#FF6B9D', bgColor: 'rgba(255,107,157,0.12)' },
+  { id: 1, name: 'Maths - 2ème Bac SM', subject: 'Mathématiques', level: '2ème Bac', teacherId: 1, teacherName: 'Karim Alaoui', roomId: 1, roomName: 'Salle 1', maxCapacity: 20, monthlyPrice: 350, enrolledStudentIds: [1, 2, 3, 4, 5], status: 'active', color: '#4568FF', bgColor: 'rgba(69,104,255,0.12)' },
+  { id: 2, name: 'Maths - 1ère Bac SE', subject: 'Mathématiques', level: '1ère Bac', teacherId: 1, teacherName: 'Karim Alaoui', roomId: 2, roomName: 'Salle 2', maxCapacity: 18, monthlyPrice: 320, enrolledStudentIds: [6, 7, 8], status: 'active', color: '#3588F2', bgColor: 'rgba(53,136,242,0.13)' },
+  { id: 3, name: 'Physique - 2ème Bac PC', subject: 'Physique-Chimie', level: '2ème Bac', teacherId: 2, teacherName: 'Salma Bennis', roomId: 1, roomName: 'Salle 1', maxCapacity: 20, monthlyPrice: 350, enrolledStudentIds: [1, 2, 9, 10], status: 'active', color: '#22B58D', bgColor: 'rgba(34,181,141,0.13)' },
+  { id: 4, name: 'Français - Tronc commun', subject: 'Français', level: 'Tronc commun', teacherId: 3, teacherName: 'Youssef Tazi', roomId: 3, roomName: 'Salle 3', maxCapacity: 24, monthlyPrice: 250, enrolledStudentIds: [11, 12, 6], status: 'active', color: '#9B55E6', bgColor: 'rgba(155,85,230,0.13)' },
+  { id: 5, name: 'Anglais - 3ème Collège', subject: 'Anglais', level: '3ème Collège', teacherId: 4, teacherName: 'Imane Chraibi', roomId: 2, roomName: 'Salle 2', maxCapacity: 16, monthlyPrice: 220, enrolledStudentIds: [3, 4, 11], status: 'active', color: '#ECA72C', bgColor: 'rgba(236,167,44,0.15)' },
+  { id: 6, name: 'Anglais - Bac International', subject: 'Anglais', level: '2ème Bac', teacherId: 4, teacherName: 'Imane Chraibi', roomId: 3, roomName: 'Salle 3', maxCapacity: 16, monthlyPrice: 280, enrolledStudentIds: [5, 9], status: 'active', color: '#FF6B9D', bgColor: 'rgba(255,107,157,0.12)' },
 ];
 
+// Démo : Yasmine et Lina partagent le même numéro de parent (Ahmed El Fassi) pour
+// illustrer la sélection d'enfant façon Netflix quand un compte a plusieurs enfants.
 export const students: Student[] = [
-  { id: 1, code: 'ETU-001', firstName: 'Yasmine', lastName: 'El Fassi', birthDate: '2007-03-14', school: 'Lycée Mohammed V', level: '2ème Bac', enrolledClassIds: [1, 3], paymentStatus: 'paid', status: 'active', avatarColor: '#4568FF', parentName: 'Ahmed El Fassi', parentPhone: '0661 44 55 66', absenceCount: 1, totalSessions: 24, createdAt: '2025-09-02' },
-  { id: 2, code: 'ETU-002', firstName: 'Omar', lastName: 'Berrada', birthDate: '2007-07-22', school: 'Lycée Descartes', level: '2ème Bac', enrolledClassIds: [1, 3], paymentStatus: 'pending', status: 'active', avatarColor: '#22B58D', parentName: 'Nadia Berrada', parentPhone: '0662 33 44 55', absenceCount: 3, totalSessions: 24, createdAt: '2025-09-02' },
-  { id: 3, code: 'ETU-003', firstName: 'Lina', lastName: 'Cherkaoui', birthDate: '2009-01-08', school: 'Collège Anatole France', level: '3ème Collège', enrolledClassIds: [1, 5], paymentStatus: 'paid', status: 'active', avatarColor: '#9B55E6', parentName: 'Rachid Cherkaoui', parentPhone: '0663 22 33 44', absenceCount: 0, totalSessions: 20, createdAt: '2025-09-05' },
-  { id: 4, code: 'ETU-004', firstName: 'Adam', lastName: 'Benjelloun', birthDate: '2009-11-30', school: 'Groupe Scolaire Al Jabr', level: '3ème Collège', enrolledClassIds: [1, 5], paymentStatus: 'overdue', status: 'active', avatarColor: '#ECA72C', parentName: 'Samira Benjelloun', parentPhone: '0664 11 22 33', absenceCount: 5, totalSessions: 20, createdAt: '2025-09-05' },
-  { id: 5, code: 'ETU-005', firstName: 'Sofia', lastName: 'Amrani', birthDate: '2007-05-19', school: 'Lycée Lyautey', level: '2ème Bac', enrolledClassIds: [1, 6], paymentStatus: 'paid', status: 'active', avatarColor: '#FF6B9D', parentName: 'Karim Amrani', parentPhone: '0665 77 88 99', absenceCount: 2, totalSessions: 22, createdAt: '2025-09-08' },
-  { id: 6, code: 'ETU-006', firstName: 'Mehdi', lastName: 'Lahlou', birthDate: '2008-02-11', school: 'Lycée Al Khawarizmi', level: '1ère Bac', enrolledClassIds: [2, 4], paymentStatus: 'paid', status: 'active', avatarColor: '#3588F2', parentName: 'Fouad Lahlou', parentPhone: '0666 12 34 56', absenceCount: 1, totalSessions: 18, createdAt: '2025-09-10' },
-  { id: 7, code: 'ETU-007', firstName: 'Aya', lastName: 'Sekkat', birthDate: '2008-09-03', school: 'Lycée Ibn Toumert', level: '1ère Bac', enrolledClassIds: [2], paymentStatus: 'pending', status: 'active', avatarColor: '#36C8B3', parentName: 'Latifa Sekkat', parentPhone: '0667 98 76 54', absenceCount: 0, totalSessions: 12, createdAt: '2025-09-12' },
-  { id: 8, code: 'ETU-008', firstName: 'Rayan', lastName: 'Ouazzani', birthDate: '2008-12-25', school: 'Lycée Descartes', level: '1ère Bac', enrolledClassIds: [2], paymentStatus: 'overdue', status: 'active', avatarColor: '#FF9500', parentName: 'Hassan Ouazzani', parentPhone: '0668 55 44 33', absenceCount: 4, totalSessions: 12, createdAt: '2025-09-15' },
-  { id: 9, code: 'ETU-009', firstName: 'Nour', lastName: 'Bensaid', birthDate: '2007-04-17', school: 'Lycée Mohammed V', level: '2ème Bac', enrolledClassIds: [3, 6], paymentStatus: 'paid', status: 'active', avatarColor: '#4568FF', parentName: 'Amina Bensaid', parentPhone: '0669 11 33 55', absenceCount: 1, totalSessions: 22, createdAt: '2025-09-18' },
-  { id: 10, code: 'ETU-010', firstName: 'Ziad', lastName: 'Filali', birthDate: '2007-08-09', school: 'Lycée Al Khansaa', level: '2ème Bac', enrolledClassIds: [3], paymentStatus: 'paid', status: 'active', avatarColor: '#22B58D', parentName: 'Othmane Filali', parentPhone: '0670 22 44 66', absenceCount: 2, totalSessions: 14, createdAt: '2025-09-20' },
-  { id: 11, code: 'ETU-011', firstName: 'Kenza', lastName: 'Mansouri', birthDate: '2010-06-27', school: 'Collège Ibn Batouta', level: '3ème Collège', enrolledClassIds: [4, 5], paymentStatus: 'pending', status: 'active', avatarColor: '#9B55E6', parentName: 'Saïd Mansouri', parentPhone: '0671 33 55 77', absenceCount: 0, totalSessions: 16, createdAt: '2025-09-22' },
-  { id: 12, code: 'ETU-012', firstName: 'Ilyas', lastName: 'Naciri', birthDate: '2010-10-05', school: 'Collège Al Massira', level: 'Tronc commun', enrolledClassIds: [4], paymentStatus: 'paid', status: 'inactive', avatarColor: '#6E6E73', parentName: 'Khadija Naciri', parentPhone: '0672 44 66 88', absenceCount: 6, totalSessions: 10, createdAt: '2025-09-25' },
+  { id: 1, code: 'ETU-001', firstName: 'Yasmine', lastName: 'El Fassi', birthDate: '2007-03-14', school: 'Lycée Mohammed V', level: '2ème Bac', enrolledClassIds: [1, 3], paymentStatus: 'paid', status: 'active', avatarColor: '#4568FF', parentName: 'Ahmed El Fassi', parentPhone: '0661 44 55 66', parentPassword: 'parent2026', absenceCount: 1, totalSessions: 24, createdAt: '2025-09-02' },
+  { id: 2, code: 'ETU-002', firstName: 'Omar', lastName: 'Berrada', birthDate: '2007-07-22', school: 'Lycée Descartes', level: '2ème Bac', enrolledClassIds: [1, 3], paymentStatus: 'pending', status: 'active', avatarColor: '#22B58D', parentName: 'Nadia Berrada', parentPhone: '0662 33 44 55', parentPassword: 'parent2026', absenceCount: 3, totalSessions: 24, createdAt: '2025-09-02' },
+  { id: 3, code: 'ETU-003', firstName: 'Lina', lastName: 'Cherkaoui', birthDate: '2009-01-08', school: 'Collège Anatole France', level: '3ème Collège', enrolledClassIds: [1, 5], paymentStatus: 'paid', status: 'active', avatarColor: '#9B55E6', parentName: 'Ahmed El Fassi', parentPhone: '0661 44 55 66', parentPassword: 'parent2026', absenceCount: 0, totalSessions: 20, createdAt: '2025-09-05' },
+  { id: 4, code: 'ETU-004', firstName: 'Adam', lastName: 'Benjelloun', birthDate: '2009-11-30', school: 'Groupe Scolaire Al Jabr', level: '3ème Collège', enrolledClassIds: [1, 5], paymentStatus: 'overdue', status: 'active', avatarColor: '#ECA72C', parentName: 'Samira Benjelloun', parentPhone: '0664 11 22 33', parentPassword: 'parent2026', absenceCount: 5, totalSessions: 20, createdAt: '2025-09-05' },
+  { id: 5, code: 'ETU-005', firstName: 'Sofia', lastName: 'Amrani', birthDate: '2007-05-19', school: 'Lycée Lyautey', level: '2ème Bac', enrolledClassIds: [1, 6], paymentStatus: 'paid', status: 'active', avatarColor: '#FF6B9D', parentName: 'Karim Amrani', parentPhone: '0665 77 88 99', parentPassword: 'parent2026', absenceCount: 2, totalSessions: 22, createdAt: '2025-09-08' },
+  { id: 6, code: 'ETU-006', firstName: 'Mehdi', lastName: 'Lahlou', birthDate: '2008-02-11', school: 'Lycée Al Khawarizmi', level: '1ère Bac', enrolledClassIds: [2, 4], paymentStatus: 'paid', status: 'active', avatarColor: '#3588F2', parentName: 'Fouad Lahlou', parentPhone: '0666 12 34 56', parentPassword: 'parent2026', absenceCount: 1, totalSessions: 18, createdAt: '2025-09-10' },
+  { id: 7, code: 'ETU-007', firstName: 'Aya', lastName: 'Sekkat', birthDate: '2008-09-03', school: 'Lycée Ibn Toumert', level: '1ère Bac', enrolledClassIds: [2], paymentStatus: 'pending', status: 'active', avatarColor: '#36C8B3', parentName: 'Latifa Sekkat', parentPhone: '0667 98 76 54', parentPassword: 'parent2026', absenceCount: 0, totalSessions: 12, createdAt: '2025-09-12' },
+  { id: 8, code: 'ETU-008', firstName: 'Rayan', lastName: 'Ouazzani', birthDate: '2008-12-25', school: 'Lycée Descartes', level: '1ère Bac', enrolledClassIds: [2], paymentStatus: 'overdue', status: 'active', avatarColor: '#FF9500', parentName: 'Hassan Ouazzani', parentPhone: '0668 55 44 33', parentPassword: 'parent2026', absenceCount: 4, totalSessions: 12, createdAt: '2025-09-15' },
+  { id: 9, code: 'ETU-009', firstName: 'Nour', lastName: 'Bensaid', birthDate: '2007-04-17', school: 'Lycée Mohammed V', level: '2ème Bac', enrolledClassIds: [3, 6], paymentStatus: 'paid', status: 'active', avatarColor: '#4568FF', parentName: 'Amina Bensaid', parentPhone: '0669 11 33 55', parentPassword: 'parent2026', absenceCount: 1, totalSessions: 22, createdAt: '2025-09-18' },
+  { id: 10, code: 'ETU-010', firstName: 'Ziad', lastName: 'Filali', birthDate: '2007-08-09', school: 'Lycée Al Khansaa', level: '2ème Bac', enrolledClassIds: [3], paymentStatus: 'paid', status: 'active', avatarColor: '#22B58D', parentName: 'Othmane Filali', parentPhone: '0670 22 44 66', parentPassword: 'parent2026', absenceCount: 2, totalSessions: 14, createdAt: '2025-09-20' },
+  { id: 11, code: 'ETU-011', firstName: 'Kenza', lastName: 'Mansouri', birthDate: '2010-06-27', school: 'Collège Ibn Batouta', level: '3ème Collège', enrolledClassIds: [4, 5], paymentStatus: 'pending', status: 'active', avatarColor: '#9B55E6', parentName: 'Saïd Mansouri', parentPhone: '0671 33 55 77', parentPassword: 'parent2026', absenceCount: 0, totalSessions: 16, createdAt: '2025-09-22' },
+  { id: 12, code: 'ETU-012', firstName: 'Ilyas', lastName: 'Naciri', birthDate: '2010-10-05', school: 'Collège Al Massira', level: 'Tronc commun', enrolledClassIds: [4], paymentStatus: 'paid', status: 'inactive', avatarColor: '#6E6E73', parentName: 'Khadija Naciri', parentPhone: '0672 44 66 88', parentPassword: 'parent2026', absenceCount: 6, totalSessions: 10, createdAt: '2025-09-25' },
 ];
 
 export const groups: Group[] = [
@@ -102,18 +104,18 @@ export const attendance: Attendance[] = [
 ];
 
 export const grades: Grade[] = [
-  { id: 1, studentId: 1, classeId: 1, label: 'Contrôle 3 — Dérivées', score: 18, date: '2026-07-05' },
-  { id: 2, studentId: 1, classeId: 1, label: 'Contrôle 2 — Limites', score: 16.5, date: '2026-06-14' },
-  { id: 3, studentId: 1, classeId: 3, label: 'Devoir — Électricité', score: 15, date: '2026-06-28' },
-  { id: 4, studentId: 1, classeId: 3, label: 'Quiz — Mécanique', score: 17, date: '2026-07-10' },
-  { id: 5, studentId: 1, classeId: 1, label: 'Contrôle 1 — Suites', score: 14.5, date: '2026-05-20' },
-  { id: 6, studentId: 2, classeId: 1, label: 'Contrôle 3 — Dérivées', score: 12, date: '2026-07-05' },
-  { id: 7, studentId: 2, classeId: 3, label: 'Devoir — Électricité', score: 13.5, date: '2026-06-28' },
+  { id: 1, studentId: 1, classeId: 1, label: 'Contrôle 3 - Dérivées', score: 18, date: '2026-07-05' },
+  { id: 2, studentId: 1, classeId: 1, label: 'Contrôle 2 - Limites', score: 16.5, date: '2026-06-14' },
+  { id: 3, studentId: 1, classeId: 3, label: 'Devoir - Électricité', score: 15, date: '2026-06-28' },
+  { id: 4, studentId: 1, classeId: 3, label: 'Quiz - Mécanique', score: 17, date: '2026-07-10' },
+  { id: 5, studentId: 1, classeId: 1, label: 'Contrôle 1 - Suites', score: 14.5, date: '2026-05-20' },
+  { id: 6, studentId: 2, classeId: 1, label: 'Contrôle 3 - Dérivées', score: 12, date: '2026-07-05' },
+  { id: 7, studentId: 2, classeId: 3, label: 'Devoir - Électricité', score: 13.5, date: '2026-06-28' },
 ];
 
 export const DAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
-// Revenus mensuels (analytiques) — aligné sur la maquette du site (34,2K MAD)
+// Revenus mensuels (analytiques) - aligné sur la maquette du site (34,2K MAD)
 export const monthlyRevenue = [
   { month: 'Fév', amount: 26800 },
   { month: 'Mar', amount: 29400 },

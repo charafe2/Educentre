@@ -1,0 +1,66 @@
+<!-- Reusable inline SVG flags -->
+<ng-template #flag let-code>
+  @switch (code) {
+    @case ('fr') {
+      <svg class="flag" viewBox="0 0 3 2" aria-hidden="true">
+        <rect width="3" height="2" fill="#fff"/>
+        <rect width="1" height="2" fill="#0055A4"/>
+        <rect x="2" width="1" height="2" fill="#EF4135"/>
+      </svg>
+    }
+    @case ('ar') {
+      <svg class="flag" viewBox="0 0 3 2" aria-hidden="true">
+        <rect width="3" height="2" fill="#c1272d"/>
+        <path d="M1.5 0.5 L1.6176 0.8382 L1.9755 0.8455 L1.6902 1.0618 L1.7939 1.4045 L1.5 1.2 L1.2061 1.4045 L1.3098 1.0618 L1.0245 0.8455 L1.3824 0.8382 Z"
+              fill="none" stroke="#006233" stroke-width="0.08"/>
+      </svg>
+    }
+    @case ('en') {
+      <svg class="flag" viewBox="0 0 19 10" aria-hidden="true">
+        <rect width="19" height="10" fill="#fff"/>
+        <rect y="0" width="19" height="0.77" fill="#B22234"/>
+        <rect y="1.54" width="19" height="0.77" fill="#B22234"/>
+        <rect y="3.08" width="19" height="0.77" fill="#B22234"/>
+        <rect y="4.62" width="19" height="0.77" fill="#B22234"/>
+        <rect y="6.15" width="19" height="0.77" fill="#B22234"/>
+        <rect y="7.69" width="19" height="0.77" fill="#B22234"/>
+        <rect y="9.23" width="19" height="0.77" fill="#B22234"/>
+        <rect width="7.6" height="5.38" fill="#3C3B6E"/>
+      </svg>
+    }
+  }
+</ng-template>
+
+<div class="flag-switcher" (click)="$event.stopPropagation()">
+  <button
+    type="button"
+    class="flag-trigger"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="menu"
+    aria-label="Language"
+    (click)="toggle($event)"
+  >
+    <ng-container [ngTemplateOutlet]="flag" [ngTemplateOutletContext]="{ $implicit: current }"></ng-container>
+    <svg class="flag-caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+      <path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
+  @if (isOpen()) {
+    <div class="flag-menu" role="menu">
+      @for (lang of languages; track lang.code) {
+        <button
+          type="button"
+          class="flag-item"
+          role="menuitemradio"
+          [attr.aria-checked]="lang.code === current"
+          [class.active]="lang.code === current"
+          (click)="select(lang.code, $event)"
+        >
+          <ng-container [ngTemplateOutlet]="flag" [ngTemplateOutletContext]="{ $implicit: lang.code }"></ng-container>
+          <span>{{ lang.label }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>

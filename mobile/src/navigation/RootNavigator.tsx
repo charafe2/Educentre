@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../i18n/I18nContext';
 import {
   AdminStackParamList, AdminTabParamList, AuthStackParamList,
   MoreStackParamList, ParentTabParamList,
@@ -13,6 +14,7 @@ import {
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
 import ParentLoginScreen from '../screens/auth/ParentLoginScreen';
+import ChildSelectScreen from '../screens/auth/ChildSelectScreen';
 
 import DashboardScreen from '../screens/admin/DashboardScreen';
 import StudentsScreen from '../screens/admin/StudentsScreen';
@@ -161,6 +163,7 @@ function AdminTabsNavigator() {
 const ParentTabs = createBottomTabNavigator<ParentTabParamList>();
 
 function ParentTabsNavigator() {
+  const { t } = useI18n();
   return (
     <ParentTabs.Navigator
       screenOptions={{
@@ -174,31 +177,35 @@ function ParentTabsNavigator() {
       <ParentTabs.Screen
         name="Accueil" component={AccueilScreen}
         options={{
+          title: t('parentTabs.accueil'),
           tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Cours" component={CoursScreen}
         options={{
+          title: t('parentTabs.cours'),
           tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Presence" component={PresenceScreen}
         options={{
-          title: 'Présence',
+          title: t('parentTabs.presence'),
           tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done-outline" size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Notes" component={NotesScreen}
         options={{
+          title: t('parentTabs.notes'),
           tabBarIcon: ({ color, size }) => <Ionicons name="ribbon-outline" size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Paiements" component={PaiementsScreen}
         options={{
+          title: t('parentTabs.paiements'),
           tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} />,
         }}
       />
@@ -207,11 +214,13 @@ function ParentTabsNavigator() {
 }
 
 export default function RootNavigator() {
-  const { role } = useAuth();
+  const { role, parentChildren, parentStudent } = useAuth();
+  const needsChildSelection = role === 'parent' && parentChildren.length > 1 && !parentStudent;
+
   return (
     <NavigationContainer theme={theme}>
       {role === 'admin' ? <AdminTabsNavigator />
-        : role === 'parent' ? <ParentTabsNavigator />
+        : role === 'parent' ? (needsChildSelection ? <ChildSelectScreen /> : <ParentTabsNavigator />)
         : <AuthNavigator />}
     </NavigationContainer>
   );

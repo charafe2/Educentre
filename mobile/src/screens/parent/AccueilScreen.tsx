@@ -3,15 +3,17 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, radius, spacing } from '../../theme';
-import { Avatar, Card, SectionTitle, StatCard } from '../../components/ui';
+import { Avatar, Card, ChildSwitchBack, SectionTitle, StatCard } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { DAYS_FR } from '../../data/demo';
 import {
   formatDateFR, studentAttendance, studentAverage, studentGrades, studentSessions,
 } from '../../data/selectors';
 
 export default function AccueilScreen() {
-  const { parentStudent: student } = useAuth();
+  const { parentStudent: student, parentChildren, switchChild } = useAuth();
+  const { t } = useI18n();
   if (!student) return null;
 
   const average = studentAverage(student.id);
@@ -24,11 +26,18 @@ export default function AccueilScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: spacing.base }} showsVerticalScrollIndicator={false}>
+      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
+      <ScrollView
+        contentContainerStyle={[
+          { padding: spacing.base },
+          parentChildren.length > 1 && { paddingTop: spacing.xxl },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Avatar name={`${student.firstName} ${student.lastName}`} color={student.avatarColor} size={52} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.hello}>Suivi de</Text>
+            <Text style={styles.hello}>{t('accueil.following')}</Text>
             <Text style={styles.name}>{student.firstName} {student.lastName}</Text>
             <Text style={styles.school}>{student.school} · {student.level}</Text>
           </View>
@@ -36,22 +45,22 @@ export default function AccueilScreen() {
 
         <View style={styles.statsGrid}>
           <StatCard
-            label="Moyenne générale"
-            value={average !== null ? `${average}/20` : '—'}
-            hint={lastGrade ? `Dernière note : ${lastGrade.score}/20` : undefined}
+            label={t('accueil.average')}
+            value={average !== null ? `${average}/20` : '-'}
+            hint={lastGrade ? t('accueil.lastGrade', { score: lastGrade.score }) : undefined}
             hintColor={colors.success}
             icon="trending-up-outline" iconColor={colors.teal} iconBg={colors.tealBg}
           />
           <StatCard
-            label="Présence"
+            label={t('accueil.attendance')}
             value={`${presenceRatio}%`}
-            hint={`${student.absenceCount} absence${student.absenceCount > 1 ? 's' : ''}`}
+            hint={`${student.absenceCount} ${student.absenceCount > 1 ? t('common.absences') : t('common.absence')}`}
             hintColor={student.absenceCount > 2 ? colors.danger : colors.gray500}
             icon="checkmark-circle-outline" iconColor={colors.blue} iconBg={colors.blueLight}
           />
         </View>
 
-        <SectionTitle title="Prochains cours" />
+        <SectionTitle title={t('accueil.nextCourses')} />
         <Card style={{ padding: 0 }}>
           {nextSessions.map((s, i) => (
             <View key={s.id} style={[styles.sessionRow, i > 0 && styles.rowBorder]}>
@@ -71,7 +80,7 @@ export default function AccueilScreen() {
 
         {lastAttendance ? (
           <>
-            <SectionTitle title="Dernière activité" />
+            <SectionTitle title={t('accueil.lastActivity')} />
             <Card>
               <View style={styles.activityRow}>
                 <View style={[
@@ -86,9 +95,9 @@ export default function AccueilScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.activityTitle}>
-                    {lastAttendance.status === 'present' ? 'Présent(e) en cours'
-                      : lastAttendance.status === 'absent' ? 'Absence signalée'
-                      : lastAttendance.status === 'late' ? 'Arrivée en retard' : 'Absence excusée'}
+                    {lastAttendance.status === 'present' ? t('accueil.present')
+                      : lastAttendance.status === 'absent' ? t('accueil.absent')
+                      : lastAttendance.status === 'late' ? t('accueil.late') : t('accueil.excused')}
                   </Text>
                   <Text style={styles.activityMeta}>
                     {lastAttendance.classe?.subject} · {formatDateFR(lastAttendance.attendedOn)}
@@ -102,7 +111,7 @@ export default function AccueilScreen() {
         <View style={styles.secureNote}>
           <Ionicons name="shield-checkmark-outline" size={15} color={colors.gray500} />
           <Text style={styles.secureText}>
-            Vos données et celles de vos enfants sont 100% sécurisées.
+            {t('accueil.secure')}
           </Text>
         </View>
         <View style={{ height: spacing.xl }} />

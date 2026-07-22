@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
-import { parentAuthGuard } from './parent/parent-auth.guard';
 import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
 
 export const routes: Routes = [
@@ -25,6 +24,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+      { path: 'revue-mensuelle', loadComponent: () => import('./pages/monthly-review/monthly-review.component').then(m => m.MonthlyReviewComponent) },
       { path: 'etudiants', loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent) },
       { path: 'groupes', loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent) },
       { path: 'professeurs', loadComponent: () => import('./pages/professeurs/professeurs.component').then(m => m.ProfesseursComponent) },
@@ -51,29 +51,6 @@ export const routes: Routes = [
         children: [
           { path: 'dashboard', loadComponent: () => import('./superadmin/pages/overview/superadmin-overview.component').then(m => m.SuperadminOverviewComponent) },
           { path: 'clients',   loadComponent: () => import('./superadmin/pages/clients/superadmin-clients.component').then(m => m.SuperadminClientsComponent) },
-        ],
-      },
-    ],
-  },
-
-  {
-    path: 'parent',
-    children: [
-      { path: '', redirectTo: 'login', pathMatch: 'full' },
-      {
-        path: 'login',
-        loadComponent: () => import('./parent/pages/login/parent-login.component').then(m => m.ParentLoginComponent),
-      },
-      {
-        path: '',
-        loadComponent: () => import('./parent/layout/parent-layout.component').then(m => m.ParentLayoutComponent),
-        canActivate: [parentAuthGuard],
-        children: [
-          { path: 'accueil', loadComponent: () => import('./parent/pages/accueil/parent-accueil.component').then(m => m.ParentAccueilComponent) },
-          { path: 'cours', loadComponent: () => import('./parent/pages/cours/parent-cours.component').then(m => m.ParentCoursComponent) },
-          { path: 'paiements', loadComponent: () => import('./parent/pages/paiements/parent-paiements.component').then(m => m.ParentPaiementsComponent) },
-          { path: 'presence', loadComponent: () => import('./parent/pages/presence/parent-presence.component').then(m => m.ParentPresenceComponent) },
-          { path: 'notes', loadComponent: () => import('./parent/pages/notes/parent-notes.component').then(m => m.ParentNotesComponent) },
         ],
       },
     ],

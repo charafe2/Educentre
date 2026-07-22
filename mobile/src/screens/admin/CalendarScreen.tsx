@@ -61,7 +61,7 @@ export default function CalendarScreen() {
                 {s.isCancelled ? (
                   <View style={styles.cancelRow}>
                     <Ionicons name="close-circle" size={14} color={colors.danger} />
-                    <Text style={styles.cancelText}>Annulée — {s.cancelReason}</Text>
+                    <Text style={styles.cancelText}>Annulée - {s.cancelReason}</Text>
                   </View>
                 ) : null}
               </View>

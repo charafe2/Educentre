@@ -1,0 +1,14 @@
+<div class="slide-inner">
+  <div class="slide-header">
+    <div>
+      <h2 class="slide-title">{{ 'monthlyReview.tasks.title' | t }}</h2>
+      <p class="slide-subtitle">{{ 'monthlyReview.tasks.subtitle' | t }}</p>
+    </div>
+    <div class="slide-stat">
+      <span class="slide-stat-value">{{ completedCount() }}/{{ tasks.length }}</span>
+      <span class="slide-stat-label">{{ 'monthlyReview.tasks.done' | t }}</span>
+    </div>
+  </div>
+
+  <app-task-checklist [tasks]="tasks" [doneMap]="doneMap()" (toggle)="toggle($event)" />
+</div>

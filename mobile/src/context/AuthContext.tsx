@@ -5,12 +5,19 @@ import { AuthUser, Student } from '../types';
 
 type Role = 'admin' | 'parent' | null;
 
+const normalizePhone = (value: string) => value.replace(/\D/g, '');
+
 interface AuthState {
   role: Role;
   adminUser: AuthUser | null;
+  // Tous les enfants rattachés au compte parent connecté (fratrie incluse).
+  parentChildren: Student[];
+  // Enfant actuellement consulté ; null quand une sélection est nécessaire (plusieurs enfants).
   parentStudent: Student | null;
   loginAdmin: (email: string, password: string) => Promise<boolean>;
-  loginParent: (studentCode: string, phone: string) => boolean;
+  loginParent: (phone: string, password: string) => boolean;
+  selectChild: (studentId: number) => void;
+  switchChild: () => void;
   logout: () => void;
 }
 
@@ -19,6 +26,7 @@ const AuthContext = createContext<AuthState | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = useState<Role>(null);
   const [adminUser, setAdminUser] = useState<AuthUser | null>(null);
+  const [parentChildren, setParentChildren] = useState<Student[]>([]);
   const [parentStudent, setParentStudent] = useState<Student | null>(null);
 
   const loginAdmin = useCallback(async (email: string, password: string) => {
@@ -29,27 +37,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
-  // Accès parent (mode démo, comme le web) : code élève + téléphone du parent.
-  const loginParent = useCallback((studentCode: string, phone: string) => {
-    const code = studentCode.trim().toUpperCase();
-    const student = students.find(s => s.code === code)
-      ?? (code === '' ? students[0] : undefined);
-    if (!student || phone.trim().length < 6) return false;
-    setParentStudent(student);
+  // Accès parent (mode démo) : numéro de téléphone + mot de passe fournis par le centre.
+  // Un même numéro peut être rattaché à plusieurs enfants (fratrie) - sélection façon
+  // "Netflix" avant d'accéder au suivi, comme sur le web.
+  const loginParent = useCallback((phone: string, password: string) => {
+    const digits = normalizePhone(phone);
+    if (digits.length < 6 || password.trim().length === 0) return false;
+
+    const children = students.filter(
+      s => normalizePhone(s.parentPhone ?? '') === digits && s.parentPassword === password,
+    );
+    if (!children.length) return false;
+
+    setParentChildren(children);
+    setParentStudent(children.length === 1 ? children[0] : null);
     setRole('parent');
     return true;
+  }, []);
+
+  const selectChild = useCallback((studentId: number) => {
+    setParentStudent(parentChildren.find(s => s.id === studentId) ?? null);
+  }, [parentChildren]);
+
+  const switchChild = useCallback(() => {
+    setParentStudent(null);
   }, []);
 
   const logout = useCallback(() => {
     if (role === 'admin') void apiLogout();
     setRole(null);
     setAdminUser(null);
+    setParentChildren([]);
     setParentStudent(null);
   }, [role]);
 
   const value = useMemo(
-    () => ({ role, adminUser, parentStudent, loginAdmin, loginParent, logout }),
-    [role, adminUser, parentStudent, loginAdmin, loginParent, logout],
+    () => ({
+      role, adminUser, parentChildren, parentStudent,
+      loginAdmin, loginParent, selectChild, switchChild, logout,
+    }),
+    [role, adminUser, parentChildren, parentStudent, loginAdmin, loginParent, selectChild, switchChild, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

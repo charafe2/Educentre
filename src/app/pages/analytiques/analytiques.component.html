@@ -3,8 +3,8 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-title">
-      <h1>Analytiques</h1>
-      <p>Rapports de performance et statistiques</p>
+      <h1>{{ 'analytics.title' | t }}</h1>
+      <p>{{ 'analytics.subtitle' | t }}</p>
     </div>
     <div class="period-tabs">
       @for (p of periods; track p.key) {
@@ -12,7 +12,7 @@
           class="period-tab"
           [class.active]="selectedPeriod() === p.key"
           (click)="selectPeriod(p.key)"
-        >{{ p.label }}</button>
+        >{{ p.label | t }}</button>
       }
     </div>
   </div>
@@ -22,33 +22,33 @@
     <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-arrow-trend-up"></i></div>
       <div class="stat-info">
-        <span class="stat-value">{{ totalRevenue().toLocaleString('fr-MA') }} <small>Dhs</small></span>
-        <span class="stat-label">Revenus encaissés</span>
-        <span class="stat-trend up"><i class="fa-solid fa-circle-check"></i> Payé</span>
+        <span class="stat-value">{{ totalRevenue().toLocaleString('fr-MA') }} <small>{{ 'common.currency' | t }}</small></span>
+        <span class="stat-label">{{ 'analytics.revenueCollected' | t }}</span>
+        <span class="stat-trend up"><i class="fa-solid fa-circle-check"></i> {{ 'analytics.paid' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-blue">
       <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalStudents() }}</span>
-        <span class="stat-label">Étudiants inscrits</span>
-        <span class="stat-trend up"><i class="fa-solid fa-user-check"></i> {{ activeStudents() }} actifs</span>
+        <span class="stat-label">{{ 'analytics.enrolledStudents' | t }}</span>
+        <span class="stat-trend up"><i class="fa-solid fa-user-check"></i> {{ 'analytics.activeCount' | t: { count: activeStudents() } }}</span>
       </div>
     </div>
     <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-regular fa-calendar-check"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ attendanceRate() }}<small>%</small></span>
-        <span class="stat-label">Taux de présence</span>
-        <span class="stat-trend neutral"><i class="fa-solid fa-chart-bar"></i> Calculé</span>
+        <span class="stat-label">{{ 'analytics.attendanceRate' | t }}</span>
+        <span class="stat-trend neutral"><i class="fa-solid fa-chart-bar"></i> {{ 'analytics.calculated' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chalkboard-user"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeTeachers() }}</span>
-        <span class="stat-label">Professeurs actifs</span>
-        <span class="stat-trend neutral"><i class="fa-solid fa-star"></i> Équipe</span>
+        <span class="stat-label">{{ 'analytics.activeTeachers' | t }}</span>
+        <span class="stat-trend neutral"><i class="fa-solid fa-star"></i> {{ 'analytics.team' | t }}</span>
       </div>
     </div>
   </div>
@@ -56,23 +56,23 @@
   <!-- Payment Distribution Strip -->
   <div class="pay-dist-panel">
     <div class="pay-dist-header">
-      <span class="pay-dist-title"><i class="fa-solid fa-chart-pie"></i> Répartition des paiements</span>
-      <span class="pay-dist-total">{{ paymentDistribution().total }} étudiants</span>
+      <span class="pay-dist-title"><i class="fa-solid fa-chart-pie"></i> {{ 'analytics.paymentBreakdown' | t }}</span>
+      <span class="pay-dist-total">{{ 'analytics.studentsCount' | t: { count: paymentDistribution().total } }}</span>
     </div>
     <div class="pay-dist-segments">
       <div class="pay-segment seg-paid">
         <span class="seg-value">{{ paymentDistribution().paid.count }}</span>
-        <span class="seg-label">Payés</span>
+        <span class="seg-label">{{ 'analytics.paidPlural' | t }}</span>
         <span class="seg-pct">{{ paymentDistribution().paid.pct }}%</span>
       </div>
       <div class="pay-segment seg-pending">
         <span class="seg-value">{{ paymentDistribution().pending.count }}</span>
-        <span class="seg-label">En attente</span>
+        <span class="seg-label">{{ 'analytics.pending' | t }}</span>
         <span class="seg-pct">{{ paymentDistribution().pending.pct }}%</span>
       </div>
       <div class="pay-segment seg-overdue">
         <span class="seg-value">{{ paymentDistribution().overdue.count }}</span>
-        <span class="seg-label">Impayés</span>
+        <span class="seg-label">{{ 'analytics.overduePlural' | t }}</span>
         <span class="seg-pct">{{ paymentDistribution().overdue.pct }}%</span>
       </div>
     </div>
@@ -92,79 +92,79 @@
         </div>
         <div>
           <div class="risk-title-row">
-            <h2 id="risk-title">Risque de départ</h2>
+            <h2 id="risk-title">{{ 'analytics.riskTitle' | t }}</h2>
             @if (!riskLoading()) {
               <span class="risk-count" [class.clear]="riskCount() === 0">
-                {{ riskCount() }} {{ riskCount() === 1 ? 'élève détecté' : 'élèves détectés' }}
+                {{ (riskCount() === 1 ? 'analytics.riskDetectedOne' : 'analytics.riskDetectedMany') | t: { count: riskCount() } }}
               </span>
             }
           </div>
-          <p>Élèves à contacter en priorité selon leur assiduité et leur situation de paiement.</p>
+          <p>{{ 'analytics.riskDescription' | t }}</p>
         </div>
       </div>
       <div class="risk-rule">
         <i class="fa-solid fa-filter"></i>
-        <span>Absence ≥ {{ riskReport()?.rule?.absenceThreshold ?? 80 }}%</span>
+        <span>{{ 'analytics.absenceThreshold' | t: { value: riskReport()?.rule?.absenceThreshold ?? 80 } }}</span>
         <span class="rule-operator">+</span>
-        <span>paiement manqué ou retardé</span>
-        <small>{{ riskReport()?.rule?.lookbackDays ?? 15 }} derniers jours</small>
+        <span>{{ 'analytics.missedOrLatePayment' | t }}</span>
+        <small>{{ 'analytics.lastDays' | t: { count: riskReport()?.rule?.lookbackDays ?? 15 } }}</small>
       </div>
     </div>
 
     @if (riskLoading()) {
-      <div class="risk-skeleton" aria-label="Chargement des risques">
+      <div class="risk-skeleton" [attr.aria-label]="'analytics.loadingRisks' | t">
         <span></span><span></span><span></span>
       </div>
     } @else if (studentRisks().length === 0) {
       <div class="risk-empty">
         <i class="fa-solid fa-circle-check"></i>
         <div>
-          <strong>Aucun élève à risque détecté</strong>
-          <span>Les absences et paiements des 15 derniers jours ne signalent aucun départ probable.</span>
+          <strong>{{ 'analytics.noRiskTitle' | t }}</strong>
+          <span>{{ 'analytics.noRiskBody' | t }}</span>
         </div>
       </div>
     } @else {
       <div class="risk-table-wrapper">
         <table class="risk-table">
           <thead>
-            <tr><th>Élève</th><th>Absences</th><th>Situation de paiement</th><th>Contact parent</th></tr>
+            <tr><th>{{ 'analytics.colStudent' | t }}</th><th>{{ 'analytics.colAbsences' | t }}</th><th>{{ 'analytics.colPaymentSituation' | t }}</th><th>{{ 'analytics.colContactParent' | t }}</th></tr>
           </thead>
           <tbody>
             @for (student of studentRisks(); track student.studentUuid) {
               <tr>
-                <td data-label="Élève">
+                <td [attr.data-label]="'analytics.colStudent' | t">
                   <div class="risk-student">
                     <span class="risk-avatar">{{ studentInitials(student) }}</span>
                     <div><strong>{{ student.studentName }}</strong><span>{{ student.studentCode }}</span></div>
                   </div>
                 </td>
-                <td data-label="Absences">
+                <td [attr.data-label]="'analytics.colAbsences' | t">
                   <div class="absence-cell">
                     <div class="absence-value">
                       <strong>{{ student.absenceRate }}%</strong>
-                      <span>{{ student.absenceCount }}/{{ student.attendanceCount }} séances</span>
+                      <span>{{ 'analytics.sessionsCount' | t: { count: student.absenceCount + '/' + student.attendanceCount } }}</span>
                     </div>
                     <div class="risk-progress" aria-hidden="true"><span [style.width.%]="student.absenceRate"></span></div>
                   </div>
                 </td>
-                <td data-label="Paiement">
+                <td [attr.data-label]="'analytics.colPaymentSituation' | t">
                   <div class="payment-risk">
                     <span class="payment-risk-badge" [class.overdue]="student.paymentIssue.status === 'overdue'">
                       {{ paymentStatusLabel(student.paymentIssue.status) }}
                     </span>
-                    <span>{{ paymentPeriodLabel(student.paymentIssue.periodMonth) }} · {{ student.paymentIssue.amount.toLocaleString('fr-MA') }} Dhs</span>
+                    <span>{{ paymentPeriodLabel(student.paymentIssue.periodMonth) }} · {{ student.paymentIssue.amount.toLocaleString('fr-MA') }} {{ 'common.currency' | t }}</span>
                     @if (student.paymentIssue.issueCount > 1) {
-                      <small>{{ student.paymentIssue.issueCount }} paiements concernés</small>
+                      <small>{{ 'analytics.paymentsInvolved' | t: { count: student.paymentIssue.issueCount } }}</small>
                     }
                   </div>
                 </td>
-                <td data-label="Contact parent">
+                <td [attr.data-label]="'analytics.colContactParent' | t">
                   @if (student.parentPhone) {
                     <a class="contact-button" [href]="'tel:' + student.parentPhone">
                       <i class="fa-solid fa-phone"></i>{{ student.parentPhone }}
                     </a>
                   } @else {
-                    <span class="no-contact">Non renseigné</span>
+                    <span class="no-contact">{{ 'analytics.notProvided' | t }}</span>
                   }
                 </td>
               </tr>
@@ -178,7 +178,7 @@
           <button type="button" class="pagination-btn" [disabled]="riskPagination().current_page <= 1 || riskLoading()" (click)="previousRiskPage()">
             <i class="fa-solid fa-chevron-left"></i>
           </button>
-          <span class="pagination-page">Page {{ riskPagination().current_page }} / {{ riskPagination().last_page }}</span>
+          <span class="pagination-page">{{ 'analytics.page' | t: { current: riskPagination().current_page, total: riskPagination().last_page } }}</span>
           <button type="button" class="pagination-btn" [disabled]="riskPagination().current_page >= riskPagination().last_page || riskLoading()" (click)="nextRiskPage()">
             <i class="fa-solid fa-chevron-right"></i>
           </button>
@@ -195,16 +195,16 @@
       <div class="revenue-header">
         <div>
           <div class="panel-header-left">
-            <h3 class="panel-title">Revenus mensuels</h3>
-            <span class="chart-chip">Paiements encaissés</span>
+            <h3 class="panel-title">{{ 'analytics.monthlyRevenue' | t }}</h3>
+            <span class="chart-chip">{{ 'analytics.paymentsCollected' | t }}</span>
           </div>
-          <p>Suivi des revenus sur les {{ monthlyRevenues().length || 6 }} derniers mois</p>
+          <p>{{ 'analytics.revenueTrackedOver' | t: { count: monthlyRevenues().length || 6 } }}</p>
         </div>
         <div class="revenue-total">
           <span class="revenue-total-icon"><i class="fa-solid fa-chart-line"></i></span>
           <strong>{{ formatDhs(revenueLatest()) }}</strong>
           <small [class.negative]="revenueGrowthPct() < 0">
-            {{ revenueGrowthPct() >= 0 ? '+' : '' }}{{ revenueGrowthPct() }}% ce mois-ci
+            {{ revenueGrowthPct() >= 0 ? '+' : '' }}{{ revenueGrowthPct() }}% {{ 'analytics.thisMonth' | t }}
             <i class="fa-solid fa-arrow-trend-up"></i>
           </small>
         </div>
@@ -215,25 +215,25 @@
           <div class="revenue-kpi">
             <span class="revenue-kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
             <strong>{{ revenueDelta() >= 0 ? '+' : '' }}{{ formatDhs(revenueDelta()) }}</strong>
-            <span>encaissés</span>
-            <small>vs mois précédent</small>
+            <span>{{ 'analytics.collected' | t }}</span>
+            <small>{{ 'analytics.vsPreviousMonth' | t }}</small>
           </div>
           <div class="revenue-kpi">
             <span class="revenue-kpi-icon"><i class="fa-solid fa-star"></i></span>
             <strong>{{ bestRevenueMonth().label }}</strong>
-            <span>Meilleur mois</span>
+            <span>{{ 'analytics.bestMonth' | t }}</span>
             <small>{{ formatDhs(bestRevenueMonth().amount) }}</small>
           </div>
           <div class="revenue-kpi">
             <span class="revenue-kpi-icon"><i class="fa-solid fa-chart-simple"></i></span>
             <strong>{{ formatDhs(revenueAverage()) }}</strong>
-            <span>Moyenne mensuelle</span>
-            <small>sur {{ monthlyRevenues().length }} mois</small>
+            <span>{{ 'analytics.monthlyAverage' | t }}</span>
+            <small>{{ 'analytics.overMonths' | t: { count: monthlyRevenues().length } }}</small>
           </div>
         </div>
 
         <div class="revenue-chart" (mouseleave)="clearActiveRevenue()">
-          <div class="revenue-axis-title">Montant (Dhs)</div>
+          <div class="revenue-axis-title">{{ 'analytics.amountDh' | t }}</div>
           <div class="revenue-plot">
             <div class="revenue-y-axis">
               @for (label of revenueYAxisLabels(); track label) {
@@ -276,12 +276,12 @@
 
         <div class="revenue-note">
           <i class="fa-solid fa-circle-info"></i>
-          <span>Les revenus incluent tous les paiements validés.</span>
+          <span>{{ 'analytics.revenueNote' | t }}</span>
         </div>
       } @else {
         <div class="chart-empty">
           <i class="fa-solid fa-chart-column"></i>
-          <span>Aucune donnée de revenus</span>
+          <span>{{ 'analytics.noRevenueData' | t }}</span>
         </div>
       }
     </div>
@@ -290,8 +290,8 @@
     <div class="panel chart-panel">
       <div class="panel-header">
         <div class="panel-header-left">
-          <h3 class="panel-title">Présence par classe</h3>
-          <span class="chart-chip">Taux d'assiduité</span>
+          <h3 class="panel-title">{{ 'analytics.attendanceByClass' | t }}</h3>
+          <span class="chart-chip">{{ 'analytics.attendanceRateShort' | t }}</span>
         </div>
       </div>
       <div class="attendance-overview">
@@ -301,16 +301,16 @@
           [class.open]="attendanceExpanded()"
           [style.--attendance-rate]="attendanceAverage() + '%'"
           (click)="toggleAttendanceDetails()"
-          aria-label="Afficher le détail de présence par classe"
+          [attr.aria-label]="'analytics.detailBySubject' | t"
         >
           <span class="attendance-ring">
             <span class="attendance-ring-inner">
               <strong>{{ attendanceAverage() }}<small>%</small></strong>
-              <span>Taux moyen</span>
+              <span>{{ 'analytics.averageRate' | t }}</span>
             </span>
           </span>
           <span class="attendance-expand-hint">
-            Détail par matière
+            {{ 'analytics.detailBySubject' | t }}
             <i class="fa-solid fa-chevron-down"></i>
           </span>
         </button>
@@ -333,7 +333,7 @@
             } @empty {
               <div class="chart-empty chart-empty--compact">
                 <i class="fa-regular fa-calendar-check"></i>
-                <span>Aucune donnée de présence</span>
+                <span>{{ 'analytics.noAttendanceData' | t }}</span>
               </div>
             }
           </div>
@@ -341,7 +341,7 @@
 
         <div class="attendance-note">
           <i class="fa-solid fa-circle-info"></i>
-          <span>Le taux moyen résume les présences enregistrées sur les classes suivies.</span>
+          <span>{{ 'analytics.attendanceNote' | t }}</span>
         </div>
       </div>
     </div>
@@ -352,19 +352,19 @@
     <div class="trend-hero-header">
       <div>
         <div class="panel-header-left">
-          <h3 class="panel-title">Évolution des inscriptions</h3>
-          <span class="chart-chip">12 derniers mois</span>
+          <h3 class="panel-title">{{ 'analytics.enrollmentTrend' | t }}</h3>
+          <span class="chart-chip">{{ 'analytics.last12Months' | t }}</span>
         </div>
-        <p>Suivez l'évolution du nombre d'étudiants inscrits sur les 12 derniers mois.</p>
+        <p>{{ 'analytics.trendDescription' | t }}</p>
       </div>
       <div class="trend-total-card">
         <i class="fa-solid fa-arrow-trend-up"></i>
         <strong>{{ trendLatest() }}</strong>
-        <span>étudiants</span>
+        <span>{{ 'analytics.students' | t }}</span>
         <small [class.negative]="enrollmentGrowthPct() < 0">
-          {{ enrollmentGrowthPct() >= 0 ? '+' : '' }}{{ enrollmentGrowthPct() }}% vs 11 derniers mois
+          {{ enrollmentGrowthPct() >= 0 ? '+' : '' }}{{ enrollmentGrowthPct() }}% {{ 'analytics.vs11Months' | t }}
         </small>
-        <em>Croissance globale</em>
+        <em>{{ 'analytics.globalGrowth' | t }}</em>
       </div>
     </div>
 
@@ -372,25 +372,25 @@
       <div class="trend-kpi">
         <span class="trend-kpi-icon"><i class="fa-solid fa-user"></i></span>
         <strong>+{{ newStudentsThisMonth() }}</strong>
-        <span>nouveaux étudiants</span>
-        <small>Ce mois-ci</small>
+        <span>{{ 'analytics.newStudents' | t }}</span>
+        <small>{{ 'analytics.thisMonthShort' | t }}</small>
       </div>
       <div class="trend-kpi">
         <span class="trend-kpi-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
         <strong>{{ enrollmentGrowthPct() >= 0 ? '+' : '' }}{{ enrollmentGrowthPct() }}%</strong>
-        <span>croissance</span>
-        <small>vs 11 derniers mois</small>
+        <span>{{ 'analytics.growth' | t }}</span>
+        <small>{{ 'analytics.vs11Months' | t }}</small>
       </div>
       <div class="trend-kpi">
         <span class="trend-kpi-icon"><i class="fa-solid fa-star"></i></span>
         <strong>{{ bestEnrollmentMonth().label }}</strong>
-        <span>Meilleur mois</span>
-        <small>{{ bestEnrollmentMonth().total }} inscriptions</small>
+        <span>{{ 'analytics.bestMonth' | t }}</span>
+        <small>{{ 'analytics.enrollmentsCount' | t: { count: bestEnrollmentMonth().total } }}</small>
       </div>
     </div>
 
     <div class="trend-chart-shell">
-      <span class="trend-axis-title">Nombre d'étudiants</span>
+      <span class="trend-axis-title">{{ 'analytics.studentsCountAxis' | t }}</span>
       <svg viewBox="0 0 1000 260" class="trend-svg" preserveAspectRatio="none" (mouseleave)="clearActiveTrendPoint()">
         <defs>
           <linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">
@@ -443,7 +443,7 @@
           <g class="trend-tooltip" [attr.transform]="trendTooltipTransform(point)">
             <rect width="80" height="50" rx="7"></rect>
             <text x="40" y="19">{{ point.longMonthLabel }}</text>
-            <text x="40" y="37">{{ point.value }} étudiants</text>
+            <text x="40" y="37">{{ point.value }} {{ 'analytics.students' | t }}</text>
           </g>
         }
       </svg>
@@ -459,19 +459,19 @@
   <div class="panel">
     <div class="panel-header">
       <div class="panel-header-left">
-        <h3 class="panel-title">Performance des professeurs</h3>
-        <span class="chart-chip">{{ teacherPerformancePagination().total }} actifs</span>
+        <h3 class="panel-title">{{ 'analytics.teacherPerformance' | t }}</h3>
+        <span class="chart-chip">{{ 'analytics.activeCount' | t: { count: teacherPerformancePagination().total } }}</span>
       </div>
     </div>
     <div class="table-wrapper">
       <table>
         <thead>
           <tr>
-            <th>Professeur</th>
-            <th>Classes</th>
-            <th>Étudiants</th>
-            <th>Taux présence</th>
-            <th>Revenus encaissés</th>
+            <th>{{ 'analytics.colTeacher' | t }}</th>
+            <th>{{ 'analytics.colClasses' | t }}</th>
+            <th>{{ 'analytics.colStudents' | t }}</th>
+            <th>{{ 'analytics.colAttendanceRate' | t }}</th>
+            <th>{{ 'analytics.colRevenueCollected' | t }}</th>
           </tr>
         </thead>
         <tbody>
@@ -497,7 +497,7 @@
               </td>
               <td>
                 <span class="grade-badge grade-good">
-                  {{ t.collectedRevenue.toLocaleString('fr-MA') }} Dhs
+                  {{ t.collectedRevenue.toLocaleString('fr-MA') }} {{ 'common.currency' | t }}
                 </span>
               </td>
             </tr>
@@ -511,7 +511,7 @@
         <button type="button" class="pagination-btn" [disabled]="teacherPerformancePagination().current_page <= 1" (click)="previousTeacherPerformancePage()">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <span class="pagination-page">Page {{ teacherPerformancePagination().current_page }} / {{ teacherPerformancePagination().last_page }}</span>
+        <span class="pagination-page">{{ 'analytics.page' | t: { current: teacherPerformancePagination().current_page, total: teacherPerformancePagination().last_page } }}</span>
         <button type="button" class="pagination-btn" [disabled]="teacherPerformancePagination().current_page >= teacherPerformancePagination().last_page" (click)="nextTeacherPerformancePage()">
           <i class="fa-solid fa-chevron-right"></i>
         </button>

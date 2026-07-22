@@ -1,6 +1,7 @@
 /* ── Layout ─────────────────────────────────────────────── */
 .sidebar {
   width: 280px;
+  height: 100dvh;
   background-color: transparent;
   display: flex;
   flex-direction: column;
@@ -80,7 +81,7 @@
 }
 
 /* ── Nav ────────────────────────────────────────────────── */
-nav { flex: 1; overflow: hidden; }
+nav { flex: 1; overflow-y: auto; }
 
 .nav-menu {
   list-style: none;
@@ -191,11 +192,24 @@ nav { flex: 1; overflow: hidden; }
   pointer-events: none;
 }
 
+.shortcut-new {
+  color: var(--accent);
+  background: var(--accent-light);
+  border-color: transparent;
+  font-family: var(--font-ui);
+  text-transform: none;
+  font-weight: 700;
+}
+
 /* ── Footer / User card ─────────────────────────────────── */
 .sidebar-footer {
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid var(--border-color);
+  position: sticky;
+  bottom: 0;
+  background-color: var(--bg-color);
+  flex-shrink: 0;
 }
 
 .user-card {
@@ -278,53 +292,10 @@ nav { flex: 1; overflow: hidden; }
   color: var(--danger);
 }
 
-/* Parent portal link in footer */
-.parent-link {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.55rem 0.875rem;
-  margin-bottom: 0.5rem;
-  border-radius: var(--radius-md);
-  border: 1px solid rgba(13, 148, 136, 0.28);
-  color: var(--accent);
-  font-size: 0.825rem;
-  font-weight: 500;
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.parent-link:hover {
-  background: var(--accent-light);
-  color: #08766f;
-}
-
-.parent-link-ext {
-  margin-left: auto;
-  font-size: 0.65rem;
-  opacity: 0.6;
-  flex-shrink: 0;
-}
-
-.sidebar.collapsed .parent-link {
-  justify-content: center;
-  padding: 0.55rem;
-  border-radius: 50%;
-  width: 38px;
-  height: 38px;
-}
-
-.sidebar.collapsed .parent-link .nav-text,
-.sidebar.collapsed .parent-link .parent-link-ext {
-  display: none;
-}
-
 @media (max-width: 760px) {
   .sidebar { width: 68px; padding: 1rem 0.65rem; }
   .logo-row { justify-content: center; padding: 0; margin-bottom: 1rem; }
-  .toggle-btn, .logo-text, .nav-label, .nav-text, .shortcut, .user-info, .logout-btn, .parent-link-ext { display: none; }
-  .nav-item, .parent-link { justify-content: center; padding: 0.65rem; }
+  .toggle-btn, .logo-text, .nav-label, .nav-text, .shortcut, .user-info, .logout-btn { display: none; }
+  .nav-item { justify-content: center; padding: 0.65rem; }
   .sidebar-footer { padding-top: 0.75rem; }
 }

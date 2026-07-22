@@ -1,0 +1,31 @@
+<div class="carousel-viewport">
+  <button
+    class="carousel-arrow carousel-arrow-prev"
+    type="button"
+    [disabled]="!canGoPrev"
+    (click)="goPrev()"
+    aria-label="Section précédente"
+  >
+    <i class="fa-solid fa-chevron-left"></i>
+  </button>
+
+  <div
+    class="carousel-track"
+    [style.transform]="trackTransform"
+    (touchstart)="onTouchStart($event)"
+    (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd()"
+  >
+    <ng-content></ng-content>
+  </div>
+
+  <button
+    class="carousel-arrow carousel-arrow-next"
+    type="button"
+    [disabled]="!canGoNext"
+    (click)="goNext()"
+    aria-label="Section suivante"
+  >
+    <i class="fa-solid fa-chevron-right"></i>
+  </button>
+</div>

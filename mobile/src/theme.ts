@@ -1,4 +1,4 @@
-// Design tokens — mirror the Moujtahid web landing (src/app/pages/hero/hero.component.css)
+// Design tokens - mirror the Moujtahid web landing (src/app/pages/hero/hero.component.css)
 export const colors = {
   white: '#FFFFFF',
   black: '#1D1D1F',

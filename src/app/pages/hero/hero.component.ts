@@ -7,13 +7,14 @@ import { Meta, Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
+import { FlagLanguageSwitcherComponent } from '../../i18n/flag-language-switcher/flag-language-switcher.component';
 
 type IntroState = 'active' | 'dismissed';
 
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [RouterLink, VideoHeroComponent],
+  imports: [RouterLink, VideoHeroComponent, FlagLanguageSwitcherComponent],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css',
   encapsulation: ViewEncapsulation.None,
@@ -144,7 +145,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, reduced ? 80 : 520);
   }
 
-  // ─── 2. Smart nav — shadow + compact + active section ───────────
+  // ─── 2. Smart nav - shadow + compact + active section ───────────
   private _initNavBehavior() {
     const nav = document.getElementById('lp-nav');
     const hamburger = document.getElementById('lp-hamburger');
@@ -206,7 +207,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, { threshold: 0.15, rootMargin: '0px 0px -48px 0px' });
     this._observers.push(observer);
 
-    // Section headers — each child staggers independently
+    // Section headers - each child staggers independently
     document.querySelectorAll('.lp .section__header .reveal').forEach((el, i) => {
       (el as HTMLElement).dataset['delay'] = String(i * 100);
       observer.observe(el);
@@ -398,7 +399,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 950);
   }
 
-  // ─── 6. Number counter — easeOutExpo via RAF ────────────────────
+  // ─── 6. Number counter - easeOutExpo via RAF ────────────────────
   private _initCounters() {
     const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -510,7 +511,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, { signal: this._listenerAbort.signal });
   }
 
-  // ─── Demo form — validation handled natively via `required` ─────
+  // ─── Demo form - validation handled natively via `required` ─────
   onDemoSubmit(event: Event): void {
     event.preventDefault();
     if (this.demoSubmitting || this.demoSubmitted) return;

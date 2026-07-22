@@ -2,18 +2,18 @@
   <!-- Page Header -->
   <div class="page-header students-hero">
     <div class="page-title">
-      <span class="eyebrow">Gestion scolaire</span>
-      <h1>Étudiants</h1>
-      <p>Suivez les inscriptions, les groupes et les paiements depuis une vue claire et rapide.</p>
+      <span class="eyebrow">{{ 'students.eyebrow' | t }}</span>
+      <h1>{{ 'students.title' | t }}</h1>
+      <p>{{ 'students.subtitle' | t }}</p>
     </div>
     <div class="hero-actions">
       <div class="activity-pill">
         <span class="status-dot dot-active"></span>
-        {{ activeCount() }} profils actifs
+        {{ 'students.activeProfiles' | t: { count: activeCount() } }}
       </div>
       <button type="button" class="btn-primary" (click)="openAdd()">
         <i class="fa-solid fa-plus"></i>
-        Nouvel étudiant
+        {{ 'students.newStudent' | t }}
       </button>
     </div>
   </div>
@@ -24,32 +24,32 @@
       <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ totalCount() }}</span>
-        <span class="stat-label">Total étudiants</span>
-        <span class="stat-note">Profils enregistrés</span>
+        <span class="stat-label">{{ 'students.totalStudents' | t }}</span>
+        <span class="stat-note">{{ 'students.registeredProfiles' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-green">
       <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeCount() }}</span>
-        <span class="stat-label">Actifs</span>
-        <span class="stat-note">Suivi en cours</span>
+        <span class="stat-label">{{ 'students.active' | t }}</span>
+        <span class="stat-note">{{ 'students.tracking' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-orange">
       <div class="stat-icon icon-orange"><i class="fa-solid fa-user-xmark"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ inactiveCount() }}</span>
-        <span class="stat-label">Inactifs</span>
-        <span class="stat-note">À réactiver</span>
+        <span class="stat-label">{{ 'students.inactive' | t }}</span>
+        <span class="stat-note">{{ 'students.toReactivate' | t }}</span>
       </div>
     </div>
     <div class="stat-card stat-teal">
       <div class="stat-icon icon-teal"><i class="fa-solid fa-chart-line"></i></div>
       <div class="stat-info">
         <span class="stat-value">{{ activeRate() }}%</span>
-        <span class="stat-label">Taux actifs</span>
-        <span class="stat-note">{{ overduePaymentCount() }} impayé(s)</span>
+        <span class="stat-label">{{ 'students.activeRate' | t }}</span>
+        <span class="stat-note">{{ 'students.overdueCount' | t: { count: overduePaymentCount() } }}</span>
       </div>
     </div>
   </div>
@@ -58,8 +58,8 @@
   <div class="panel table-panel">
     <div class="panel-header">
       <div class="panel-header-left">
-        <h3 class="panel-title">Liste des étudiants</h3>
-        <span class="results-count">{{ resultCount() }} étudiant(s)</span>
+        <h3 class="panel-title">{{ 'students.listTitle' | t }}</h3>
+        <span class="results-count">{{ 'students.resultsCount' | t: { count: resultCount() } }}</span>
       </div>
       <div class="filter-bar">
         <div class="search-wrapper">
@@ -67,26 +67,26 @@
           <input
             type="text"
             class="search-input"
-            placeholder="Rechercher..."
+            [placeholder]="'students.searchPlaceholder' | t"
             (input)="onSearch($event)"
           />
         </div>
         <select class="filter-select" (change)="onLevelChange($event)">
-          <option value="">Tous les niveaux</option>
+          <option value="">{{ 'students.allLevels' | t }}</option>
           @for (level of levels; track level) {
             <option [value]="level">{{ level }}</option>
           }
         </select>
         <select class="filter-select" (change)="onStatusChange($event)">
-          <option value="">Tous les statuts</option>
-          <option value="active">Actifs</option>
-          <option value="inactive">Inactifs</option>
+          <option value="">{{ 'students.allStatuses' | t }}</option>
+          <option value="active">{{ 'students.statusActive' | t }}</option>
+          <option value="inactive">{{ 'students.statusInactive' | t }}</option>
         </select>
         <select class="filter-select filter-select-payment" (change)="onPaymentStatusChange($event)">
-          <option value="">Tous les paiements</option>
-          <option value="paid">Payé</option>
-          <option value="pending">En attente</option>
-          <option value="overdue">Impayé</option>
+          <option value="">{{ 'students.allPayments' | t }}</option>
+          <option value="paid">{{ 'students.paidLabel' | t }}</option>
+          <option value="pending">{{ 'students.pendingLabel' | t }}</option>
+          <option value="overdue">{{ 'students.overdueLabel' | t }}</option>
         </select>
       </div>
     </div>
@@ -95,12 +95,12 @@
       <table>
         <thead>
           <tr>
-            <th>Code</th>
-            <th>Étudiant</th>
-            <th>Niveau</th>
-            <th>Groupes</th>
-            <th>Paiement</th>
-            <th>Statut</th>
+            <th>{{ 'students.colCode' | t }}</th>
+            <th>{{ 'students.colStudent' | t }}</th>
+            <th>{{ 'students.colLevel' | t }}</th>
+            <th>{{ 'students.colGroups' | t }}</th>
+            <th>{{ 'students.colPayment' | t }}</th>
+            <th>{{ 'common.status' | t }}</th>
             <th></th>
           </tr>
         </thead>
@@ -129,7 +129,7 @@
                     </span>
                   }
                   @if (student.enrolledClassIds.length === 0) {
-                    <span class="text-muted">—</span>
+                    <span class="text-muted">-</span>
                   }
                 </div>
               </td>
@@ -142,7 +142,7 @@
               <td>
                 <div [ngClass]="['status-badge', student.status === 'active' ? 'status-active' : 'status-inactive']">
                   <span [ngClass]="['status-dot', student.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
-                  {{ student.status === 'active' ? 'Actif' : 'Inactif' }}
+                  {{ (student.status === 'active' ? 'common.active' : 'common.inactive') | t }}
                 </div>
               </td>
               <td>
@@ -151,20 +151,20 @@
                     <button
                       class="action-btn remind-btn"
                       [class.remind-overdue]="student.paymentStatus === 'overdue'"
-                      aria-label="Rappeler le parent"
-                      title="Rappeler le parent via WhatsApp"
+                      [attr.aria-label]="'students.remindParent' | t"
+                      [title]="'students.remindParentWhatsapp' | t"
                       (click)="rappeler(student)"
                     >
                       <i class="fa-brands fa-whatsapp"></i>
                     </button>
                   }
-                  <button class="action-btn" aria-label="Voir détails" title="Voir détails" (click)="showDetailPanel.set(student)">
+                  <button class="action-btn" [attr.aria-label]="'students.viewDetails' | t" [title]="'students.viewDetails' | t" (click)="showDetailPanel.set(student)">
                     <i class="fa-regular fa-eye"></i>
                   </button>
-                  <button class="action-btn" aria-label="Modifier" title="Modifier" (click)="openEdit(student)">
+                  <button class="action-btn" [attr.aria-label]="'common.edit' | t" [title]="'common.edit' | t" (click)="openEdit(student)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
-                  <button class="action-btn danger-btn" aria-label="Supprimer" title="Supprimer" (click)="deleteStudent(student)">
+                  <button class="action-btn danger-btn" [attr.aria-label]="'common.delete' | t" [title]="'common.delete' | t" (click)="deleteStudent(student)">
                     <i class="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
@@ -175,8 +175,8 @@
               <td colspan="7">
                 <div class="empty-state">
                   <i class="fa-solid fa-users empty-icon"></i>
-                  <p class="empty-title">Aucun étudiant trouvé</p>
-                  <p class="empty-sub">Modifiez vos filtres ou ajoutez un nouvel étudiant.</p>
+                  <p class="empty-title">{{ 'students.emptyTitle' | t }}</p>
+                  <p class="empty-sub">{{ 'students.emptySub' | t }}</p>
                 </div>
               </td>
             </tr>
@@ -191,7 +191,7 @@
         <button type="button" class="pagination-btn" [disabled]="pagination().current_page <= 1 || loadingPage()" (click)="previousPage()">
           <i class="fa-solid fa-chevron-left"></i>
         </button>
-        <span class="pagination-page">Page {{ pagination().current_page }} / {{ pagination().last_page }}</span>
+        <span class="pagination-page">{{ 'students.page' | t: { current: pagination().current_page, total: pagination().last_page } }}</span>
         <button type="button" class="pagination-btn" [disabled]="pagination().current_page >= pagination().last_page || loadingPage()" (click)="nextPage()">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
@@ -203,51 +203,51 @@
 <!-- Add/Edit Modal -->
 @if (showModal()) {
   <app-modal
-    [title]="editingStudent() ? 'Modifier l\'étudiant' : 'Nouvel étudiant'"
+    [title]="(editingStudent() ? 'students.modalEdit' : 'students.modalNew') | t"
     size="lg"
     (closed)="showModal.set(false)"
   >
     <div class="form-body">
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Prénom</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.firstName" placeholder="Prénom" />
+          <label class="form-label">{{ 'students.firstName' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.firstName" [placeholder]="'students.firstName' | t" />
         </div>
         <div class="form-group">
-          <label class="form-label">Nom</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.lastName" placeholder="Nom de famille" />
+          <label class="form-label">{{ 'students.lastName' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.lastName" [placeholder]="'students.lastNamePlaceholder' | t" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Date de naissance</label>
+          <label class="form-label">{{ 'students.birthDate' | t }}</label>
           <input class="form-input" type="date" [(ngModel)]="formData.birthDate" />
         </div>
         <div class="form-group">
-          <label class="form-label">École</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.school" placeholder="Nom de l'école" />
+          <label class="form-label">{{ 'students.school' | t }}</label>
+          <input class="form-input" type="text" [(ngModel)]="formData.school" [placeholder]="'students.schoolPlaceholder' | t" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Niveau</label>
+          <label class="form-label">{{ 'students.level' | t }}</label>
           <select class="form-select" [(ngModel)]="formData.level" (ngModelChange)="onFormLevelChange($event)">
-            <option value="">Choisir un niveau</option>
+            <option value="">{{ 'students.chooseLevel' | t }}</option>
             @for (level of levels; track level) {
               <option [value]="level">{{ level }}</option>
             }
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Statut</label>
+          <label class="form-label">{{ 'common.status' | t }}</label>
           <select class="form-select" [(ngModel)]="formData.status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'common.active' | t }}</option>
+            <option value="inactive">{{ 'common.inactive' | t }}</option>
           </select>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Classes inscrites</label>
+        <label class="form-label">{{ 'students.enrolledClasses' | t }}</label>
         @if (formData.level) {
           <div class="classes-checkbox-grid">
             @for (cls of filteredAvailableClasses; track cls.id) {
@@ -260,37 +260,37 @@
                 <span class="class-color-dot" [style.background-color]="cls.color"></span>
                 <span class="class-checkbox-label">
                   <span class="class-checkbox-name">{{ cls.name }}</span>
-                  <span class="class-checkbox-price">{{ cls.monthlyPrice }} Dhs/mois</span>
+                  <span class="class-checkbox-price">{{ 'students.pricePerMonth' | t: { price: cls.monthlyPrice } }}</span>
                 </span>
               </label>
             } @empty {
-              <div class="classes-empty">Aucune classe disponible pour ce niveau.</div>
+              <div class="classes-empty">{{ 'students.noClassForLevel' | t }}</div>
             }
           </div>
         } @else {
-          <div class="classes-empty">Choisissez d'abord un niveau pour afficher les classes.</div>
+          <div class="classes-empty">{{ 'students.chooseLevelFirst' | t }}</div>
         }
       </div>
       <div class="form-group">
-        <label class="form-label">Nom du parent</label>
-        <input class="form-input" type="text" [(ngModel)]="formData.parentName" placeholder="Nom du parent / tuteur" />
+        <label class="form-label">{{ 'students.parentName' | t }}</label>
+        <input class="form-input" type="text" [(ngModel)]="formData.parentName" [placeholder]="'students.parentNamePlaceholder' | t" />
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Téléphone parent</label>
+          <label class="form-label">{{ 'students.parentPhone' | t }}</label>
           <input class="form-input" type="tel" [(ngModel)]="formData.parentPhone" placeholder="0661234567" />
         </div>
         <div class="form-group">
-          <label class="form-label">WhatsApp parent</label>
+          <label class="form-label">{{ 'students.parentWhatsapp' | t }}</label>
           <input class="form-input" type="tel" [(ngModel)]="formData.parentWhatsapp" placeholder="0661234567" />
         </div>
       </div>
     </div>
     <div class="form-footer">
-      <button class="btn-secondary" (click)="showModal.set(false)">Annuler</button>
+      <button class="btn-secondary" (click)="showModal.set(false)">{{ 'common.cancel' | t }}</button>
       <button class="btn-primary" (click)="submit()">
         <i class="fa-solid fa-floppy-disk"></i>
-        {{ editingStudent() ? 'Enregistrer' : 'Ajouter' }}
+        {{ (editingStudent() ? 'common.save' : 'common.add') | t }}
       </button>
     </div>
   </app-modal>
@@ -300,7 +300,7 @@
 @if (showDetailPanel(); as s) {
   <div class="detail-panel">
     <div class="detail-panel-header">
-      <h3 class="detail-panel-title">Profil étudiant</h3>
+      <h3 class="detail-panel-title">{{ 'students.profileTitle' | t }}</h3>
       <button class="modal-close" (click)="showDetailPanel.set(null)">
         <i class="fa-solid fa-xmark"></i>
       </button>
@@ -316,42 +316,42 @@
           <div class="detail-profile-code">{{ s.code }}</div>
           <div [ngClass]="['status-badge', s.status === 'active' ? 'status-active' : 'status-inactive']" class="detail-status-badge">
             <span [ngClass]="['status-dot', s.status === 'active' ? 'dot-active' : 'dot-inactive']"></span>
-            {{ s.status === 'active' ? 'Actif' : 'Inactif' }}
+            {{ (s.status === 'active' ? 'common.active' : 'common.inactive') | t }}
           </div>
         </div>
       </div>
 
       <div>
-        <div class="detail-section-title">Informations</div>
-        <div class="detail-info-row"><span>École</span><span>{{ s.school }}</span></div>
-        <div class="detail-info-row"><span>Niveau</span><span>{{ s.level }}</span></div>
-        <div class="detail-info-row"><span>Naissance</span><span>{{ s.birthDate || '—' }}</span></div>
+        <div class="detail-section-title">{{ 'students.infoSection' | t }}</div>
+        <div class="detail-info-row"><span>{{ 'students.school' | t }}</span><span>{{ s.school }}</span></div>
+        <div class="detail-info-row"><span>{{ 'students.level' | t }}</span><span>{{ s.level }}</span></div>
+        <div class="detail-info-row"><span>{{ 'students.birth' | t }}</span><span>{{ s.birthDate || '-' }}</span></div>
       </div>
 
       @if (s.parentName) {
         <div>
-          <div class="detail-section-title">Contact parent</div>
-          <div class="detail-info-row"><span>Nom</span><span>{{ s.parentName }}</span></div>
-          <div class="detail-info-row"><span>Tél.</span><span>{{ s.parentPhone }}</span></div>
-          <div class="detail-info-row"><span>WhatsApp</span><span>{{ s.parentWhatsapp }}</span></div>
+          <div class="detail-section-title">{{ 'students.parentContact' | t }}</div>
+          <div class="detail-info-row"><span>{{ 'students.parentNameField' | t }}</span><span>{{ s.parentName }}</span></div>
+          <div class="detail-info-row"><span>{{ 'students.phoneField' | t }}</span><span>{{ s.parentPhone }}</span></div>
+          <div class="detail-info-row"><span>{{ 'students.parentWhatsapp' | t }}</span><span>{{ s.parentWhatsapp }}</span></div>
         </div>
       }
 
       <div>
-        <div class="detail-section-title">Classes inscrites ({{ s.enrolledClassIds.length }})</div>
+        <div class="detail-section-title">{{ 'students.enrolledClassesCount' | t: { count: s.enrolledClassIds.length } }}</div>
         @for (cls of getEnrolledClasses(s); track cls.id) {
           <div class="detail-class-item" [style.border-left-color]="cls.color">
             <span class="detail-class-name">{{ cls.name }}</span>
-            <span class="detail-class-price">{{ cls.monthlyPrice }} Dhs/mois</span>
+            <span class="detail-class-price">{{ 'students.pricePerMonth' | t: { price: cls.monthlyPrice } }}</span>
           </div>
         }
         @if (s.enrolledClassIds.length === 0) {
-          <p class="detail-empty-text">Aucune classe inscrite</p>
+          <p class="detail-empty-text">{{ 'students.noEnrolledClass' | t }}</p>
         }
       </div>
 
       <div>
-        <div class="detail-section-title">Groupes ({{ getStudentGroups(s).length }})</div>
+        <div class="detail-section-title">{{ 'students.groupsCount' | t: { count: getStudentGroups(s).length } }}</div>
         @for (g of getStudentGroups(s); track g.classe.id) {
           <div class="detail-group-item" [style.border-left-color]="g.classe.color">
             <div class="detail-group-left">
@@ -359,17 +359,17 @@
               <span class="detail-group-sub">{{ g.classe.subject }} · {{ g.classe.level }}</span>
             </div>
             <span class="detail-group-pill" [style.background]="g.classe.bgColor" [style.color]="g.classe.color">
-              Groupe {{ g.group.groupNumber }}
+              {{ 'students.groupLabel' | t: { number: g.group.groupNumber } }}
             </span>
           </div>
         }
         @if (getStudentGroups(s).length === 0) {
-          <p class="detail-empty-text">Aucun groupe assigné</p>
+          <p class="detail-empty-text">{{ 'students.noGroupAssigned' | t }}</p>
         }
       </div>
 
       <div>
-        <div class="detail-section-title">Paiement</div>
+        <div class="detail-section-title">{{ 'students.payment' | t }}</div>
         <div [ngClass]="['status-badge', 'status-' + s.paymentStatus]">
           <span [ngClass]="['status-dot', 'dot-' + s.paymentStatus]"></span>
           {{ getPaymentLabel(s.paymentStatus) }}
@@ -380,14 +380,14 @@
         @if (s.paymentStatus === 'pending' || s.paymentStatus === 'overdue') {
           <button class="btn-remind" (click)="rappeler(s)">
             <i class="fa-brands fa-whatsapp"></i>
-            Rappeler le parent
+            {{ 'students.remindParent' | t }}
           </button>
         }
         <button class="btn-primary" (click)="openEdit(s); showDetailPanel.set(null)">
-          <i class="fa-regular fa-pen-to-square"></i> Modifier
+          <i class="fa-regular fa-pen-to-square"></i> {{ 'common.edit' | t }}
         </button>
         <button class="btn-danger" (click)="deleteStudent(s)">
-          <i class="fa-regular fa-trash-can"></i> Supprimer
+          <i class="fa-regular fa-trash-can"></i> {{ 'common.delete' | t }}
         </button>
       </div>
 

@@ -41,7 +41,7 @@ export default function StudentDetailScreen({ route }: Props) {
         <View style={styles.contactRow}>
           <Ionicons name="call-outline" size={14} color={colors.gray500} />
           <Text style={styles.contact}>
-            {student.parentName} — {student.parentPhone}
+            {student.parentName} - {student.parentPhone}
           </Text>
         </View>
       </Card>
@@ -53,7 +53,7 @@ export default function StudentDetailScreen({ route }: Props) {
           <ProgressBar ratio={presenceRatio} color={presenceRatio > 0.85 ? colors.success : colors.warning} />
         </Card>
         <Card style={styles.kpi}>
-          <Text style={styles.kpiValue}>{average !== null ? `${average}/20` : '—'}</Text>
+          <Text style={styles.kpiValue}>{average !== null ? `${average}/20` : '-'}</Text>
           <Text style={styles.kpiLabel}>Moyenne générale</Text>
           <ProgressBar ratio={average !== null ? average / 20 : 0} color={colors.blue} />
         </Card>

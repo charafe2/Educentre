@@ -42,7 +42,7 @@ export function sessionsOfDay(day: number): (Session & { classe: Classe })[] {
     .sort((a, b) => a.startHour - b.startHour);
 }
 
-// Score de risque simplifié — même esprit que la section "risque d'abandon" du site :
+// Score de risque simplifié - même esprit que la section "risque d'abandon" du site :
 // absences, retards de paiement et inactivité pèsent sur le score.
 export function riskStudents(): { student: Student; score: number }[] {
   return students

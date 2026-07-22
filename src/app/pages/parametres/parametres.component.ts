@@ -6,13 +6,17 @@ import { CentreService } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
+import { SubjectsService } from '../../services/subjects.service';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../auth/auth.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';
+import { Subject } from '../../models/subject.model';
 import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../../services/receipt-customization.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 interface User {
   id: number;
@@ -25,7 +29,7 @@ interface User {
 
 @Component({
   selector: 'app-parametres',
-  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent],
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe],
   templateUrl: './parametres.component.html',
   styleUrl: './parametres.component.css'
 })
@@ -34,22 +38,25 @@ export class ParametresComponent implements OnInit {
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
+  private subjectsService = inject(SubjectsService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private auth = inject(AuthService);
   private receiptCustomization = inject(ReceiptCustomizationService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   activeTab = signal('centre');
 
+  // `label` holds a translation key, resolved in the template via `| t`.
   tabs = [
-    { id: 'centre', label: 'Informations du centre', icon: 'fa-solid fa-building' },
-    { id: 'receipt', label: 'Personnalisation du reçu', icon: 'fa-solid fa-receipt' },
-    { id: 'matieres', label: 'Matières & Classes', icon: 'fa-solid fa-book-open' },
-    { id: 'users', label: 'Utilisateurs', icon: 'fa-solid fa-users' },
-    { id: 'securite', label: 'Sécurité', icon: 'fa-solid fa-lock' },
-    { id: 'subscription', label: 'Abonnement', icon: 'fa-solid fa-credit-card' },
-    { id: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
-    { id: 'integrations', label: 'Intégrations', icon: 'fa-solid fa-plug' },
+    { id: 'centre', label: 'settings.tabCentre', icon: 'fa-solid fa-building' },
+    { id: 'receipt', label: 'settings.tabReceipt', icon: 'fa-solid fa-receipt' },
+    { id: 'matieres', label: 'settings.tabMatieres', icon: 'fa-solid fa-book-open' },
+    { id: 'users', label: 'settings.tabUsers', icon: 'fa-solid fa-users' },
+    { id: 'securite', label: 'settings.tabSecurity', icon: 'fa-solid fa-lock' },
+    { id: 'subscription', label: 'settings.tabSubscription', icon: 'fa-solid fa-credit-card' },
+    { id: 'notifications', label: 'settings.tabNotifications', icon: 'fa-solid fa-bell' },
   ];
 
   centreForm = { ...this.centreService.centreInfo() };
@@ -60,24 +67,40 @@ export class ParametresComponent implements OnInit {
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique'];
 
   users = signal<User[]>([
-    { id: 1, name: 'Ahmed Berrada', email: 'a.berrada@centre.ma', role: 'Administrateur', roleType: 'admin', lastLogin: '08/05/2025' },
-    { id: 2, name: 'Rachid Mansouri', email: 'r.mansouri@centre.ma', role: 'Professeur', roleType: 'teacher', lastLogin: '07/05/2025' },
-    { id: 3, name: 'Samira Bouazza', email: 's.bouazza@centre.ma', role: 'Professeur', roleType: 'teacher', lastLogin: '08/05/2025' },
-    { id: 4, name: 'Khadija Alami', email: 'k.alami@centre.ma', role: 'Gestionnaire', roleType: 'manager', lastLogin: '06/05/2025' },
-    { id: 5, name: 'Younes Tazi', email: 'y.tazi@centre.ma', role: 'Comptable', roleType: 'accountant', lastLogin: '05/05/2025' },
+    { id: 1, name: 'Ahmed Berrada', email: 'a.berrada@centre.ma', role: this.roleLabel('admin'), roleType: 'admin', lastLogin: '08/05/2025' },
+    { id: 2, name: 'Rachid Mansouri', email: 'r.mansouri@centre.ma', role: this.roleLabel('teacher'), roleType: 'teacher', lastLogin: '07/05/2025' },
+    { id: 3, name: 'Samira Bouazza', email: 's.bouazza@centre.ma', role: this.roleLabel('teacher'), roleType: 'teacher', lastLogin: '08/05/2025' },
+    { id: 4, name: 'Khadija Alami', email: 'k.alami@centre.ma', role: this.roleLabel('manager'), roleType: 'manager', lastLogin: '06/05/2025' },
+    { id: 5, name: 'Younes Tazi', email: 'y.tazi@centre.ma', role: this.roleLabel('accountant'), roleType: 'accountant', lastLogin: '05/05/2025' },
   ]);
 
   showUserModal = signal(false);
-  userForm = { name: '', email: '', role: 'Professeur', roleType: 'teacher' as User['roleType'] };
+  userForm = { name: '', email: '', role: this.roleLabel('teacher'), roleType: 'teacher' as User['roleType'] };
 
+  roleLabel(type: User['roleType']): string {
+    const key = {
+      admin: 'settings.roleAdmin',
+      teacher: 'settings.roleTeacher',
+      manager: 'settings.roleManager',
+      accountant: 'settings.roleAccountant',
+    }[type];
+    return this.t(key);
+  }
+
+  onUserRoleTypeChange(roleType: User['roleType']): void {
+    this.userForm.roleType = roleType;
+    this.userForm.role = this.roleLabel(roleType);
+  }
+
+  // `label` holds a translation key, resolved in the template via `| t`.
   subscriptionFeatures = [
-    { label: 'Étudiants illimités', included: true },
-    { label: 'Professeurs illimités', included: true },
-    { label: 'Envoi WhatsApp automatique', included: true },
-    { label: 'Rapports & Analytiques', included: true },
-    { label: 'Sauvegarde cloud', included: true },
-    { label: 'Support prioritaire', included: false },
-    { label: 'API personnalisée', included: false },
+    { label: 'settings.featureUnlimitedStudents', included: true },
+    { label: 'settings.featureUnlimitedTeachers', included: true },
+    { label: 'settings.featureAutoWhatsapp', included: true },
+    { label: 'settings.featureReportsAnalytics', included: true },
+    { label: 'settings.featureCloudBackup', included: true },
+    { label: 'settings.featurePrioritySupport', included: false },
+    { label: 'settings.featureCustomApi', included: false },
   ];
 
   notifSettings = {
@@ -101,9 +124,9 @@ export class ParametresComponent implements OnInit {
     this.saving.set(true);
     try {
       await this.centreService.update({ ...this.centreForm });
-      this.toast.show('Informations du centre enregistrées');
+      this.toast.show(this.t('settings.toastCentreSaved'));
     } catch (err: unknown) {
-      const message = extractValidationError(err);
+      const message = extractValidationError(err, this.t('settings.saveError'));
       this.toast.show(message);
     } finally {
       this.saving.set(false);
@@ -137,16 +160,16 @@ export class ParametresComponent implements OnInit {
   saveReceiptSettings(): void {
     this.receiptCustomization.save({ ...this.receiptForm });
     this.receiptForm = { ...this.receiptCustomization.settings() };
-    this.toast.show('Personnalisation du reçu enregistrée');
+    this.toast.show(this.t('settings.toastReceiptSaved'));
   }
 
   resetReceiptSettings(): void {
     this.receiptForm = this.receiptCustomization.reset();
-    this.toast.show('Modèle de reçu réinitialisé', 'info');
+    this.toast.show(this.t('settings.toastReceiptReset'), 'info');
   }
 
   openAddUser(): void {
-    this.userForm = { name: '', email: '', role: 'Professeur', roleType: 'teacher' };
+    this.userForm = { name: '', email: '', role: this.roleLabel('teacher'), roleType: 'teacher' };
     this.showUserModal.set(true);
   }
 
@@ -158,24 +181,24 @@ export class ParametresComponent implements OnInit {
       email: this.userForm.email,
       role: this.userForm.role,
       roleType: this.userForm.roleType,
-      lastLogin: '—',
+      lastLogin: '-',
     }]);
-    this.toast.show('Utilisateur ajouté');
+    this.toast.show(this.t('settings.toastUserAdded'));
     this.showUserModal.set(false);
   }
 
   deleteUser(u: User): void {
-    if (confirm(`Supprimer l'utilisateur ${u.name} ?`)) {
+    if (confirm(this.t('settings.confirmDeleteUser', { name: u.name }))) {
       this.users.update(list => list.filter(x => x.id !== u.id));
-      this.toast.show('Utilisateur supprimé', 'info');
+      this.toast.show(this.t('settings.toastUserDeleted'), 'info');
     }
   }
 
   saveNotifications(): void {
-    this.toast.show('Paramètres de notifications enregistrés');
+    this.toast.show(this.t('settings.toastNotifSaved'));
   }
 
-  // Security — password change
+  // Security - password change
   passwordForm = { current: '', newPw: '', confirm: '' };
   showCurrent  = signal(false);
   showNew      = signal(false);
@@ -188,7 +211,7 @@ export class ParametresComponent implements OnInit {
     const { current, newPw, confirm } = this.passwordForm;
 
     if (!current || !newPw || !confirm) {
-      this.passwordError.set('Tous les champs sont obligatoires.');
+      this.passwordError.set(this.t('settings.allFieldsRequired'));
       return;
     }
 
@@ -202,11 +225,16 @@ export class ParametresComponent implements OnInit {
     }
 
     this.passwordForm = { current: '', newPw: '', confirm: '' };
-    this.toast.show('Mot de passe modifié avec succès');
+    this.toast.show(this.t('settings.toastPasswordChanged'));
   }
 
   // ── Matières ──────────────────────────────────────────────
   allTeachers = this.teachersService.teachers;
+  allSubjects = this.subjectsService.subjects;
+
+  newSubjectName = signal('');
+  editingSubjectId = signal<number | null>(null);
+  editingSubjectName = signal('');
 
   colorPresets = [
     { color: '#1d4ed8', bgColor: '#dbeafe' },
@@ -233,16 +261,18 @@ export class ParametresComponent implements OnInit {
 
   matiereForm = {
     name: '', subject: '', level: '', teacherId: null as number | null,
-    maxCapacity: 15, monthlyPrice: 0,
+    maxCapacity: null as number | null, monthlyPrice: null as number | null,
     status: 'active' as 'active' | 'inactive',
     color: '#1d4ed8', bgColor: '#dbeafe',
   };
 
+  // Aucune valeur métier n'est présélectionnée (professeur, capacité, prix) :
+  // c'est au propriétaire/gérant de les choisir lui-même pour chaque classe.
   openAddMatiere(): void {
     this.editingMatiere.set(null);
     this.matiereForm = {
-      name: '', subject: '', level: '', teacherId: this.allTeachers()[0]?.id ?? null,
-      maxCapacity: 15, monthlyPrice: 300,
+      name: '', subject: '', level: '', teacherId: null,
+      maxCapacity: null, monthlyPrice: null,
       status: 'active', color: '#1d4ed8', bgColor: '#dbeafe',
     };
     this.showMatiereModal.set(true);
@@ -266,24 +296,27 @@ export class ParametresComponent implements OnInit {
 
   submitMatiere(): void {
     const f = this.matiereForm;
-    if (!f.name.trim() || !f.subject.trim() || !f.level.trim()) {
-      this.toast.show('Veuillez remplir tous les champs obligatoires');
+    if (!f.name.trim() || !f.subject.trim() || !f.level.trim() || !f.teacherId
+      || !f.maxCapacity || !f.monthlyPrice) {
+      this.toast.show(this.t('settings.toastRequiredFields'));
       return;
     }
+    const maxCapacity = +f.maxCapacity;
+    const monthlyPrice = +f.monthlyPrice;
     const ec = this.editingMatiere();
     if (ec) {
       this.classesService.update(ec.id, {
         name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, maxCapacity: +f.maxCapacity,
-        monthlyPrice: +f.monthlyPrice, status: f.status,
+        teacherId: f.teacherId, maxCapacity,
+        monthlyPrice, status: f.status,
         color: f.color, bgColor: f.bgColor,
       });
-      this.toast.show('Classe mise à jour');
+      this.toast.show(this.t('settings.toastClassUpdated'));
     } else {
       this.classesService.add({
         name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, roomId: 0, maxCapacity: +f.maxCapacity,
-        monthlyPrice: +f.monthlyPrice, status: f.status,
+        teacherId: f.teacherId, roomId: null, maxCapacity,
+        monthlyPrice, status: f.status,
         color: f.color, bgColor: f.bgColor, enrolledStudentIds: [],
       }).subscribe((res: any) => {
         const newId = res?.data?.id ?? res?.id ?? Date.now();
@@ -291,7 +324,7 @@ export class ParametresComponent implements OnInit {
           ...list,
           { id: Date.now(), classeId: newId, groupNumber: 1, studentIds: [], maxCapacity: DEFAULT_CAPACITY },
         ]);
-        this.toast.show('Classe ajoutée');
+        this.toast.show(this.t('settings.toastClassAdded'));
         this.showMatiereModal.set(false);
       });
       return;
@@ -300,22 +333,69 @@ export class ParametresComponent implements OnInit {
   }
 
   deleteMatiere(c: Classe): void {
-    if (confirm(`Supprimer la classe "${c.name}" ?`)) {
+    if (confirm(this.t('settings.confirmDeleteClass', { name: c.name }))) {
       this.classesService.delete(c.id);
-      this.toast.show('Classe supprimée', 'info');
+      this.toast.show(this.t('settings.toastClassDeleted'), 'info');
     }
   }
 
+  // ── Bibliothèque de matières ─────────────────────────────────
+  // Le propriétaire/gérant gère lui-même la liste des matières (au lieu de
+  // taper un nom en texte libre à chaque classe) : ça évite les doublons et
+  // fautes de frappe, et un renommage se répercute sur les classes existantes.
+  addSubject(): void {
+    const name = this.newSubjectName().trim();
+    if (!name) return;
+    this.subjectsService.add({ name }).subscribe({
+      next: () => {
+        this.newSubjectName.set('');
+        this.toast.show(this.t('settings.toastSubjectAdded'));
+      },
+      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectAddError'))),
+    });
+  }
+
+  startEditSubject(s: Subject): void {
+    this.editingSubjectId.set(s.id);
+    this.editingSubjectName.set(s.name);
+  }
+
+  cancelEditSubject(): void {
+    this.editingSubjectId.set(null);
+    this.editingSubjectName.set('');
+  }
+
+  saveEditSubject(): void {
+    const id = this.editingSubjectId();
+    const name = this.editingSubjectName().trim();
+    if (id === null || !name) return;
+    this.subjectsService.update(id, { name }).subscribe({
+      next: () => {
+        this.toast.show(this.t('settings.toastSubjectRenamed'));
+        this.cancelEditSubject();
+      },
+      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectRenameError'))),
+    });
+  }
+
+  removeSubject(s: Subject): void {
+    if (!confirm(this.t('settings.confirmDeleteSubject', { name: s.name }))) return;
+    this.subjectsService.delete(s.id).subscribe({
+      next: () => this.toast.show(this.t('settings.toastSubjectDeleted'), 'info'),
+      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectDeleteError'))),
+    });
+  }
+
   getTeacherName(id: number | null): string {
-    if (id === null) return '—';
+    if (id === null) return '-';
     const t = this.allTeachers().find(t => t.id === id);
-    return t ? `${t.firstName} ${t.lastName}` : '—';
+    return t ? `${t.firstName} ${t.lastName}` : '-';
   }
 
   setTab(tabId: string): void { this.activeTab.set(tabId); }
 }
 
-function extractValidationError(err: unknown, fallback = 'Erreur lors de l\'enregistrement'): string {
+function extractValidationError(err: unknown, fallback: string): string {
   if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
     const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
     return messages.join('. ');
