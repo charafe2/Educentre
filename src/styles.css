@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 @theme inline {
   --color-destructive-foreground: var(--destructive-foreground);
   --color-muted-2: var(--muted-2);
