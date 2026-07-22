@@ -5,7 +5,6 @@ RUN npm ci
 COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json public ./
 COPY src/ src/
 RUN npm run build -- --configuration production
-RUN cp /app/dist/moujtahid/browser/landing.html /app/dist/moujtahid/browser/index.html
 
 FROM nginx:1.27-alpine AS serve
 COPY --from=build /app/dist/moujtahid/browser /usr/share/nginx/html
