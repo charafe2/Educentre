@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
+import { superadminGuestGuard } from './superadmin/superadmin-guest.guard';
 
 export const routes: Routes = [
   {
@@ -56,10 +57,11 @@ export const routes: Routes = [
   {
     path: 'superadmin',
     children: [
-      { path: '', redirectTo: 'login', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'login',
         loadComponent: () => import('./superadmin/pages/login/superadmin-login.component').then(m => m.SuperadminLoginComponent),
+        canActivate: [superadminGuestGuard],
       },
       {
         path: '',

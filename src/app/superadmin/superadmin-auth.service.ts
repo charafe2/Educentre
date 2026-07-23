@@ -28,6 +28,27 @@ export class SuperadminAuthService {
   isLoggedIn = computed(() => this._loggedIn());
   user = this._user.asReadonly();
 
+  constructor() {
+    this.tryLoadUser();
+  }
+
+  private tryLoadUser(): void {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return;
+
+    this.http.get<ApiResponse<SuperAdminUser>>(`${this.baseUrl}/me`)
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this._user.set(res.data);
+          }
+        },
+        error: () => {
+          this.clearSession();
+        },
+      });
+  }
+
   async login(email: string, password: string): Promise<boolean> {
     try {
       const response = await firstValueFrom(
