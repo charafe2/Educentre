@@ -10,7 +10,7 @@ import { SubjectsService } from '../../services/subjects.service';
 import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
-import { AuthService } from '../../auth/auth.service';
+import { AuthStore } from '../../auth/auth.store';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';

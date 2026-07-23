@@ -28,4 +28,27 @@ class SuperAdminLoginRequest extends FormRequest
             'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
         ];
     }
+
+    public function ensureIsNotRateLimited(): void
+    {
+        if (!\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+            return;
+        }
+
+        event(new \Illuminate\Auth\Events\Lockout($this));
+
+        $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($this->throttleKey());
+
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'email' => trans('auth.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]),
+        ]);
+    }
+
+    public function throttleKey(): string
+    {
+        return \Illuminate\Support\Str::transliterate(\Illuminate\Support\Str::lower($this->input('email')).'|'.$this->ip());
+    }
 }

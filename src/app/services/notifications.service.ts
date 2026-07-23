@@ -4,7 +4,7 @@ import { Observable, tap, interval, startWith, switchMap } from 'rxjs';
 import { AppNotification } from '../models/notification.model';
 import { environment } from '../../environments/environment';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
-import { AuthService } from '../auth/auth.service';
+import { AuthStore } from '../auth/auth.store';
 
 const UNREAD_POLL_INTERVAL_MS = 30000;
 
@@ -17,7 +17,7 @@ export interface NotificationFilters {
 @Injectable({ providedIn: 'root' })
 export class NotificationsService {
   private http = inject(HttpClient);
-  private auth = inject(AuthService);
+  private auth = inject(AuthStore);
 
   notifications = signal<AppNotification[]>([]);
   pagination = signal<PaginationMeta>({ current_page: 1, per_page: 15, total: 0, last_page: 1, from: null, to: null });

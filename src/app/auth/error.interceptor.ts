@@ -2,22 +2,22 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { SuperadminAuthService } from '../superadmin/superadmin-auth.service';
-import { AuthService } from './auth.service';
+import { SuperadminAuthStore } from '../superadmin/superadmin-auth.store';
+import { AuthStore } from './auth.store';
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
-  const superadminAuth = inject(SuperadminAuthService);
-  const auth = inject(AuthService);
+  const superadminAuth = inject(SuperadminAuthStore);
+  const auth = inject(AuthStore);
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
         if (req.url.includes('/v1/superadmin')) {
-          superadminAuth.logout();
+          superadminAuth.forceClearSession();
           router.navigate(['/superadmin/login']);
         } else {
-          auth.logout();
+          auth.forceClearSession();
           router.navigate(['/login']);
         }
       }

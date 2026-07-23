@@ -2,6 +2,7 @@
 
 namespace App\Domains\Auth\Controllers;
 
+use App\Domains\Auth\DTOs\LoginDTO;
 use App\Domains\Auth\Requests\ChangePasswordRequest;
 use App\Domains\Auth\Requests\LoginRequest;
 use App\Domains\Auth\Resources\UserResource;
@@ -57,25 +58,27 @@ class AuthController extends Controller
     )]
     public function login(LoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login(
-            $request->validated('email'),
-            $request->validated('password'),
-        );
+        $request->ensureIsNotRateLimited();
 
-        if ($result === null) {
+        try {
+            $result = $this->authService->login(
+                LoginDTO::fromArray($request->validated()),
+                $request->throttleKey()
+            );
+
+            return $this->success(
+                data: [
+                    'user' => UserResource::make($result['user']),
+                    'token' => $result['token'],
+                ],
+                message: 'Connexion réussie.',
+            );
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
             return $this->error(
-                message: 'Email ou mot de passe incorrect.',
+                message: $e->getMessage(),
                 code: 401,
             );
         }
-
-        return $this->success(
-            data: [
-                'user' => UserResource::make($result['user']),
-                'token' => $result['token'],
-            ],
-            message: 'Connexion réussie.',
-        );
     }
 
     #[OA\Post(

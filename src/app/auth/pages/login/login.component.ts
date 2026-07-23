@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { NgClass } from '@angular/common';
-import { AuthService } from '../../auth.service';
+import { AuthStore } from '../../auth.store';
 
 @Component({
   selector: 'app-login',
@@ -12,7 +12,7 @@ import { AuthService } from '../../auth.service';
   styleUrl: './login.component.css'
 })
 export class LoginComponent {
-  private auth = inject(AuthService);
+  private auth = inject(AuthStore);
   private router = inject(Router);
 
   email = '';

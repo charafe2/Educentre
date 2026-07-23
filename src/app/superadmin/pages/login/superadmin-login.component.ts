@@ -1,16 +1,17 @@
 import { Component, signal, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SuperadminAuthService } from '../../superadmin-auth.service';
+import { SuperadminAuthStore } from '../../superadmin-auth.store';
 
 @Component({
   selector: 'app-superadmin-login',
-  imports: [FormsModule],
+  standalone: true,
+  imports: [RouterLink, FormsModule],
   templateUrl: './superadmin-login.component.html',
   styleUrl: './superadmin-login.component.css'
 })
 export class SuperadminLoginComponent {
-  private auth = inject(SuperadminAuthService);
+  private auth = inject(SuperadminAuthStore);
   private router = inject(Router);
 
   email = '';

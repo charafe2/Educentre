@@ -1,6 +1,6 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../../auth/auth.service';
+import { AuthStore } from '../../auth/auth.store';
 import { NotificationsService } from '../../services/notifications.service';
 import { AppNotification, NotificationType } from '../../models/notification.model';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -20,8 +20,8 @@ const NOTIFICATION_ICONS: Record<NotificationType, string> = {
   styleUrl: './topbar.component.css'
 })
 export class TopbarComponent {
-  private auth = inject(AuthService);
   private router = inject(Router);
+  auth = inject(AuthStore);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
   notificationsService = inject(NotificationsService);

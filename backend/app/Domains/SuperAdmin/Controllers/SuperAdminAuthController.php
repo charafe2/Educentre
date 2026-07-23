@@ -2,6 +2,7 @@
 
 namespace App\Domains\SuperAdmin\Controllers;
 
+use App\Domains\SuperAdmin\DTOs\SuperAdminLoginDTO;
 use App\Domains\SuperAdmin\Requests\SuperAdminLoginRequest;
 use App\Domains\SuperAdmin\Resources\SuperAdminResource;
 use App\Domains\SuperAdmin\Services\SuperAdminAuthService;
@@ -20,25 +21,27 @@ class SuperAdminAuthController extends Controller
 
     public function login(SuperAdminLoginRequest $request): JsonResponse
     {
-        $result = $this->authService->login(
-            $request->validated('email'),
-            $request->validated('password'),
-        );
+        $request->ensureIsNotRateLimited();
 
-        if ($result === null) {
+        try {
+            $result = $this->authService->login(
+                SuperAdminLoginDTO::fromArray($request->validated()),
+                $request->throttleKey()
+            );
+
+            return $this->success(
+                data: [
+                    'user' => SuperAdminResource::make($result['user']),
+                    'token' => $result['token'],
+                ],
+                message: 'Connexion réussie.',
+            );
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
             return $this->error(
-                message: 'Email ou mot de passe incorrect.',
+                message: $e->getMessage(),
                 code: 401,
             );
         }
-
-        return $this->success(
-            data: [
-                'user' => SuperAdminResource::make($result['user']),
-                'token' => $result['token'],
-            ],
-            message: 'Connexion réussie.',
-        );
     }
 
     public function logout(Request $request): JsonResponse

@@ -1,20 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { AuthStore } from './auth.store';
 
-export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+export const authGuard: CanActivateFn = (route, state) => {
+  const auth = inject(AuthStore);
   const router = inject(Router);
 
   if (auth.isLoggedIn()) {
     return true;
   }
 
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    // Token exists but user not loaded yet - auth service will load it
-    return true;
-  }
-
-  return router.createUrlTree(['/login']);
 };
