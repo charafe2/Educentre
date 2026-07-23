@@ -4,7 +4,7 @@ import { rxMethod } from '@ngrx/signals/rxjs-interop';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed } from '@angular/core';
 import { catchError, exhaustMap, filter, map, of, pipe, tap } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../environments/environment';
 
 export interface AuthUser {
   uuid: string;

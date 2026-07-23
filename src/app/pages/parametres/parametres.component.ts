@@ -42,7 +42,7 @@ export class ParametresComponent implements OnInit {
   private academicLevelsService = inject(AcademicLevelsService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
-  private auth = inject(AuthService);
+  private auth = inject(AuthStore);
   private receiptCustomization = inject(ReceiptCustomizationService);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
