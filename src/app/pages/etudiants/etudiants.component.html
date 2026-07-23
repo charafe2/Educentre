@@ -73,7 +73,7 @@
         </div>
         <select class="filter-select" (change)="onLevelChange($event)">
           <option value="">{{ 'students.allLevels' | t }}</option>
-          @for (level of levels; track level) {
+          @for (level of levels(); track level) {
             <option [value]="level">{{ level }}</option>
           }
         </select>
@@ -233,7 +233,7 @@
           <label class="form-label">{{ 'students.level' | t }}</label>
           <select class="form-select" [(ngModel)]="formData.level" (ngModelChange)="onFormLevelChange($event)">
             <option value="">{{ 'students.chooseLevel' | t }}</option>
-            @for (level of levels; track level) {
+            @for (level of levels(); track level) {
               <option [value]="level">{{ level }}</option>
             }
           </select>

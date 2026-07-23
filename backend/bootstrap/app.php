@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->api(append: [
             \App\Domains\Core\Middleware\ResolveTenantMiddleware::class,
         ]);
+        $middleware->alias([
+            'superadmin' => \App\Domains\Core\Middleware\EnsureSuperAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

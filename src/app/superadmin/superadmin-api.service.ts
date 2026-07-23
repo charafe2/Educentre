@@ -119,6 +119,38 @@ export interface CreateCentreInvoicePayload {
   notes?: string | null;
 }
 
+export interface Subject {
+  id: number;
+  name: string;
+  status: 'active' | 'inactive';
+  color: string;
+  bgColor: string;
+  assignedCentresCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveSubjectPayload {
+  name: string;
+  status: Subject['status'];
+  color?: string;
+  bgColor?: string;
+}
+
+export interface AcademicLevel {
+  id: number;
+  name: string;
+  status: 'active' | 'inactive';
+  assignedCentresCount?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveAcademicLevelPayload {
+  name: string;
+  status: AcademicLevel['status'];
+}
+
 @Injectable({ providedIn: 'root' })
 export class SuperadminApiService {
   private http = inject(HttpClient);
@@ -199,6 +231,68 @@ export class SuperadminApiService {
 
   deleteInvoice(id: number): Promise<void> {
     return this.data(this.http.delete<ApiResponse<void>>(`${this.baseUrl}/invoices/${id}`));
+  }
+
+  getSubjects(search?: string, status?: 'active' | 'inactive'): Promise<Subject[]> {
+    const params: Record<string, string> = {};
+    if (search) params['search'] = search;
+    if (status) params['status'] = status;
+    return this.data(this.http.get<ApiResponse<Subject[]>>(`${this.baseUrl}/subjects`, { params }));
+  }
+
+  createSubject(payload: SaveSubjectPayload): Promise<{ id: number }> {
+    return this.data(this.http.post<ApiResponse<{ id: number }>>(`${this.baseUrl}/subjects`, payload));
+  }
+
+  updateSubject(id: number, payload: SaveSubjectPayload): Promise<null> {
+    return this.data(this.http.put<ApiResponse<null>>(`${this.baseUrl}/subjects/${id}`, payload));
+  }
+
+  deleteSubject(id: number): Promise<void> {
+    return this.data(this.http.delete<ApiResponse<void>>(`${this.baseUrl}/subjects/${id}`));
+  }
+
+  getCentreSubjects(centreId: number): Promise<number[]> {
+    return this.data(
+      this.http.get<ApiResponse<{ subjectIds: number[] }>>(`${this.baseUrl}/centres/${centreId}/subjects`)
+    ).then(res => res.subjectIds);
+  }
+
+  syncCentreSubjects(centreId: number, subjectIds: number[]): Promise<number[]> {
+    return this.data(
+      this.http.put<ApiResponse<{ subjectIds: number[] }>>(`${this.baseUrl}/centres/${centreId}/subjects`, { subjectIds })
+    ).then(res => res.subjectIds);
+  }
+
+  getAcademicLevels(search?: string, status?: 'active' | 'inactive'): Promise<AcademicLevel[]> {
+    const params: Record<string, string> = {};
+    if (search) params['search'] = search;
+    if (status) params['status'] = status;
+    return this.data(this.http.get<ApiResponse<AcademicLevel[]>>(`${this.baseUrl}/academic-levels`, { params }));
+  }
+
+  createAcademicLevel(payload: SaveAcademicLevelPayload): Promise<{ id: number }> {
+    return this.data(this.http.post<ApiResponse<{ id: number }>>(`${this.baseUrl}/academic-levels`, payload));
+  }
+
+  updateAcademicLevel(id: number, payload: SaveAcademicLevelPayload): Promise<null> {
+    return this.data(this.http.put<ApiResponse<null>>(`${this.baseUrl}/academic-levels/${id}`, payload));
+  }
+
+  deleteAcademicLevel(id: number): Promise<void> {
+    return this.data(this.http.delete<ApiResponse<void>>(`${this.baseUrl}/academic-levels/${id}`));
+  }
+
+  getCentreAcademicLevels(centreId: number): Promise<number[]> {
+    return this.data(
+      this.http.get<ApiResponse<{ levelIds: number[] }>>(`${this.baseUrl}/centres/${centreId}/academic-levels`)
+    ).then(res => res.levelIds);
+  }
+
+  syncCentreAcademicLevels(centreId: number, levelIds: number[]): Promise<number[]> {
+    return this.data(
+      this.http.put<ApiResponse<{ levelIds: number[] }>>(`${this.baseUrl}/centres/${centreId}/academic-levels`, { levelIds })
+    ).then(res => res.levelIds);
   }
 
   private async data<T>(request: Observable<ApiResponse<T>>): Promise<T> {

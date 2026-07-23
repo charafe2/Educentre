@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Domains\Core\Models\Centre;
 use App\Domains\Teachers\Models\Teacher;
+use App\Models\SuperAdmin;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,6 +14,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        SuperAdmin::create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin@moujtahid.ma',
+            'password' => Hash::make('superadmin123456789'),
+        ]);
+
         $tenant = Tenant::create([
             'name' => 'Centre Moujtahid',
             'slug' => 'moujtahid',

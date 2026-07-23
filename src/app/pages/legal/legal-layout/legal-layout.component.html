@@ -1,0 +1,16 @@
+<app-site-navbar></app-site-navbar>
+
+<div class="legal-shell">
+  <div class="legal-header">
+    <h1 class="legal-title">{{ title }}</h1>
+    @if (updatedAt) {
+      <p class="legal-updated">Dernière mise à jour : {{ updatedAt }}</p>
+    }
+  </div>
+
+  <div class="legal-body">
+    <ng-content></ng-content>
+  </div>
+</div>
+
+<app-site-footer></app-site-footer>

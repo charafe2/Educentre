@@ -1,0 +1,178 @@
+<div class="page">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Niveaux scolaires</h1>
+      <p class="page-subtitle">Catalogue global des niveaux, assignés ensuite à chaque centre</p>
+    </div>
+    <button class="btn-create" (click)="openCreate()">
+      <i class="fa-solid fa-plus"></i>
+      Créer un niveau
+    </button>
+  </div>
+
+  <!-- Stats row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon icon-total"><i class="fa-solid fa-layer-group"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ totalLevels() }}</span>
+        <span class="stat-label">Niveaux total</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-active"><i class="fa-solid fa-circle-check"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ activeLevels() }}</span>
+        <span class="stat-label">Actifs</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon icon-students"><i class="fa-solid fa-buildings"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ assignedLevels() }}</span>
+        <span class="stat-label">Assignés à un centre</span>
+      </div>
+    </div>
+  </div>
+
+  @if (pageError()) {
+    <div class="page-error">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ pageError() }}
+    </div>
+  }
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Rechercher un niveau..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <div class="filter-tabs">
+      @for (f of [['all','Tous'],['active','Actifs'],['inactive','Inactifs']]; track f[0]) {
+        <button
+          [ngClass]="['filter-tab', filterStatus() === f[0] ? 'filter-active' : '']"
+          (click)="filterStatus.set($any(f[0]))"
+        >{{ f[1] }}</button>
+      }
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <table>
+      <thead>
+        <tr>
+          <th>Niveau</th>
+          <th>Statut</th>
+          <th>Centres assignés</th>
+          <th>Créé le</th>
+          <th>Mis à jour</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="6" class="empty-row">Chargement des niveaux...</td></tr>
+        } @else {
+        @for (level of filteredLevels(); track level.id) {
+          <tr>
+            <td class="centre-name">{{ level.name }}</td>
+            <td>
+              <span [ngClass]="['status-badge', level.status === 'active' ? 'status-active' : 'status-suspended']">
+                <span class="status-dot"></span>
+                {{ level.status === 'active' ? 'Actif' : 'Inactif' }}
+              </span>
+            </td>
+            <td class="students-count">{{ level.assignedCentresCount ?? 0 }}</td>
+            <td class="date-cell">{{ level.createdAt | date:'dd/MM/yyyy' }}</td>
+            <td class="date-cell">{{ level.updatedAt | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <div class="actions">
+                <button class="action-btn action-edit" title="Modifier" (click)="openEdit(level)">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+                <button class="action-btn action-delete" title="Supprimer" (click)="deleteLevel(level)">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr>
+            <td colspan="6" class="empty-row">
+              <i class="fa-solid fa-layer-group"></i>
+              <span>Aucun niveau trouvé</span>
+            </td>
+          </tr>
+        }
+        }
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Create/edit level modal -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="showModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-icon"><i class="fa-solid fa-layer-group"></i></div>
+          <div>
+            <h2 class="modal-title">{{ editingLevelId() ? 'Modifier le niveau' : 'Créer un niveau' }}</h2>
+            <p class="modal-subtitle">{{ editingLevelId() ? 'Mettez à jour le nom ou le statut' : 'Ajouté au catalogue global, à assigner ensuite aux centres' }}</p>
+          </div>
+        </div>
+        <button class="modal-close" (click)="showModal.set(false)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+
+        @if (formError()) {
+          <div class="form-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ formError() }}
+          </div>
+        }
+
+        <div class="form-grid">
+          <div class="form-group form-full">
+            <label class="form-label">Nom du niveau <span class="req">*</span></label>
+            <input class="form-input" type="text" [(ngModel)]="form.name" placeholder="1ère Bac" />
+          </div>
+          <div class="form-group form-full">
+            <label class="form-label">Statut</label>
+            <select class="form-input" [(ngModel)]="form.status">
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showModal.set(false)">Annuler</button>
+        <button class="btn-confirm" (click)="submitSave()" [disabled]="saving()">
+          <i class="fa-solid" [class.fa-plus]="!editingLevelId()" [class.fa-floppy-disk]="editingLevelId()"></i>
+          {{ saving() ? 'Enregistrement...' : (editingLevelId() ? 'Enregistrer' : 'Créer le niveau') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

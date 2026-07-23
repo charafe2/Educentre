@@ -19,6 +19,23 @@ export const routes: Routes = [
   },
 
   {
+    path: 'politique-de-confidentialite',
+    loadComponent: () => import('./pages/legal/politique-confidentialite/politique-confidentialite.component').then(m => m.PolitiqueConfidentialiteComponent),
+  },
+  {
+    path: 'conditions-generales-utilisation',
+    loadComponent: () => import('./pages/legal/conditions-generales/conditions-generales.component').then(m => m.ConditionsGeneralesComponent),
+  },
+  {
+    path: 'politique-de-cookies',
+    loadComponent: () => import('./pages/legal/politique-cookies/politique-cookies.component').then(m => m.PolitiqueCookiesComponent),
+  },
+  {
+    path: 'mentions-legales',
+    loadComponent: () => import('./pages/legal/mentions-legales/mentions-legales.component').then(m => m.MentionsLegalesComponent),
+  },
+
+  {
     path: '',
     loadComponent: () => import('./layout/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
     canActivate: [authGuard],
@@ -51,6 +68,8 @@ export const routes: Routes = [
         children: [
           { path: 'dashboard', loadComponent: () => import('./superadmin/pages/overview/superadmin-overview.component').then(m => m.SuperadminOverviewComponent) },
           { path: 'clients',   loadComponent: () => import('./superadmin/pages/clients/superadmin-clients.component').then(m => m.SuperadminClientsComponent) },
+          { path: 'subjects',  loadComponent: () => import('./superadmin/pages/subjects/superadmin-subjects.component').then(m => m.SuperadminSubjectsComponent) },
+          { path: 'academic-levels', loadComponent: () => import('./superadmin/pages/academic-levels/superadmin-academic-levels.component').then(m => m.SuperadminAcademicLevelsComponent) },
           { path: 'packages',  loadComponent: () => import('./superadmin/pages/packages/superadmin-packages.component').then(m => m.SuperadminPackagesComponent) },
           { path: 'accounts',  loadComponent: () => import('./superadmin/pages/accounts/superadmin-accounts.component').then(m => m.SuperadminAccountsComponent) },
           { path: 'invoices',  loadComponent: () => import('./superadmin/pages/invoices/superadmin-invoices.component').then(m => m.SuperadminInvoicesComponent) },

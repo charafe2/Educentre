@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Domains\Planning\Requests;
+namespace App\Domains\SuperAdmin\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class StoreSubjectRequest extends FormRequest
+class UpdateSubjectRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -16,13 +16,10 @@ class StoreSubjectRequest extends FormRequest
     {
         return [
             'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('subjects', 'name')->where(
-                    fn ($query) => $query->where('tenant_id', $this->user()->tenant_id)
-                ),
+                'sometimes', 'required', 'string', 'max:255',
+                Rule::unique('subjects', 'name')->ignore($this->route('id')),
             ],
+            'status' => ['sometimes', Rule::in(['active', 'inactive'])],
             'color' => ['nullable', 'string', 'max:20'],
             'bgColor' => ['nullable', 'string', 'max:20'],
         ];

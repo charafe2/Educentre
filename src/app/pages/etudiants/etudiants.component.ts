@@ -5,6 +5,7 @@ import { forkJoin, of } from 'rxjs';
 import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
 import { GroupsService } from '../../services/groups.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { ToastService } from '../../services/toast.service';
 import { Group } from '../../models/group.model';
 import { Classe } from '../../models/classe.model';
@@ -23,6 +24,7 @@ export class EtudiantsComponent {
   private studentsService = inject(StudentsService);
   private classesService = inject(ClassesService);
   private groupsService = inject(GroupsService);
+  private academicLevelsService = inject(AcademicLevelsService);
   private toast = inject(ToastService);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
@@ -32,7 +34,8 @@ export class EtudiantsComponent {
   selectedStatus = signal('');
   selectedPaymentStatus = signal('');
 
-  levels = ['3ème Collège', 'Tronc Commun', '1ère Bac', '2ème Bac'];
+  // Academic levels assigned to this center by the Super Admin.
+  levels = computed(() => this.academicLevelsService.levels().map(l => l.name));
 
   students = this.studentsService.pagedStudents;
   pagination = this.studentsService.pagination;

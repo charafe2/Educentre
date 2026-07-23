@@ -183,46 +183,12 @@
             </div>
             <div class="subject-chips">
               @for (s of allSubjects(); track s.id) {
-                @if (editingSubjectId() === s.id) {
-                  <div class="subject-chip subject-chip-editing">
-                    <input
-                      class="form-input subject-chip-input"
-                      type="text"
-                      [(ngModel)]="editingSubjectName"
-                      (keyup.enter)="saveEditSubject()"
-                      (keyup.escape)="cancelEditSubject()"
-                    />
-                    <button class="chip-btn" (click)="saveEditSubject()" [title]="'common.save' | t">
-                      <i class="fa-solid fa-check"></i>
-                    </button>
-                    <button class="chip-btn" (click)="cancelEditSubject()" [title]="'common.cancel' | t">
-                      <i class="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-                } @else {
-                  <div class="subject-chip">
-                    <span>{{ s.name }}</span>
-                    <button class="chip-btn" (click)="startEditSubject(s)" [title]="'common.edit' | t">
-                      <i class="fa-regular fa-pen-to-square"></i>
-                    </button>
-                    <button class="chip-btn chip-btn-danger" (click)="removeSubject(s)" [title]="'common.delete' | t">
-                      <i class="fa-regular fa-trash-can"></i>
-                    </button>
-                  </div>
-                }
+                <div class="subject-chip">
+                  <span>{{ s.name }}</span>
+                </div>
+              } @empty {
+                <p class="subject-library-empty">{{ 'settings.noSubjectsAssigned' | t }}</p>
               }
-              <div class="subject-chip subject-chip-add">
-                <input
-                  class="form-input subject-chip-input"
-                  type="text"
-                  [placeholder]="'settings.newSubjectPlaceholder' | t"
-                  [(ngModel)]="newSubjectName"
-                  (keyup.enter)="addSubject()"
-                />
-                <button class="chip-btn" (click)="addSubject()" [title]="'common.add' | t">
-                  <i class="fa-solid fa-plus"></i>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -553,7 +519,15 @@
 
         <div class="form-group">
           <label class="form-label">{{ 'settings.level' | t }} <span class="required">*</span></label>
-          <input class="form-input" type="text" [(ngModel)]="matiereForm.level" placeholder="Ex : 2ème Bac" />
+          <select class="form-input" [(ngModel)]="matiereForm.level">
+            <option value="" disabled>{{ 'students.chooseLevel' | t }}</option>
+            @for (l of allLevels(); track l.id) {
+              <option [ngValue]="l.name">{{ l.name }}</option>
+            }
+          </select>
+          @if (allLevels().length === 0) {
+            <p class="field-hint">{{ 'settings.noLevelAvailable' | t }}</p>
+          }
         </div>
 
         <div class="form-group">

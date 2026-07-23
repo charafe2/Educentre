@@ -237,6 +237,85 @@
           </div>
         </div>
 
+        @if (editingClientId(); as centreId) {
+          <div class="form-section-label">Matières assignées</div>
+
+          @if (subjectsError()) {
+            <div class="form-error">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ subjectsError() }}
+            </div>
+          }
+
+          @if (loadingSubjects()) {
+            <p class="subjects-hint">Chargement des matières...</p>
+          } @else {
+            <div class="subject-checkbox-list">
+              @for (subject of allActiveSubjects(); track subject.id) {
+                <label class="subject-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="isSubjectAssigned(subject.id)"
+                    (change)="toggleSubjectAssignment(subject.id)"
+                  />
+                  <span class="subject-dot" [style.background]="subject.color"></span>
+                  {{ subject.name }}
+                </label>
+              } @empty {
+                <p class="subjects-hint">Aucune matière active dans le catalogue.</p>
+              }
+            </div>
+
+            <div class="subjects-actions">
+              <button type="button" class="btn-confirm" (click)="saveSubjectAssignments()" [disabled]="savingSubjects()">
+                <i class="fa-solid fa-floppy-disk"></i>
+                {{ savingSubjects() ? 'Enregistrement...' : 'Enregistrer les matières' }}
+              </button>
+              @if (subjectsSaved()) {
+                <span class="subjects-saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
+              }
+            </div>
+          }
+
+          <div class="form-section-label">Niveaux scolaires assignés</div>
+
+          @if (levelsError()) {
+            <div class="form-error">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ levelsError() }}
+            </div>
+          }
+
+          @if (loadingLevels()) {
+            <p class="subjects-hint">Chargement des niveaux...</p>
+          } @else {
+            <div class="subject-checkbox-list">
+              @for (level of allActiveLevels(); track level.id) {
+                <label class="subject-checkbox">
+                  <input
+                    type="checkbox"
+                    [checked]="isLevelAssigned(level.id)"
+                    (change)="toggleLevelAssignment(level.id)"
+                  />
+                  {{ level.name }}
+                </label>
+              } @empty {
+                <p class="subjects-hint">Aucun niveau actif dans le catalogue.</p>
+              }
+            </div>
+
+            <div class="subjects-actions">
+              <button type="button" class="btn-confirm" (click)="saveLevelAssignments()" [disabled]="savingLevels()">
+                <i class="fa-solid fa-floppy-disk"></i>
+                {{ savingLevels() ? 'Enregistrement...' : 'Enregistrer les niveaux' }}
+              </button>
+              @if (levelsSaved()) {
+                <span class="subjects-saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
+              }
+            </div>
+          }
+        }
+
       </div>
 
       <div class="modal-footer">

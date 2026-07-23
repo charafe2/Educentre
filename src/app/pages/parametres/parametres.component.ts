@@ -7,13 +7,13 @@ import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
 import { SubjectsService } from '../../services/subjects.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { AuthService } from '../../auth/auth.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';
-import { Subject } from '../../models/subject.model';
 import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../../services/receipt-customization.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
@@ -39,6 +39,7 @@ export class ParametresComponent implements OnInit {
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
   private subjectsService = inject(SubjectsService);
+  private academicLevelsService = inject(AcademicLevelsService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private auth = inject(AuthService);
@@ -229,12 +230,11 @@ export class ParametresComponent implements OnInit {
   }
 
   // ── Matières ──────────────────────────────────────────────
+  // Subjects are managed by the Super Admin and assigned per center — this
+  // page only lets the owner/manager pick from what's already assigned.
   allTeachers = this.teachersService.teachers;
   allSubjects = this.subjectsService.subjects;
-
-  newSubjectName = signal('');
-  editingSubjectId = signal<number | null>(null);
-  editingSubjectName = signal('');
+  allLevels = this.academicLevelsService.levels;
 
   colorPresets = [
     { color: '#1d4ed8', bgColor: '#dbeafe' },
@@ -337,53 +337,6 @@ export class ParametresComponent implements OnInit {
       this.classesService.delete(c.id);
       this.toast.show(this.t('settings.toastClassDeleted'), 'info');
     }
-  }
-
-  // ── Bibliothèque de matières ─────────────────────────────────
-  // Le propriétaire/gérant gère lui-même la liste des matières (au lieu de
-  // taper un nom en texte libre à chaque classe) : ça évite les doublons et
-  // fautes de frappe, et un renommage se répercute sur les classes existantes.
-  addSubject(): void {
-    const name = this.newSubjectName().trim();
-    if (!name) return;
-    this.subjectsService.add({ name }).subscribe({
-      next: () => {
-        this.newSubjectName.set('');
-        this.toast.show(this.t('settings.toastSubjectAdded'));
-      },
-      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectAddError'))),
-    });
-  }
-
-  startEditSubject(s: Subject): void {
-    this.editingSubjectId.set(s.id);
-    this.editingSubjectName.set(s.name);
-  }
-
-  cancelEditSubject(): void {
-    this.editingSubjectId.set(null);
-    this.editingSubjectName.set('');
-  }
-
-  saveEditSubject(): void {
-    const id = this.editingSubjectId();
-    const name = this.editingSubjectName().trim();
-    if (id === null || !name) return;
-    this.subjectsService.update(id, { name }).subscribe({
-      next: () => {
-        this.toast.show(this.t('settings.toastSubjectRenamed'));
-        this.cancelEditSubject();
-      },
-      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectRenameError'))),
-    });
-  }
-
-  removeSubject(s: Subject): void {
-    if (!confirm(this.t('settings.confirmDeleteSubject', { name: s.name }))) return;
-    this.subjectsService.delete(s.id).subscribe({
-      next: () => this.toast.show(this.t('settings.toastSubjectDeleted'), 'info'),
-      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.toastSubjectDeleteError'))),
-    });
   }
 
   getTeacherName(id: number | null): string {

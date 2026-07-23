@@ -2,67 +2,24 @@
 
 namespace App\Domains\Planning\Services;
 
-use App\Domains\Planning\Models\CourseClass;
-use App\Domains\Planning\Models\Subject;
+use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Validation\ValidationException;
 
 class SubjectService
 {
-    public function all(int $tenantId): Collection
+    /**
+     * Subjects a tenant's users may see and pick from — assigned by the
+     * Super Admin and currently active. Tenants can no longer create,
+     * rename, or delete subjects themselves.
+     */
+    public function assignedFor(int $tenantId): Collection
     {
-        return Subject::query()->where('tenant_id', $tenantId)->orderBy('name')->get();
-    }
+        $tenant = Tenant::find($tenantId);
 
-    public function create(array $data): Subject
-    {
-        return Subject::create([
-            'tenant_id' => $data['tenant_id'],
-            'name' => trim($data['name']),
-            'color' => $data['color'] ?? '#1d4ed8',
-            'bg_color' => $data['bgColor'] ?? '#dbeafe',
-        ]);
-    }
-
-    public function update(int $tenantId, int $id, array $data): Subject
-    {
-        $subject = Subject::query()->where('tenant_id', $tenantId)->findOrFail($id);
-        $oldName = $subject->name;
-        $newName = isset($data['name']) ? trim($data['name']) : $oldName;
-
-        $subject->update([
-            'name' => $newName,
-            'color' => $data['color'] ?? $subject->color,
-            'bg_color' => $data['bgColor'] ?? $subject->bg_color,
-        ]);
-
-        // Renaming a subject in the catalog propagates to every class already using it,
-        // so the owner never has to touch classes one by one after a rename.
-        if ($newName !== $oldName) {
-            CourseClass::query()
-                ->where('tenant_id', $tenantId)
-                ->where('subject', $oldName)
-                ->update(['subject' => $newName]);
+        if ($tenant === null) {
+            return new Collection();
         }
 
-        return $subject;
-    }
-
-    public function delete(int $tenantId, int $id): void
-    {
-        $subject = Subject::query()->where('tenant_id', $tenantId)->findOrFail($id);
-
-        $inUse = CourseClass::query()
-            ->where('tenant_id', $tenantId)
-            ->where('subject', $subject->name)
-            ->exists();
-
-        if ($inUse) {
-            throw ValidationException::withMessages([
-                'name' => ['Cette matière est utilisée par au moins une classe. Modifiez ou supprimez ces classes avant de la supprimer.'],
-            ]);
-        }
-
-        $subject->delete();
+        return $tenant->subjects()->where('status', 'active')->orderBy('name')->get();
     }
 }

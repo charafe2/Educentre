@@ -4,6 +4,8 @@ import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ClassesService } from '../../services/classes.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
+import { SubjectsService } from '../../services/subjects.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { ToastService } from '../../services/toast.service';
 import { Group } from '../../models/group.model';
 import { Classe } from '../../models/classe.model';
@@ -36,11 +38,15 @@ export class GroupesComponent {
   private classesService = inject(ClassesService);
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
+  private subjectsService = inject(SubjectsService);
+  private academicLevelsService = inject(AcademicLevelsService);
   private toast = inject(ToastService);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   allTeachers = this.teachersService.teachers;
+  allSubjects = this.subjectsService.subjects;
+  allLevels = this.academicLevelsService.levels;
 
   editingClasse = signal<Classe | null>(null);
   editForm = {

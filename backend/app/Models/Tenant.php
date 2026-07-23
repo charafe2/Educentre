@@ -4,9 +4,12 @@ namespace App\Models;
 
 use App\Domains\Core\Models\Centre;
 use App\Domains\Finance\Models\Payment;
+use App\Domains\Planning\Models\AcademicLevel;
+use App\Domains\Planning\Models\Subject;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -56,5 +59,15 @@ class Tenant extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function subjects(): BelongsToMany
+    {
+        return $this->belongsToMany(Subject::class, 'subject_tenant');
+    }
+
+    public function academicLevels(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicLevel::class, 'academic_level_tenant');
     }
 }

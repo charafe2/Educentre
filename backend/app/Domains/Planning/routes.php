@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Domains\Planning\Controllers\AcademicLevelController;
 use App\Domains\Planning\Controllers\ClassController;
 use App\Domains\Planning\Controllers\GroupController;
 use App\Domains\Planning\Controllers\SessionController;
@@ -15,11 +16,14 @@ Route::middleware('auth:sanctum')->prefix('classes')->group(function () {
     Route::delete('/{id}', [ClassController::class, 'destroy']);
 });
 
+// Subjects and academic levels are global catalogs managed only by the Super
+// Admin (see Domains/SuperAdmin). Tenants only ever read what's assigned.
 Route::middleware('auth:sanctum')->prefix('subjects')->group(function () {
     Route::get('/', [SubjectController::class, 'index']);
-    Route::post('/', [SubjectController::class, 'store']);
-    Route::put('/{id}', [SubjectController::class, 'update']);
-    Route::delete('/{id}', [SubjectController::class, 'destroy']);
+});
+
+Route::middleware('auth:sanctum')->prefix('academic-levels')->group(function () {
+    Route::get('/', [AcademicLevelController::class, 'index']);
 });
 
 Route::middleware('auth:sanctum')->prefix('groups')->group(function () {

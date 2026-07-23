@@ -246,14 +246,24 @@
           </div>
           <div class="edit-field">
             <label>{{ 'groups.subject' | t }}</label>
-            <input type="text" [(ngModel)]="editForm.subject" placeholder="Ex : Mathématiques" />
+            <select [(ngModel)]="editForm.subject">
+              <option value="" disabled>{{ 'settings.selectASubject' | t }}</option>
+              @for (s of allSubjects(); track s.id) {
+                <option [ngValue]="s.name">{{ s.name }}</option>
+              }
+            </select>
           </div>
         </div>
 
         <div class="edit-field-row">
           <div class="edit-field">
             <label>{{ 'groups.level' | t }}</label>
-            <input type="text" [(ngModel)]="editForm.level" placeholder="Ex : 2ème Bac" />
+            <select [(ngModel)]="editForm.level">
+              <option value="" disabled>{{ 'students.chooseLevel' | t }}</option>
+              @for (l of allLevels(); track l.id) {
+                <option [ngValue]="l.name">{{ l.name }}</option>
+              }
+            </select>
           </div>
           <div class="edit-field">
             <label>{{ 'common.status' | t }}</label>

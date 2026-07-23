@@ -1,0 +1,121 @@
+:host {
+  display: block;
+  background: var(--bg-color);
+  min-height: 100vh;
+}
+
+.legal-shell {
+  max-width: 820px;
+  margin: 0 auto;
+  /* 52px offsets the fixed <app-site-navbar> (--nav-height in site-navbar.component.css). */
+  padding: calc(52px + clamp(2rem, 6vw, 4rem)) 1.5rem clamp(4rem, 8vw, 6rem);
+}
+
+.legal-header {
+  margin-bottom: 2.5rem;
+}
+
+.legal-title {
+  font-family: var(--font-ui);
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  margin: 0 0 0.6rem;
+}
+
+.legal-updated {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.legal-body {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  padding: clamp(1.5rem, 4vw, 3rem);
+}
+
+.legal-body section + section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.legal-body h2 {
+  font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+  margin: 0 0 0.9rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.legal-body h2 .legal-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.legal-body p {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin: 0 0 0.9rem;
+}
+
+.legal-body p:last-child { margin-bottom: 0; }
+
+.legal-body ul {
+  margin: 0 0 0.9rem;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.legal-body li {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.legal-body strong { color: var(--text-main); font-weight: 600; }
+
+.legal-placeholder {
+  background: var(--warning-bg);
+  color: #92400e;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.88em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legal-body a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.legal-body a:hover { text-decoration: underline; }
+
+.legal-notice {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  background: var(--accent-light);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 2rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #0f5e54;
+}
+

@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ClientAccount, SuperadminApiService } from '../../superadmin-api.service';
+import { AcademicLevel, ClientAccount, Subject, SuperadminApiService } from '../../superadmin-api.service';
 
 @Component({
   selector: 'app-superadmin-clients',
@@ -48,6 +48,22 @@ export class SuperadminClientsComponent implements OnInit {
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique', 'Musique', 'Sport'];
   plans: ClientAccount['plan'][] = ['Basique', 'Pro', 'Enterprise'];
 
+  // Subjects assignment (independent of the centre-details form/save above)
+  allActiveSubjects = signal<Subject[]>([]);
+  assignedSubjectIds = signal<Set<number>>(new Set());
+  loadingSubjects = signal(false);
+  savingSubjects = signal(false);
+  subjectsError = signal('');
+  subjectsSaved = signal(false);
+
+  // Academic levels assignment (same independent load/save pattern as subjects)
+  allActiveLevels = signal<AcademicLevel[]>([]);
+  assignedLevelIds = signal<Set<number>>(new Set());
+  loadingLevels = signal(false);
+  savingLevels = signal(false);
+  levelsError = signal('');
+  levelsSaved = signal(false);
+
   form: {
     centreName: string; centreType: string; city: string;
     ownerName: string; email: string; phone: string;
@@ -82,7 +98,7 @@ export class SuperadminClientsComponent implements OnInit {
     this.showModal.set(true);
   }
 
-  openEdit(client: ClientAccount) {
+  async openEdit(client: ClientAccount) {
     this.editingClientId.set(client.id);
     this.form = {
       centreName: client.centreName,
@@ -97,6 +113,114 @@ export class SuperadminClientsComponent implements OnInit {
     this.formError.set('');
     this.showPassword.set(false);
     this.showModal.set(true);
+    await Promise.all([
+      this.loadSubjectAssignment(client.id),
+      this.loadLevelAssignment(client.id),
+    ]);
+  }
+
+  private async loadSubjectAssignment(centreId: number): Promise<void> {
+    this.loadingSubjects.set(true);
+    this.subjectsError.set('');
+    this.subjectsSaved.set(false);
+    try {
+      const [allSubjects, assignedIds] = await Promise.all([
+        this.api.getSubjects(undefined, 'active'),
+        this.api.getCentreSubjects(centreId),
+      ]);
+      this.allActiveSubjects.set(allSubjects);
+      this.assignedSubjectIds.set(new Set(assignedIds));
+    } catch {
+      this.subjectsError.set('Impossible de charger les matières.');
+    } finally {
+      this.loadingSubjects.set(false);
+    }
+  }
+
+  private async loadLevelAssignment(centreId: number): Promise<void> {
+    this.loadingLevels.set(true);
+    this.levelsError.set('');
+    this.levelsSaved.set(false);
+    try {
+      const [allLevels, assignedIds] = await Promise.all([
+        this.api.getAcademicLevels(undefined, 'active'),
+        this.api.getCentreAcademicLevels(centreId),
+      ]);
+      this.allActiveLevels.set(allLevels);
+      this.assignedLevelIds.set(new Set(assignedIds));
+    } catch {
+      this.levelsError.set('Impossible de charger les niveaux.');
+    } finally {
+      this.loadingLevels.set(false);
+    }
+  }
+
+  isSubjectAssigned(subjectId: number): boolean {
+    return this.assignedSubjectIds().has(subjectId);
+  }
+
+  toggleSubjectAssignment(subjectId: number): void {
+    this.assignedSubjectIds.update(current => {
+      const next = new Set(current);
+      if (next.has(subjectId)) {
+        next.delete(subjectId);
+      } else {
+        next.add(subjectId);
+      }
+      return next;
+    });
+    this.subjectsSaved.set(false);
+  }
+
+  async saveSubjectAssignments(): Promise<void> {
+    const centreId = this.editingClientId();
+    if (centreId === null) return;
+
+    this.savingSubjects.set(true);
+    this.subjectsError.set('');
+    try {
+      const subjectIds = await this.api.syncCentreSubjects(centreId, Array.from(this.assignedSubjectIds()));
+      this.assignedSubjectIds.set(new Set(subjectIds));
+      this.subjectsSaved.set(true);
+    } catch {
+      this.subjectsError.set('Impossible d\'enregistrer les matières.');
+    } finally {
+      this.savingSubjects.set(false);
+    }
+  }
+
+  isLevelAssigned(levelId: number): boolean {
+    return this.assignedLevelIds().has(levelId);
+  }
+
+  toggleLevelAssignment(levelId: number): void {
+    this.assignedLevelIds.update(current => {
+      const next = new Set(current);
+      if (next.has(levelId)) {
+        next.delete(levelId);
+      } else {
+        next.add(levelId);
+      }
+      return next;
+    });
+    this.levelsSaved.set(false);
+  }
+
+  async saveLevelAssignments(): Promise<void> {
+    const centreId = this.editingClientId();
+    if (centreId === null) return;
+
+    this.savingLevels.set(true);
+    this.levelsError.set('');
+    try {
+      const levelIds = await this.api.syncCentreAcademicLevels(centreId, Array.from(this.assignedLevelIds()));
+      this.assignedLevelIds.set(new Set(levelIds));
+      this.levelsSaved.set(true);
+    } catch {
+      this.levelsError.set('Impossible d\'enregistrer les niveaux.');
+    } finally {
+      this.savingLevels.set(false);
+    }
   }
 
   async submitSave() {
