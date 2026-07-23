@@ -78,7 +78,24 @@ return new class extends Migration
 
     private function hasUnique(string $table, string $indexName): bool
     {
-        return !empty(DB::select('SHOW INDEX FROM `'.$table.'` WHERE Key_name = ?', [$indexName]));
+        $driver = DB::connection()->getDriverName();
+        
+        if ($driver === 'pgsql') {
+            return !empty(DB::select('SELECT 1 FROM pg_indexes WHERE tablename = ? AND indexname = ?', [$table, $indexName]));
+        }
+        
+        if ($driver === 'mysql') {
+            return !empty(DB::select('SHOW INDEX FROM `'.$table.'` WHERE Key_name = ?', [$indexName]));
+        }
+        
+        $indexes = DB::select("PRAGMA index_list('{$table}')");
+        foreach ($indexes as $index) {
+            if ($index->name === $indexName) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public function down(): void
