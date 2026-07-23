@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
+            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
             $table->string('name');
             $table->string('color')->default('#1d4ed8');
             $table->string('bg_color')->default('#dbeafe');

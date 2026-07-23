@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(DB::raw('(UUID())'));
+            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('type');
