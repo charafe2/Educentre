@@ -166,16 +166,27 @@
 }
 
 .notification-item {
+  position: relative;
   display: grid;
   grid-template-columns: 34px 1fr 12px;
   gap: 0.75rem;
   align-items: start;
-  padding: 0.75rem 0.95rem;
+  padding: 0.75rem 2rem 0.75rem 0.95rem;
   color: var(--text-main);
+  cursor: pointer;
+  transition: background-color 0.15s;
 }
 
 .notification-item:hover {
   background-color: var(--bg-color);
+}
+
+.notification-item--unread {
+  background-color: color-mix(in srgb, var(--primary) 5%, transparent);
+}
+
+.notification-item--unread:hover {
+  background-color: color-mix(in srgb, var(--primary) 9%, transparent);
 }
 
 .notification-avatar {
@@ -187,9 +198,59 @@
   justify-content: center;
   background-color: var(--bg-color);
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 700;
   border: 1px solid var(--border-color);
+}
+
+.notification-item--unread .notification-avatar {
+  background-color: var(--accent-light);
+  color: var(--accent);
+  border-color: transparent;
+}
+
+.notification-delete {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.55rem;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-light);
+  font-size: 0.68rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.notification-item:hover .notification-delete {
+  opacity: 1;
+}
+
+.notification-delete:hover {
+  background-color: var(--danger-bg);
+  color: var(--danger);
+}
+
+.notifications-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 2.25rem 1rem;
+  color: var(--text-light);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.notifications-state i {
+  font-size: 1.3rem;
 }
 
 .notification-copy p {

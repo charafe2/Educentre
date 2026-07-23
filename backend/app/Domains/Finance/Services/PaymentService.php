@@ -3,12 +3,15 @@
 namespace App\Domains\Finance\Services;
 
 use App\Domains\Finance\Models\Payment;
+use App\Domains\Notifications\Services\NotificationService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 class PaymentService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     public function all(int $tenantId): Collection
     {
         return Payment::query()
@@ -64,7 +67,10 @@ class PaymentService
             'paid_at' => $data['paidAt'] ?? now()->toDateString(),
         ]);
 
-        return $payment->refresh();
+        $payment->refresh();
+        $this->notificationService->notifyPaymentReceived($payment);
+
+        return $payment;
     }
 
     public function delete(int $tenantId, int $id): void

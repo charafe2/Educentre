@@ -2,12 +2,15 @@
 
 namespace App\Domains\Settings\Controllers;
 
+use App\Domains\Settings\Requests\SendSupportRequestRequest;
 use App\Domains\Settings\Requests\UpdateSettingsRequest;
 use App\Domains\Settings\Resources\SettingsResource;
 use App\Domains\Settings\Services\SettingsService;
 use App\Http\Controllers\Controller;
+use App\Mail\SupportRequestMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Settings', description: 'Paramètres du centre')]
@@ -88,5 +91,16 @@ class SettingsController extends Controller
             data: SettingsResource::make($tenant->fresh()),
             message: 'Informations du centre mises à jour.',
         );
+    }
+
+    public function sendSupportRequest(SendSupportRequestRequest $request): JsonResponse
+    {
+        Mail::to('support@moujtahide.ma')->send(new SupportRequestMail(
+            sender: $request->user(),
+            subjectLine: $request->validated('subject'),
+            messageBody: $request->validated('message'),
+        ));
+
+        return $this->success(null, 'Votre demande a été envoyée au support.');
     }
 }

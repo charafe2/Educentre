@@ -2,6 +2,7 @@
 
 namespace App\Domains\Students\Services;
 
+use App\Domains\Notifications\Services\NotificationService;
 use App\Domains\Students\Models\Enrollment;
 use App\Domains\Students\Models\Student;
 use App\Domains\Students\Models\StudentParent;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     public function all(int $tenantId): Collection
     {
         return Student::query()
@@ -44,7 +47,7 @@ class StudentService
 
     public function create(array $data): Student
     {
-        return DB::transaction(function () use ($data) {
+        $student = DB::transaction(function () use ($data) {
             $tenantId = $data['tenant_id'];
 
             $student = Student::create([
@@ -84,6 +87,10 @@ class StudentService
 
             return $student->load(['enrollments', 'parents']);
         });
+
+        $this->notificationService->notifyStudentRegistered($student);
+
+        return $student;
     }
 
     public function update(int $tenantId, int $id, array $data): Student

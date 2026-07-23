@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import { I18nProvider } from './src/i18n/I18nContext';
+import { NotificationProvider } from './src/notifications/NotificationProvider';
 import RootNavigator from './src/navigation/RootNavigator';
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
     <SafeAreaProvider>
       <I18nProvider>
         <AuthProvider>
+          <NotificationProvider />
           <StatusBar style="dark" />
           <RootNavigator />
         </AuthProvider>

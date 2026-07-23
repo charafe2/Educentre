@@ -1,16 +1,16 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
+import { NotificationsService } from '../../services/notifications.service';
+import { AppNotification, NotificationType } from '../../models/notification.model';
 import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 import { LanguageSwitcherComponent } from '../../i18n/language-switcher/language-switcher.component';
 
-type NotificationItem = {
-  id: number;
-  name: string;
-  initials: string;
-  message: string;
-  time: string;
-  unread: boolean;
+const NOTIFICATION_ICONS: Record<NotificationType, string> = {
+  payment_received: 'fa-solid fa-circle-check',
+  student_registered: 'fa-solid fa-user-plus',
+  student_at_risk: 'fa-solid fa-triangle-exclamation',
 };
 
 @Component({
@@ -22,45 +22,24 @@ type NotificationItem = {
 export class TopbarComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
+  notificationsService = inject(NotificationsService);
 
   isNotificationsOpen = false;
   isProfileOpen = false;
 
-  notifications: NotificationItem[] = [
-    {
-      id: 1,
-      name: 'Chris Thompson',
-      initials: 'CT',
-      message: 'requested review on PR #42: Feature implementation.',
-      time: '15 minutes ago',
-      unread: true,
-    },
-    {
-      id: 2,
-      name: 'Emma Davis',
-      initials: 'ED',
-      message: 'shared New component library.',
-      time: '45 minutes ago',
-      unread: true,
-    },
-    {
-      id: 3,
-      name: 'James Wilson',
-      initials: 'JW',
-      message: 'assigned you to API integration task.',
-      time: '4 hours ago',
-      unread: false,
-    },
-  ];
-
-  get unreadCount(): number {
-    return this.notifications.filter((notification) => notification.unread).length;
-  }
+  notifications = this.notificationsService.notifications;
+  unreadCount = this.notificationsService.unreadCount;
+  loading = this.notificationsService.loading;
 
   toggleNotifications(event: MouseEvent): void {
     event.stopPropagation();
     this.isNotificationsOpen = !this.isNotificationsOpen;
     this.isProfileOpen = false;
+    if (this.isNotificationsOpen) {
+      this.notificationsService.load();
+    }
   }
 
   toggleProfile(event: MouseEvent): void {
@@ -71,10 +50,45 @@ export class TopbarComponent {
 
   markAllAsRead(event: MouseEvent): void {
     event.stopPropagation();
-    this.notifications = this.notifications.map((notification) => ({
-      ...notification,
-      unread: false,
-    }));
+    this.notificationsService.markAllAsRead().subscribe();
+  }
+
+  onNotificationClick(notification: AppNotification, event: MouseEvent): void {
+    event.stopPropagation();
+
+    if (!notification.isRead) {
+      this.notificationsService.markAsRead(notification.id).subscribe();
+    }
+
+    this.isNotificationsOpen = false;
+
+    if (notification.relatedEntityType === 'student') {
+      this.router.navigate(['/etudiants']);
+    }
+  }
+
+  deleteNotification(notification: AppNotification, event: MouseEvent): void {
+    event.stopPropagation();
+    this.notificationsService.delete(notification.id).subscribe();
+  }
+
+  iconFor(type: NotificationType): string {
+    return NOTIFICATION_ICONS[type] ?? 'fa-regular fa-bell';
+  }
+
+  timeAgo(createdAt: string): string {
+    const seconds = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+
+    if (seconds < 60) return this.t('topbar.justNow');
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return this.t('topbar.minutesAgo', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return this.t('topbar.hoursAgo', { count: hours });
+    const days = Math.floor(hours / 24);
+    if (days === 1) return this.t('topbar.yesterday');
+    if (days < 7) return this.t('topbar.daysAgo', { count: days });
+
+    return new Date(createdAt).toLocaleDateString();
   }
 
   @HostListener('document:click')

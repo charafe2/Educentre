@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
+import { navigationRef } from './navigationRef';
 import {
   AdminStackParamList, AdminTabParamList, AuthStackParamList,
   MoreStackParamList, ParentTabParamList,
@@ -218,7 +219,7 @@ export default function RootNavigator() {
   const needsChildSelection = role === 'parent' && parentChildren.length > 1 && !parentStudent;
 
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer ref={navigationRef} theme={theme}>
       {role === 'admin' ? <AdminTabsNavigator />
         : role === 'parent' ? (needsChildSelection ? <ChildSelectScreen /> : <ParentTabsNavigator />)
         : <AuthNavigator />}

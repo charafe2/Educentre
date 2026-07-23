@@ -58,6 +58,7 @@ export class ParametresComponent implements OnInit {
     { id: 'securite', label: 'settings.tabSecurity', icon: 'fa-solid fa-lock' },
     { id: 'subscription', label: 'settings.tabSubscription', icon: 'fa-solid fa-credit-card' },
     { id: 'notifications', label: 'settings.tabNotifications', icon: 'fa-solid fa-bell' },
+    { id: 'support', label: 'settings.tabSupport', icon: 'fa-solid fa-headset' },
   ];
 
   centreForm = { ...this.centreService.centreInfo() };
@@ -227,6 +228,32 @@ export class ParametresComponent implements OnInit {
 
     this.passwordForm = { current: '', newPw: '', confirm: '' };
     this.toast.show(this.t('settings.toastPasswordChanged'));
+  }
+
+  // ── Support ───────────────────────────────────────────────
+  supportForm = { subject: '', message: '' };
+  supportError = signal('');
+  sendingSupport = signal(false);
+
+  async sendSupportRequest(): Promise<void> {
+    this.supportError.set('');
+    const { subject, message } = this.supportForm;
+
+    if (!subject.trim() || !message.trim()) {
+      this.supportError.set(this.t('settings.allFieldsRequired'));
+      return;
+    }
+
+    this.sendingSupport.set(true);
+    try {
+      await this.centreService.sendSupportRequest(subject.trim(), message.trim());
+      this.supportForm = { subject: '', message: '' };
+      this.toast.show(this.t('settings.toastSupportSent'));
+    } catch (err: unknown) {
+      this.supportError.set(extractValidationError(err, this.t('settings.saveError')));
+    } finally {
+      this.sendingSupport.set(false);
+    }
   }
 
   // ── Matières ──────────────────────────────────────────────

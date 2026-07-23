@@ -55,4 +55,13 @@ export class CentreService {
     );
     this.centreInfo.update(info => ({ ...info, ...data }));
   }
+
+  async sendSupportRequest(subject: string, message: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post<{ success: boolean; message: string }>(
+        `${environment.apiUrl}/v1/settings/support-request`,
+        { subject, message }
+      )
+    );
+  }
 }

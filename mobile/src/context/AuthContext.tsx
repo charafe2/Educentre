@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { apiLogin, apiLogout } from '../api/client';
+import { unregisterPushNotifications } from '../services/notifications';
 import { students } from '../data/demo';
 import { AuthUser, Student } from '../types';
 
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     if (role === 'admin') void apiLogout();
+    void unregisterPushNotifications();
     setRole(null);
     setAdminUser(null);
     setParentChildren([]);

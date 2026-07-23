@@ -77,3 +77,26 @@ export async function apiLogout(): Promise<void> {
   }
   await tokenStore.clear();
 }
+
+export async function registerPushToken(token: string, platform: string): Promise<void> {
+  if (DEMO_MODE) return;
+
+  try {
+    await request('/v1/device-tokens', {
+      method: 'POST',
+      body: JSON.stringify({ token, platform }),
+    });
+  } catch {
+    // Best-effort: a failed registration shouldn't block app usage.
+  }
+}
+
+export async function unregisterPushToken(token: string): Promise<void> {
+  if (DEMO_MODE) return;
+
+  try {
+    await request(`/v1/device-tokens/${encodeURIComponent(token)}`, { method: 'DELETE' });
+  } catch {
+    // Best-effort.
+  }
+}

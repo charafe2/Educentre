@@ -20,7 +20,7 @@
         (click)="toggleNotifications($event)"
       >
         <i class="fa-regular fa-bell"></i>
-        @if (unreadCount > 0) {
+        @if (unreadCount() > 0) {
           <span class="badge"></span>
         }
       </button>
@@ -29,26 +29,55 @@
         <section class="notifications-panel" role="menu" [attr.aria-label]="'topbar.notifications' | t">
           <header class="notifications-header">
             <h2>{{ 'topbar.notifications' | t }}</h2>
-            <button type="button" class="mark-read-btn" (click)="markAllAsRead($event)">
-              {{ 'topbar.markAllRead' | t }}
-            </button>
+            @if (unreadCount() > 0) {
+              <button type="button" class="mark-read-btn" (click)="markAllAsRead($event)">
+                {{ 'topbar.markAllRead' | t }}
+              </button>
+            }
           </header>
 
           <div class="notifications-list">
-            @for (notification of notifications; track notification.id) {
-              <article class="notification-item" [class.notification-item--unread]="notification.unread" role="menuitem">
-                <div class="notification-avatar" aria-hidden="true">{{ notification.initials }}</div>
-                <div class="notification-copy">
-                  <p>
-                    <strong>{{ notification.name }}</strong>
-                    {{ notification.message }}
-                  </p>
-                  <span>{{ notification.time }}</span>
-                </div>
-                @if (notification.unread) {
-                  <span class="notification-dot" aria-label="Unread"></span>
-                }
-              </article>
+            @if (loading()) {
+              <div class="notifications-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>{{ 'topbar.notificationsLoading' | t }}</span>
+              </div>
+            } @else if (notifications().length === 0) {
+              <div class="notifications-state">
+                <i class="fa-regular fa-bell-slash"></i>
+                <span>{{ 'topbar.notificationsEmpty' | t }}</span>
+              </div>
+            } @else {
+              @for (notification of notifications(); track notification.id) {
+                <article
+                  class="notification-item"
+                  [class.notification-item--unread]="!notification.isRead"
+                  role="menuitem"
+                  (click)="onNotificationClick(notification, $event)"
+                >
+                  <div class="notification-avatar" aria-hidden="true">
+                    <i [class]="iconFor(notification.type)"></i>
+                  </div>
+                  <div class="notification-copy">
+                    <p>
+                      <strong>{{ notification.title }}</strong>
+                      {{ notification.message }}
+                    </p>
+                    <span>{{ timeAgo(notification.createdAt) }}</span>
+                  </div>
+                  @if (!notification.isRead) {
+                    <span class="notification-dot" aria-label="Unread"></span>
+                  }
+                  <button
+                    type="button"
+                    class="notification-delete"
+                    [attr.aria-label]="'topbar.deleteNotification' | t"
+                    (click)="deleteNotification(notification, $event)"
+                  >
+                    <i class="fa-regular fa-xmark"></i>
+                  </button>
+                </article>
+              }
             }
           </div>
         </section>

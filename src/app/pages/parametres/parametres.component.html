@@ -485,6 +485,50 @@
         </div>
       }
 
+      <!-- Support -->
+      @if (activeTab() === 'support') {
+        <div class="settings-section">
+          <h3 class="section-title">{{ 'settings.supportTitle' | t }}</h3>
+          <p class="section-desc">{{ 'settings.supportDesc' | t }}</p>
+
+          @if (supportError()) {
+            <div class="pw-error">
+              <i class="fa-solid fa-circle-exclamation"></i>
+              {{ supportError() }}
+            </div>
+          }
+
+          <div class="form-group form-full">
+            <label class="form-label">{{ 'settings.supportSubject' | t }}</label>
+            <input
+              class="form-input"
+              type="text"
+              [(ngModel)]="supportForm.subject"
+              name="supportSubject"
+              [placeholder]="'settings.supportSubjectPlaceholder' | t"
+            />
+          </div>
+
+          <div class="form-group form-full">
+            <label class="form-label">{{ 'settings.supportMessage' | t }}</label>
+            <textarea
+              class="form-input form-textarea"
+              rows="6"
+              [(ngModel)]="supportForm.message"
+              name="supportMessage"
+              [placeholder]="'settings.supportMessagePlaceholder' | t"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary" [disabled]="sendingSupport()" (click)="sendSupportRequest()">
+              <i class="fa-solid fa-paper-plane"></i>
+              {{ (sendingSupport() ? 'settings.supportSending' : 'settings.supportSend') | t }}
+            </button>
+          </div>
+        </div>
+      }
+
     </div>
   </div>
 </div>
