@@ -8,6 +8,7 @@ use App\Domains\Settings\Resources\SettingsResource;
 use App\Domains\Settings\Services\SettingsService;
 use App\Http\Controllers\Controller;
 use App\Mail\SupportRequestMail;
+use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -51,7 +52,7 @@ class SettingsController extends Controller
     )]
     public function centre(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $tenant = Tenant::findOrFail($request->user()->tenant_id);
 
         return $this->success(
             data: SettingsResource::make($tenant),
@@ -83,7 +84,7 @@ class SettingsController extends Controller
     )]
     public function updateCentre(UpdateSettingsRequest $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $tenant = Tenant::findOrFail($request->user()->tenant_id);
 
         $this->settingsService->updateCentre($tenant, $request->validated());
 

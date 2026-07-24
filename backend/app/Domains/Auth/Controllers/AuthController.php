@@ -218,7 +218,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         return $this->success(
-            data: UserResource::make($request->user()->load('tenant')),
+            data: UserResource::make($request->user()),
         );
     }
 }
