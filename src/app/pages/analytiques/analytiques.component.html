@@ -84,7 +84,7 @@
   </div>
 
   <!-- Student Attrition Risk -->
-  <section class="risk-panel" aria-labelledby="risk-title">
+  <section class="risk-panel" [class.collapsed]="!riskExpanded()" aria-labelledby="risk-title">
     <div class="risk-header">
       <div class="risk-heading">
         <div class="risk-icon" [class.clear]="!riskLoading() && riskCount() === 0">
@@ -102,14 +102,25 @@
           <p>{{ 'analytics.riskDescription' | t }}</p>
         </div>
       </div>
-      <div class="risk-rule">
-        <i class="fa-solid fa-filter"></i>
-        <span>{{ 'analytics.absenceThreshold' | t: { value: riskReport()?.rule?.absenceThreshold ?? 80 } }}</span>
-        <span class="rule-operator">+</span>
-        <span>{{ 'analytics.missedOrLatePayment' | t }}</span>
-        <small>{{ 'analytics.lastDays' | t: { count: riskReport()?.rule?.lookbackDays ?? 15 } }}</small>
+      <div class="risk-header-right">
+        @if (riskExpanded()) {
+          <div class="risk-rule">
+            <i class="fa-solid fa-filter"></i>
+            <span>{{ 'analytics.absenceThreshold' | t: { value: riskReport()?.rule?.absenceThreshold ?? 80 } }}</span>
+            <span class="rule-operator">+</span>
+            <span>{{ 'analytics.missedOrLatePayment' | t }}</span>
+            <small>{{ 'analytics.lastDays' | t: { count: riskReport()?.rule?.lookbackDays ?? 15 } }}</small>
+          </div>
+        }
+        <button type="button" class="risk-toggle-hint" [attr.aria-expanded]="riskExpanded()" aria-controls="risk-panel-body" (click)="toggleRiskPanel()">
+          {{ (riskExpanded() ? 'analytics.riskCollapse' : 'analytics.riskExpand') | t }}
+          <i class="fa-solid fa-chevron-down"></i>
+        </button>
       </div>
     </div>
+
+    @if (riskExpanded()) {
+    <div id="risk-panel-body">
 
     @if (riskLoading()) {
       <div class="risk-skeleton" [attr.aria-label]="'analytics.loadingRisks' | t">
@@ -184,6 +195,8 @@
           </button>
         </div>
       </div>
+    }
+    </div>
     }
   </section>
 

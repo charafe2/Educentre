@@ -433,6 +433,8 @@
 .revenue-bars-area {
   position: relative;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   border-left: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
 }
@@ -1199,7 +1201,8 @@ td {
 /* Student attrition risk */
 .risk-panel { background: var(--surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: 1.5rem; overflow: hidden; }
 .risk-header { padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; border-bottom: 1px solid var(--border-color); }
-.risk-heading, .risk-title-row, .risk-rule { display: flex; align-items: center; }
+.risk-panel.collapsed .risk-header { border-bottom: 0; }
+.risk-heading, .risk-title-row, .risk-rule, .risk-header-right, .risk-toggle-hint { display: flex; align-items: center; }
 .risk-heading { gap: 0.875rem; min-width: 0; }
 .risk-title-row { gap: 0.65rem; flex-wrap: wrap; }
 .risk-icon { width: 42px; height: 42px; border-radius: var(--radius-md); display: grid; place-items: center; flex-shrink: 0; color: var(--danger); background: var(--danger-bg); }
@@ -1208,10 +1211,15 @@ td {
 .risk-heading p { margin: 0.25rem 0 0; color: var(--text-muted); font-size: 0.8rem; }
 .risk-count { padding: 0.18rem 0.55rem; border-radius: 999px; color: var(--danger); background: var(--danger-bg); font-size: 0.7rem; font-weight: 700; }
 .risk-count.clear { color: var(--success); background: var(--success-bg); }
+.risk-header-right { gap: 1rem; flex-shrink: 0; }
 .risk-rule { gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; color: var(--text-muted); font-size: 0.72rem; font-weight: 600; }
 .risk-rule i { color: var(--accent); }
 .risk-rule small { padding: 0.18rem 0.5rem; border: 1px solid var(--border-dark); border-radius: 999px; color: var(--text-muted); background: var(--bg-color); font-size: 0.68rem; }
 .rule-operator { color: var(--danger); font-weight: 800; }
+.risk-toggle-hint { gap: 0.4rem; padding: 0.4rem 0.75rem; border: 1px solid var(--border-dark); border-radius: 999px; background: var(--bg-color); color: var(--text-main); font: inherit; font-size: 0.78rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+.risk-toggle-hint:hover { background: var(--surface); border-color: var(--accent); }
+.risk-toggle-hint i { color: var(--accent); font-size: 0.72rem; transition: transform 0.2s ease; }
+.risk-panel:not(.collapsed) .risk-toggle-hint i { transform: rotate(180deg); }
 .risk-table-wrapper { overflow-x: auto; }
 .risk-table th { background: var(--surface); }
 .risk-table td { padding-top: 1rem; padding-bottom: 1rem; }
@@ -1312,9 +1320,8 @@ td {
   .content-area { padding: 1.25rem; }
   .stats-grid, .pay-dist-segments { grid-template-columns: 1fr; }
   .revenue-panel { padding: 1.1rem; }
-  .revenue-plot { grid-template-columns: 42px minmax(0, 1fr); overflow-x: auto; }
-  .revenue-bars-area { min-width: 620px; }
-  .revenue-bars { padding-inline: 1.2rem; gap: 1rem; }
+  .revenue-plot { grid-template-columns: 42px minmax(0, 1fr); }
+  .revenue-bars { min-width: 620px; padding-inline: 1.2rem; gap: 1rem; }
   .revenue-total strong { font-size: 1.6rem; }
   .trend-panel { padding: 1.1rem; }
   .trend-kpis { grid-template-columns: 1fr; }

@@ -496,6 +496,8 @@ export const ar: TranslationSchema = {
     riskDetectedOne: '{count} طالب مكتشف',
     riskDetectedMany: '{count} طلاب مكتشفون',
     riskDescription: 'طلاب يجب التواصل معهم بالأولوية حسب مواظبتهم ووضعية أدائهم.',
+    riskExpand: 'إظهار التفاصيل',
+    riskCollapse: 'إخفاء التفاصيل',
     absenceThreshold: 'الغياب ≥ {value}%',
     missedOrLatePayment: 'دفعة فائتة أو متأخرة',
     lastDays: 'آخر {count} أيام',

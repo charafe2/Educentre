@@ -497,6 +497,8 @@ export const fr = {
     riskDetectedOne: '{count} élève détecté',
     riskDetectedMany: '{count} élèves détectés',
     riskDescription: 'Élèves à contacter en priorité selon leur assiduité et leur situation de paiement.',
+    riskExpand: 'Afficher les détails',
+    riskCollapse: 'Masquer les détails',
     absenceThreshold: 'Absence ≥ {value}%',
     missedOrLatePayment: 'paiement manqué ou retardé',
     lastDays: '{count} derniers jours',

@@ -70,6 +70,7 @@ export class AnalytiquesComponent {
   teacherPage = signal(1);
   riskPage = signal(1);
   riskLoading = signal(true);
+  riskExpanded = signal(false);
   attendanceExpanded = signal(false);
   activeTrendIndex = signal<number | null>(null);
   activeRevenueIndex = signal<number | null>(null);
@@ -273,6 +274,10 @@ export class AnalytiquesComponent {
 
   toggleAttendanceDetails(): void {
     this.attendanceExpanded.update(value => !value);
+  }
+
+  toggleRiskPanel(): void {
+    this.riskExpanded.update(value => !value);
   }
 
   setActiveTrendPoint(index: number): void {

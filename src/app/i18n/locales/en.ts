@@ -496,6 +496,8 @@ export const en: TranslationSchema = {
     riskDetectedOne: '{count} student detected',
     riskDetectedMany: '{count} students detected',
     riskDescription: 'Students to contact as a priority based on their attendance and payment situation.',
+    riskExpand: 'Show details',
+    riskCollapse: 'Hide details',
     absenceThreshold: 'Absence ≥ {value}%',
     missedOrLatePayment: 'missed or late payment',
     lastDays: 'last {count} days',
