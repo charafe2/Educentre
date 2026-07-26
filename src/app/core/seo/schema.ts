@@ -105,6 +105,39 @@ const HOME_FAQ: ReadonlyArray<{ question: string; answer: string }> = [
   },
 ];
 
+/**
+ * Customer testimonials — MUST mirror the visible cards in the homepage
+ * "Témoignages" section (hero.component.html) exactly: same authors, quotes and
+ * 5-star ratings. Structured data may only reflect genuine, on-page reviews; if
+ * a card changes or is removed, update this list (and vice-versa).
+ */
+const HOME_TESTIMONIALS: ReadonlyArray<{ name: string; rating: number; quote: string }> = [
+  {
+    name: 'Fatima Zahra M.',
+    rating: 5,
+    quote:
+      'Moujtahid nous a économisé douze heures par semaine rien que sur la planification. Les alertes de présence changent tout — les parents nous remercient de les tenir informés.',
+  },
+  {
+    name: 'Youssef B.',
+    rating: 5,
+    quote:
+      "Nous sommes passés des registres papier à un tableau de bord en temps réel en un seul après-midi. L'intégration était fluide et l'équipe disponible à chaque étape.",
+  },
+  {
+    name: 'Nadia O.',
+    rating: 5,
+    quote:
+      "La réconciliation des paiements occupait notre comptable une journée entière. Avec Moujtahid, c'est automatisé, précis au dirham, et vérifiable en moins de cinq minutes.",
+  },
+  {
+    name: 'Omar K.',
+    rating: 5,
+    quote:
+      "Les analyses nous ont donné des informations que nous n'avions jamais eues. Nous identifions maintenant les élèves fragiles des semaines avant les examens — et nous pouvons vraiment agir.",
+  },
+];
+
 export function buildHomeSchema(): JsonLdSchema {
   const site = environment.siteUrl.replace(/\/+$/, '');
 
@@ -167,6 +200,20 @@ export function buildHomeSchema(): JsonLdSchema {
             category: 'monthly',
           },
         ],
+        // Reflects the genuine testimonials displayed on the homepage.
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: 5,
+          reviewCount: HOME_TESTIMONIALS.length,
+          bestRating: 5,
+          worstRating: 1,
+        },
+        review: HOME_TESTIMONIALS.map(({ name, rating, quote }) => ({
+          '@type': 'Review',
+          author: { '@type': 'Person', name },
+          reviewRating: { '@type': 'Rating', ratingValue: rating, bestRating: 5, worstRating: 1 },
+          reviewBody: quote,
+        })),
       },
       {
         '@type': 'FAQPage',
