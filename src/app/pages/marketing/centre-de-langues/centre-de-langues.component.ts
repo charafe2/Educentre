@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MarketingLayoutComponent } from '../marketing-layout/marketing-layout.component';
 import { FaqSectionComponent } from '../../../shared/faq-section/faq-section.component';
+import { RelatedPagesComponent } from '../../../shared/related-pages/related-pages.component';
 import { SeoService } from '../../../core/seo/seo.service';
 import { PUBLIC_PAGES } from '../../../core/seo/public-pages';
 import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/schema';
@@ -9,13 +10,13 @@ import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/sch
 @Component({
   selector: 'app-centre-de-langues',
   standalone: true,
-  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent],
+  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent, RelatedPagesComponent],
   templateUrl: './centre-de-langues.component.html',
   styleUrl: '../marketing-shared.css',
 })
 export class CentreDeLanguesComponent implements OnInit {
   private readonly seo = inject(SeoService);
-  private readonly page = PUBLIC_PAGES.languageCenter;
+  protected readonly page = PUBLIC_PAGES.languageCenter;
 
   readonly faqItems: FaqItem[] = [
     {

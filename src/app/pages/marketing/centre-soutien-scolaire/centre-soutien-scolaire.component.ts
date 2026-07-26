@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MarketingLayoutComponent } from '../marketing-layout/marketing-layout.component';
 import { FaqSectionComponent } from '../../../shared/faq-section/faq-section.component';
+import { RelatedPagesComponent } from '../../../shared/related-pages/related-pages.component';
 import { SeoService } from '../../../core/seo/seo.service';
 import { PUBLIC_PAGES } from '../../../core/seo/public-pages';
 import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/schema';
@@ -9,13 +10,13 @@ import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/sch
 @Component({
   selector: 'app-centre-soutien-scolaire',
   standalone: true,
-  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent],
+  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent, RelatedPagesComponent],
   templateUrl: './centre-soutien-scolaire.component.html',
   styleUrl: '../marketing-shared.css',
 })
 export class CentreSoutienScolaireComponent implements OnInit {
   private readonly seo = inject(SeoService);
-  private readonly page = PUBLIC_PAGES.tutoringCenter;
+  protected readonly page = PUBLIC_PAGES.tutoringCenter;
 
   // Single source of truth for both the visible accordion and the FAQPage schema.
   readonly faqItems: FaqItem[] = [

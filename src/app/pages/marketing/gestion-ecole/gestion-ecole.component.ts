@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { MarketingLayoutComponent } from '../marketing-layout/marketing-layout.component';
 import { FaqSectionComponent } from '../../../shared/faq-section/faq-section.component';
+import { RelatedPagesComponent } from '../../../shared/related-pages/related-pages.component';
 import { SeoService } from '../../../core/seo/seo.service';
 import { PUBLIC_PAGES } from '../../../core/seo/public-pages';
 import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/schema';
@@ -9,13 +10,13 @@ import { buildBreadcrumbs, buildFaqSchema, FaqItem } from '../../../core/seo/sch
 @Component({
   selector: 'app-gestion-ecole',
   standalone: true,
-  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent],
+  imports: [MarketingLayoutComponent, RouterLink, FaqSectionComponent, RelatedPagesComponent],
   templateUrl: './gestion-ecole.component.html',
   styleUrl: '../marketing-shared.css',
 })
 export class GestionEcoleComponent implements OnInit {
   private readonly seo = inject(SeoService);
-  private readonly page = PUBLIC_PAGES.school;
+  protected readonly page = PUBLIC_PAGES.school;
 
   readonly faqItems: FaqItem[] = [
     {

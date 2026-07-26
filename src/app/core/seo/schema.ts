@@ -116,10 +116,19 @@ export function buildHomeSchema(): JsonLdSchema {
         '@id': `${site}/#organization`,
         name: 'Moujtahid',
         url: `${site}/`,
+        logo: `${site}/assets/photos/MoujtahideLogo.png`,
+        email: 'support@moujtahide.ma',
         description:
           'Éditeur marocain de logiciel de gestion des centres de soutien scolaire et de langues, également adopté par les écoles privées.',
         areaServed: { '@type': 'Country', name: 'Maroc' },
         address: { '@type': 'PostalAddress', addressCountry: 'MA' },
+        contactPoint: {
+          '@type': 'ContactPoint',
+          email: 'support@moujtahide.ma',
+          contactType: 'customer support',
+          areaServed: 'MA',
+          availableLanguage: ['French', 'Arabic'],
+        },
       },
       {
         '@type': 'WebSite',
