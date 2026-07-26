@@ -1,6 +1,56 @@
 import { environment } from '../../../environments/environment';
 import { JsonLdSchema } from './seo.model';
 
+/** A single FAQ entry — the one source of truth for both the visible accordion
+ *  and the FAQPage schema, so the two can never drift apart. */
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+/** A breadcrumb trail node: label + site-relative path. */
+export interface Crumb {
+  name: string;
+  path: string;
+}
+
+function siteBase(): string {
+  return environment.siteUrl.replace(/\/+$/, '');
+}
+
+/**
+ * BreadcrumbList node for a page's trail (e.g. Accueil → Cette page). Returns a
+ * schema node (no @context) meant to be composed into a @graph via
+ * SeoService.setSchema([...]).
+ */
+export function buildBreadcrumbs(crumbs: Crumb[]): JsonLdSchema {
+  const base = siteBase();
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: crumbs.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: crumb.path === '/' ? `${base}/` : `${base}/${crumb.path.replace(/^\/+/, '')}`,
+    })),
+  };
+}
+
+/**
+ * FAQPage node built from the SAME items rendered in the visible accordion, so
+ * the structured data matches on-page content exactly (a Google requirement).
+ */
+export function buildFaqSchema(items: ReadonlyArray<FaqItem>): JsonLdSchema {
+  return {
+    '@type': 'FAQPage',
+    mainEntity: items.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  };
+}
+
 /**
  * Homepage structured data (single source of truth). Consolidates the
  * Organization, WebSite, SoftwareApplication and FAQ schema that previously

@@ -12,7 +12,17 @@ export interface PageSeo {
   path: string;
   /** Optional comma-separated keywords for the (legacy) keywords meta tag. */
   keywords?: string;
+  /**
+   * Optional site-relative or absolute Open Graph / Twitter image. Defaults to
+   * the site-wide social image when omitted. Site-relative paths (starting '/')
+   * are resolved against environment.siteUrl.
+   */
+  image?: string;
+  /** Open Graph object type. Defaults to 'website'. */
+  type?: string;
+  /** robots directive. Defaults to 'index, follow, max-image-preview:large'. */
+  robots?: string;
 }
 
-/** Minimal shape of a JSON-LD schema object passed to {@link SeoService.setSchema}. */
+/** Minimal shape of a JSON-LD schema node/object passed to {@link SeoService.setSchema}. */
 export type JsonLdSchema = Record<string, unknown>;
