@@ -41,6 +41,14 @@ export const PUBLIC_PAGES = {
     keywords:
       'gestion des centres de langues, logiciel gestion centre de langues Maroc, gestion des élèves',
   },
+  bestSoftware: {
+    path: '/meilleur-logiciel-gestion-centre-maroc',
+    title: 'Meilleur logiciel de gestion de centre au Maroc | Moujtahid',
+    description:
+      'Comment choisir le meilleur logiciel de gestion de centre (soutien scolaire, langues) au Maroc : critères clés, prix en dirhams et où se situe Moujtahid. Essai gratuit.',
+    keywords:
+      'meilleur logiciel de gestion de centre, logiciel gestion centre Maroc, gestion des centres de soutien, gestion des centres de langues',
+  },
   studentManagement: {
     path: '/fonctionnalites/gestion-eleves',
     title: 'Gestion des élèves — Logiciel scolaire au Maroc | Moujtahid',

@@ -12,6 +12,7 @@ const VERTICALS: ReadonlyArray<RelatedLink> = [
   { path: '/logiciel-gestion-centre-de-langues', label: 'Gestion de centre de langues' },
   { path: '/logiciel-gestion-ecole', label: "Gestion d'école" },
   { path: '/fonctionnalites/gestion-eleves', label: 'Gestion des élèves' },
+  { path: '/meilleur-logiciel-gestion-centre-maroc', label: 'Bien choisir son logiciel de gestion de centre' },
 ];
 
 /**

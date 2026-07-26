@@ -95,6 +95,37 @@ function buildRobots(baseUrl) {
   return lines.join('\n');
 }
 
+/**
+ * /llms.txt — a concise, factual, markdown summary of the site aimed at AI
+ * engines (llmstxt.org convention). Kept factual and extractable; prices/contact
+ * mirror the site content.
+ */
+function buildLlms(baseUrl) {
+  return `# Moujtahid
+
+> Moujtahid est un logiciel marocain de gestion des centres de soutien scolaire et de langues (et d'écoles privées) : gestion des élèves, présences, paiements en dirhams (MAD) et application mobile pour les parents.
+
+Moujtahid est conçu au Maroc, en français, avec une facturation en dirhams (MAD). Il s'adresse aux centres de soutien scolaire, aux centres de langues et aux écoles privées, de Casablanca à Rabat, Marrakech et Fès. Deux formules mensuelles sont proposées, avec un essai gratuit de 30 jours.
+
+## Pages principales
+- [Accueil](${baseUrl}/) : présentation, fonctionnalités, tarifs et FAQ
+- [Logiciel de gestion de centre de soutien scolaire](${baseUrl}/logiciel-gestion-centre-soutien-scolaire)
+- [Logiciel de gestion de centre de langues](${baseUrl}/logiciel-gestion-centre-de-langues)
+- [Logiciel de gestion d'école](${baseUrl}/logiciel-gestion-ecole)
+- [Gestion des élèves](${baseUrl}/fonctionnalites/gestion-eleves)
+- [Meilleur logiciel de gestion de centre au Maroc — guide](${baseUrl}/meilleur-logiciel-gestion-centre-maroc)
+
+## Faits
+- Marché : Maroc
+- Langue : français
+- Monnaie : dirham marocain (MAD)
+- Tarifs : Débutant 189 MAD/mois, Pro 289 MAD/mois
+- Essai gratuit : 30 jours
+- Plateformes : Web, iOS, Android
+- Contact : support@moujtahide.ma
+`;
+}
+
 async function main() {
   const { siteUrl } = JSON.parse(readFileSync(siteConfigPath, 'utf8'));
   const baseUrl = siteUrl.production.replace(/\/+$/, '');
@@ -106,9 +137,11 @@ async function main() {
 
   writeFileSync(join(browserDir, 'sitemap.xml'), buildSitemap(baseUrl, routes));
   writeFileSync(join(browserDir, 'robots.txt'), buildRobots(baseUrl));
+  writeFileSync(join(browserDir, 'llms.txt'), buildLlms(baseUrl));
 
   console.log(`Sitemap: ${routes.length} routes -> ${baseUrl}/sitemap.xml`);
   console.log(`Robots:  ${baseUrl}/robots.txt`);
+  console.log(`LLMs:    ${baseUrl}/llms.txt`);
 }
 
 main().catch(err => {

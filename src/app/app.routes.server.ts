@@ -15,6 +15,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'logiciel-gestion-ecole', renderMode: RenderMode.Prerender },
   { path: 'logiciel-gestion-centre-de-langues', renderMode: RenderMode.Prerender },
   { path: 'fonctionnalites/gestion-eleves', renderMode: RenderMode.Prerender },
+  { path: 'meilleur-logiciel-gestion-centre-maroc', renderMode: RenderMode.Prerender },
   { path: 'politique-de-confidentialite', renderMode: RenderMode.Prerender },
   { path: 'conditions-generales-utilisation', renderMode: RenderMode.Prerender },
   { path: 'politique-de-cookies', renderMode: RenderMode.Prerender },

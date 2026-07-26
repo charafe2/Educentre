@@ -37,6 +37,10 @@ export const routes: Routes = [
     path: 'fonctionnalites/gestion-eleves',
     loadComponent: () => import('./pages/marketing/gestion-eleves/gestion-eleves.component').then(m => m.GestionElevesComponent),
   },
+  {
+    path: 'meilleur-logiciel-gestion-centre-maroc',
+    loadComponent: () => import('./pages/marketing/meilleur-logiciel/meilleur-logiciel.component').then(m => m.MeilleurLogicielComponent),
+  },
 
   {
     path: 'politique-de-confidentialite',
