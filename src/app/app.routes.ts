@@ -19,6 +19,25 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
 
+  // Public SEO marketing landing pages (Moroccan French). Kept above the
+  // authenticated layout route so they resolve as standalone public pages.
+  {
+    path: 'logiciel-gestion-centre-soutien-scolaire',
+    loadComponent: () => import('./pages/marketing/centre-soutien-scolaire/centre-soutien-scolaire.component').then(m => m.CentreSoutienScolaireComponent),
+  },
+  {
+    path: 'logiciel-gestion-ecole',
+    loadComponent: () => import('./pages/marketing/gestion-ecole/gestion-ecole.component').then(m => m.GestionEcoleComponent),
+  },
+  {
+    path: 'logiciel-gestion-centre-de-langues',
+    loadComponent: () => import('./pages/marketing/centre-de-langues/centre-de-langues.component').then(m => m.CentreDeLanguesComponent),
+  },
+  {
+    path: 'fonctionnalites/gestion-eleves',
+    loadComponent: () => import('./pages/marketing/gestion-eleves/gestion-eleves.component').then(m => m.GestionElevesComponent),
+  },
+
   {
     path: 'politique-de-confidentialite',
     loadComponent: () => import('./pages/legal/politique-confidentialite/politique-confidentialite.component').then(m => m.PolitiqueConfidentialiteComponent),
