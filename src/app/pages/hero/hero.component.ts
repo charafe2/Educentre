@@ -1,12 +1,15 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  ViewEncapsulation, PLATFORM_ID, Inject,
+  ViewEncapsulation, PLATFORM_ID, Inject, inject,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
 import { FlagLanguageSwitcherComponent } from '../../i18n/flag-language-switcher/flag-language-switcher.component';
+import { SeoService } from '../../core/seo/seo.service';
+import { PUBLIC_PAGES } from '../../core/seo/public-pages';
+import { buildHomeSchema } from '../../core/seo/schema';
 
 type IntroState = 'active' | 'dismissed';
 
@@ -44,9 +47,16 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   private _sectionMotionAbort?: AbortController;
   private _introDismissed = false;
 
+  private readonly seo = inject(SeoService);
+
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   ngOnInit() {
+    // SEO must run on both server (prerender) and browser, so it comes before the
+    // browser-only DOM work below.
+    this.seo.setPageSeo(PUBLIC_PAGES.home);
+    this.seo.setSchema(buildHomeSchema());
+
     if (!isPlatformBrowser(this.platformId)) return;
     this._savedBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = '#ffffff';
