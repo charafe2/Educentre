@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { DOCUMENT, Injectable, inject, signal } from '@angular/core';
 import { fr } from './locales/fr';
 import { ar } from './locales/ar';
 import { en } from './locales/en';
@@ -20,6 +20,10 @@ const DICTS: Record<Lang, Tree> = { fr, ar, en };
 
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
+  // Injected DOCUMENT (not the global) so setting lang/dir works during
+  // prerender/SSR as well as in the browser.
+  private readonly document = inject(DOCUMENT);
+
   // Exposed as a signal so any computed/effect can react to language changes.
   readonly lang = signal<Lang>(this.readInitialLang());
 
@@ -84,7 +88,7 @@ export class TranslationService {
 
   private applyDocumentAttributes(lang: Lang): void {
     const dir = lang === 'ar' ? 'rtl' : 'ltr';
-    const root = document.documentElement;
+    const root = this.document.documentElement;
     root.setAttribute('lang', lang);
     root.setAttribute('dir', dir);
   }
