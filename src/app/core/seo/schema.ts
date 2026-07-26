@@ -67,7 +67,7 @@ export function buildHomeSchema(): JsonLdSchema {
         name: 'Moujtahid',
         url: `${site}/`,
         description:
-          'Éditeur marocain de logiciel de gestion scolaire pour centres de soutien, écoles privées et centres de langues.',
+          'Éditeur marocain de logiciel de gestion des centres de soutien scolaire et de langues, également adopté par les écoles privées.',
         areaServed: { '@type': 'Country', name: 'Maroc' },
         address: { '@type': 'PostalAddress', addressCountry: 'MA' },
       },
@@ -91,7 +91,7 @@ export function buildHomeSchema(): JsonLdSchema {
         countriesSupported: 'MA',
         areaServed: { '@type': 'Country', name: 'Maroc' },
         description:
-          'Logiciel de gestion des centres scolaires au Maroc : élèves, présences, paiements en dirhams (MAD) et application parents.',
+          'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc : élèves, présences, paiements en dirhams (MAD) et application parents.',
         offers: [
           {
             '@type': 'Offer',

@@ -12,19 +12,19 @@ import { PageSeo } from './seo.model';
 export const PUBLIC_PAGES = {
   home: {
     path: '/',
-    title: 'Moujtahid — Logiciel de gestion des centres scolaires au Maroc',
+    title: 'Moujtahid — Gestion des centres de soutien scolaire au Maroc',
     description:
-      'Moujtahid, le logiciel de gestion des centres scolaires au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit 30 jours.',
+      'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit 30 jours.',
     keywords:
-      'gestion des centres scolaires Maroc, logiciel gestion scolaire Maroc, gestion des élèves, gestion des écoles Maroc',
+      'gestion des centres de soutien scolaire, gestion des centres de langues, logiciel gestion centre de soutien scolaire Maroc, gestion des élèves',
   },
   tutoringCenter: {
     path: '/logiciel-gestion-centre-soutien-scolaire',
-    title: 'Logiciel de gestion de centre de soutien scolaire au Maroc',
+    title: 'Logiciel de gestion des centres de soutien scolaire au Maroc',
     description:
-      'Logiciel de gestion de centre de soutien scolaire conçu pour le Maroc : groupes, présences, paiements en MAD et suivi des élèves, de Casablanca à Marrakech.',
+      'Logiciel de gestion des centres de soutien scolaire au Maroc : groupes, présences, paiements en MAD et suivi des élèves, de Casablanca à Marrakech.',
     keywords:
-      'logiciel gestion centre de soutien scolaire, gestion centre de soutien Maroc, gestion des élèves',
+      'gestion des centres de soutien scolaire, logiciel gestion centre de soutien scolaire Maroc, gestion des élèves',
   },
   school: {
     path: '/logiciel-gestion-ecole',
@@ -35,11 +35,11 @@ export const PUBLIC_PAGES = {
   },
   languageCenter: {
     path: '/logiciel-gestion-centre-de-langues',
-    title: 'Logiciel de gestion de centre de langues au Maroc | Moujtahid',
+    title: 'Logiciel de gestion des centres de langues au Maroc | Moujtahid',
     description:
-      "Logiciel de gestion de centre de langues au Maroc : sessions, niveaux, présences et paiements en MAD, pour les centres de langues de Rabat, Casablanca et Fès.",
+      "Logiciel de gestion des centres de langues au Maroc : sessions, niveaux, présences et paiements en MAD, pour les centres de langues de Rabat, Casablanca et Fès.",
     keywords:
-      'logiciel gestion centre de langues, gestion centre de langues Maroc, gestion des élèves',
+      'gestion des centres de langues, logiciel gestion centre de langues Maroc, gestion des élèves',
   },
   studentManagement: {
     path: '/fonctionnalites/gestion-eleves',
