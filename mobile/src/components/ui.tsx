@@ -42,14 +42,16 @@ export function StatCard({ label, value, hint, hintColor, icon, iconColor, iconB
   );
 }
 
-export function Avatar({ name, color, size = 42 }: { name: string; color: string; size?: number }) {
+export function Avatar({ name, color, size = 42, solid = false }: {
+  name: string; color: string; size?: number; solid?: boolean;
+}) {
   const initials = name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
   return (
     <View style={{
       width: size, height: size, borderRadius: size / 2,
-      backgroundColor: `${color}22`, alignItems: 'center', justifyContent: 'center',
+      backgroundColor: solid ? color : `${color}22`, alignItems: 'center', justifyContent: 'center',
     }}>
-      <Text style={{ color, fontWeight: '700', fontSize: size * 0.36 }}>{initials}</Text>
+      <Text style={{ color: solid ? colors.white : color, fontWeight: '700', fontSize: size * 0.36 }}>{initials}</Text>
     </View>
   );
 }
@@ -128,22 +130,6 @@ export function ProgressBar({ ratio, color = colors.blue, height = 6 }: {
   );
 }
 
-// Bouton retour discret, style natif iOS, pour revenir au choix d'enfant
-// (espace parent multi-enfants) sans se déconnecter.
-export function ChildSwitchBack({ onPress }: { onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel="Changer d'enfant"
-      hitSlop={10}
-      style={({ pressed }) => [styles.childBack, pressed && { opacity: 0.5 }]}
-    >
-      <Ionicons name="chevron-back" size={22} color={colors.gray300} />
-    </Pressable>
-  );
-}
-
 export function EmptyState({ icon, title, body }: {
   icon: keyof typeof Ionicons.glyphMap; title: string; body?: string;
 }) {
@@ -206,10 +192,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   fieldError: { fontSize: font.tiny, color: colors.danger, marginTop: 4 },
-  childBack: {
-    position: 'absolute', top: spacing.sm, left: spacing.sm, zIndex: 10,
-    width: 32, height: 32, alignItems: 'center', justifyContent: 'center',
-  },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl },
   emptyIcon: {
     width: 56, height: 56, borderRadius: 28, backgroundColor: colors.gray50,

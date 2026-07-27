@@ -73,6 +73,29 @@ export function studentSessions(student: Student): (Session & { classe: Classe }
     .sort((a, b) => a.day - b.day || a.startHour - b.startHour);
 }
 
+// Prochaine séance à venir, calculée depuis l'heure réelle de l'appareil.
+// Le planning démo tourne sur une semaine fixe (day: 0=Lundi..5=Samedi) donc on
+// convertit vers l'index JS (0=Dimanche..6=Samedi) pour trouver la distance en jours.
+export function nextUpcomingSession(student: Student): { session: Session & { classe: Classe }; daysAway: number } | null {
+  const list = studentSessions(student).filter(s => !s.isCancelled);
+  if (!list.length) return null;
+
+  const now = new Date();
+  const jsDay = now.getDay();
+  const currentHour = now.getHours();
+
+  let best: { session: (typeof list)[number]; daysAway: number } | null = null;
+  for (const s of list) {
+    const sessionJsDay = s.day + 1; // demo day 0=Lundi..5=Samedi -> JS 1..6
+    let daysAway = (sessionJsDay - jsDay + 7) % 7;
+    if (daysAway === 0 && s.startHour <= currentHour) daysAway = 7;
+    if (!best || daysAway < best.daysAway || (daysAway === best.daysAway && s.startHour < best.session.startHour)) {
+      best = { session: s, daysAway };
+    }
+  }
+  return best;
+}
+
 export function studentAttendance(studentId: number): (Attendance & { classe?: Classe })[] {
   return attendance
     .filter(a => a.studentId === studentId)

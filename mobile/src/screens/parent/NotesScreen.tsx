@@ -2,7 +2,8 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, font, spacing } from '../../theme';
-import { Card, ChildSwitchBack, EmptyState, ProgressBar, SectionTitle } from '../../components/ui';
+import { Card, EmptyState, ProgressBar, SectionTitle } from '../../components/ui';
+import { ParentPageHeader } from '../../components/ParentHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { formatDateFR, studentAverage, studentGrades } from '../../data/selectors';
@@ -25,17 +26,17 @@ export default function NotesScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
       <ScrollView
-        contentContainerStyle={[
-          { padding: spacing.base },
-          parentChildren.length > 1 && { paddingTop: spacing.xxl },
-        ]}
+        contentContainerStyle={{ padding: spacing.base }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{t('notes.title')}</Text>
-        <Text style={styles.subtitle}>{t('notes.subtitle', { name: student.firstName })}</Text>
-
+        <ParentPageHeader
+          title={t('notes.title')}
+          subtitle={t('notes.subtitle', { name: student.firstName })}
+          student={student}
+          multiChildren={parentChildren.length > 1}
+          onSwitchChild={switchChild}
+        />
         <Card style={styles.heroCard}>
           <Text style={styles.heroLabel}>{t('notes.average')}</Text>
           <Text style={styles.heroValue}>{average !== null ? `${average}` : '-'}<Text style={styles.heroMax}>/20</Text></Text>
@@ -96,9 +97,7 @@ export default function NotesScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.gray50 },
-  title: { fontSize: font.h2, fontWeight: '800', color: colors.black, letterSpacing: -0.3 },
-  subtitle: { fontSize: font.small, color: colors.gray500, marginTop: 2 },
-  heroCard: { marginTop: spacing.md, alignItems: 'center', paddingVertical: spacing.xl },
+  heroCard: { alignItems: 'center', paddingVertical: spacing.xl },
   heroLabel: { fontSize: font.small, color: colors.gray500 },
   heroValue: {
     fontSize: 46, fontWeight: '800', color: colors.black,

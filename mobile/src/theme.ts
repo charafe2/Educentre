@@ -23,6 +23,13 @@ export const colors = {
   tealBg: 'rgba(34, 181, 141, 0.13)',
   gold: '#ECA72C',
   goldBg: 'rgba(236, 167, 44, 0.15)',
+  // Parent-space hero header (see mobile/src/components/ParentHeader.tsx).
+  navy: '#152A4E',
+  navyDark: '#0F1F38',
+  onNavy: '#FFFFFF',
+  onNavyMuted: 'rgba(255, 255, 255, 0.66)',
+  onNavySoft: 'rgba(255, 255, 255, 0.14)',
+  onNavyBorder: 'rgba(255, 255, 255, 0.16)',
 };
 
 export const spacing = {

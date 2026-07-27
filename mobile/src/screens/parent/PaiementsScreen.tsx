@@ -3,7 +3,8 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, font, formatMAD, spacing } from '../../theme';
-import { Badge, Button, Card, ChildSwitchBack, EmptyState, SectionTitle } from '../../components/ui';
+import { Badge, Button, Card, EmptyState, SectionTitle } from '../../components/ui';
+import { ParentPageHeader } from '../../components/ParentHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { formatMonthFR, studentPayments } from '../../data/selectors';
@@ -19,17 +20,17 @@ export default function PaiementsScreen() {
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
-      {parentChildren.length > 1 ? <ChildSwitchBack onPress={switchChild} /> : null}
       <ScrollView
-        contentContainerStyle={[
-          { padding: spacing.base },
-          parentChildren.length > 1 && { paddingTop: spacing.xxl },
-        ]}
+        contentContainerStyle={{ padding: spacing.base }}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>{t('paiements.title')}</Text>
-        <Text style={styles.subtitle}>{t('paiements.subtitle', { name: student.firstName })}</Text>
-
+        <ParentPageHeader
+          title={t('paiements.title')}
+          subtitle={t('paiements.subtitle', { name: student.firstName })}
+          student={student}
+          multiChildren={parentChildren.length > 1}
+          onSwitchChild={switchChild}
+        />
         <Card style={[
           styles.dueCard,
           dueTotal === 0 && { backgroundColor: colors.successBg, borderColor: 'transparent' },
@@ -88,9 +89,7 @@ export default function PaiementsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.gray50 },
-  title: { fontSize: font.h2, fontWeight: '800', color: colors.black, letterSpacing: -0.3 },
-  subtitle: { fontSize: font.small, color: colors.gray500, marginTop: 2 },
-  dueCard: { marginTop: spacing.md },
+  dueCard: {},
   dueRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   dueLabel: { fontSize: font.small, color: colors.gray500 },
   dueTitle: { fontSize: font.body + 1, fontWeight: '800', color: colors.black },
