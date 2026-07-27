@@ -1,5 +1,5 @@
 import { Component, signal, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -13,7 +13,6 @@ import { TranslatePipe } from '../../i18n/translate.pipe';
 })
 export class SidebarComponent {
   auth = inject(AuthStore);
-  private router = inject(Router);
 
   collapsed = signal(false);
   user = this.auth.user;
@@ -28,8 +27,11 @@ export class SidebarComponent {
     return this.auth.canAccess(key);
   }
 
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+  async logout(): Promise<void> {
+    await this.auth.logout();
+    // Hard reload (not router.navigate) so every app-root singleton service
+    // (student/teacher/payment caches, etc.) is torn down — an SPA-only nav
+    // would let the next login on this tab inherit this tenant's cached data.
+    window.location.href = '/login';
   }
 }

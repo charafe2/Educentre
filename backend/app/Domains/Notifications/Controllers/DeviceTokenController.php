@@ -12,7 +12,15 @@ class DeviceTokenController extends Controller
 {
     public function store(StoreDeviceTokenRequest $request): JsonResponse
     {
-        DeviceToken::updateOrCreate(
+        // `token` (not tenant_id) is the real unique key here — the same
+        // physical device can legitimately re-register under a different
+        // tenant/user (e.g. someone logs into a different centre's account
+        // on the same phone), and ownership must transfer cleanly rather
+        // than fail on the column's unique constraint. Matching without a
+        // tenant filter is intentional; withoutGlobalScopes makes that
+        // explicit instead of relying on the ambient tenant scope to happen
+        // to produce the same result.
+        DeviceToken::withoutGlobalScopes()->updateOrCreate(
             ['token' => $request->validated('token')],
             [
                 'tenant_id' => $request->user()->tenant_id,

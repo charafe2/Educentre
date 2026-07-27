@@ -29,7 +29,6 @@ export interface PaymentSummary {
 export class PaymentsService {
   private http = inject(HttpClient);
   private studentsService = inject(StudentsService);
-  private pageCache = new Map<string, PaginatedApiResponse<Payment, PaymentSummary>>();
   private lastPageFilters: PaymentPageFilters = { page: 1, perPage: 8 };
 
   payments = signal<Payment[]>([]);
@@ -64,13 +63,6 @@ export class PaymentsService {
   loadPaymentPage(filters: PaymentPageFilters = this.lastPageFilters): void {
     const normalized = { page: 1, perPage: 8, ...filters };
     this.lastPageFilters = normalized;
-    const key = this.cacheKey(normalized);
-    const cached = this.pageCache.get(key);
-
-    if (cached) {
-      this.applyPage(cached);
-      return;
-    }
 
     this.loadingPage.set(true);
     this.http.get<PaginatedApiResponse<Payment, PaymentSummary>>(`${environment.apiUrl}/v1/payments`, {
@@ -78,7 +70,6 @@ export class PaymentsService {
     }).subscribe({
       next: res => {
         if (res.success) {
-          this.pageCache.set(key, res);
           this.applyPage(res);
         }
       },
@@ -140,7 +131,6 @@ export class PaymentsService {
   }
 
   private refreshRelatedData(): void {
-    this.pageCache.clear();
     this.loadPayments();
     this.loadPaymentPage(this.lastPageFilters);
     this.studentsService.loadStudents();
@@ -162,14 +152,5 @@ export class PaymentsService {
     if (filters.status) params = params.set('status', filters.status);
 
     return params;
-  }
-
-  private cacheKey(filters: PaymentPageFilters): string {
-    return JSON.stringify({
-      page: filters.page ?? 1,
-      perPage: filters.perPage ?? 8,
-      month: filters.month ?? '',
-      status: filters.status ?? '',
-    });
   }
 }

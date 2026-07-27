@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { SuperadminAuthStore } from '../superadmin-auth.store';
 
 @Component({
@@ -11,12 +11,14 @@ import { SuperadminAuthStore } from '../superadmin-auth.store';
 })
 export class SuperadminLayoutComponent {
   private auth = inject(SuperadminAuthStore);
-  private router = inject(Router);
 
   sidebarCollapsed = signal(false);
 
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/superadmin/login']);
+  async logout(): Promise<void> {
+    await this.auth.logout();
+    // Hard reload (not router.navigate) so every app-root singleton service
+    // is torn down — an SPA-only nav would let the next login on this tab
+    // inherit stale cached data.
+    window.location.href = '/superadmin/login';
   }
 }

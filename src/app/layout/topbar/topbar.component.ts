@@ -101,6 +101,9 @@ export class TopbarComponent {
     event.stopPropagation();
     await this.auth.logout();
     this.isProfileOpen = false;
-    this.router.navigate(['/login']);
+    // Hard reload (not router.navigate) so every app-root singleton service
+    // (student/teacher/payment caches, etc.) is torn down — an SPA-only nav
+    // would let the next login on this tab inherit this tenant's cached data.
+    window.location.href = '/login';
   }
 }

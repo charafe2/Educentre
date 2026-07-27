@@ -6,6 +6,20 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Binds the authenticated user's tenant_id into the container so
+ * TenantScope (see App\Domains\Core\Scopes\TenantScope) can scope every
+ * BelongsToTenant model query to it.
+ *
+ * SECURITY NOTE: this relies on the container being torn down and rebuilt
+ * fresh for every request, which is true today (plain PHP-FPM / `artisan
+ * serve`, no Octane). If this app ever adopts Laravel Octane, Swoole, or
+ * RoadRunner, `app()->instance()` bindings persist across requests handled
+ * by the same worker — a request that doesn't hit this binding (e.g. an
+ * unauthenticated route served by a worker that just handled an
+ * authenticated one) would silently inherit the PREVIOUS request's
+ * tenant_id. Re-audit this file before adopting any of those.
+ */
 class ResolveTenantMiddleware
 {
     /**

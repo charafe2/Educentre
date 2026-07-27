@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { TeacherPayrollRecord, TeacherSalaryRow } from '../models/monthly-review.model';
 import { Teacher } from '../models/teacher.model';
 import { Classe } from '../models/classe.model';
+import { AuthStore } from '../auth/auth.store';
 
 // TODO(backend): there is no payroll persistence yet (no `teacher_payments` table/API).
 // This service is a client-only stand-in so the Monthly Review "Mark as Paid" action
@@ -10,10 +11,14 @@ import { Classe } from '../models/classe.model';
 //   POST   /api/v1/teacher-payments/:teacherId/mark-paid   { month, method }
 //   DELETE /api/v1/teacher-payments/:teacherId?month=YYYY-MM
 // The public method signatures below are written to make that swap a drop-in change.
-const STORAGE_KEY = 'moujtahid.teacherPayroll.v1';
+const STORAGE_KEY_PREFIX = 'moujtahid.teacherPayroll.v1';
 
 @Injectable({ providedIn: 'root' })
 export class TeacherPayrollService {
+  // Namespaced per logged-in user — teacherId is only unique within a tenant,
+  // so a shared/un-namespaced key would show one tenant's paid/unpaid status
+  // on another tenant's teachers of the same id.
+  private auth = inject(AuthStore);
   private records = signal<TeacherPayrollRecord[]>(this.loadFromStorage());
 
   isPaid(teacherId: number, month: string): boolean {
@@ -75,9 +80,14 @@ export class TeacherPayrollService {
       .filter(row => row.amountOwed > 0);
   }
 
+  private storageKey(): string {
+    const uuid = this.auth.user()?.uuid;
+    return uuid ? `${STORAGE_KEY_PREFIX}.${uuid}` : STORAGE_KEY_PREFIX;
+  }
+
   private persist(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.records()));
+      localStorage.setItem(this.storageKey(), JSON.stringify(this.records()));
     } catch {
       // Storage unavailable (private browsing, quota) — state stays in-memory for this session.
     }
@@ -85,7 +95,7 @@ export class TeacherPayrollService {
 
   private loadFromStorage(): TeacherPayrollRecord[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(this.storageKey());
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];

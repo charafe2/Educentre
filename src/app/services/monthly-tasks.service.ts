@@ -1,10 +1,11 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { MonthlyTask } from '../models/monthly-review.model';
+import { AuthStore } from '../auth/auth.store';
 
 // TODO(backend): task completion isn't persisted server-side yet. This mirrors
 // TeacherPayrollService's approach (localStorage today, swap for a real
 // `monthly_review_tasks` table/API later — e.g. POST /api/v1/monthly-review/tasks/:id/toggle).
-const STORAGE_KEY = 'moujtahid.monthlyTasks.v1';
+const STORAGE_KEY_PREFIX = 'moujtahid.monthlyTasks.v1';
 
 // `label` / `description` hold translation keys, resolved via the `t` pipe
 // where the tasks are rendered (see TaskChecklistComponent).
@@ -25,6 +26,9 @@ interface TaskCompletion {
 
 @Injectable({ providedIn: 'root' })
 export class MonthlyTasksService {
+  // Namespaced per logged-in user — see TeacherPayrollService for why a bare
+  // shared key would leak one tenant's checklist state into another's.
+  private auth = inject(AuthStore);
   private completions = signal<TaskCompletion[]>(this.loadFromStorage());
 
   readonly tasks = DEFAULT_MONTHLY_TASKS;
@@ -48,9 +52,14 @@ export class MonthlyTasksService {
     return this.tasks.filter(t => this.isDone(t.id, month)).length;
   }
 
+  private storageKey(): string {
+    const uuid = this.auth.user()?.uuid;
+    return uuid ? `${STORAGE_KEY_PREFIX}.${uuid}` : STORAGE_KEY_PREFIX;
+  }
+
   private persist(): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.completions()));
+      localStorage.setItem(this.storageKey(), JSON.stringify(this.completions()));
     } catch {
       // Storage unavailable — state stays in-memory for this session.
     }
@@ -58,7 +67,7 @@ export class MonthlyTasksService {
 
   private loadFromStorage(): TaskCompletion[] {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(this.storageKey());
       return raw ? JSON.parse(raw) : [];
     } catch {
       return [];

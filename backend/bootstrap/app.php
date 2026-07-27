@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(append: [
             \App\Domains\Core\Middleware\ResolveTenantMiddleware::class,
+            \App\Domains\Core\Middleware\PreventApiResponseCaching::class,
         ]);
         $middleware->alias([
             'superadmin' => \App\Domains\Core\Middleware\EnsureSuperAdmin::class,

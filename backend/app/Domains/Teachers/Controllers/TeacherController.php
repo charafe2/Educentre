@@ -47,9 +47,9 @@ class TeacherController extends Controller
         );
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id, Request $request): JsonResponse
     {
-        $teacher = $this->teacherService->find($id);
+        $teacher = $this->teacherService->find($id, $request->user()->tenant_id);
         return $this->success(new TeacherResource($teacher));
     }
 
@@ -68,13 +68,13 @@ class TeacherController extends Controller
 
     public function update(int $id, UpdateTeacherRequest $request): JsonResponse
     {
-        $this->teacherService->update($id, $request->validated());
+        $this->teacherService->update($id, $request->user()->tenant_id, $request->validated());
         return $this->success(null, 'Professeur mis à jour avec succès.');
     }
 
-    public function destroy(int $id): JsonResponse
+    public function destroy(int $id, Request $request): JsonResponse
     {
-        $this->teacherService->delete($id);
+        $this->teacherService->delete($id, $request->user()->tenant_id);
         return $this->success(null, 'Professeur supprimé avec succès.');
     }
 }
