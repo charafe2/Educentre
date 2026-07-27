@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n/I18nContext';
@@ -16,6 +17,7 @@ import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
 import ParentLoginScreen from '../screens/auth/ParentLoginScreen';
 import ChildSelectScreen from '../screens/auth/ChildSelectScreen';
+import OnboardingScreen, { ONBOARDING_STORAGE_KEY } from '../screens/onboarding/OnboardingScreen';
 
 import DashboardScreen from '../screens/admin/DashboardScreen';
 import StudentsScreen from '../screens/admin/StudentsScreen';
@@ -57,8 +59,14 @@ function AuthNavigator() {
       }}
     >
       <AuthStack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
-      <AuthStack.Screen name="AdminLogin" component={AdminLoginScreen} options={{ title: 'Connexion' }} />
-      <AuthStack.Screen name="ParentLogin" component={ParentLoginScreen} options={{ title: 'Connexion' }} />
+      <AuthStack.Screen
+        name="AdminLogin" component={AdminLoginScreen}
+        options={{ headerShown: false, animation: 'fade_from_bottom' }}
+      />
+      <AuthStack.Screen
+        name="ParentLogin" component={ParentLoginScreen}
+        options={{ headerShown: false, animation: 'fade_from_bottom' }}
+      />
     </AuthStack.Navigator>
   );
 }
@@ -179,35 +187,35 @@ function ParentTabsNavigator() {
         name="Accueil" component={AccueilScreen}
         options={{
           title: t('parentTabs.accueil'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Cours" component={CoursScreen}
         options={{
           title: t('parentTabs.cours'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
-        }}
-      />
-      <ParentTabs.Screen
-        name="Presence" component={PresenceScreen}
-        options={{
-          title: t('parentTabs.presence'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-done-outline" size={size} color={color} />,
-        }}
-      />
-      <ParentTabs.Screen
-        name="Notes" component={NotesScreen}
-        options={{
-          title: t('parentTabs.notes'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="ribbon-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'book' : 'book-outline'} size={size} color={color} />,
         }}
       />
       <ParentTabs.Screen
         name="Paiements" component={PaiementsScreen}
         options={{
           title: t('parentTabs.paiements'),
-          tabBarIcon: ({ color, size }) => <Ionicons name="card-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'card' : 'card-outline'} size={size} color={color} />,
+        }}
+      />
+      <ParentTabs.Screen
+        name="Presence" component={PresenceScreen}
+        options={{
+          title: t('parentTabs.presence'),
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />,
+        }}
+      />
+      <ParentTabs.Screen
+        name="Notes" component={NotesScreen}
+        options={{
+          title: t('parentTabs.notes'),
+          tabBarIcon: ({ color, size, focused }) => <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={size} color={color} />,
         }}
       />
     </ParentTabs.Navigator>
@@ -218,10 +226,22 @@ export default function RootNavigator() {
   const { role, parentChildren, parentStudent } = useAuth();
   const needsChildSelection = role === 'parent' && parentChildren.length > 1 && !parentStudent;
 
+  // undefined = still reading AsyncStorage (kept invisible under AnimatedSplash);
+  // false = first launch, show the onboarding slides; true = skip straight to auth.
+  const [onboarded, setOnboarded] = useState<boolean | undefined>(undefined);
+
+  useEffect(() => {
+    AsyncStorage.getItem(ONBOARDING_STORAGE_KEY)
+      .then(value => setOnboarded(value === 'true'))
+      .catch(() => setOnboarded(true));
+  }, []);
+
   return (
     <NavigationContainer ref={navigationRef} theme={theme}>
       {role === 'admin' ? <AdminTabsNavigator />
         : role === 'parent' ? (needsChildSelection ? <ChildSelectScreen /> : <ParentTabsNavigator />)
+        : onboarded === false ? <OnboardingScreen onDone={() => setOnboarded(true)} />
+        : onboarded === undefined ? null
         : <AuthNavigator />}
     </NavigationContainer>
   );

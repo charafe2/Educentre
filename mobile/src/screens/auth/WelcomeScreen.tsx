@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useRef } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -9,40 +9,65 @@ import { useI18n } from '../../i18n/I18nContext';
 import { LanguageSwitcher } from '../../i18n/LanguageSwitcher';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Welcome'>;
+type Destination = 'AdminLogin' | 'ParentLogin';
 
 export default function WelcomeScreen({ navigation }: Props) {
   const { t } = useI18n();
+  const screenOpacity = useRef(new Animated.Value(1)).current;
+  const screenScale = useRef(new Animated.Value(1)).current;
+
+  // Plays a brief "the choice is being made" fade+shrink of the whole screen
+  // before pushing the login route, so the transition reads as one continuous
+  // motion rather than an abrupt cut — the login screen's own entrance
+  // animation (AuthHero + sheet slide-up) picks up right where this leaves off.
+  const selectRole = (destination: Destination) => {
+    Animated.parallel([
+      Animated.timing(screenOpacity, {
+        toValue: 0, duration: 240, easing: Easing.out(Easing.ease), useNativeDriver: true,
+      }),
+      Animated.timing(screenScale, {
+        toValue: 0.96, duration: 240, easing: Easing.out(Easing.ease), useNativeDriver: true,
+      }),
+    ]).start(() => {
+      navigation.navigate(destination);
+      screenOpacity.setValue(1);
+      screenScale.setValue(1);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.root}>
-      <LanguageSwitcher style={{ marginTop: spacing.md }} />
-      <View style={styles.hero}>
-        <Text style={styles.logo}>
-          Moujtahid<Text style={{ color: colors.blue }}>.</Text>
-        </Text>
-        <Text style={styles.tagline}>
-          {t('welcome.tagline')} <Text style={{ color: colors.blue }}>{t('welcome.taglineAccent')}</Text>
-        </Text>
-        <Text style={styles.sub}>
-          {t('welcome.sub')}
-        </Text>
-      </View>
+      <Animated.View style={{ flex: 1, opacity: screenOpacity, transform: [{ scale: screenScale }] }}>
+        <LanguageSwitcher style={{ marginTop: spacing.md }} />
+        <View style={styles.hero}>
+          <Text style={styles.logo}>
+            Moujtahid<Text style={{ color: colors.blue }}>.</Text>
+          </Text>
+          <Text style={styles.tagline}>
+            {t('welcome.tagline')} <Text style={{ color: colors.blue }}>{t('welcome.taglineAccent')}</Text>
+          </Text>
+          <Text style={styles.sub}>
+            {t('welcome.sub')}
+          </Text>
+        </View>
 
-      <View style={styles.cards}>
-        <RoleCard
-          icon="business-outline"
-          title={t('welcome.directorTitle')}
-          body={t('welcome.directorBody')}
-          onPress={() => navigation.navigate('AdminLogin')}
-        />
-        <RoleCard
-          icon="people-outline"
-          title={t('welcome.parentTitle')}
-          body={t('welcome.parentBody')}
-          onPress={() => navigation.navigate('ParentLogin')}
-        />
-      </View>
+        <View style={styles.cards}>
+          <RoleCard
+            icon="business-outline"
+            title={t('welcome.directorTitle')}
+            body={t('welcome.directorBody')}
+            onPress={() => selectRole('AdminLogin')}
+          />
+          <RoleCard
+            icon="people-outline"
+            title={t('welcome.parentTitle')}
+            body={t('welcome.parentBody')}
+            onPress={() => selectRole('ParentLogin')}
+          />
+        </View>
 
-      <Text style={styles.footer}>{t('welcome.footer')}</Text>
+        <Text style={styles.footer}>{t('welcome.footer')}</Text>
+      </Animated.View>
     </SafeAreaView>
   );
 }
