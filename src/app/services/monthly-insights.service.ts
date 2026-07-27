@@ -7,9 +7,12 @@ import { TeacherPayrollService } from './teacher-payroll.service';
 import { AttendanceService } from './attendance.service';
 import { Payment } from '../models/payment.model';
 
+export type InsightTone = 'accent' | 'success' | 'warning' | 'danger';
+
 export interface MonthlyInsight {
   icon: string;
   text: string;
+  tone: InsightTone;
 }
 
 // TODO(AI): this generates a deterministic, rule-based executive summary
@@ -40,15 +43,18 @@ export class MonthlyInsightsService {
       insights.push({
         icon: 'fa-solid fa-user-clock',
         text: `${unpaidStudentIds.size} élève${unpaidStudentIds.size > 1 ? 's' : ''} n'${unpaidStudentIds.size > 1 ? 'ont' : 'a'} pas encore payé ce mois-ci.`,
+        tone: 'danger',
       });
       insights.push({
         icon: 'fa-solid fa-sack-dollar',
         text: `${amountRemaining.toLocaleString('fr-MA')} Dhs restent à collecter.`,
+        tone: 'danger',
       });
     } else if (monthPayments.length > 0) {
       insights.push({
         icon: 'fa-solid fa-champagne-glasses',
         text: 'Tous les paiements du mois ont été encaissés. Excellent travail !',
+        tone: 'success',
       });
     }
 
@@ -62,6 +68,7 @@ export class MonthlyInsightsService {
       insights.push({
         icon: 'fa-solid fa-chalkboard-user',
         text: `${teachersUnpaid.length} professeur${teachersUnpaid.length > 1 ? 's' : ''} reste${teachersUnpaid.length > 1 ? 'nt' : ''} à payer.`,
+        tone: 'warning',
       });
     }
 
@@ -70,6 +77,7 @@ export class MonthlyInsightsService {
       insights.push({
         icon: 'fa-solid fa-chart-line',
         text: `Taux de présence global : ${attendanceRate}%.`,
+        tone: 'accent',
       });
     }
 
@@ -78,6 +86,7 @@ export class MonthlyInsightsService {
       insights.push({
         icon: 'fa-solid fa-trophy',
         text: `${topClass.name} a généré le plus de revenus ce mois-ci (${topClass.amount.toLocaleString('fr-MA')} Dhs).`,
+        tone: 'success',
       });
     }
 
@@ -86,6 +95,7 @@ export class MonthlyInsightsService {
       insights.push({
         icon: 'fa-solid fa-user-plus',
         text: `${newStudents.length} nouvel${newStudents.length > 1 ? 'les' : ''} élève${newStudents.length > 1 ? 's' : ''} inscrit${newStudents.length > 1 ? 's' : ''} ce mois-ci.`,
+        tone: 'success',
       });
     }
 

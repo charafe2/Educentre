@@ -6,27 +6,19 @@
     </div>
   </div>
 
-  <div class="insight-card">
-    <div class="insight-card-glow" aria-hidden="true"></div>
-    <div class="insight-card-header">
-      <div class="insight-card-icon"><i class="fa-solid fa-sparkles"></i></div>
-      <div>
-        <span class="insight-card-eyebrow">{{ 'monthlyReview.insights.eyebrow' | t }}</span>
-        <h3>{{ 'monthlyReview.insights.heading' | t }}</h3>
-      </div>
+  @if (insights().length === 0) {
+    <div class="empty-state">
+      <i class="fa-solid fa-chart-simple"></i>
+      <p>{{ 'monthlyReview.insights.empty' | t }}</p>
     </div>
-
-    @if (insights().length === 0) {
-      <p class="insight-empty">{{ 'monthlyReview.insights.empty' | t }}</p>
-    } @else {
-      <ul class="insight-list">
-        @for (item of insights(); track item.text) {
-          <li>
-            <i [class]="item.icon"></i>
-            <span>{{ item.text }}</span>
-          </li>
-        }
-      </ul>
-    }
-  </div>
+  } @else {
+    <ul class="insight-list">
+      @for (item of insights(); track item.text) {
+        <li class="insight-row" [class]="'tone-' + item.tone">
+          <span class="insight-icon"><i [class]="item.icon"></i></span>
+          <span class="insight-text">{{ item.text }}</span>
+        </li>
+      }
+    </ul>
+  }
 </div>

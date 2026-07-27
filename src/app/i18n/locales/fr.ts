@@ -162,8 +162,6 @@ export const fr = {
     insights: {
       title: 'Résumé exécutif',
       subtitle: 'Généré automatiquement à partir des données de {month}.',
-      eyebrow: 'Ce mois-ci',
-      heading: "Vue d'ensemble",
       empty: 'Pas encore assez de données ce mois-ci pour générer un résumé.',
     },
   },

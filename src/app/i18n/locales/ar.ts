@@ -161,8 +161,6 @@ export const ar: TranslationSchema = {
     insights: {
       title: 'الملخّص التنفيذي',
       subtitle: 'مُولَّد تلقائياً من بيانات {month}.',
-      eyebrow: 'هذا الشهر',
-      heading: 'نظرة عامة',
       empty: 'لا توجد بيانات كافية هذا الشهر لتوليد ملخّص.',
     },
   },

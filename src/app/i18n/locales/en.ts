@@ -161,8 +161,6 @@ export const en: TranslationSchema = {
     insights: {
       title: 'Executive summary',
       subtitle: 'Automatically generated from {month} data.',
-      eyebrow: 'This month',
-      heading: 'Overview',
       empty: 'Not enough data this month to generate a summary yet.',
     },
   },
