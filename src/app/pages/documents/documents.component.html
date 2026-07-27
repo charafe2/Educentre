@@ -183,9 +183,9 @@
         <label class="form-label">{{ 'documents.student' | t }}</label>
         <select class="form-select" [ngModel]="genSelectedStudentId()"
           (ngModelChange)="genSelectedStudentId.set($event); genSelectedPaymentId.set(0)">
-          <option value="0">{{ 'documents.selectPlaceholder' | t }}</option>
+          <option [ngValue]="0">{{ 'documents.selectPlaceholder' | t }}</option>
           @for (s of students(); track s.id) {
-            <option [value]="s.id">{{ s.firstName }} {{ s.lastName }}</option>
+            <option [ngValue]="s.id">{{ s.firstName }} {{ s.lastName }}</option>
           }
         </select>
       </div>
@@ -194,9 +194,9 @@
           <label class="form-label">{{ 'documents.payment' | t }}</label>
           <select class="form-select" [ngModel]="genSelectedPaymentId()"
             (ngModelChange)="genSelectedPaymentId.set($event)">
-            <option value="0">{{ 'documents.selectPlaceholder' | t }}</option>
+            <option [ngValue]="0">{{ 'documents.selectPlaceholder' | t }}</option>
             @for (p of studentPayments(); track p.id) {
-              <option [value]="p.id">
+              <option [ngValue]="p.id">
                 {{ getPeriodLabel(p.periodMonth) }} - {{ getClassName(p.classeId) }} - {{ p.amount }} {{ 'common.currency' | t }} [{{ p.status }}]
               </option>
             }
