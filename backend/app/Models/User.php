@@ -38,6 +38,8 @@ class User extends Authenticatable
         'status',
         'avatar_url',
         'last_login_at',
+        'is_owner',
+        'permissions',
     ];
 
     protected $hidden = [
@@ -53,6 +55,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_owner' => 'boolean',
+            'permissions' => 'array',
         ];
     }
 

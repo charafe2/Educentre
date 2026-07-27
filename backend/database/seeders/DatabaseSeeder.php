@@ -42,6 +42,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin123456789'),
             'role' => 'admin',
             'status' => 'active',
+            'is_owner' => true,
         ]);
 
         $manager = User::factory()->create([
@@ -51,6 +52,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('manager1234567'),
             'role' => 'manager',
             'status' => 'active',
+            'is_owner' => false,
+            'permissions' => ['etudiants', 'groupes', 'professeurs', 'finances', 'calendrier'],
         ]);
 
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Mathematiques', 'payment_mode' => 'fixed', 'is_active' => true]);

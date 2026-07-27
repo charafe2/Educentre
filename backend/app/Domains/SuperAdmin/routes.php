@@ -37,6 +37,7 @@ Route::prefix('superadmin')->group(function () {
             Route::put('/{centreId}/subjects', [CentreController::class, 'syncSubjects']);
             Route::get('/{centreId}/academic-levels', [CentreController::class, 'academicLevels']);
             Route::put('/{centreId}/academic-levels', [CentreController::class, 'syncAcademicLevels']);
+            Route::patch('/{centreId}/max-users', [CentreController::class, 'updateMaxUsers']);
         });
     });
 });

@@ -231,6 +231,17 @@ tr:hover td { background: #f8fafc; }
 .students-count { font-weight: 600; color: #2563eb; }
 .date-cell { color: #94a3b8; font-size: 0.8rem; }
 
+.users-count-cell { display: flex; align-items: center; gap: 0.5rem; }
+.users-count-value { font-weight: 600; color: #1e293b; }
+.max-users-editor { display: flex; align-items: center; gap: 0.3rem; }
+.max-users-input {
+  width: 56px;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.82rem;
+}
+
 /* Plan badge */
 .plan-badge {
   font-size: 0.72rem;

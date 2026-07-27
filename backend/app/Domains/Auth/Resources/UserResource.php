@@ -18,6 +18,8 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'email_verified_at', type: 'string', format: 'datetime', nullable: true),
         new OA\Property(property: 'last_login_at', type: 'string', format: 'datetime', nullable: true),
         new OA\Property(property: 'created_at', type: 'string', format: 'datetime'),
+        new OA\Property(property: 'is_owner', type: 'boolean', example: true),
+        new OA\Property(property: 'permissions', type: 'array', items: new OA\Items(type: 'string'), nullable: true),
     ],
     type: 'object'
 )]
@@ -35,6 +37,10 @@ class UserResource extends JsonResource
             'email_verified_at' => $this->email_verified_at,
             'last_login_at' => $this->last_login_at,
             'created_at' => $this->created_at,
+            // is_owner=true means unrestricted access; permissions is only
+            // meaningful for non-owner users (null/absent otherwise).
+            'is_owner' => $this->is_owner,
+            'permissions' => $this->is_owner ? null : ($this->permissions ?? []),
         ];
     }
 }

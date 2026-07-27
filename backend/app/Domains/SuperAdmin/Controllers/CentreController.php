@@ -24,6 +24,7 @@ class CentreController extends Controller
             $owner = User::where('tenant_id', $centre->tenant_id)->orderBy('id')->first();
             $subscription = Subscription::where('tenant_id', $centre->tenant_id)->latest()->first();
             $studentsCount = Student::where('tenant_id', $centre->tenant_id)->count();
+            $usersCount = User::where('tenant_id', $centre->tenant_id)->count();
 
             return [
                 'id' => $centre->id,
@@ -39,10 +40,32 @@ class CentreController extends Controller
                 'status' => $centre->is_active ? 'active' : 'suspended',
                 'createdAt' => $centre->created_at,
                 'studentsCount' => $studentsCount,
+                'usersCount' => $usersCount,
+                'maxUsers' => $centre->tenant?->max_users ?? 5,
             ];
         });
 
         return $this->success($data);
+    }
+
+    public function updateMaxUsers(int $centreId, Request $request): JsonResponse
+    {
+        $centre = Centre::query()->with('tenant')->findOrFail($centreId);
+
+        $validated = $request->validate([
+            'maxUsers' => ['required', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        if (! $centre->tenant) {
+            return $this->error('Ce centre est introuvable.', null, 404);
+        }
+
+        $centre->tenant->setMaxUsers($validated['maxUsers']);
+
+        return $this->success(
+            data: ['maxUsers' => $centre->tenant->fresh()->max_users],
+            message: "Limite d'utilisateurs mise à jour.",
+        );
     }
 
     public function subjects(int $centreId): JsonResponse

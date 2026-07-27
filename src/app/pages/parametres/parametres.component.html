@@ -259,13 +259,19 @@
       <!-- Users -->
       @if (activeTab() === 'users') {
         <div class="settings-section">
-          <div class="panel-header" style="margin-bottom:1.5rem;">
+          <div class="panel-header" style="margin-bottom:0.5rem;">
             <h3 class="section-title" style="margin:0;">{{ 'settings.usersTitle' | t }}</h3>
-            <button class="btn-primary btn-sm" (click)="openAddUser()">
+            <button class="btn-primary btn-sm" [disabled]="usersService.atCapacity()" (click)="openAddUser()">
               <i class="fa-solid fa-plus"></i>
               {{ 'settings.add' | t }}
             </button>
           </div>
+          <p class="section-desc" style="margin-bottom:1.5rem;">
+            {{ 'settings.usersSeatCount' | t: { count: usersService.usersCount(), max: usersService.maxUsers() } }}
+            @if (usersService.atCapacity()) {
+              <span class="seat-limit-warning">{{ 'settings.usersAtCapacity' | t }}</span>
+            }
+          </p>
           <div class="table-wrapper">
             <table>
               <thead>
@@ -273,24 +279,37 @@
                   <th>{{ 'settings.colName' | t }}</th>
                   <th>{{ 'settings.colEmail' | t }}</th>
                   <th>{{ 'settings.colRole' | t }}</th>
-                  <th>{{ 'settings.colLastLogin' | t }}</th>
+                  <th>{{ 'settings.colPermissions' | t }}</th>
                   <th>{{ 'common.actions' | t }}</th>
                 </tr>
               </thead>
               <tbody>
-                @for (user of users(); track user.id) {
+                @for (user of usersService.users(); track user.uuid) {
                   <tr class="table-row">
                     <td><strong>{{ user.name }}</strong></td>
                     <td>{{ user.email }}</td>
                     <td>
-                      <span [ngClass]="['role-badge', 'role-' + user.roleType]">{{ user.role }}</span>
+                      <span [ngClass]="['role-badge', user.is_owner ? 'role-admin' : 'role-manager']">
+                        {{ user.is_owner ? ('settings.roleOwner' | t) : user.role }}
+                      </span>
                     </td>
-                    <td>{{ user.lastLogin }}</td>
+                    <td>
+                      @if (user.is_owner) {
+                        <span class="permissions-summary">{{ 'settings.allTabs' | t }}</span>
+                      } @else {
+                        <span class="permissions-summary">{{ (user.permissions ?? []).length }} / {{ permissionOptions.length }}</span>
+                      }
+                    </td>
                     <td>
                       <div class="action-btns">
-                        <button class="action-btn danger-btn" (click)="deleteUser(user)">
-                          <i class="fa-regular fa-trash-can"></i>
-                        </button>
+                        @if (!user.is_owner) {
+                          <button class="action-btn" (click)="openEditUser(user)">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                          </button>
+                          <button class="action-btn danger-btn" (click)="deleteUser(user)">
+                            <i class="fa-regular fa-trash-can"></i>
+                          </button>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -629,34 +648,55 @@
   </app-modal>
 }
 
-<!-- Add User Modal -->
+<!-- Add/Edit User Modal -->
 @if (showUserModal()) {
-  <app-modal [title]="'settings.modalAddUser' | t" size="sm" (closed)="showUserModal.set(false)">
+  <app-modal
+    [title]="(editingUserUuid() ? 'settings.modalEditUser' : 'settings.modalAddUser') | t"
+    size="sm" (closed)="showUserModal.set(false)"
+  >
     <div class="form-body">
       <div class="form-group">
         <label class="form-label">{{ 'settings.fullName' | t }}</label>
         <input class="form-input" type="text" [(ngModel)]="userForm.name" [placeholder]="'settings.fullNamePlaceholder' | t" />
       </div>
+      @if (!editingUserUuid()) {
+        <div class="form-group">
+          <label class="form-label">{{ 'teachers.email' | t }}</label>
+          <input class="form-input" type="email" [(ngModel)]="userForm.email" placeholder="email@centre.ma" />
+        </div>
+        <p class="section-desc" style="margin-top:-0.5rem;">{{ 'settings.samePasswordAsOwner' | t }}</p>
+      }
+
       <div class="form-group">
-        <label class="form-label">{{ 'teachers.email' | t }}</label>
-        <input class="form-input" type="email" [(ngModel)]="userForm.email" placeholder="email@centre.ma" />
+        <label class="form-label">{{ 'settings.permissionsLabel' | t }}</label>
+        <p class="section-desc" style="margin:0 0 0.75rem;">{{ 'settings.permissionsDesc' | t }}</p>
+        <div class="permissions-grid">
+          @for (option of permissionOptions; track option.key) {
+            <label class="permission-checkbox">
+              <input
+                type="checkbox"
+                [checked]="userForm.permissions.includes(option.key)"
+                (change)="togglePermission(option.key)"
+              />
+              <i [class]="option.icon"></i>
+              <span>{{ option.labelKey | t }}</span>
+            </label>
+          }
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">{{ 'settings.colRole' | t }}</label>
-        <select class="form-select" [(ngModel)]="userForm.roleType"
-          (ngModelChange)="onUserRoleTypeChange($event)">
-          <option value="admin">{{ 'settings.roleAdmin' | t }}</option>
-          <option value="teacher">{{ 'settings.roleTeacher' | t }}</option>
-          <option value="manager">{{ 'settings.roleManager' | t }}</option>
-          <option value="accountant">{{ 'settings.roleAccountant' | t }}</option>
-        </select>
-      </div>
+
+      @if (userFormError()) {
+        <div class="pw-error">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ userFormError() }}
+        </div>
+      }
     </div>
     <div class="form-footer">
       <button class="btn-secondary" (click)="showUserModal.set(false)">{{ 'common.cancel' | t }}</button>
-      <button class="btn-primary" (click)="submitUser()">
-        <i class="fa-solid fa-plus"></i>
-        {{ 'common.add' | t }}
+      <button class="btn-primary" [disabled]="savingUser()" (click)="submitUser()">
+        <i class="fa-solid" [ngClass]="editingUserUuid() ? 'fa-check' : 'fa-plus'"></i>
+        {{ (editingUserUuid() ? 'common.save' : 'common.add') | t }}
       </button>
     </div>
   </app-modal>

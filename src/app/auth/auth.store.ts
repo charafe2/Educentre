@@ -15,7 +15,26 @@ export interface AuthUser {
   avatar_url: string | null;
   email_verified_at: string | null;
   last_login_at: string | null;
+  is_owner: boolean;
+  // Sidebar-tab keys this user may access. Null for owners (unrestricted).
+  permissions: string[] | null;
 }
+
+/** Route/permission keys a non-owner user can be granted, mirroring the
+ *  sidebar tabs (excludes `dashboard`, always visible, and `parametres`,
+ *  owner-only). Kept in sync with the backend's TenantPermissions::KEYS. */
+export const TENANT_PERMISSION_KEYS = [
+  'revue-mensuelle',
+  'etudiants',
+  'groupes',
+  'professeurs',
+  'finances',
+  'calendrier',
+  'analytiques',
+  'documents',
+] as const;
+
+export type TenantPermissionKey = typeof TENANT_PERMISSION_KEYS[number];
 
 interface AuthState {
   user: AuthUser | null;
@@ -34,6 +53,7 @@ export const AuthStore = signalStore(
   withState(initialState),
   withComputed((store) => ({
     isLoggedIn: computed(() => store.user() !== null),
+    isOwner: computed(() => store.user()?.is_owner ?? false),
   })),
   withMethods((store, http = inject(HttpClient)) => {
     
@@ -136,6 +156,15 @@ export const AuthStore = signalStore(
       ),
 
       forceClearSession: () => clearSession(),
+
+      /** Owners can access everything; other users need the key in their
+       *  granted permissions list. `dashboard` is always accessible. */
+      canAccess(key: TenantPermissionKey | 'dashboard'): boolean {
+        const user = store.user();
+        if (!user) return false;
+        if (key === 'dashboard' || user.is_owner) return true;
+        return user.permissions?.includes(key) ?? false;
+      },
     };
   }),
   withHooks({

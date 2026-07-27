@@ -10,7 +10,8 @@ import { SubjectsService } from '../../services/subjects.service';
 import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
-import { AuthStore } from '../../auth/auth.store';
+import { SettingsUsersService, TenantUser } from '../../services/settings-users.service';
+import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';
@@ -18,14 +19,20 @@ import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../..
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  roleType: 'admin' | 'manager' | 'teacher' | 'accountant';
-  lastLogin: string;
-}
+/** Checkbox list shown when adding/editing a user — mirrors the sidebar tabs
+ *  (see layout/sidebar) and the backend's TenantPermissions::KEYS. Reuses the
+ *  existing `nav.*` labels so the checkbox wording always matches what the
+ *  granted user will actually see in their own sidebar. */
+const PERMISSION_OPTIONS: { key: TenantPermissionKey; labelKey: string; icon: string }[] = [
+  { key: 'revue-mensuelle', labelKey: 'nav.monthlyReview', icon: 'fa-solid fa-clipboard-check' },
+  { key: 'etudiants', labelKey: 'nav.students', icon: 'fa-regular fa-user' },
+  { key: 'groupes', labelKey: 'nav.groups', icon: 'fa-solid fa-people-group' },
+  { key: 'professeurs', labelKey: 'nav.teachers', icon: 'fa-solid fa-chalkboard-user' },
+  { key: 'finances', labelKey: 'nav.finances', icon: 'fa-regular fa-credit-card' },
+  { key: 'calendrier', labelKey: 'nav.calendar', icon: 'fa-regular fa-calendar' },
+  { key: 'analytiques', labelKey: 'nav.analytics', icon: 'fa-solid fa-chart-line' },
+  { key: 'documents', labelKey: 'nav.documents', icon: 'fa-regular fa-file-lines' },
+];
 
 @Component({
   selector: 'app-parametres',
@@ -43,6 +50,7 @@ export class ParametresComponent implements OnInit {
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private auth = inject(AuthStore);
+  usersService = inject(SettingsUsersService);
   private receiptCustomization = inject(ReceiptCustomizationService);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
@@ -68,31 +76,14 @@ export class ParametresComponent implements OnInit {
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique'];
 
-  users = signal<User[]>([
-    { id: 1, name: 'Ahmed Berrada', email: 'a.berrada@centre.ma', role: this.roleLabel('admin'), roleType: 'admin', lastLogin: '08/05/2025' },
-    { id: 2, name: 'Rachid Mansouri', email: 'r.mansouri@centre.ma', role: this.roleLabel('teacher'), roleType: 'teacher', lastLogin: '07/05/2025' },
-    { id: 3, name: 'Samira Bouazza', email: 's.bouazza@centre.ma', role: this.roleLabel('teacher'), roleType: 'teacher', lastLogin: '08/05/2025' },
-    { id: 4, name: 'Khadija Alami', email: 'k.alami@centre.ma', role: this.roleLabel('manager'), roleType: 'manager', lastLogin: '06/05/2025' },
-    { id: 5, name: 'Younes Tazi', email: 'y.tazi@centre.ma', role: this.roleLabel('accountant'), roleType: 'accountant', lastLogin: '05/05/2025' },
-  ]);
+  isOwner = this.auth.isOwner;
+  permissionOptions = PERMISSION_OPTIONS;
 
   showUserModal = signal(false);
-  userForm = { name: '', email: '', role: this.roleLabel('teacher'), roleType: 'teacher' as User['roleType'] };
-
-  roleLabel(type: User['roleType']): string {
-    const key = {
-      admin: 'settings.roleAdmin',
-      teacher: 'settings.roleTeacher',
-      manager: 'settings.roleManager',
-      accountant: 'settings.roleAccountant',
-    }[type];
-    return this.t(key);
-  }
-
-  onUserRoleTypeChange(roleType: User['roleType']): void {
-    this.userForm.roleType = roleType;
-    this.userForm.role = this.roleLabel(roleType);
-  }
+  editingUserUuid = signal<string | null>(null);
+  userForm = { name: '', email: '', permissions: [] as TenantPermissionKey[] };
+  userFormError = signal('');
+  savingUser = signal(false);
 
   // `label` holds a translation key, resolved in the template via `| t`.
   subscriptionFeatures = [
@@ -115,6 +106,9 @@ export class ParametresComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCentreSettings();
+    if (this.isOwner()) {
+      this.usersService.load();
+    }
   }
 
   async loadCentreSettings(): Promise<void> {
@@ -171,29 +165,59 @@ export class ParametresComponent implements OnInit {
   }
 
   openAddUser(): void {
-    this.userForm = { name: '', email: '', role: this.roleLabel('teacher'), roleType: 'teacher' };
+    this.editingUserUuid.set(null);
+    this.userForm = { name: '', email: '', permissions: [] };
+    this.userFormError.set('');
     this.showUserModal.set(true);
   }
 
-  submitUser(): void {
-    const id = Math.max(...this.users().map(u => u.id)) + 1;
-    this.users.update(list => [...list, {
-      id,
-      name: this.userForm.name,
-      email: this.userForm.email,
-      role: this.userForm.role,
-      roleType: this.userForm.roleType,
-      lastLogin: '-',
-    }]);
-    this.toast.show(this.t('settings.toastUserAdded'));
-    this.showUserModal.set(false);
+  openEditUser(u: TenantUser): void {
+    this.editingUserUuid.set(u.uuid);
+    this.userForm = { name: u.name, email: u.email, permissions: [...(u.permissions ?? [])] };
+    this.userFormError.set('');
+    this.showUserModal.set(true);
   }
 
-  deleteUser(u: User): void {
-    if (confirm(this.t('settings.confirmDeleteUser', { name: u.name }))) {
-      this.users.update(list => list.filter(x => x.id !== u.id));
-      this.toast.show(this.t('settings.toastUserDeleted'), 'info');
+  togglePermission(key: TenantPermissionKey): void {
+    const current = this.userForm.permissions;
+    this.userForm.permissions = current.includes(key)
+      ? current.filter(k => k !== key)
+      : [...current, key];
+  }
+
+  submitUser(): void {
+    this.userFormError.set('');
+    if (!this.userForm.name.trim() || this.userForm.permissions.length === 0) {
+      this.userFormError.set(this.t('settings.userFormRequired'));
+      return;
     }
+
+    const editingUuid = this.editingUserUuid();
+    this.savingUser.set(true);
+
+    const request$ = editingUuid
+      ? this.usersService.update(editingUuid, { name: this.userForm.name.trim(), permissions: this.userForm.permissions })
+      : this.usersService.add({ name: this.userForm.name.trim(), email: this.userForm.email.trim(), permissions: this.userForm.permissions });
+
+    request$.subscribe({
+      next: () => {
+        this.savingUser.set(false);
+        this.toast.show(this.t(editingUuid ? 'settings.toastUserUpdated' : 'settings.toastUserAdded'));
+        this.showUserModal.set(false);
+      },
+      error: (err: unknown) => {
+        this.savingUser.set(false);
+        this.userFormError.set(extractValidationError(err, this.t('settings.saveError')));
+      },
+    });
+  }
+
+  deleteUser(u: TenantUser): void {
+    if (!confirm(this.t('settings.confirmDeleteUser', { name: u.name }))) return;
+    this.usersService.remove(u.uuid).subscribe({
+      next: () => this.toast.show(this.t('settings.toastUserDeleted'), 'info'),
+      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.saveError')), 'error'),
+    });
   }
 
   saveNotifications(): void {

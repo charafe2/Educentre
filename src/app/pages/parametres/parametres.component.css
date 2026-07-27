@@ -214,6 +214,42 @@ td {
 .role-teacher { background: var(--accent-light); color: var(--accent); }
 .role-accountant { background: var(--warning-bg); color: var(--warning); }
 
+.permissions-summary { font-size: 0.85rem; color: var(--text-muted); }
+
+.seat-limit-warning {
+  color: var(--danger);
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.permission-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  color: var(--text-main);
+  cursor: pointer;
+  user-select: none;
+}
+
+.permission-checkbox:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.permission-checkbox input { accent-color: var(--accent); }
+.permission-checkbox i { width: 16px; text-align: center; }
+
 .action-btns { display: flex; gap: 0.4rem; }
 
 .action-btn {

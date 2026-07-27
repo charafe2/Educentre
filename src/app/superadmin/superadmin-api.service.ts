@@ -46,6 +46,9 @@ export interface ClientAccount {
   status: 'active' | 'suspended' | 'trial';
   createdAt: string;
   studentsCount: number;
+  /** "Paramètres > Utilisateurs" seat usage/cap for this centre's tenant. */
+  usersCount: number;
+  maxUsers: number;
 }
 
 export interface SaveClientPayload {
@@ -178,6 +181,12 @@ export class SuperadminApiService {
 
   deleteCentre(id: number): Promise<void> {
     return this.data(this.http.delete<ApiResponse<void>>(`${this.baseUrl}/centres/${id}`));
+  }
+
+  updateCentreMaxUsers(id: number, maxUsers: number): Promise<{ maxUsers: number }> {
+    return this.data(
+      this.http.patch<ApiResponse<{ maxUsers: number }>>(`${this.baseUrl}/centres/${id}/max-users`, { maxUsers })
+    );
   }
 
   getPackages(): Promise<PackagePlan[]> {

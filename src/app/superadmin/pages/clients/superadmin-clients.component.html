@@ -83,6 +83,7 @@
           <th>Contact</th>
           <th>Plan</th>
           <th>Étudiants</th>
+          <th>Utilisateurs</th>
           <th>Statut</th>
           <th>Créé le</th>
           <th>Actions</th>
@@ -90,7 +91,7 @@
       </thead>
       <tbody>
         @if (loading()) {
-          <tr><td colspan="8" class="empty-row">Chargement des centres...</td></tr>
+          <tr><td colspan="9" class="empty-row">Chargement des centres...</td></tr>
         } @else {
         @for (client of filteredClients(); track client.id) {
           <tr>
@@ -114,6 +115,31 @@
               <span [ngClass]="['plan-badge', 'plan-' + client.plan.toLowerCase()]">{{ client.plan }}</span>
             </td>
             <td class="students-count">{{ client.studentsCount }}</td>
+            <td class="users-count-cell">
+              @if (editingMaxUsersId() === client.id) {
+                <div class="max-users-editor">
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    class="max-users-input"
+                    [ngModel]="maxUsersDraft()"
+                    (ngModelChange)="maxUsersDraft.set($event)"
+                  />
+                  <button class="action-btn action-edit" title="Enregistrer" (click)="saveMaxUsers(client)">
+                    <i class="fa-solid fa-check"></i>
+                  </button>
+                  <button class="action-btn" title="Annuler" (click)="cancelEditMaxUsers()">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              } @else {
+                <span class="users-count-value">{{ client.usersCount }} / {{ client.maxUsers }}</span>
+                <button class="action-btn action-edit" title="Modifier la limite" (click)="startEditMaxUsers(client)">
+                  <i class="fa-regular fa-pen-to-square"></i>
+                </button>
+              }
+            </td>
             <td>
               <span [ngClass]="['status-badge', 'status-' + client.status]">
                 <span class="status-dot"></span>
@@ -144,7 +170,7 @@
         }
         @empty {
           <tr>
-            <td colspan="8" class="empty-row">
+            <td colspan="9" class="empty-row">
               <i class="fa-solid fa-buildings"></i>
               <span>Aucun client trouvé</span>
             </td>

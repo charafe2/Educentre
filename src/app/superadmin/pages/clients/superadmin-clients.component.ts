@@ -278,6 +278,33 @@ export class SuperadminClientsComponent implements OnInit {
     }
   }
 
+  // Inline "seats" editor for Paramètres > Utilisateurs' cap — small and
+  // self-contained on purpose (the full client edit modal's save flow isn't
+  // wired to a real backend endpoint yet, see submitSave()).
+  editingMaxUsersId = signal<number | null>(null);
+  maxUsersDraft = signal(5);
+
+  startEditMaxUsers(client: ClientAccount): void {
+    this.editingMaxUsersId.set(client.id);
+    this.maxUsersDraft.set(client.maxUsers);
+  }
+
+  cancelEditMaxUsers(): void {
+    this.editingMaxUsersId.set(null);
+  }
+
+  async saveMaxUsers(client: ClientAccount): Promise<void> {
+    const value = this.maxUsersDraft();
+    if (!Number.isFinite(value) || value < 1) return;
+    try {
+      const result = await this.api.updateCentreMaxUsers(client.id, value);
+      this.clients.update(list => list.map(c => c.id === client.id ? { ...c, maxUsers: result.maxUsers } : c));
+      this.editingMaxUsersId.set(null);
+    } catch {
+      this.pageError.set("Impossible de modifier la limite d'utilisateurs.");
+    }
+  }
+
   async deleteClient(client: ClientAccount) {
     if (!confirm(`Supprimer le compte de "${client.centreName}" ? Cette action est irréversible.`)) return;
     try {

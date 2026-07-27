@@ -70,4 +70,19 @@ class Tenant extends Model
     {
         return $this->belongsToMany(AcademicLevel::class, 'academic_level_tenant');
     }
+
+    /**
+     * Seat cap for "Paramètres > Utilisateurs". Stored inside the existing
+     * `settings` JSON bucket (no dedicated column) so it's superadmin-editable
+     * without a schema change. Defaults to 5 when not explicitly set.
+     */
+    public function getMaxUsersAttribute(): int
+    {
+        return (int) ($this->settings['max_users'] ?? 5);
+    }
+
+    public function setMaxUsers(int $maxUsers): void
+    {
+        $this->update(['settings' => [...($this->settings ?? []), 'max_users' => $maxUsers]]);
+    }
 }

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { permissionGuard } from './auth/permission.guard';
 import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
 import { superadminGuestGuard } from './superadmin/superadmin-guest.guard';
 
@@ -65,15 +66,42 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
-      { path: 'revue-mensuelle', loadComponent: () => import('./pages/monthly-review/monthly-review.component').then(m => m.MonthlyReviewComponent) },
-      { path: 'etudiants', loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent) },
-      { path: 'groupes', loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent) },
-      { path: 'professeurs', loadComponent: () => import('./pages/professeurs/professeurs.component').then(m => m.ProfesseursComponent) },
-      { path: 'finances', loadComponent: () => import('./pages/finances/finances.component').then(m => m.FinancesComponent) },
-      { path: 'calendrier', loadComponent: () => import('./pages/calendrier/calendrier.component').then(m => m.CalendrierComponent) },
-      { path: 'analytiques', loadComponent: () => import('./pages/analytiques/analytiques.component').then(m => m.AnalytiquesComponent) },
-      { path: 'documents', loadComponent: () => import('./pages/documents/documents.component').then(m => m.DocumentsComponent) },
-      { path: 'parametres', loadComponent: () => import('./pages/parametres/parametres.component').then(m => m.ParametresComponent) },
+      {
+        path: 'revue-mensuelle', canActivate: [permissionGuard], data: { permKey: 'revue-mensuelle' },
+        loadComponent: () => import('./pages/monthly-review/monthly-review.component').then(m => m.MonthlyReviewComponent),
+      },
+      {
+        path: 'etudiants', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
+        loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent),
+      },
+      {
+        path: 'groupes', canActivate: [permissionGuard], data: { permKey: 'groupes' },
+        loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent),
+      },
+      {
+        path: 'professeurs', canActivate: [permissionGuard], data: { permKey: 'professeurs' },
+        loadComponent: () => import('./pages/professeurs/professeurs.component').then(m => m.ProfesseursComponent),
+      },
+      {
+        path: 'finances', canActivate: [permissionGuard], data: { permKey: 'finances' },
+        loadComponent: () => import('./pages/finances/finances.component').then(m => m.FinancesComponent),
+      },
+      {
+        path: 'calendrier', canActivate: [permissionGuard], data: { permKey: 'calendrier' },
+        loadComponent: () => import('./pages/calendrier/calendrier.component').then(m => m.CalendrierComponent),
+      },
+      {
+        path: 'analytiques', canActivate: [permissionGuard], data: { permKey: 'analytiques' },
+        loadComponent: () => import('./pages/analytiques/analytiques.component').then(m => m.AnalytiquesComponent),
+      },
+      {
+        path: 'documents', canActivate: [permissionGuard], data: { permKey: 'documents' },
+        loadComponent: () => import('./pages/documents/documents.component').then(m => m.DocumentsComponent),
+      },
+      {
+        path: 'parametres', canActivate: [permissionGuard], data: { permKey: 'parametres' },
+        loadComponent: () => import('./pages/parametres/parametres.component').then(m => m.ParametresComponent),
+      },
     ],
   },
 

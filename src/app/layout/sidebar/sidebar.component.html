@@ -22,85 +22,105 @@
           </div>
         </a>
       </li>
-      <li>
-        <a routerLink="/revue-mensuelle" routerLinkActive="active" class="nav-item" [title]="'nav.monthlyReview' | t">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-clipboard-check"></i>
-            <span class="nav-text">{{ 'nav.monthlyReview' | t }}</span>
-          </div>
-          <span class="shortcut shortcut-new">{{ 'nav.new' | t }}</span>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/etudiants" routerLinkActive="active" class="nav-item" [title]="'nav.students' | t">
-          <div class="nav-item-left">
-            <i class="fa-regular fa-user"></i>
-            <span class="nav-text">{{ 'nav.students' | t }}</span>
-          </div>
-          <span class="shortcut">G E</span>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/groupes" routerLinkActive="active" class="nav-item" [title]="'nav.groups' | t">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-people-group"></i>
-            <span class="nav-text">{{ 'nav.groups' | t }}</span>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" [title]="'nav.teachers' | t">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-chalkboard-user"></i>
-            <span class="nav-text">{{ 'nav.teachers' | t }}</span>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/finances" routerLinkActive="active" class="nav-item" [title]="'nav.finances' | t">
-          <div class="nav-item-left">
-            <i class="fa-regular fa-credit-card"></i>
-            <span class="nav-text">{{ 'nav.finances' | t }}</span>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/calendrier" routerLinkActive="active" class="nav-item" [title]="'nav.calendar' | t">
-          <div class="nav-item-left">
-            <i class="fa-regular fa-calendar"></i>
-            <span class="nav-text">{{ 'nav.calendar' | t }}</span>
-          </div>
-          <span class="shortcut">G C</span>
-        </a>
-      </li>
+      @if (canSee('revue-mensuelle')) {
+        <li>
+          <a routerLink="/revue-mensuelle" routerLinkActive="active" class="nav-item" [title]="'nav.monthlyReview' | t">
+            <div class="nav-item-left">
+              <i class="fa-solid fa-clipboard-check"></i>
+              <span class="nav-text">{{ 'nav.monthlyReview' | t }}</span>
+            </div>
+            <span class="shortcut shortcut-new">{{ 'nav.new' | t }}</span>
+          </a>
+        </li>
+      }
+      @if (canSee('etudiants')) {
+        <li>
+          <a routerLink="/etudiants" routerLinkActive="active" class="nav-item" [title]="'nav.students' | t">
+            <div class="nav-item-left">
+              <i class="fa-regular fa-user"></i>
+              <span class="nav-text">{{ 'nav.students' | t }}</span>
+            </div>
+            <span class="shortcut">G E</span>
+          </a>
+        </li>
+      }
+      @if (canSee('groupes')) {
+        <li>
+          <a routerLink="/groupes" routerLinkActive="active" class="nav-item" [title]="'nav.groups' | t">
+            <div class="nav-item-left">
+              <i class="fa-solid fa-people-group"></i>
+              <span class="nav-text">{{ 'nav.groups' | t }}</span>
+            </div>
+          </a>
+        </li>
+      }
+      @if (canSee('professeurs')) {
+        <li>
+          <a routerLink="/professeurs" routerLinkActive="active" class="nav-item" [title]="'nav.teachers' | t">
+            <div class="nav-item-left">
+              <i class="fa-solid fa-chalkboard-user"></i>
+              <span class="nav-text">{{ 'nav.teachers' | t }}</span>
+            </div>
+          </a>
+        </li>
+      }
+      @if (canSee('finances')) {
+        <li>
+          <a routerLink="/finances" routerLinkActive="active" class="nav-item" [title]="'nav.finances' | t">
+            <div class="nav-item-left">
+              <i class="fa-regular fa-credit-card"></i>
+              <span class="nav-text">{{ 'nav.finances' | t }}</span>
+            </div>
+          </a>
+        </li>
+      }
+      @if (canSee('calendrier')) {
+        <li>
+          <a routerLink="/calendrier" routerLinkActive="active" class="nav-item" [title]="'nav.calendar' | t">
+            <div class="nav-item-left">
+              <i class="fa-regular fa-calendar"></i>
+              <span class="nav-text">{{ 'nav.calendar' | t }}</span>
+            </div>
+            <span class="shortcut">G C</span>
+          </a>
+        </li>
+      }
 
-      <li class="nav-label">{{ 'nav.section_reports' | t }}</li>
-      <li>
-        <a routerLink="/analytiques" routerLinkActive="active" class="nav-item" [title]="'nav.analytics' | t">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-chart-line"></i>
-            <span class="nav-text">{{ 'nav.analytics' | t }}</span>
-          </div>
-        </a>
-      </li>
-      <li>
-        <a routerLink="/documents" routerLinkActive="active" class="nav-item" [title]="'nav.documents' | t">
-          <div class="nav-item-left">
-            <i class="fa-regular fa-file-lines"></i>
-            <span class="nav-text">{{ 'nav.documents' | t }}</span>
-          </div>
-        </a>
-      </li>
+      @if (canSee('analytiques') || canSee('documents')) {
+        <li class="nav-label">{{ 'nav.section_reports' | t }}</li>
+        @if (canSee('analytiques')) {
+          <li>
+            <a routerLink="/analytiques" routerLinkActive="active" class="nav-item" [title]="'nav.analytics' | t">
+              <div class="nav-item-left">
+                <i class="fa-solid fa-chart-line"></i>
+                <span class="nav-text">{{ 'nav.analytics' | t }}</span>
+              </div>
+            </a>
+          </li>
+        }
+        @if (canSee('documents')) {
+          <li>
+            <a routerLink="/documents" routerLinkActive="active" class="nav-item" [title]="'nav.documents' | t">
+              <div class="nav-item-left">
+                <i class="fa-regular fa-file-lines"></i>
+                <span class="nav-text">{{ 'nav.documents' | t }}</span>
+              </div>
+            </a>
+          </li>
+        }
+      }
 
-      <li class="nav-label">{{ 'nav.section_system' | t }}</li>
-      <li>
-        <a routerLink="/parametres" routerLinkActive="active" class="nav-item" [title]="'nav.settings' | t">
-          <div class="nav-item-left">
-            <i class="fa-solid fa-gear"></i>
-            <span class="nav-text">{{ 'nav.settings' | t }}</span>
-          </div>
-        </a>
-      </li>
+      @if (isOwner()) {
+        <li class="nav-label">{{ 'nav.section_system' | t }}</li>
+        <li>
+          <a routerLink="/parametres" routerLinkActive="active" class="nav-item" [title]="'nav.settings' | t">
+            <div class="nav-item-left">
+              <i class="fa-solid fa-gear"></i>
+              <span class="nav-text">{{ 'nav.settings' | t }}</span>
+            </div>
+          </a>
+        </li>
+      }
     </ul>
   </nav>
 
