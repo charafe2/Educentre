@@ -12,7 +12,7 @@ import { PageSeo } from './seo.model';
 export const PUBLIC_PAGES = {
   home: {
     path: '/',
-    title: 'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc',
+    title: 'Gestion des centres de soutien scolaire et de langues au Maroc',
     description:
       'Moujtahid, le logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit.',
     keywords:
