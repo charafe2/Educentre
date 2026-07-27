@@ -12,11 +12,11 @@ import { PageSeo } from './seo.model';
 export const PUBLIC_PAGES = {
   home: {
     path: '/',
-    title: 'Moujtahid — Gestion des centres de soutien scolaire au Maroc',
+    title: 'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc',
     description:
-      'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit 30 jours.',
+      'Moujtahid, le logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit.',
     keywords:
-      'gestion des centres de soutien scolaire, gestion des centres de langues, logiciel gestion centre de soutien scolaire Maroc, gestion des élèves',
+      'gestion des centres de soutien scolaire, gestion des centres de langues, gestion des écoles Maroc, logiciel gestion de centre Maroc, gestion des élèves',
   },
   tutoringCenter: {
     path: '/logiciel-gestion-centre-soutien-scolaire',

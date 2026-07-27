@@ -183,7 +183,7 @@ export function buildHomeSchema(): JsonLdSchema {
         countriesSupported: 'MA',
         areaServed: { '@type': 'Country', name: 'Maroc' },
         description:
-          'Logiciel de gestion des centres de soutien scolaire et de langues au Maroc : élèves, présences, paiements en dirhams (MAD) et application parents.',
+          'Logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc : élèves, présences, paiements en dirhams (MAD) et application parents.',
         offers: [
           {
             '@type': 'Offer',
