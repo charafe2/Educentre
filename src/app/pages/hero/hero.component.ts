@@ -6,7 +6,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
-import { FlagLanguageSwitcherComponent } from '../../i18n/flag-language-switcher/flag-language-switcher.component';
 import { SeoService } from '../../core/seo/seo.service';
 import { PUBLIC_PAGES } from '../../core/seo/public-pages';
 import { buildHomeSchema } from '../../core/seo/schema';
@@ -16,7 +15,7 @@ type IntroState = 'active' | 'dismissed';
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [RouterLink, VideoHeroComponent, FlagLanguageSwitcherComponent],
+  imports: [RouterLink, VideoHeroComponent],
   templateUrl: './hero.component.html',
   styleUrl: './hero.component.css',
   encapsulation: ViewEncapsulation.None,
