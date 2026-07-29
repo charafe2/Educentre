@@ -124,7 +124,13 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.white,
     borderTopLeftRadius: 36, borderTopRightRadius: 36,
     overflow: 'hidden',
-    marginTop: -28,
+    // No negative marginTop here (on purpose): pulling this sheet up to
+    // overlap AuthHero across the ScrollView's own boundary is exactly the
+    // kind of cross-boundary negative-margin trick react-native-web doesn't
+    // reliably clip/paint — the radius above rendered but the overlap could
+    // silently vanish on web. Sitting flush below the header still shows
+    // the rounded top corners clearly against the navy background, without
+    // depending on that overlap.
     paddingTop: spacing.lg, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl,
   },
   grabber: {

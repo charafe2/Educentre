@@ -1,12 +1,9 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { apiLogin, apiLogout } from '../api/client';
+import { apiLogin, apiLoginParent, apiLogout, apiLogoutParent } from '../api/client';
 import { unregisterPushNotifications } from '../services/notifications';
-import { students } from '../data/demo';
 import { AuthUser, Student } from '../types';
 
 type Role = 'admin' | 'parent' | null;
-
-const normalizePhone = (value: string) => value.replace(/\D/g, '');
 
 interface AuthState {
   role: Role;
@@ -16,7 +13,7 @@ interface AuthState {
   // Enfant actuellement consulté ; null quand une sélection est nécessaire (plusieurs enfants).
   parentStudent: Student | null;
   loginAdmin: (email: string, password: string) => Promise<boolean>;
-  loginParent: (phone: string, password: string) => boolean;
+  loginParent: (phone: string, password: string) => Promise<boolean>;
   selectChild: (studentId: number) => void;
   switchChild: () => void;
   logout: () => void;
@@ -38,17 +35,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return true;
   }, []);
 
-  // Accès parent (mode démo) : numéro de téléphone + mot de passe fournis par le centre.
+  // Accès parent : numéro de téléphone + mot de passe fournis par le centre.
   // Un même numéro peut être rattaché à plusieurs enfants (fratrie) - sélection façon
   // "Netflix" avant d'accéder au suivi, comme sur le web.
-  const loginParent = useCallback((phone: string, password: string) => {
-    const digits = normalizePhone(phone);
-    if (digits.length < 6 || password.trim().length === 0) return false;
-
-    const children = students.filter(
-      s => normalizePhone(s.parentPhone ?? '') === digits && s.parentPassword === password,
-    );
-    if (!children.length) return false;
+  const loginParent = useCallback(async (phone: string, password: string) => {
+    const children = await apiLoginParent(phone, password);
+    if (!children || !children.length) return false;
 
     setParentChildren(children);
     setParentStudent(children.length === 1 ? children[0] : null);
@@ -66,6 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(() => {
     if (role === 'admin') void apiLogout();
+    else if (role === 'parent') void apiLogoutParent();
     void unregisterPushNotifications();
     setRole(null);
     setAdminUser(null);

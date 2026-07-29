@@ -3,7 +3,7 @@
 use App\Domains\Finance\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware('auth:sanctum')->prefix('payments')->group(function () {
+Route::middleware('staff')->prefix('payments')->group(function () {
     Route::get('/', [PaymentController::class, 'index']);
     Route::post('/', [PaymentController::class, 'store']);
     Route::put('/{id}', [PaymentController::class, 'update']);

@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'superadmin' => \App\Domains\Core\Middleware\EnsureSuperAdmin::class,
+            'parent' => \App\Domains\Core\Middleware\EnsureParent::class,
+        ]);
+        $middleware->appendToGroup('staff', [
+            'auth:sanctum',
+            \App\Domains\Core\Middleware\EnsureStaffUser::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule): void {

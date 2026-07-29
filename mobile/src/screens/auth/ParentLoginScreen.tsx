@@ -25,6 +25,7 @@ export default function ParentLoginScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const sheetOpacity = useRef(new Animated.Value(0)).current;
   const sheetTranslateY = useRef(new Animated.Value(24)).current;
@@ -36,9 +37,11 @@ export default function ParentLoginScreen() {
     ]).start();
   }, [sheetOpacity, sheetTranslateY]);
 
-  const submit = () => {
+  const submit = async () => {
     setError('');
-    const ok = loginParent(phone, password);
+    setLoading(true);
+    const ok = await loginParent(phone, password);
+    setLoading(false);
     if (!ok) {
       setError(t('parentLogin.error'));
     }
@@ -94,6 +97,7 @@ export default function ParentLoginScreen() {
               <Button
                 title={t('parentLogin.submit')}
                 onPress={submit}
+                loading={loading}
                 style={{ backgroundColor: colors.navy, marginTop: spacing.md }}
               />
 
@@ -117,7 +121,8 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: colors.white,
     borderTopLeftRadius: 36, borderTopRightRadius: 36,
     overflow: 'hidden',
-    marginTop: -28,
+    // See AdminLoginScreen — no negative marginTop on purpose, the
+    // cross-boundary overlap into AuthHero doesn't clip reliably on web.
     paddingTop: spacing.lg, paddingHorizontal: spacing.xl, paddingBottom: spacing.xl,
   },
   grabber: {

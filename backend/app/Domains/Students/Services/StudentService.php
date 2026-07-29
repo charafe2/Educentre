@@ -9,6 +9,7 @@ use App\Domains\Students\Models\StudentParent;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StudentService
 {
@@ -71,6 +72,11 @@ class StudentService
                     'last_name' => $names[1] ?? '',
                     'phone' => $data['parentPhone'] ?? null,
                     'whatsapp_phone' => $data['parentWhatsapp'] ?? null,
+                    // TODO(backend): no "invite parent to set their own password"
+                    // flow exists yet — everyone gets this same default so the
+                    // parent app login (phone + this password) works immediately
+                    // after enrollment. Replace once a real invite/reset flow ships.
+                    'password' => Hash::make('parent2026'),
                     'is_primary' => true,
                 ]);
             }
