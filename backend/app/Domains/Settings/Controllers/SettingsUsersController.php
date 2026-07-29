@@ -10,6 +10,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'SettingsUsers', description: "Gestion des utilisateurs du centre (Paramètres > Utilisateurs)")]
@@ -70,17 +72,27 @@ class SettingsUsersController extends Controller
             'tenant_id' => $tenant->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
-            // Copies the owner's already-hashed password as-is (the `hashed`
-            // cast on User::password only re-hashes values that aren't already
-            // a valid hash, see Illuminate\Database\Eloquent\Concerns\HasAttributes::
-            // castAttributeAsHashedString) — the new user logs in with the exact
-            // same password as the owner, by design.
-            'password' => $owner->password,
+            // Throwaway value, immediately overwritten below — see comment there.
+            'password' => Str::random(40),
             'role' => 'Collaborateur',
             'status' => 'active',
             'is_owner' => false,
             'permissions' => $validated['permissions'],
         ]);
+
+        // Copy the owner's already-hashed password as-is via a raw update,
+        // bypassing Eloquent's `hashed` cast on purpose: that cast calls
+        // Hash::verifyConfiguration() against the *currently configured*
+        // hashing driver and throws ("Could not verify the hashed value's
+        // configuration") if the stored hash's algorithm doesn't match it —
+        // which happens whenever the app's default driver differs from
+        // whatever algorithm actually produced this hash (e.g. a hosting
+        // environment where argon2 support differs from wherever the
+        // account was originally created). We already know this hash is
+        // valid — it authenticates the owner on every login — so it needs
+        // to be stored verbatim, not re-validated against today's config.
+        DB::table('users')->where('id', $user->id)->update(['password' => $owner->password]);
+        $user->refresh();
 
         return $this->success(
             data: UserResource::make($user),

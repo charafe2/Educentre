@@ -1,7 +1,12 @@
 :host {
+  /* No min-height: 100vh here on purpose — on a short page (e.g. Mentions
+     légales) in a tall/narrow browser window, forcing the host to fill the
+     viewport left a large empty gap between the content and the footer
+     (there's nothing that should stretch to fill that leftover space, so
+     it just sat there as dead space). The footer following the content
+     directly, whatever height that ends up being, is the correct look. */
   display: block;
   background: var(--bg-color);
-  min-height: 100vh;
 }
 
 .legal-shell {
