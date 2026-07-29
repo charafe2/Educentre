@@ -56,6 +56,20 @@ export const PUBLIC_PAGES = {
       'La gestion des élèves (تدبير التلاميذ) simplifiée : dossiers, présences, notes, paiements en MAD et alertes parents, pour les centres et écoles au Maroc.',
     keywords: 'gestion des élèves, gestion des élèves Maroc, logiciel gestion scolaire',
   },
+  vsTayssir: {
+    path: '/moujtahid-vs-tayssir-academie',
+    title: 'Moujtahid vs Tayssir Académie : comparatif 2026 | Moujtahid',
+    description:
+      'Moujtahid ou Tayssir Académie pour gérer votre centre au Maroc ? Comparatif honnête : tarifs, facturation mensuelle vs annuelle, fonctionnalités et essai gratuit.',
+    keywords: 'Moujtahid vs Tayssir Académie, comparatif logiciel gestion centre Maroc, alternative Tayssir Académie',
+  },
+  vsCenterPlus: {
+    path: '/moujtahid-vs-centerplus',
+    title: 'Moujtahid vs CenterPlus : comparatif 2026 | Moujtahid',
+    description:
+      'Moujtahid ou CenterPlus pour gérer votre centre au Maroc ? Comparatif honnête : langue, tarifs, fonctionnalités et facturation en dirhams (MAD).',
+    keywords: 'Moujtahid vs CenterPlus, comparatif logiciel gestion centre Maroc, alternative CenterPlus',
+  },
 } as const satisfies Record<string, PageSeo>;
 
 /** SEO metadata for the legal pages (indexable but low priority). */

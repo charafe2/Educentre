@@ -1,0 +1,97 @@
+<app-marketing-layout>
+  <section class="mkt-hero">
+    <p class="mkt-kicker">Comparatif</p>
+    <h1>Moujtahid vs CenterPlus</h1>
+    <p class="mkt-lead">
+      Moujtahid et CenterPlus visent tous les deux les centres de soutien scolaire et de langues au
+      Maroc. Voici un comparatif honnête, fondé sur les informations publiques des deux éditeurs,
+      pour vous aider à choisir.
+    </p>
+    <div class="mkt-hero__actions">
+      <a routerLink="/login" class="mkt-btn mkt-btn--primary">Essai gratuit 30 jours</a>
+      <a href="/#lp-pricing" class="mkt-btn mkt-btn--ghost">Voir les tarifs Moujtahid en MAD</a>
+    </div>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Comparatif détaillé</h2>
+    <p class="mkt-section__intro">
+      Comparatif basé sur les sites publics de chaque éditeur en 2026. CenterPlus ne publie pas ses
+      tarifs en ligne ; les cases correspondantes sont marquées comme telles plutôt que devinées.
+      Vérifiez toujours directement auprès de l'éditeur avant de vous engager.
+    </p>
+    <div class="mkt-compare-wrap">
+      <table class="mkt-compare">
+        <caption>Moujtahid comparé à CenterPlus</caption>
+        <thead>
+          <tr>
+            <th scope="col">Critère</th>
+            <th scope="col">Moujtahid</th>
+            <th scope="col">CenterPlus</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Marché</th>
+            <td>Maroc, national</td>
+            <td>Maroc — Casablanca, Agadir, Rabat, Marrakech mis en avant</td>
+          </tr>
+          <tr>
+            <th scope="row">Langue</th>
+            <td>Français</td>
+            <td>Arabe (site disponible en arabe) ; autres langues non détaillées publiquement</td>
+          </tr>
+          <tr>
+            <th scope="row">Tarifs</th>
+            <td>189 MAD/mois (Débutant) à 289 MAD/mois (Pro), publiés en ligne</td>
+            <td>Non publiés sur le site — sur devis</td>
+          </tr>
+          <tr>
+            <th scope="row">Essai avant engagement</th>
+            <td>30 jours gratuits (Pro) ; formule Débutant gratuite à vie</td>
+            <td>Non précisé publiquement</td>
+          </tr>
+          <tr>
+            <th scope="row">Paiements</th>
+            <td>Facturation automatisée en MAD, liens de paiement en ligne</td>
+            <td>Alertes automatiques pour impayés, calcul au prorata, reçus numériques via WhatsApp</td>
+          </tr>
+          <tr>
+            <th scope="row">Présences</th>
+            <td>Suivi en un appui par élève, alertes SMS automatiques</td>
+            <td>Non détaillé publiquement au-delà de la gestion des classes et groupes</td>
+          </tr>
+          <tr>
+            <th scope="row">Mise en route</th>
+            <td>Assistant d'intégration ; configuration moyenne inférieure à deux heures</td>
+            <td>Configuration annoncée en moins de 10 minutes</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mkt-compare-note">
+      Sources : sites publics de <a href="https://moujtahide.ma" rel="noopener">Moujtahid</a> et de
+      <a href="https://www.centerplus.app/" target="_blank" rel="noopener nofollow">CenterPlus</a>, consultés en 2026.
+    </p>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Où se situe Moujtahid</h2>
+    <p class="mkt-section__intro">
+      Les deux solutions ciblent le marché marocain, mais avec des priorités différentes.
+      Moujtahid affiche ses tarifs publiquement en dirhams et propose un essai gratuit sans carte
+      bancaire, ce qui permet de tester avant tout engagement financier. CenterPlus met en avant
+      une mise en route très rapide et des reçus envoyés par WhatsApp. Si la transparence des prix
+      et l'essai gratuit comptent le plus pour vous, c'est un point où Moujtahid se distingue
+      nettement.
+    </p>
+  </section>
+
+  <app-faq-section
+    [items]="faqItems"
+    title="Questions fréquentes : Moujtahid vs CenterPlus"
+    headingId="faq-vs-centerplus"
+  ></app-faq-section>
+
+  <app-related-pages [currentPath]="page.path"></app-related-pages>
+</app-marketing-layout>

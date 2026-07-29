@@ -42,6 +42,14 @@ export const routes: Routes = [
     path: 'meilleur-logiciel-gestion-centre-maroc',
     loadComponent: () => import('./pages/marketing/meilleur-logiciel/meilleur-logiciel.component').then(m => m.MeilleurLogicielComponent),
   },
+  {
+    path: 'moujtahid-vs-tayssir-academie',
+    loadComponent: () => import('./pages/marketing/vs-tayssir/vs-tayssir.component').then(m => m.VsTayssirComponent),
+  },
+  {
+    path: 'moujtahid-vs-centerplus',
+    loadComponent: () => import('./pages/marketing/vs-centerplus/vs-centerplus.component').then(m => m.VsCenterPlusComponent),
+  },
 
   {
     path: 'politique-de-confidentialite',
