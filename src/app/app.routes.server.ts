@@ -18,6 +18,7 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'meilleur-logiciel-gestion-centre-maroc', renderMode: RenderMode.Prerender },
   { path: 'moujtahid-vs-tayssir-academie', renderMode: RenderMode.Prerender },
   { path: 'moujtahid-vs-centerplus', renderMode: RenderMode.Prerender },
+  { path: 'blog', renderMode: RenderMode.Prerender },
   { path: 'politique-de-confidentialite', renderMode: RenderMode.Prerender },
   { path: 'conditions-generales-utilisation', renderMode: RenderMode.Prerender },
   { path: 'politique-de-cookies', renderMode: RenderMode.Prerender },

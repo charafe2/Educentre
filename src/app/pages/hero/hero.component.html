@@ -49,9 +49,11 @@
     <section class="hero" aria-label="Accroche principale">
       
 
-      <!-- Headline built char-by-char by JS. aria-label provides accessible text. -->
+      <!-- Headline built char-by-char by JS. aria-label provides accessible text —
+           keep this in sync with the JS text in hero.component.ts and the noscript
+           fallback in src/index.html so the H1 is always the same keyword-rich phrase. -->
       <h1 class="hero__headline" id="lp-headline"
-          aria-label="Gérez votre centre avec précision"></h1>
+          aria-label="Gérez votre centre de soutien scolaire"></h1>
 
       <p class="hero__subhead" id="lp-subhead">
         Moujtahid unifie planification, présences, paiements et analyses
@@ -1035,6 +1037,21 @@
             </div></div>
           </div>
 
+          <!-- Must stay in sync with HOME_FAQ in core/seo/schema.ts (7th entry) —
+               Google requires the FAQPage structured data to match visible content. -->
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a7">
+              <span class="faq__question">Moujtahid convient-il à tous les types de centres au Maroc ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a7"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. Moujtahid est un logiciel de gestion scolaire conçu au Maroc, pensé d'abord pour les centres de soutien scolaire, et adopté aussi par des écoles privées, centres de langues et centres de formation. Facturation en dirhams, villes marocaines intégrées et alertes SMS locales : tout est adapté au marché marocain.</p>
+            </div></div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -1069,17 +1086,7 @@
           <ul class="footer__links">
             <li><a href="#lp-features" class="footer__link">Fonctionnalités</a></li>
             <li><a href="#lp-pricing"  class="footer__link">Tarifs</a></li>
-            <li><a href="#"            class="footer__link">Nouveautés</a></li>
-            <li><a href="#"            class="footer__link">Feuille de route</a></li>
-          </ul>
-        </div>
-        <div>
-          <p class="footer__col-title">Entreprise</p>
-          <ul class="footer__links">
-            <li><a href="#" class="footer__link">À propos</a></li>
-            <li><a href="#" class="footer__link">Blog</a></li>
-            <li><a href="#" class="footer__link">Carrières</a></li>
-            <li><a href="#" class="footer__link">Presse</a></li>
+            <li><a routerLink="/blog" class="footer__link">Blog</a></li>
           </ul>
         </div>
         <div>

@@ -104,9 +104,12 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     const headline = document.getElementById('lp-headline');
     if (!headline) return;
 
+    // Keep in sync with the aria-label on #lp-headline in hero.component.html
+    // and the noscript fallback in src/index.html, so the H1 reads as the same
+    // keyword-rich phrase whether JS runs, fails, or never loads.
     const line1 = 'Gérez votre centre';
-    const line2Prefix = 'avec ';  // non-breaking space keeps "avec précision" together on breaks
-    const line2Accent = 'précision.';
+    const line2Prefix = 'de ';
+    const line2Accent = 'soutien scolaire.';
 
     let idx = 0;
     const charSpan = (ch: string, accent = false): string => {

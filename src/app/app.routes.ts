@@ -50,6 +50,10 @@ export const routes: Routes = [
     path: 'moujtahid-vs-centerplus',
     loadComponent: () => import('./pages/marketing/vs-centerplus/vs-centerplus.component').then(m => m.VsCenterPlusComponent),
   },
+  {
+    path: 'blog',
+    loadComponent: () => import('./pages/marketing/blog/blog.component').then(m => m.BlogComponent),
+  },
 
   {
     path: 'politique-de-confidentialite',

@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- ============ SEO ============ -->
-  <meta name="description" content="Moujtahid, logiciel de gestion des centres de soutien scolaire au Maroc : planning intelligent, présences, paiements en dirhams, application parents. Essai gratuit 30 jours.">
+  <meta name="description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <meta name="author" content="Moujtahid">
   <meta name="theme-color" content="#0071e3">
@@ -21,7 +21,7 @@
   <meta property="og:locale" content="fr_FR">
   <meta property="og:url" content="https://moujtahide.ma/">
   <meta property="og:title" content="Gestion des Centres de Soutien Scolaire et Langues | Maroc">
-  <meta property="og:description" content="Le logiciel de gestion des centres de soutien scolaire au Maroc : planning, présences, paiements en dirhams, application parents. Essai gratuit 30 jours.">
+  <meta property="og:description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
   <meta property="og:image" content="https://moujtahide.ma/assets/photos/excel2.png">
   <meta property="og:image:width" content="1667">
   <meta property="og:image:height" content="944">
@@ -29,7 +29,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Gestion des Centres de Soutien Scolaire et Langues | Maroc">
-  <meta name="twitter:description" content="Le logiciel de gestion des centres de soutien scolaire au Maroc : planning, présences, paiements en dirhams, application parents. Essai gratuit 30 jours.">
+  <meta name="twitter:description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
   <meta name="twitter:image" content="https://moujtahide.ma/assets/photos/excel2.png">
 
   <!--
@@ -50,8 +50,13 @@
 </head>
 <body>
   <app-root></app-root>
+  <!--
+    No <h1> here on purpose: the app always renders exactly one <h1>
+    (#lp-headline in hero.component.html — see the SEO comment there), so a
+    second one in this fallback would create a duplicate-H1 issue for anyone
+    (or any crawler) parsing raw HTML with JS disabled.
+  -->
   <noscript>
-    <h1>Moujtahid — Logiciel de gestion des centres de soutien scolaire au Maroc</h1>
     <p>Moujtahid est le logiciel de gestion des centres de soutien scolaire et de langues au Maroc : planification, présences, paiements en dirhams et analyses. Activez JavaScript pour utiliser l'application.</p>
   </noscript>
 </body>

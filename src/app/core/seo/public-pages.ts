@@ -13,8 +13,10 @@ export const PUBLIC_PAGES = {
   home: {
     path: '/',
     title: 'Gestion des Centres de Soutien Scolaire et Langues | Maroc',
+    // Kept under 155 chars so Google's SERP doesn't truncate it — see index.html's
+    // static <meta name="description">, which must say exactly the same thing.
     description:
-      'Moujtahid, le logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc : élèves, présences, paiements en MAD et application parents. Essai gratuit.',
+      'Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.',
     keywords:
       'gestion des centres de soutien scolaire, gestion des centres de langues, gestion des écoles Maroc, logiciel gestion de centre Maroc, gestion des élèves',
   },
@@ -30,14 +32,14 @@ export const PUBLIC_PAGES = {
     path: '/logiciel-gestion-ecole',
     title: "Logiciel de gestion d'école privée au Maroc | Moujtahid",
     description:
-      "Solution de gestion des écoles au Maroc (تدبير المدرسة) : inscriptions, emplois du temps, paiements en dirhams et communication parents, pour les écoles marocaines.",
+      "Solution de gestion des écoles au Maroc (تدبير المدرسة) : inscriptions, emplois du temps, paiements en dirhams et communication parents.",
     keywords: 'gestion des écoles Maroc, logiciel gestion école privée Maroc, gestion scolaire',
   },
   languageCenter: {
     path: '/logiciel-gestion-centre-de-langues',
     title: 'Logiciel de gestion des centres de langues au Maroc | Moujtahid',
     description:
-      "Logiciel de gestion des centres de langues au Maroc : sessions, niveaux, présences et paiements en MAD, pour les centres de langues de Rabat, Casablanca et Fès.",
+      "Logiciel de gestion des centres de langues au Maroc : sessions, niveaux, présences et paiements en MAD. Pour les centres de Rabat, Casablanca et Fès.",
     keywords:
       'gestion des centres de langues, logiciel gestion centre de langues Maroc, gestion des élèves',
   },
@@ -45,7 +47,7 @@ export const PUBLIC_PAGES = {
     path: '/meilleur-logiciel-gestion-centre-maroc',
     title: 'Meilleur logiciel de gestion de centre au Maroc | Moujtahid',
     description:
-      'Comment choisir le meilleur logiciel de gestion de centre (soutien scolaire, langues) au Maroc : critères clés, prix en dirhams et où se situe Moujtahid. Essai gratuit.',
+      'Comment choisir le meilleur logiciel de gestion de centre (soutien scolaire, langues) au Maroc : critères, prix en dirhams. Essai gratuit.',
     keywords:
       'meilleur logiciel de gestion de centre, logiciel gestion centre Maroc, gestion des centres de soutien, gestion des centres de langues',
   },
@@ -60,7 +62,7 @@ export const PUBLIC_PAGES = {
     path: '/moujtahid-vs-tayssir-academie',
     title: 'Moujtahid vs Tayssir Académie : comparatif 2026 | Moujtahid',
     description:
-      'Moujtahid ou Tayssir Académie pour gérer votre centre au Maroc ? Comparatif honnête : tarifs, facturation mensuelle vs annuelle, fonctionnalités et essai gratuit.',
+      'Moujtahid ou Tayssir Académie pour gérer votre centre au Maroc ? Comparatif honnête : tarifs, facturation mensuelle vs annuelle, essai gratuit.',
     keywords: 'Moujtahid vs Tayssir Académie, comparatif logiciel gestion centre Maroc, alternative Tayssir Académie',
   },
   vsCenterPlus: {
@@ -69,6 +71,13 @@ export const PUBLIC_PAGES = {
     description:
       'Moujtahid ou CenterPlus pour gérer votre centre au Maroc ? Comparatif honnête : langue, tarifs, fonctionnalités et facturation en dirhams (MAD).',
     keywords: 'Moujtahid vs CenterPlus, comparatif logiciel gestion centre Maroc, alternative CenterPlus',
+  },
+  blog: {
+    path: '/blog',
+    title: 'Blog Moujtahid — Ressources gestion de centres au Maroc',
+    description:
+      'Guides et comparatifs pour bien gérer un centre de soutien scolaire, de langues ou une école au Maroc.',
+    keywords: 'blog gestion de centre Maroc, ressources gestion scolaire, guide logiciel centre',
   },
 } as const satisfies Record<string, PageSeo>;
 
