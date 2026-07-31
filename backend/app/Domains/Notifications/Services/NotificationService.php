@@ -82,7 +82,7 @@ class NotificationService
             tenantId: $payment->tenant_id,
             type: NotificationType::PAYMENT_RECEIVED,
             title: 'Paiement reçu',
-            message: "{$student->first_name} {$student->last_name} a effectué le paiement de ce mois.",
+            message: "Paiement mensuel réglé avec succès pour {$student->first_name} {$student->last_name}.",
             relatedEntityType: 'student',
             relatedEntityId: $student->id,
         );
@@ -94,7 +94,7 @@ class NotificationService
             tenantId: $student->tenant_id,
             type: NotificationType::STUDENT_REGISTERED,
             title: 'Nouvel élève inscrit',
-            message: "Un nouvel élève a été inscrit : {$student->first_name} {$student->last_name}.",
+            message: "Nouvelle inscription validée : {$student->first_name} {$student->last_name}.",
             relatedEntityType: 'student',
             relatedEntityId: $student->id,
         );
@@ -121,7 +121,7 @@ class NotificationService
             tenantId: $student->tenant_id,
             type: NotificationType::STUDENT_AT_RISK,
             title: 'Élève à risque de décrochage',
-            message: "{$student->first_name} {$student->last_name} a été identifié(e) comme étant à risque de décrochage.",
+            message: "Alerte : {$student->first_name} {$student->last_name} présente un risque de décrochage scolaire.",
             relatedEntityType: 'student',
             relatedEntityId: $student->id,
         );

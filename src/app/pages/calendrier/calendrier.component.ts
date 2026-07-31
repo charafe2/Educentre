@@ -12,6 +12,14 @@ import { Classe } from "../../models/classe.model";
 import { AttendanceStatus } from "../../models/attendance.model";
 import { TranslatePipe } from "../../i18n/translate.pipe";
 import { TranslationService } from "../../i18n/translation.service";
+import { NotificationsService } from "../../services/notifications.service";
+import { AppNotification, NotificationType } from "../../models/notification.model";
+
+const NOTIFICATION_ICONS: Record<NotificationType, string> = {
+  payment_received: 'fa-solid fa-circle-check',
+  student_registered: 'fa-solid fa-user-plus',
+  student_at_risk: 'fa-solid fa-triangle-exclamation',
+};
 
 @Component({
   selector: "app-calendrier",
@@ -27,6 +35,7 @@ export class CalendrierComponent {
   private toast = inject(ToastService);
   private i18n = inject(TranslationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
+  private notificationsService = inject(NotificationsService);
 
   weekOffset = signal(0);
   // Fixed internal day order (index 0-5 = Mon-Sat) for logic/indexing;
@@ -68,6 +77,7 @@ export class CalendrierComponent {
 
   constructor() {
     this.loadWorkHours();
+    this.notificationsService.load();
   }
 
   // Session CRUD
@@ -389,5 +399,24 @@ export class CalendrierComponent {
 
   private clampHour(value: number, min: number, max: number): number {
     return Math.min(max, Math.max(min, Math.trunc(value)));
+  }
+
+  iconFor(type: NotificationType): string {
+    return NOTIFICATION_ICONS[type] ?? 'fa-regular fa-bell';
+  }
+
+  timeAgo(createdAt: string): string {
+    const seconds = Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000);
+
+    if (seconds < 60) return this.t('topbar.justNow');
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return this.t('topbar.minutesAgo', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return this.t('topbar.hoursAgo', { count: hours });
+    const days = Math.floor(hours / 24);
+    if (days === 1) return this.t('topbar.yesterday');
+    if (days < 7) return this.t('topbar.daysAgo', { count: days });
+
+    return new Date(createdAt).toLocaleDateString();
   }
 }

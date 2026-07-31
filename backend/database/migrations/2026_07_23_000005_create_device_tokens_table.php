@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('device_tokens', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->unique();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('token')->unique();

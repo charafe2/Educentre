@@ -103,6 +103,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/calendrier/calendrier.component').then(m => m.CalendrierComponent),
       },
       {
+        path: 'notifications',
+        loadComponent: () => import('./pages/notifications/notifications').then(m => m.NotificationsComponent),
+      },
+      {
         path: 'analytiques', canActivate: [permissionGuard], data: { permKey: 'analytiques' },
         loadComponent: () => import('./pages/analytiques/analytiques.component').then(m => m.AnalytiquesComponent),
       },

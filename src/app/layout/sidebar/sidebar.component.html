@@ -85,6 +85,14 @@
           </a>
         </li>
       }
+      <li>
+        <a routerLink="/notifications" routerLinkActive="active" class="nav-item" [title]="'nav.notifications' | t">
+          <div class="nav-item-left">
+            <i class="fa-regular fa-bell"></i>
+            <span class="nav-text">{{ 'nav.notifications' | t }}</span>
+          </div>
+        </a>
+      </li>
 
       @if (canSee('analytiques') || canSee('documents')) {
         <li class="nav-label">{{ 'nav.section_reports' | t }}</li>

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
+            $table->uuid('uuid')->unique();
             $table->string('specialty')->nullable();
             $table->string('payment_mode')->default('fixed'); // fixed, per_student
             $table->decimal('fixed_monthly_salary', 10, 2)->nullable();

@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('academic_levels', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique()->default(DB::raw('gen_random_uuid()'));
+            $table->uuid('uuid')->unique();
             $table->string('name')->unique();
             $table->string('status')->default('active');
             $table->timestamps();

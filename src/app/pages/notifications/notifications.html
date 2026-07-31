@@ -1,0 +1,47 @@
+<div class="content-area">
+  <div class="page-header">
+    <div class="page-title">
+      <h1>{{ 'notifications.title' | t }}</h1>
+      <p>{{ 'notifications.subtitle' | t }}</p>
+    </div>
+  </div>
+
+  <div class="panel notifications-panel">
+    <div class="panel-header">
+      <h3 class="panel-title">
+        <i class="fa-regular fa-bell" style="color:var(--accent);margin-right:0.5rem;"></i>
+        {{ 'notifications.recentNotifications' | t }}
+      </h3>
+    </div>
+    
+    <div class="notifications-filters">
+      <button class="filter-chip" [class.active]="notificationFilter() === 'ALL'" (click)="notificationFilter.set('ALL')">{{ 'notifications.filterAll' | t }}</button>
+      <button class="filter-chip" [class.active]="notificationFilter() === 'UNREAD'" (click)="notificationFilter.set('UNREAD')">{{ 'notifications.filterUnread' | t }}</button>
+      <button class="filter-chip" [class.active]="notificationFilter() === 'PAYMENT'" (click)="notificationFilter.set('PAYMENT')">{{ 'notifications.filterPayments' | t }}</button>
+      <button class="filter-chip" [class.active]="notificationFilter() === 'REGISTRATION'" (click)="notificationFilter.set('REGISTRATION')">{{ 'notifications.filterRegistrations' | t }}</button>
+      <button class="filter-chip" [class.active]="notificationFilter() === 'RISK'" (click)="notificationFilter.set('RISK')">{{ 'notifications.filterAlerts' | t }}</button>
+    </div>
+
+    <div class="notifications-list">
+      @if (filteredNotifications().length === 0) {
+        <p class="empty-state">{{ 'notifications.noNotifications' | t }}</p>
+      } @else {
+        @for (notification of filteredNotifications(); track notification.id) {
+          <article class="notification-card" [class.unread]="!notification.isRead">
+            <div class="notification-icon">
+              <i [class]="iconFor(notification.type)"></i>
+            </div>
+            <div class="notification-content">
+              <h4>{{ notification.title }}</h4>
+              <p>{{ notification.message }}</p>
+              <span class="notification-time">{{ timeAgo(notification.createdAt) }}</span>
+            </div>
+            @if (!notification.isRead) {
+              <span class="notification-dot" aria-label="Unread"></span>
+            }
+          </article>
+        }
+      }
+    </div>
+  </div>
+</div>

@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
-            $table->uuid('uuid')->default(\Illuminate\Support\Facades\DB::raw('gen_random_uuid()'))->unique();
+            $table->uuid('uuid')->unique();
             $table->string('plan');
             $table->decimal('monthly_price', 10, 2)->default(0);
             $table->date('start_date')->nullable();
