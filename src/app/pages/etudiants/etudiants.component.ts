@@ -1,7 +1,9 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin, of } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { forkJoin, of, Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
 import { GroupsService } from '../../services/groups.service';
@@ -33,6 +35,17 @@ export class EtudiantsComponent {
   selectedLevel = signal('');
   selectedStatus = signal('');
   selectedPaymentStatus = signal('');
+
+  // Debounced so a full keystroke doesn't fire a request on every character —
+  // without this, fast typing could show a stale response arriving after a
+  // newer one (the search results seemingly "getting stuck" mid-typing).
+  private readonly searchInput$ = new Subject<string>();
+  private readonly searchInputSub = this.searchInput$
+    .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
+    .subscribe(value => {
+      this.searchTerm.set(value);
+      this.loadPage(1);
+    });
 
   // Academic levels assigned to this center by the Super Admin.
   levels = computed(() => this.academicLevelsService.levels().map(l => l.name));
@@ -196,6 +209,11 @@ export class EtudiantsComponent {
     return this.classesService.getByIds(s.enrolledClassIds);
   }
 
+  /** Total monthly amount owed by a student: sum of its enrolled classes' monthlyPrice. */
+  getStudentTotal(s: Student): number {
+    return this.getEnrolledClasses(s).reduce((total, cls) => total + cls.monthlyPrice, 0);
+  }
+
   getInitials(firstName: string, lastName: string): string {
     return (firstName[0] + lastName[0]).toUpperCase();
   }
@@ -210,8 +228,7 @@ export class EtudiantsComponent {
   }
 
   onSearch(event: Event): void {
-    this.searchTerm.set((event.target as HTMLInputElement).value);
-    this.loadPage(1);
+    this.searchInput$.next((event.target as HTMLInputElement).value);
   }
 
   onLevelChange(event: Event): void {

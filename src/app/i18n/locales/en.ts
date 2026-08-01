@@ -314,6 +314,7 @@ export const en: TranslationSchema = {
     colStudent: 'Student',
     colLevel: 'Level',
     colGroups: 'Groups',
+    colAmount: 'Amount',
     colPayment: 'Payment',
     remindParent: 'Remind parent',
     remindParentWhatsapp: 'Remind parent via WhatsApp',

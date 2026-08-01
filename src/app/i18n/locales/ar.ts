@@ -314,6 +314,7 @@ export const ar: TranslationSchema = {
     colStudent: 'الطالب',
     colLevel: 'المستوى',
     colGroups: 'المجموعات',
+    colAmount: 'المبلغ',
     colPayment: 'الأداء',
     remindParent: 'تذكير ولي الأمر',
     remindParentWhatsapp: 'تذكير ولي الأمر عبر واتساب',

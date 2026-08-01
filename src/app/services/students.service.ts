@@ -2,8 +2,8 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Student } from '../models/student.model';
 import { environment } from '../../environments/environment';
-import { tap } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
+import { Observable, Subject } from 'rxjs';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
 
 export interface StudentPageFilters {
@@ -33,7 +33,29 @@ export class StudentsService {
   summary = signal<StudentSummary>({ total: 0, active: 0, inactive: 0, overduePayments: 0 });
   loadingPage = signal(false);
 
+  // Routed through switchMap so an older, slower request can never overwrite a
+  // newer one's results (e.g. typing quickly in the search box, or switching
+  // filters before the previous page finished loading).
+  private readonly pageRequest$ = new Subject<StudentPageFilters>();
+
   constructor() {
+    this.pageRequest$
+      .pipe(
+        switchMap(filters => {
+          this.loadingPage.set(true);
+          return this.http.get<PaginatedApiResponse<Student, StudentSummary>>(`${environment.apiUrl}/v1/students`, {
+            params: this.params(filters),
+          });
+        }),
+      )
+      .subscribe({
+        next: res => {
+          if (res.success) this.applyPage(res);
+          this.loadingPage.set(false);
+        },
+        error: () => this.loadingPage.set(false),
+      });
+
     this.loadStudents();
     this.loadStudentPage();
   }
@@ -51,19 +73,7 @@ export class StudentsService {
   loadStudentPage(filters: StudentPageFilters = this.lastPageFilters): void {
     const normalized = { page: 1, perPage: 8, ...filters };
     this.lastPageFilters = normalized;
-
-    this.loadingPage.set(true);
-    this.http.get<PaginatedApiResponse<Student, StudentSummary>>(`${environment.apiUrl}/v1/students`, {
-      params: this.params(normalized),
-    }).subscribe({
-      next: res => {
-        if (res.success) {
-          this.applyPage(res);
-        }
-      },
-      complete: () => this.loadingPage.set(false),
-      error: () => this.loadingPage.set(false),
-    });
+    this.pageRequest$.next(normalized);
   }
 
   getById(id: number): Student | undefined {

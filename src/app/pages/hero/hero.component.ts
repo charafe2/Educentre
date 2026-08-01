@@ -109,7 +109,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     // keyword-rich phrase whether JS runs, fails, or never loads.
     const line1 = 'Gérez votre centre';
     const line2Prefix = 'de ';
-    const line2Accent = 'soutien scolaire.';
+    const line2Accent = 'soutien scolaire';
 
     let idx = 0;
     const charSpan = (ch: string, accent = false): string => {

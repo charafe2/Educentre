@@ -99,6 +99,7 @@
             <th>{{ 'students.colStudent' | t }}</th>
             <th>{{ 'students.colLevel' | t }}</th>
             <th>{{ 'students.colGroups' | t }}</th>
+            <th>{{ 'students.colAmount' | t }}</th>
             <th>{{ 'students.colPayment' | t }}</th>
             <th>{{ 'common.status' | t }}</th>
             <th></th>
@@ -132,6 +133,9 @@
                     <span class="text-muted">-</span>
                   }
                 </div>
+              </td>
+              <td>
+                <span class="amount-value">{{ 'students.pricePerMonth' | t: { price: getStudentTotal(student) } }}</span>
               </td>
               <td>
                 <div [ngClass]="['status-badge', 'status-' + student.paymentStatus]">
@@ -172,7 +176,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7">
+              <td colspan="8">
                 <div class="empty-state">
                   <i class="fa-solid fa-users empty-icon"></i>
                   <p class="empty-title">{{ 'students.emptyTitle' | t }}</p>

@@ -315,6 +315,7 @@ export const fr = {
     colStudent: 'Étudiant',
     colLevel: 'Niveau',
     colGroups: 'Groupes',
+    colAmount: 'Montant',
     colPayment: 'Paiement',
     remindParent: 'Rappeler le parent',
     remindParentWhatsapp: 'Rappeler le parent via WhatsApp',
