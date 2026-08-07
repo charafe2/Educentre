@@ -19,6 +19,7 @@ export class ChatWidgetComponent {
   view = signal<'subject' | 'chat'>('chat');
   newMessage = '';
   subjectInput = '';
+  subjectError = '';
   startingConversation = false;
 
   currentUserId = this.authStore.user()?.uuid;
@@ -65,6 +66,7 @@ export class ChatWidgetComponent {
     event.preventDefault();
     if (!this.subjectInput.trim() || this.startingConversation) return;
 
+    this.subjectError = '';
     this.startingConversation = true;
     this.chatService.startConversation(this.subjectInput.trim()).subscribe({
       next: () => {
@@ -73,6 +75,7 @@ export class ChatWidgetComponent {
       },
       error: () => {
         this.startingConversation = false;
+        this.subjectError = 'Une erreur est survenue. Veuillez réessayer.';
       }
     });
   }

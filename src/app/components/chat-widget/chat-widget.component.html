@@ -43,6 +43,7 @@
           class="cw-subject-input"
           autocomplete="off"
         />
+        <p *ngIf="subjectError" class="cw-subject-error">{{ subjectError }}</p>
         <button type="submit" class="cw-subject-submit" [disabled]="!subjectInput.trim() || startingConversation">
           {{ startingConversation ? 'Démarrage…' : 'Démarrer la conversation' }}
         </button>
