@@ -1,0 +1,223 @@
+<!-- Toast Notifications -->
+<div class="tk-toast-container">
+  <div *ngFor="let toast of ticketService.toasts()"
+       class="tk-toast"
+       [class.tk-toast-ticket]="toast.type === 'new-ticket'"
+       [class.tk-toast-message]="toast.type === 'new-message'"
+       (click)="onToastClick(toast)">
+    <div class="tk-toast-icon">
+      <svg *ngIf="toast.type === 'new-ticket'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <svg *ngIf="toast.type === 'new-message'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+      </svg>
+    </div>
+    <div class="tk-toast-body">
+      <span class="tk-toast-title">{{ toast.title }}</span>
+      <span class="tk-toast-msg">{{ toast.message }}</span>
+    </div>
+    <button class="tk-toast-close" (click)="ticketService.dismissToast(toast.id); $event.stopPropagation()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="tk-shell">
+  <!-- ── Left Panel: Ticket List ── -->
+  <aside class="tk-list-panel">
+    <header class="tk-list-header">
+      <h2 class="tk-list-title">Tickets Support</h2>
+      <span class="tk-list-count">{{ getTicketCount('all') }}</span>
+    </header>
+
+    <div class="tk-filters">
+      <button class="tk-filter-btn" [class.active]="filterStatus === 'all'" (click)="filterStatus = 'all'">
+        Tous <span class="tk-filter-count">{{ getTicketCount('all') }}</span>
+      </button>
+      <button class="tk-filter-btn" [class.active]="filterStatus === 'open'" (click)="filterStatus = 'open'">
+        Ouverts <span class="tk-filter-count">{{ getTicketCount('open') }}</span>
+      </button>
+      <button class="tk-filter-btn" [class.active]="filterStatus === 'closed'" (click)="filterStatus = 'closed'">
+        Fermés <span class="tk-filter-count">{{ getTicketCount('closed') }}</span>
+      </button>
+    </div>
+
+    <div class="tk-ticket-list">
+      <div *ngIf="getFilteredTickets().length === 0" class="tk-empty-list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/>
+        </svg>
+        <p>Aucun ticket pour le moment</p>
+      </div>
+
+      <div *ngFor="let ticket of getFilteredTickets()"
+           class="tk-ticket-item"
+           [class.tk-active]="ticketService.activeTicket()?.id === ticket.id"
+           [class.tk-has-unread]="ticket.unread_count && ticket.unread_count > 0"
+           (click)="selectTicket(ticket)"
+           (dblclick)="onDoubleClickTicket(ticket)">
+        <div class="tk-ticket-avatar" [class.tk-avatar-open]="ticket.status === 'open'" [class.tk-avatar-pending]="ticket.status === 'pending'">
+          {{ getInitials(ticket.user?.name) }}
+        </div>
+        <div class="tk-ticket-body">
+          <div class="tk-ticket-top">
+            <span class="tk-ticket-name">{{ ticket.user?.name || 'Utilisateur' }}</span>
+            <span class="tk-ticket-time">{{ ticket.updated_at | date:'HH:mm' }}</span>
+          </div>
+          <div class="tk-ticket-meta">
+            <span class="tk-ticket-tenant">{{ ticket.user?.tenant?.name || '—' }}</span>
+          </div>
+          <div class="tk-ticket-subject">
+            {{ (ticket.subject || 'Objet non défini').length > 40 ? (ticket.subject || 'Objet non défini').substring(0, 40) + '…' : (ticket.subject || 'Objet non défini') }}
+          </div>
+          <div class="tk-ticket-bottom">
+            <span class="tk-status-pill" [class.tk-status-open]="ticket.status === 'open'" [class.tk-status-closed]="ticket.status === 'closed'" [class.tk-status-pending]="ticket.status === 'pending'">
+              {{ ticket.status === 'open' ? 'Ouvert' : (ticket.status === 'pending' ? 'En attente' : 'Fermé') }}
+            </span>
+            <span *ngIf="ticket.unread_count && ticket.unread_count > 0" class="tk-unread-badge">
+              {{ ticket.unread_count }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Right Panel: Chat ── -->
+  <section class="tk-chat-panel">
+    <ng-container *ngIf="ticketService.activeTicket() as active; else emptyChat">
+
+      <!-- Chat Header -->
+      <header class="tk-chat-header">
+        <div class="tk-chat-header-left">
+          <div class="tk-chat-avatar" [class.tk-avatar-open]="active.status === 'open'" [class.tk-avatar-pending]="active.status === 'pending'">
+            {{ getInitials(active.user?.name) }}
+          </div>
+          <div class="tk-chat-identity">
+            <span class="tk-chat-subject">Objet : {{ active.subject || 'Objet non défini' }}</span>
+            <span class="tk-chat-sub">
+              <span class="tk-chat-name-small">{{ active.user?.name }}</span> · {{ active.user?.tenant?.name }} · {{ active.user?.email }}
+            </span>
+          </div>
+        </div>
+        <div class="tk-chat-actions">
+          <button *ngIf="active.status === 'pending'" class="tk-action-btn tk-action-claim" (click)="claimTicket()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
+            Accepter
+          </button>
+          
+          <select *ngIf="active.status !== 'closed'" class="tk-select-status" [ngModel]="active.status" (ngModelChange)="updateStatus($event)">
+            <option value="pending">En attente</option>
+            <option value="open">Ouvert</option>
+            <option value="in_progress">En cours</option>
+            <option value="closed">Fermé</option>
+          </select>
+          
+          <select *ngIf="active.status !== 'closed'" class="tk-select-assign" [ngModel]="active.agent_id" (ngModelChange)="assignTicket($event)">
+            <option [ngValue]="null" disabled>Assigner à...</option>
+            <option *ngFor="let sa of superadmins" [ngValue]="sa.id">{{ sa.name }}</option>
+          </select>
+
+          <div *ngIf="active.status === 'closed'" class="tk-resolved-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Résolu
+          </div>
+        </div>
+      </header>
+
+      <!-- Internal Notes -->
+      <div class="tk-internal-notes" *ngIf="active.status !== 'closed'">
+        <details>
+          <summary><i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Notes internes (visibles uniquement par le support)</summary>
+          <div class="tk-notes-content">
+            <textarea [(ngModel)]="editedNotes" placeholder="Ajouter une note interne..." class="tk-notes-textarea"></textarea>
+            <button class="tk-action-btn tk-action-claim" (click)="saveNotes()" style="margin-top: 8px;">Enregistrer les notes</button>
+          </div>
+        </details>
+      </div>
+
+      <!-- Messages -->
+      <div class="tk-messages" #messagesContainer>
+        <div *ngFor="let msg of ticketService.messages()"
+             class="tk-msg"
+             [class.tk-msg-me]="isMe(msg)"
+             [class.tk-msg-them]="!isMe(msg)">
+          <div class="tk-msg-bubble">
+            <p class="tk-msg-text">{{ msg.content }}</p>
+            <div class="tk-msg-footer">
+              <span class="tk-msg-author">{{ isMe(msg) ? 'Vous' : (msg.sender?.name || 'Client') }}</span>
+              <span class="tk-msg-timestamp">{{ msg.created_at | date:'HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Composer -->
+      <footer class="tk-composer" [class.tk-composer-disabled]="active.status === 'closed'">
+        <form (submit)="sendMessage($event)" class="tk-composer-form">
+          <input
+            type="text"
+            [(ngModel)]="newMessage"
+            name="message"
+            class="tk-composer-input"
+            [placeholder]="active.status === 'closed' ? 'Ce ticket est résolu' : 'Écrire un message…'"
+            [disabled]="active.status === 'closed'"
+            autocomplete="off" />
+          <button type="submit" class="tk-send-btn" [disabled]="!newMessage.trim() || active.status === 'closed'">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+          </button>
+        </form>
+      </footer>
+
+    </ng-container>
+
+    <ng-template #emptyChat>
+      <div class="tk-empty-chat">
+        <div class="tk-empty-icon-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+          </svg>
+        </div>
+        <h3 class="tk-empty-title">Support en temps réel</h3>
+        <p class="tk-empty-desc">Sélectionnez un ticket à gauche pour commencer la conversation avec le client.</p>
+      </div>
+    </ng-template>
+  </section>
+</div>
+
+<!-- Summary Modal -->
+<div *ngIf="showSummaryModal" class="tk-modal-overlay" (click)="showSummaryModal = false">
+  <div class="tk-modal" (click)="$event.stopPropagation()">
+    <header class="tk-modal-header">
+      <h3>Résumé de la demande</h3>
+      <button class="tk-modal-close" (click)="showSummaryModal = false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="tk-modal-body" *ngIf="selectedSummaryTicket">
+      <div class="tk-summary-item">
+        <strong>Utilisateur :</strong> {{ selectedSummaryTicket.user?.name }} 
+        <span *ngIf="selectedSummaryTicket.user?.email">({{ selectedSummaryTicket.user?.email }})</span>
+      </div>
+      <div class="tk-summary-item">
+        <strong>Centre :</strong> {{ selectedSummaryTicket.user?.tenant?.name || '—' }}
+      </div>
+      <div class="tk-summary-item">
+        <strong>Date de création :</strong> {{ selectedSummaryTicket.created_at | date:'dd/MM/yyyy HH:mm' }}
+      </div>
+      <div class="tk-summary-item">
+        <strong>Statut :</strong> {{ selectedSummaryTicket.status }}
+      </div>
+      
+      <div class="tk-modal-actions" style="margin-top: 20px; display: flex; gap: 10px;">
+        <button *ngIf="selectedSummaryTicket.status === 'pending'" class="tk-action-btn tk-action-claim" (click)="selectTicket(selectedSummaryTicket); claimTicket(); showSummaryModal = false;">
+          Accepter et ouvrir
+        </button>
+        <button class="tk-action-btn" (click)="selectTicket(selectedSummaryTicket); showSummaryModal = false;">
+          Voir la conversation
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

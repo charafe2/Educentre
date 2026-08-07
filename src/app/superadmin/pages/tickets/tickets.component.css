@@ -1,0 +1,775 @@
+/* ── Tickets shell — inherits superadmin design tokens ── */
+:host {
+  --tk-surface: var(--surface);
+  --tk-canvas: var(--bg-color);
+  --tk-line: var(--border-color);
+  --tk-text: var(--text-main);
+  --tk-muted: var(--text-muted);
+  --tk-soft: var(--text-light);
+  --tk-green-bg: var(--success-bg);
+  --tk-green-text: var(--success);
+  --tk-blue-bg: #e0e7ff;
+  --tk-blue-text: #4338ca;
+  --tk-red-bg: var(--danger-bg);
+  --tk-red-text: var(--danger);
+  --tk-amber-bg: var(--warning-bg);
+  --tk-amber-text: var(--warning);
+  --tk-accent: var(--accent);
+  --tk-accent-light: var(--accent-light);
+  --tk-radius: var(--radius-md);
+  --tk-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+  height: calc(100dvh - 90px);
+  font-family: var(--font-ui);
+}
+
+/* ── Shell grid ── */
+.tk-shell {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100%;
+  border: 1px solid var(--tk-line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--tk-surface);
+}
+
+/* ═══════════════════════════════════════════
+   LEFT PANEL — Ticket List
+   ═══════════════════════════════════════════ */
+.tk-list-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--tk-line);
+  background: var(--tk-canvas);
+}
+
+.tk-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 14px;
+}
+
+.tk-list-title {
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--tk-text);
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.tk-list-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--tk-line);
+  color: var(--tk-muted);
+  font-size: 0.7rem;
+  font-weight: 750;
+}
+
+/* ── Filters ── */
+.tk-filters {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px 12px;
+}
+
+.tk-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tk-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 160ms var(--tk-ease);
+}
+.tk-filter-btn:hover {
+  background: var(--tk-canvas);
+  color: var(--tk-text);
+}
+.tk-filter-btn.active {
+  background: var(--tk-accent-light);
+  border-color: transparent;
+  color: var(--tk-accent);
+}
+.tk-filter-count {
+  font-size: 0.65rem;
+  font-weight: 800;
+  opacity: 0.6;
+}
+
+/* ── Ticket list ── */
+.tk-ticket-list {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.tk-empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: var(--tk-soft);
+  text-align: center;
+}
+.tk-empty-list svg {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 12px;
+  opacity: 0.4;
+}
+.tk-empty-list p {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ── Individual ticket row ── */
+.tk-ticket-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(234, 234, 234, 0.6);
+  transition: background 140ms var(--tk-ease);
+  position: relative;
+}
+.tk-ticket-item:hover {
+  background: rgba(255, 255, 255, 0.75);
+}
+.tk-ticket-item.tk-active {
+  background: var(--tk-accent-light);
+  box-shadow: inset 3px 0 0 var(--tk-accent);
+}
+.tk-ticket-item.tk-has-unread .tk-ticket-name {
+  font-weight: 800;
+}
+
+.tk-ticket-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--tk-line);
+  color: var(--tk-muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.tk-ticket-avatar.tk-avatar-open {
+  background: var(--tk-green-bg);
+  color: var(--tk-green-text);
+}
+.tk-ticket-avatar.tk-avatar-pending {
+  background: var(--tk-amber-bg);
+  color: var(--tk-amber-text);
+}
+
+.tk-ticket-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tk-ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.tk-ticket-name {
+  font-size: 0.84rem;
+  font-weight: 680;
+  color: var(--tk-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-ticket-time {
+  font-size: 0.68rem;
+  color: var(--tk-soft);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.tk-ticket-meta {
+  margin-top: 2px;
+}
+
+.tk-ticket-tenant {
+  font-size: 0.72rem;
+  color: var(--tk-muted);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+.tk-ticket-subject {
+  margin-top: 3px;
+  font-size: 0.76rem;
+  color: var(--tk-text);
+  font-weight: 550;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-ticket-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.tk-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.tk-status-pill.tk-status-open {
+  background: var(--tk-green-bg);
+  color: var(--tk-green-text);
+}
+.tk-status-pill.tk-status-pending {
+  background: var(--tk-amber-bg);
+  color: var(--tk-amber-text);
+}
+.tk-status-pill.tk-status-closed {
+  background: var(--tk-line);
+  color: var(--tk-muted);
+}
+
+.tk-unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--tk-red-text);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+/* ═══════════════════════════════════════════
+   RIGHT PANEL — Chat
+   ═══════════════════════════════════════════ */
+.tk-chat-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--tk-surface);
+  min-width: 0;
+}
+
+/* ── Chat header ── */
+.tk-chat-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--tk-line);
+  min-height: 72px;
+}
+
+.tk-chat-header-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+  margin-top: 2px;
+}
+
+.tk-chat-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--tk-line);
+  color: var(--tk-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.tk-chat-avatar.tk-avatar-open {
+  background: var(--tk-green-bg);
+  color: var(--tk-green-text);
+}
+.tk-chat-avatar.tk-avatar-pending {
+  background: var(--tk-amber-bg);
+  color: var(--tk-amber-text);
+}
+
+.tk-chat-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tk-chat-subject {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--tk-text);
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-chat-name-small {
+  font-weight: 700;
+}
+
+.tk-chat-sub {
+  font-size: 0.78rem;
+  color: var(--tk-muted);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-chat-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.tk-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border: 1px solid var(--tk-line);
+  border-radius: 8px;
+  background: var(--tk-surface);
+  color: var(--tk-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 680;
+  cursor: pointer;
+  transition: all 160ms var(--tk-ease);
+}
+.tk-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.tk-action-btn:hover {
+  border-color: #dededa;
+  color: var(--tk-text);
+  background: #fbfbfa;
+}
+.tk-action-btn:active {
+  transform: scale(0.98);
+}
+
+.tk-action-claim {
+  background: var(--tk-accent);
+  border-color: transparent;
+  color: #ffffff;
+}
+.tk-action-claim:hover {
+  background: color-mix(in srgb, var(--tk-accent) 88%, black);
+  color: #ffffff;
+}
+
+.tk-action-close:hover {
+  background: var(--tk-green-bg);
+  border-color: transparent;
+  color: var(--tk-green-text);
+}
+
+.tk-select-status,
+.tk-select-assign {
+  padding: 7px 30px 7px 12px;
+  border: 1px solid var(--tk-line);
+  border-radius: 8px;
+  background-color: var(--tk-surface);
+  color: var(--tk-text);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 140ms var(--tk-ease);
+}
+.tk-select-status:hover,
+.tk-select-assign:hover {
+  border-color: var(--tk-accent);
+}
+
+.tk-resolved-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: var(--tk-green-bg);
+  border: 1px solid rgba(52, 101, 56, 0.14);
+  color: var(--tk-green-text);
+  font-size: 0.78rem;
+  font-weight: 680;
+}
+.tk-resolved-chip svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tk-internal-notes {
+  margin: 16px 24px 0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--tk-amber-bg);
+  border: 1px solid color-mix(in srgb, var(--tk-amber-text) 20%, transparent);
+}
+.tk-internal-notes summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--tk-amber-text);
+  font-weight: 650;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.tk-notes-textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--tk-line);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  resize: vertical;
+  min-height: 64px;
+}
+
+/* ── Messages area ── */
+.tk-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--tk-canvas);
+  scrollbar-gutter: stable;
+}
+
+.tk-msg {
+  display: flex;
+  max-width: 65%;
+}
+.tk-msg-them {
+  align-self: flex-start;
+}
+.tk-msg-me {
+  align-self: flex-end;
+}
+
+.tk-msg-bubble {
+  padding: 12px 16px;
+  border-radius: 14px;
+  line-height: 1.5;
+  box-shadow: var(--shadow-sm);
+}
+
+.tk-msg-them .tk-msg-bubble {
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-line);
+  border-bottom-left-radius: 4px;
+  color: var(--tk-text);
+}
+
+.tk-msg-me .tk-msg-bubble {
+  background: linear-gradient(135deg, var(--tk-blue-text), var(--tk-accent));
+  border-bottom-right-radius: 4px;
+  color: #ffffff;
+}
+
+.tk-msg-text {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.tk-msg-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 0.64rem;
+  font-weight: 650;
+  opacity: 0.55;
+}
+
+.tk-msg-me .tk-msg-footer {
+  opacity: 0.45;
+  color: #ffffff;
+}
+
+/* ── Composer ── */
+.tk-composer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--tk-line);
+  background: var(--tk-surface);
+}
+.tk-composer-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.tk-composer-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tk-composer-input {
+  flex: 1;
+  padding: 11px 16px;
+  border: 1px solid var(--tk-line);
+  border-radius: 10px;
+  background: var(--tk-canvas);
+  color: var(--tk-text);
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 550;
+  outline: none;
+  transition: border-color 140ms var(--tk-ease), box-shadow 140ms var(--tk-ease);
+}
+.tk-composer-input::placeholder {
+  color: var(--tk-soft);
+  font-weight: 550;
+}
+.tk-composer-input:focus {
+  border-color: rgba(52, 101, 56, 0.35);
+  box-shadow: 0 0 0 3px rgba(52, 101, 56, 0.08);
+}
+
+.tk-send-btn {
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 10px;
+  background: var(--tk-text);
+  color: #ffffff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: transform 140ms var(--tk-ease), opacity 140ms var(--tk-ease);
+}
+.tk-send-btn svg {
+  width: 18px;
+  height: 18px;
+}
+.tk-send-btn:hover {
+  transform: scale(1.04);
+}
+.tk-send-btn:active {
+  transform: scale(0.96);
+}
+.tk-send-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+  transform: none;
+}
+
+/* ── Empty state ── */
+.tk-empty-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  text-align: center;
+}
+
+.tk-empty-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: var(--tk-canvas);
+  border: 1px solid var(--tk-line);
+  display: grid;
+  place-items: center;
+  margin-bottom: 20px;
+}
+.tk-empty-icon-wrap svg {
+  width: 32px;
+  height: 32px;
+  color: var(--tk-soft);
+}
+
+.tk-empty-title {
+  margin: 0 0 8px;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--tk-text);
+  letter-spacing: -0.01em;
+}
+
+.tk-empty-desc {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 550;
+  color: var(--tk-muted);
+  line-height: 1.55;
+  max-width: 300px;
+}
+
+
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════ */
+.tk-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 380px;
+  pointer-events: none;
+}
+
+.tk-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--tk-surface);
+  border: 1px solid var(--tk-line);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  cursor: pointer;
+  pointer-events: all;
+  animation: tk-toast-in 320ms var(--tk-ease) both;
+  transition: transform 160ms var(--tk-ease), opacity 160ms var(--tk-ease);
+}
+.tk-toast:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1), 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+@keyframes tk-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.tk-toast-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.tk-toast-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.tk-toast-ticket .tk-toast-icon {
+  background: var(--tk-green-bg);
+  color: var(--tk-green-text);
+}
+.tk-toast-message .tk-toast-icon {
+  background: var(--tk-blue-bg);
+  color: var(--tk-blue-text);
+}
+
+.tk-toast-body {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tk-toast-title {
+  font-size: 0.82rem;
+  font-weight: 750;
+  color: var(--tk-text);
+  letter-spacing: -0.01em;
+}
+
+.tk-toast-msg {
+  font-size: 0.74rem;
+  font-weight: 550;
+  color: var(--tk-muted);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-toast-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tk-soft);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: background 120ms, color 120ms;
+}
+.tk-toast-close svg {
+  width: 14px;
+  height: 14px;
+}
+.tk-toast-close:hover {
+  background: var(--tk-red-bg);
+  color: var(--tk-red-text);
+}
+
+/* ── Responsive ── */
+@media (max-width: 800px) {
+  .tk-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: 260px 1fr;
+  }
+  .tk-list-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--tk-line);
+  }
+}
