@@ -1,0 +1,88 @@
+<div class="cw-root">
+  <button
+    *ngIf="!isOpen()"
+    (click)="toggleChat()"
+    class="cw-launcher"
+    aria-label="Ouvrir le support"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="cw-launcher-icon">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+    </svg>
+    <span *ngIf="chatService.unreadCount() > 0" class="cw-launcher-badge">{{ chatService.unreadCount() }}</span>
+  </button>
+
+  <div *ngIf="isOpen()" class="cw-window">
+    <header class="cw-header">
+      <div class="cw-header-text">
+        <h3 class="cw-title">Support</h3>
+        <p class="cw-subtitle">Nous répondons en quelques minutes.</p>
+      </div>
+      <button (click)="toggleChat()" class="cw-close" aria-label="Fermer">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="cw-close-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </header>
+
+    <!-- Subject capture step: shown before the first conversation is created -->
+    <div *ngIf="view() === 'subject'" class="cw-subject-view">
+      <div class="cw-subject-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/>
+        </svg>
+      </div>
+      <h4 class="cw-subject-heading">Comment pouvons-nous vous aider ?</h4>
+      <p class="cw-subject-hint">Décrivez votre demande en quelques mots, un membre de notre équipe vous répondra rapidement.</p>
+      <form (submit)="submitSubject($event)" class="cw-subject-form">
+        <input
+          type="text"
+          [(ngModel)]="subjectInput"
+          name="subject"
+          maxlength="120"
+          placeholder="Ex : Problème de facturation"
+          class="cw-subject-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="cw-subject-submit" [disabled]="!subjectInput.trim() || startingConversation">
+          {{ startingConversation ? 'Démarrage…' : 'Démarrer la conversation' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Chat view -->
+    <ng-container *ngIf="view() === 'chat'">
+      <div class="cw-messages" #scrollMe [scrollTop]="scrollMe.scrollHeight">
+        <div *ngIf="chatService.messages().length === 0" class="cw-empty">
+          <p>Envoyez un message pour démarrer la conversation avec le support.</p>
+        </div>
+
+        <div
+          *ngFor="let msg of chatService.messages()"
+          class="cw-msg"
+          [ngClass]="isMe(msg) ? 'cw-msg-me' : 'cw-msg-them'"
+        >
+          {{ msg.content }}
+          <div class="cw-msg-time">{{ msg.created_at | date:'shortTime' }}</div>
+        </div>
+      </div>
+
+      <footer class="cw-composer">
+        <form (submit)="sendMessage($event)" class="cw-composer-form">
+          <input
+            type="text"
+            [(ngModel)]="newMessage"
+            name="message"
+            placeholder="Écrivez votre message…"
+            class="cw-composer-input"
+            autocomplete="off"
+          />
+          <button type="submit" class="cw-composer-send" [disabled]="!newMessage.trim()">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="cw-send-icon">
+              <path d="M3.478 2.404a.75.75 0 00-.926.941l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.404z" />
+            </svg>
+          </button>
+        </form>
+      </footer>
+    </ng-container>
+  </div>
+</div>
