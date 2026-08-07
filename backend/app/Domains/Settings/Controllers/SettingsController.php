@@ -96,11 +96,27 @@ class SettingsController extends Controller
 
     public function sendSupportRequest(SendSupportRequestRequest $request): JsonResponse
     {
-        Mail::to('support@moujtahide.ma')->send(new SupportRequestMail(
-            sender: $request->user(),
-            subjectLine: $request->validated('subject'),
-            messageBody: $request->validated('message'),
-        ));
+        $user = $request->user();
+
+        // Create a conversation (ticket)
+        $conversation = \App\Domains\Support\Models\Conversation::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'subject' => $request->validated('subject'),
+        ]);
+
+        // Create the first message with the body
+        $message = $conversation->messages()->create([
+            'sender_type' => get_class($user),
+            'sender_id' => $user->id,
+            'content' => $request->validated('message'),
+            'is_read' => false,
+        ]);
+
+        // Broadcast to superadmins
+        broadcast(new \App\Events\NewTicketCreated($conversation));
+        broadcast(new \App\Events\MessageSent($message->load('sender', 'conversation')))->toOthers();
 
         return $this->success(null, 'Votre demande a été envoyée au support.');
     }

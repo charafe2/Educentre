@@ -13,4 +13,5 @@ Route::prefix('v1')->group(function () {
     require base_path('app/Domains/Retention/routes.php');
     require base_path('app/Domains/SuperAdmin/routes.php');
     require base_path('app/Domains/Notifications/routes.php');
+    require base_path('app/Domains/Support/routes.php');
 });

@@ -16,8 +16,8 @@ use App\Domains\Core\Traits\BelongsToTenant;
 
 class User extends Authenticatable
 {
-    /** @use BelongsToTenant, HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant;
 
     protected static function booted(): void
     {

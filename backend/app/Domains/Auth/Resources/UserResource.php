@@ -41,6 +41,7 @@ class UserResource extends JsonResource
             // meaningful for non-owner users (null/absent otherwise).
             'is_owner' => $this->is_owner,
             'permissions' => $this->is_owner ? null : ($this->permissions ?? []),
+            'tenant_id' => $this->tenant_id,
         ];
     }
 }

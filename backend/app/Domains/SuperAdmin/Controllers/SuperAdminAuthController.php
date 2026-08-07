@@ -55,4 +55,10 @@ class SuperAdminAuthController extends Controller
     {
         return $this->success(data: SuperAdminResource::make($request->user()));
     }
+
+    public function index(): JsonResponse
+    {
+        $superadmins = \App\Models\SuperAdmin::all();
+        return $this->success(data: SuperAdminResource::collection($superadmins));
+    }
 }
