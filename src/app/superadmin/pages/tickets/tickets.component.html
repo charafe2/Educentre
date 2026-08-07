@@ -69,7 +69,7 @@
             <span class="tk-ticket-tenant">{{ ticket.user?.tenant?.name || '—' }}</span>
           </div>
           <div class="tk-ticket-subject">
-            {{ (ticket.subject || 'Objet non défini').length > 40 ? (ticket.subject || 'Objet non défini').substring(0, 40) + '…' : (ticket.subject || 'Objet non défini') }}
+            {{ ticket.subject || 'Objet non défini' }}
           </div>
           <div class="tk-ticket-bottom">
             <span class="tk-status-pill" [class.tk-status-open]="ticket.status === 'open'" [class.tk-status-closed]="ticket.status === 'closed'" [class.tk-status-pending]="ticket.status === 'pending'">

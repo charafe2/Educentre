@@ -46,7 +46,7 @@ export class ChatWidgetComponent {
   }
 
   isMe(msg: any): boolean {
-    return msg.sender_type?.includes('User') && msg.sender_id === this.currentUserId;
+    return msg.sender_type?.includes('User');
   }
 
   initConversation() {

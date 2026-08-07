@@ -29,7 +29,7 @@
   grid-template-columns: 340px 1fr;
   height: 100%;
   border: 1px solid var(--tk-line);
-  border-radius: 12px;
+  border-radius: var(--tk-radius);
   overflow: hidden;
   background: var(--tk-surface);
 }
@@ -96,7 +96,7 @@
   transition: all 160ms var(--tk-ease);
 }
 .tk-filter-btn:hover {
-  background: var(--tk-canvas);
+  background: var(--tk-surface);
   color: var(--tk-text);
 }
 .tk-filter-btn.active {
@@ -145,12 +145,12 @@
   gap: 12px;
   padding: 14px 18px;
   cursor: pointer;
-  border-bottom: 1px solid rgba(234, 234, 234, 0.6);
+  border-bottom: 1px solid color-mix(in srgb, var(--tk-line) 60%, transparent);
   transition: background 140ms var(--tk-ease);
   position: relative;
 }
 .tk-ticket-item:hover {
-  background: rgba(255, 255, 255, 0.75);
+  background: color-mix(in srgb, var(--tk-surface) 75%, transparent);
 }
 .tk-ticket-item.tk-active {
   background: var(--tk-accent-light);
@@ -384,9 +384,9 @@
   height: 16px;
 }
 .tk-action-btn:hover {
-  border-color: #dededa;
+  border-color: var(--tk-line);
   color: var(--tk-text);
-  background: #fbfbfa;
+  background: var(--tk-canvas);
 }
 .tk-action-btn:active {
   transform: scale(0.98);
@@ -400,12 +400,6 @@
 .tk-action-claim:hover {
   background: color-mix(in srgb, var(--tk-accent) 88%, black);
   color: #ffffff;
-}
-
-.tk-action-close:hover {
-  background: var(--tk-green-bg);
-  border-color: transparent;
-  color: var(--tk-green-text);
 }
 
 .tk-select-status,
@@ -433,7 +427,7 @@
   padding: 7px 14px;
   border-radius: 8px;
   background: var(--tk-green-bg);
-  border: 1px solid rgba(52, 101, 56, 0.14);
+  border: 1px solid color-mix(in srgb, var(--tk-green-text) 20%, transparent);
   color: var(--tk-green-text);
   font-size: 0.78rem;
   font-weight: 680;
@@ -571,8 +565,8 @@
   font-weight: 550;
 }
 .tk-composer-input:focus {
-  border-color: rgba(52, 101, 56, 0.35);
-  box-shadow: 0 0 0 3px rgba(52, 101, 56, 0.08);
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 .tk-send-btn {
