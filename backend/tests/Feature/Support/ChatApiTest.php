@@ -47,6 +47,23 @@ class ChatApiTest extends TestCase
         });
     }
 
+    public function test_new_ticket_broadcast_payload_includes_subject(): void
+    {
+        $user = $this->chatUser();
+
+        $conversation = \App\Domains\Support\Models\Conversation::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'subject' => 'Problème de facturation',
+        ]);
+
+        $payload = (new \App\Events\NewTicketCreated($conversation))->broadcastWith();
+
+        $this->assertArrayHasKey('subject', $payload);
+        $this->assertSame('Problème de facturation', $payload['subject']);
+    }
+
     private function chatUser(): User
     {
         $tenant = Tenant::factory()->create();
