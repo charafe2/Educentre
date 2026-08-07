@@ -84,3 +84,6 @@ Thumbs.db
 *.bak
 *.orig
 *.tmp
+
+# ── Superpowers scratch workspaces ───────────────────────────
+.superpowers/
