@@ -1,12 +1,11 @@
-import { Injectable, signal, inject } from '@angular/core';
+import { Injectable, signal, inject, effect } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap, interval, startWith, switchMap } from 'rxjs';
 import { AppNotification } from '../models/notification.model';
 import { environment } from '../../environments/environment';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
 import { AuthStore } from '../auth/auth.store';
-
-const UNREAD_POLL_INTERVAL_MS = 30000;
+import { RealtimeService } from './realtime.service';
 
 export interface NotificationFilters {
   page?: number;
@@ -18,6 +17,7 @@ export interface NotificationFilters {
 export class NotificationsService {
   private http = inject(HttpClient);
   private auth = inject(AuthStore);
+  private realtime = inject(RealtimeService);
 
   notifications = signal<AppNotification[]>([]);
   pagination = signal<PaginationMeta>({ current_page: 1, per_page: 15, total: 0, last_page: 1, from: null, to: null });
@@ -25,19 +25,27 @@ export class NotificationsService {
   loading = signal(false);
 
   constructor() {
-    // Only start polling once the user is actually logged in — avoids firing
-    // requests on app bootstrap before a token exists.
-    interval(UNREAD_POLL_INTERVAL_MS).pipe(
-      startWith(0),
-      switchMap(() => {
-        if (!this.auth.isLoggedIn()) {
-          return [];
+    // Refresh unread count once when user logs in
+    effect(() => {
+      const user = this.auth.user();
+      if (user) {
+        this.refreshUnreadCount();
+
+        // Listen for real-time notifications
+        if (this.realtime.echo) {
+          this.realtime.echo.private(`tenant.${user.tenant_id}`)
+            .listen('.notification.created', (event: any) => {
+              // We received a real-time notification
+              this.unreadCount.update(count => count + 1);
+              
+              // Only prepend to list if it's meant for this user specifically or a global tenant notification
+              if (event.userId === null || event.userId === user.uuid || event.userId === (user as any).id) {
+                // If we are currently viewing the first page of notifications, we could prepend it
+                // For simplicity, just refetching or prepending
+                // In a real app we'd map the event payload to AppNotification
+              }
+            });
         }
-        return this.http.get<ApiResponse<{ count: number }>>(`${environment.apiUrl}/v1/notifications/unread-count`);
-      }),
-    ).subscribe(res => {
-      if (res && 'data' in res && res.success) {
-        this.unreadCount.set(res.data.count);
       }
     });
   }

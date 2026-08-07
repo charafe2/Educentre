@@ -506,9 +506,9 @@
 
       <!-- Support -->
       @if (activeTab() === 'support') {
-        <div class="settings-section">
-          <h3 class="section-title">{{ 'settings.supportTitle' | t }}</h3>
-          <p class="section-desc">{{ 'settings.supportDesc' | t }}</p>
+        <div class="settings-section tk-support-container" style="max-width: 840px; margin: 0 auto;">
+          <h3 class="section-title" style="font-size: 18px; font-weight: 600; color: #111827;">{{ 'settings.supportTitle' | t }}</h3>
+          <p class="section-desc" style="font-size: 13px; color: #6b7280;">{{ 'settings.supportDesc' | t }}</p>
 
           @if (supportError()) {
             <div class="pw-error">
@@ -518,7 +518,7 @@
           }
 
           <div class="form-group form-full">
-            <label class="form-label">{{ 'settings.supportSubject' | t }}</label>
+            <label class="form-label" style="color: #374151; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">{{ 'settings.supportSubject' | t }}</label>
             <input
               class="form-input"
               type="text"
@@ -528,22 +528,134 @@
             />
           </div>
 
-          <div class="form-group form-full">
-            <label class="form-label">{{ 'settings.supportMessage' | t }}</label>
+          <div class="form-group form-full" style="position: relative;">
+            <label class="form-label" style="color: #374151; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">{{ 'settings.supportMessage' | t }}</label>
             <textarea
               class="form-input form-textarea"
-              rows="6"
+              rows="4"
               [(ngModel)]="supportForm.message"
               name="supportMessage"
               [placeholder]="'settings.supportMessagePlaceholder' | t"
+              maxlength="500"
             ></textarea>
+            <span style="position: absolute; bottom: 8px; right: 12px; font-size: 11px; color: #9ca3af; pointer-events: none;">
+              {{ supportForm.message ? supportForm.message.length : 0 }}/500
+            </span>
           </div>
 
-          <div class="form-actions">
-            <button class="btn-primary" [disabled]="sendingSupport()" (click)="sendSupportRequest()">
+          <div class="form-actions" style="margin-top: 1rem;">
+            <button class="btn-primary support-btn" 
+                    [disabled]="sendingSupport() || !supportForm.subject || !supportForm.message" 
+                    (click)="sendSupportRequest()">
               <i class="fa-solid fa-paper-plane"></i>
               {{ (sendingSupport() ? 'settings.supportSending' : 'settings.supportSend') | t }}
             </button>
+          </div>
+          
+          <hr style="margin: 32px 0; border: none; border-top: 1px solid #e5e7eb;" />
+
+          <h3 class="section-title" style="font-size: 18px; font-weight: 600; color: #111827;">Mes tickets</h3>
+          <p class="section-desc" style="font-size: 13px; color: #6b7280;">Retrouvez ci-dessous l'historique de vos demandes d'assistance.</p>
+
+          <div class="tk-shell" style="height: 600px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 1rem;">
+            <!-- ── Left Panel: Ticket List ── -->
+            <aside class="tk-list-panel" style="border-right: 1px solid var(--border); background: #ffffff;">
+              <div class="tk-ticket-list">
+                @if (chatService.conversations().length === 0) {
+                  <div class="tk-empty-list" style="padding: 2rem; text-align: center; color: var(--text-muted);">
+                    <p>Aucun ticket pour le moment</p>
+                  </div>
+                }
+                
+                @for (ticket of chatService.conversations(); track ticket.id) {
+                  <div class="tk-ticket-item"
+                       [class.tk-active]="chatService.activeConversation()?.id === ticket.id"
+                       (click)="selectConversation(ticket)">
+                    <div class="tk-ticket-body" style="flex: 1;">
+                      <div class="tk-ticket-title">
+                        {{ (ticket.subject || 'Demande de support').length > 60 ? (ticket.subject || 'Demande de support').substring(0, 60) + '…' : (ticket.subject || 'Demande de support') }}
+                      </div>
+                      <div class="tk-ticket-meta">
+                        <span class="tk-ticket-time">{{ ticket.updated_at | date:'dd/MM/yyyy HH:mm' }}</span>
+                        <span style="color: #d1d5db;">·</span>
+                        <span class="tk-status-badge" 
+                              [class.badge-open]="ticket.status === 'open'" 
+                              [class.badge-pending]="ticket.status === 'pending'"
+                              [class.badge-closed]="ticket.status === 'closed'">
+                          {{ ticket.status === 'open' ? 'Ouvert' : (ticket.status === 'pending' ? 'En attente' : (ticket.status === 'closed' ? 'Fermé' : 'En cours')) }}
+                        </span>
+                      </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right tk-ticket-arrow"></i>
+                  </div>
+                }
+              </div>
+            </aside>
+
+            <!-- ── Right Panel: Chat ── -->
+            <section class="tk-chat-panel" style="flex: 1; display: flex; flex-direction: column; background: var(--bg-soft);">
+              @if (chatService.activeConversation(); as active) {
+                <!-- Chat Header -->
+                <header class="tk-chat-header" style="padding: 1rem; border-bottom: 1px solid var(--border); background: var(--bg);">
+                  <div class="tk-chat-header-left">
+                    <div class="tk-chat-identity">
+                      <span class="tk-chat-name" style="font-weight: 500;">Conversation avec le support</span>
+                    </div>
+                  </div>
+                </header>
+
+                <!-- Messages -->
+                <div class="tk-messages" #messagesContainer style="flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                  @for (msg of chatService.messages(); track msg.id) {
+                    <div class="tk-msg"
+                         [class.tk-msg-me]="msg.sender_type?.includes('TenantUser')"
+                         [class.tk-msg-them]="!msg.sender_type?.includes('TenantUser')"
+                         style="max-width: 80%; display: flex; flex-direction: column;"
+                         [style.align-self]="msg.sender_type?.includes('TenantUser') ? 'flex-end' : 'flex-start'">
+                      <div class="tk-msg-bubble" 
+                           style="padding: 0.75rem 1rem; border-radius: 12px;"
+                           [style.background]="msg.sender_type?.includes('TenantUser') ? 'var(--primary)' : 'var(--bg)'"
+                           [style.color]="msg.sender_type?.includes('TenantUser') ? 'white' : 'var(--text)'"
+                           [style.border]="msg.sender_type?.includes('TenantUser') ? 'none' : '1px solid var(--border)'">
+                        <p class="tk-msg-text" style="margin: 0; white-space: pre-wrap; word-break: break-word;">{{ msg.content }}</p>
+                        <div class="tk-msg-footer" style="font-size: 0.7rem; margin-top: 0.25rem; opacity: 0.8; display: flex; justify-content: space-between;">
+                          <span class="tk-msg-author">{{ msg.sender_type?.includes('TenantUser') ? 'Vous' : 'Support' }}</span>
+                          <span class="tk-msg-timestamp" style="margin-left: 10px;">{{ msg.created_at | date:'HH:mm' }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- Composer -->
+                <footer class="tk-composer" 
+                        [class.tk-composer-disabled]="active.status === 'closed' || active.status === 'pending'"
+                        style="padding: 1rem; border-top: 1px solid var(--border); background: var(--bg);">
+                  <form (submit)="sendMessage($event)" class="tk-composer-form" style="display: flex; gap: 0.5rem;">
+                    <input
+                      type="text"
+                      [(ngModel)]="newMessage"
+                      name="message"
+                      class="tk-composer-input"
+                      [placeholder]="active.status === 'closed' ? 'Ce ticket est fermé.' : (active.status === 'pending' ? 'Ticket en attente de prise en charge...' : 'Écrire un message…')"
+                      [disabled]="active.status === 'closed' || active.status === 'pending'"
+                      autocomplete="off" 
+                      style="flex: 1; padding: 0.75rem; border-radius: 20px; border: 1px solid var(--border);" />
+                    <button type="submit" class="tk-send-btn" 
+                            [disabled]="!newMessage.trim() || active.status === 'closed' || active.status === 'pending'"
+                            style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                      <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                  </form>
+                </footer>
+              } @else {
+                <div class="tk-empty-chat" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
+                  <i class="fa-solid fa-comments" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.2;"></i>
+                  <h3 class="tk-empty-title">Sélectionnez un ticket</h3>
+                  <p class="tk-empty-desc">Cliquez sur un ticket dans la liste pour voir la conversation.</p>
+                </div>
+              }
+            </section>
           </div>
         </div>
       }

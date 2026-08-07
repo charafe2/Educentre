@@ -771,3 +771,56 @@ td { padding: 0.9rem 1rem; font-size: 0.875rem; color: var(--text-main); border-
   font-size: 0.875rem; font-weight: 500;
   margin-bottom: 1.25rem;
 }
+
+/* Support Ticket UI Enhancements */
+.support-btn { background: #0d9488; }
+.support-btn:hover:not(:disabled) { background: #0f766e; }
+.support-btn:disabled { background: #9ca3af; cursor: not-allowed; opacity: 1; }
+
+.tk-ticket-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tk-ticket-item:hover { background: #f9fafb; }
+.tk-ticket-item.tk-active { background: #f3f4f6; }
+
+.tk-ticket-title {
+  font-weight: bold;
+  font-size: 15px;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.tk-ticket-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tk-ticket-time {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.tk-status-badge {
+  border-radius: 9999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-open { background: #fee2e2; color: #b91c1c; }
+.badge-pending { background: #fef3c7; color: #b45309; }
+.badge-closed { background: #dcfce7; color: #15803d; }
+/* Assuming En cours defaults to something if needed, else pending or open covers it */
+
+.tk-ticket-arrow {
+  color: #9ca3af;
+  font-size: 14px;
+}

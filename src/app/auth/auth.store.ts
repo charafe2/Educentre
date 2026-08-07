@@ -18,6 +18,7 @@ export interface AuthUser {
   is_owner: boolean;
   // Sidebar-tab keys this user may access. Null for owners (unrestricted).
   permissions: string[] | null;
+  tenant_id: number;
 }
 
 /** Route/permission keys a non-owner user can be granted, mirroring the

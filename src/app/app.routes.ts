@@ -142,6 +142,7 @@ export const routes: Routes = [
           { path: 'packages',  loadComponent: () => import('./superadmin/pages/packages/superadmin-packages.component').then(m => m.SuperadminPackagesComponent) },
           { path: 'accounts',  loadComponent: () => import('./superadmin/pages/accounts/superadmin-accounts.component').then(m => m.SuperadminAccountsComponent) },
           { path: 'invoices',  loadComponent: () => import('./superadmin/pages/invoices/superadmin-invoices.component').then(m => m.SuperadminInvoicesComponent) },
+          { path: 'tickets',   loadComponent: () => import('./superadmin/pages/tickets/tickets.component').then(m => m.TicketsComponent) },
         ],
       },
     ],

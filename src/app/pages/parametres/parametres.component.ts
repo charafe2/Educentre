@@ -1,5 +1,5 @@
-import { Component, signal, inject, OnInit, computed } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { Component, signal, inject, OnInit, computed, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CentreService } from '../../services/centre.service';
@@ -18,6 +18,7 @@ import { Classe } from '../../models/classe.model';
 import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../../services/receipt-customization.service';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
+import { ChatService, Conversation, Message } from '../../services/chat.service';
 
 /** Checkbox list shown when adding/editing a user — mirrors the sidebar tabs
  *  (see layout/sidebar) and the backend's TenantPermissions::KEYS. Reuses the
@@ -36,11 +37,12 @@ const PERMISSION_OPTIONS: { key: TenantPermissionKey; labelKey: string; icon: st
 
 @Component({
   selector: 'app-parametres',
-  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe],
+  standalone: true,
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe, DatePipe],
   templateUrl: './parametres.component.html',
   styleUrl: './parametres.component.css'
 })
-export class ParametresComponent implements OnInit {
+export class ParametresComponent implements OnInit, AfterViewChecked {
   private centreService = inject(CentreService);
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
@@ -53,9 +55,13 @@ export class ParametresComponent implements OnInit {
   usersService = inject(SettingsUsersService);
   private receiptCustomization = inject(ReceiptCustomizationService);
   private i18n = inject(TranslationService);
+  chatService = inject(ChatService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   activeTab = signal('centre');
+
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  shouldScrollToBottom = false;
 
   // `label` holds a translation key, resolved in the template via `| t`.
   tabs = [
@@ -108,6 +114,18 @@ export class ParametresComponent implements OnInit {
     this.loadCentreSettings();
     if (this.isOwner()) {
       this.usersService.load();
+    }
+    this.chatService.loadConversations().subscribe();
+  }
+
+  ngAfterViewChecked() {
+    if (this.shouldScrollToBottom) {
+      try {
+        if (this.messagesContainer) {
+          this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+        }
+      } catch (_) {}
+      this.shouldScrollToBottom = false;
     }
   }
 
@@ -258,6 +276,7 @@ export class ParametresComponent implements OnInit {
   supportForm = { subject: '', message: '' };
   supportError = signal('');
   sendingSupport = signal(false);
+  newMessage = '';
 
   async sendSupportRequest(): Promise<void> {
     this.supportError.set('');
@@ -273,11 +292,29 @@ export class ParametresComponent implements OnInit {
       await this.centreService.sendSupportRequest(subject.trim(), message.trim());
       this.supportForm = { subject: '', message: '' };
       this.toast.show(this.t('settings.toastSupportSent'));
+      this.chatService.loadConversations().subscribe(); // refresh tickets
     } catch (err: unknown) {
       this.supportError.set(extractValidationError(err, this.t('settings.saveError')));
     } finally {
       this.sendingSupport.set(false);
     }
+  }
+
+  selectConversation(conv: Conversation) {
+    this.chatService.setActiveConversation(conv);
+    this.shouldScrollToBottom = true;
+  }
+
+  sendMessage(event: Event) {
+    event.preventDefault();
+    const active = this.chatService.activeConversation();
+    if (!this.newMessage.trim() || !active) return;
+    if (active.status === 'closed' || active.status === 'pending') return;
+
+    this.chatService.sendMessage(active.uuid, this.newMessage).subscribe(() => {
+      this.newMessage = '';
+      this.shouldScrollToBottom = true;
+    });
   }
 
   // ── Matières ──────────────────────────────────────────────

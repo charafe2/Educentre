@@ -8,4 +8,10 @@ export const environment = {
   production: false,
   apiUrl: '/api',
   siteUrl: siteConfig.siteUrl.development,
+  reverb: {
+    key: 'local_reverb_key',
+    host: '127.0.0.1',
+    port: 8080,
+    scheme: 'http'
+  }
 };

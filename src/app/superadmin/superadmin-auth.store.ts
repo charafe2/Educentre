@@ -7,6 +7,7 @@ import { catchError, exhaustMap, of, pipe, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 export interface SuperAdminUser {
+  id: number;
   name: string;
   email: string;
   role: 'superadmin';

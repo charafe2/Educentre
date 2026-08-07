@@ -1,6 +1,7 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { SuperadminAuthStore } from '../superadmin-auth.store';
+import { RealtimeService } from '../../services/realtime.service';
 
 @Component({
   selector: 'app-superadmin-layout',
@@ -9,10 +10,19 @@ import { SuperadminAuthStore } from '../superadmin-auth.store';
   templateUrl: './superadmin-layout.component.html',
   styleUrl: './superadmin-layout.component.css'
 })
-export class SuperadminLayoutComponent {
+export class SuperadminLayoutComponent implements OnInit, OnDestroy {
   private auth = inject(SuperadminAuthStore);
+  private realtimeService = inject(RealtimeService);
 
   sidebarCollapsed = signal(false);
+
+  ngOnInit(): void {
+    this.realtimeService.initialize();
+  }
+
+  ngOnDestroy(): void {
+    this.realtimeService.disconnect();
+  }
 
   async logout(): Promise<void> {
     await this.auth.logout();
