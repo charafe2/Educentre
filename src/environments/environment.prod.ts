@@ -7,4 +7,10 @@ export const environment = {
   production: true,
   apiUrl: '/api',
   siteUrl: siteConfig.siteUrl.production,
+  reverb: {
+    key: 'base64:Dj5oOLdAjFm1iU2S7J5LejvA3jFi7c45GCDU7QxYRmU=',
+    host: 'moujtahide.ma',
+    port: 443,
+    scheme: 'https'
+  }
 };
