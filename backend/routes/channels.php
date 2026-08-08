@@ -2,7 +2,11 @@
 
 use Illuminate\Support\Facades\Broadcast;
 
-Broadcast::routes(['middleware' => ['auth:sanctum']]);
+// Registered under the `api` prefix (not the default /broadcasting/auth) because
+// nginx only proxies /api/ through to PHP-FPM, and the Angular client authorizes
+// private channels against `${environment.apiUrl}/broadcasting/auth`. Token auth
+// via Sanctum, since the SPA sends a Bearer token rather than a session cookie.
+Broadcast::routes(['middleware' => ['auth:sanctum'], 'prefix' => 'api']);
 
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;

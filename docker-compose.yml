@@ -73,9 +73,12 @@ services:
       REVERB_APP_ID: ${REVERB_APP_ID}
       REVERB_APP_KEY: ${REVERB_APP_KEY}
       REVERB_APP_SECRET: ${REVERB_APP_SECRET}
-      REVERB_HOST: 0.0.0.0
+      # Destination Laravel POSTs broadcast events to, over the compose network.
+      # 0.0.0.0 is a bind address, not a routable destination — it resolves back
+      # to this container, where nothing listens on 8080.
+      REVERB_HOST: reverb
       REVERB_PORT: 8080
-      REVERB_SCHEME: ${REVERB_SCHEME:-http}
+      REVERB_SCHEME: http
       VITE_REVERB_APP_KEY: ${REVERB_APP_KEY}
       VITE_REVERB_HOST: localhost
       VITE_REVERB_PORT: ${REVERB_PORT:-8080}
@@ -118,6 +121,16 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       CACHE_STORE: redis
+      # ShouldBroadcast queues the broadcast, so THIS container is what actually
+      # publishes to Reverb. Without these it falls back to config's default of
+      # 'null' and every broadcast is silently discarded.
+      BROADCAST_CONNECTION: reverb
+      REVERB_APP_ID: ${REVERB_APP_ID}
+      REVERB_APP_KEY: ${REVERB_APP_KEY}
+      REVERB_APP_SECRET: ${REVERB_APP_SECRET}
+      REVERB_HOST: reverb
+      REVERB_PORT: 8080
+      REVERB_SCHEME: http
     depends_on:
       postgres:
         condition: service_healthy

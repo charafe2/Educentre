@@ -64,6 +64,23 @@ class ChatApiTest extends TestCase
         $this->assertSame('Problème de facturation', $payload['subject']);
     }
 
+    public function test_broadcasting_auth_is_reachable_under_the_api_prefix(): void
+    {
+        $user = $this->chatUser();
+
+        // The Angular client authorizes private channels against
+        // `${environment.apiUrl}/broadcasting/auth` — i.e. /api/broadcasting/auth,
+        // because that is the only prefix nginx proxies through to Laravel.
+        // If the route is not registered there every private-channel
+        // subscription 404s and realtime updates silently stop arriving.
+        $this->actingAs($user)
+            ->postJson('/api/broadcasting/auth', [
+                'socket_id' => '1234.5678',
+                'channel_name' => 'private-tenant.'.$user->tenant_id,
+            ])
+            ->assertSuccessful();
+    }
+
     private function chatUser(): User
     {
         $tenant = Tenant::factory()->create();
