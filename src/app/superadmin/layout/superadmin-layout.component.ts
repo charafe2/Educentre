@@ -15,6 +15,14 @@ export class SuperadminLayoutComponent implements OnInit, OnDestroy {
   private realtimeService = inject(RealtimeService);
 
   sidebarCollapsed = signal(false);
+  mobileNavOpen = signal(false);
+
+  // Read once at construction: the console is an operations surface, and a
+  // dated stamp in the topbar is what tells the operator which day's ledger
+  // they are looking at. A ticking clock would be motion without meaning.
+  today = new Intl.DateTimeFormat('fr-FR', {
+    day: '2-digit', month: 'short', year: 'numeric',
+  }).format(new Date());
 
   ngOnInit(): void {
     this.realtimeService.initialize();

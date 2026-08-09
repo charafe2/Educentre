@@ -1,119 +1,163 @@
-<div class="accounts-page reveal-in">
-  <section class="accounts-header">
+<div class="sa-page accounts">
+
+  <header class="sa-head">
     <div>
-      <span class="eyebrow">Accès plateforme</span>
+      <span class="sa-eyebrow">Accès plateforme</span>
       <h1>Comptes super-admin</h1>
-      <p>Créez, modifiez, suspendez et supprimez les accès globaux au panneau plateforme.</p>
+      <p class="sa-lede">Qui peut ouvrir cette console. Chaque accès est nominatif et journalisé.</p>
     </div>
-    <button class="primary-button" (click)="newAccount()" type="button">
-      Nouveau compte
-    </button>
-  </section>
+    <div class="sa-head-actions">
+      <button class="sa-btn ghost" type="button" (click)="loadAccounts()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate"></i>
+        Actualiser
+      </button>
+      <button class="sa-btn primary" type="button" (click)="newAccount()">
+        <i class="fa-solid fa-plus"></i>
+        Nouveau compte
+      </button>
+    </div>
+  </header>
+
+  <dl class="sa-figures">
+    <div>
+      <dt>Accès enregistrés</dt>
+      <dd>{{ accounts().length }}</dd>
+    </div>
+    <div class="paid">
+      <dt>Actifs</dt>
+      <dd>{{ activeCount() }}</dd>
+    </div>
+    <div class="late">
+      <dt>Suspendus</dt>
+      <dd>{{ suspendedCount() }}</dd>
+    </div>
+  </dl>
 
   @if (error()) {
-    <div class="inline-alert">{{ error() }}</div>
+    <div class="sa-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ error() }}
+    </div>
   }
 
-  <section class="summary-strip" aria-label="Résumé des comptes super-admin">
-    <div><strong>{{ accounts().length }}</strong><span>Total</span></div>
-    <div><strong>{{ activeCount() }}</strong><span>Actifs</span></div>
-    <div><strong>{{ suspendedCount() }}</strong><span>Suspendus</span></div>
-  </section>
+  <section class="split">
 
-  <section class="crud-layout">
-    <div class="accounts-panel">
-      <div class="panel-title-row">
+    <div class="sa-table-card registry">
+      <div class="sa-card-head">
         <div>
           <h2>Registre des accès</h2>
-          <p>Sélectionnez un compte pour modifier ses informations.</p>
+          <p>Sélectionnez un compte pour le modifier.</p>
         </div>
-        <button class="secondary-button" (click)="loadAccounts()" type="button">Actualiser</button>
       </div>
 
-      <div class="accounts-table" role="table" aria-label="Comptes super-admin">
-        <div class="table-head" role="row">
-          <span>Compte</span>
-          <span>Statut</span>
-          <span>Dernière connexion</span>
-          <span>Actions</span>
-        </div>
-
-        @if (loading()) {
-          <div class="empty-state">Chargement des comptes...</div>
-        } @else {
-          @for (account of accounts(); track account.id) {
-            <article class="account-record" [class.selected]="selectedId() === account.id" role="row">
-              <button class="account-main" type="button" (click)="selectAccount(account)">
-                <span class="avatar">{{ account.name.slice(0, 2).toUpperCase() }}</span>
-                <span class="identity">
-                  <strong>{{ account.name }}</strong>
-                  <small>{{ account.email }}</small>
-                </span>
-              </button>
-
-              <span [ngClass]="['status-badge', account.status]">{{ statusLabel(account.status) }}</span>
-              <span class="last-login">{{ account.lastLoginAt || 'Jamais' }}</span>
-
-              <div class="row-actions">
-                <button class="icon-action" type="button" title="Modifier" (click)="selectAccount(account)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 19 4.2-1 9.1-9.1a2.1 2.1 0 0 0-3-3L6.2 15 5 19Z"/><path d="m14.6 6.6 2.8 2.8"/></svg>
-                </button>
-                <button class="icon-action" type="button" [title]="account.status === 'active' ? 'Suspendre' : 'Réactiver'" (click)="toggle(account)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M8 8l8 8"/></svg>
-                </button>
-                <button class="icon-action danger" type="button" title="Supprimer" (click)="remove(account)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 7l.7-2h4.6L15 7"/><path d="M8 7l.8 13h6.4L16 7"/></svg>
-                </button>
-              </div>
-            </article>
-          }
-          @empty {
-            <div class="empty-state">Aucun compte super-admin. Créez le premier accès depuis le formulaire.</div>
-          }
-        }
+      <div class="sa-table-scroll">
+        <table class="sa-table">
+          <thead>
+            <tr>
+              <th>Compte</th>
+              <th>Statut</th>
+              <th class="num">Dernière connexion</th>
+              <th><span class="sr">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (loading()) {
+              @for (row of [1, 2, 3]; track row) {
+                <tr class="loading-row"><td colspan="4"><span class="sa-skeleton"></span></td></tr>
+              }
+            } @else {
+              @for (account of accounts(); track account.id) {
+                <tr [class.on]="selectedId() === account.id">
+                  <td>
+                    <button class="sa-idcell pick-row" type="button" (click)="selectAccount(account)">
+                      <span class="sa-mark">{{ account.name.slice(0, 2) }}</span>
+                      <span class="sa-idcell-copy">
+                        <strong>{{ account.name }}</strong>
+                        <small>{{ account.email }}</small>
+                      </span>
+                    </button>
+                  </td>
+                  <td>
+                    <span [class]="'sa-badge ' + account.status">{{ statusLabel(account.status) }}</span>
+                  </td>
+                  <td class="num sa-meta">{{ account.lastLoginAt || 'Jamais' }}</td>
+                  <td>
+                    <div class="sa-actions">
+                      <button class="sa-iconbtn" type="button" title="Modifier le compte" (click)="selectAccount(account)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 19 4.2-1 9.1-9.1a2.1 2.1 0 0 0-3-3L6.2 15 5 19Z"/><path d="m14.6 6.6 2.8 2.8"/></svg>
+                      </button>
+                      <button class="sa-iconbtn" type="button"
+                              [title]="account.status === 'active' ? 'Suspendre le compte' : 'Réactiver le compte'"
+                              (click)="toggle(account)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="m8 8 8 8"/></svg>
+                      </button>
+                      <button class="sa-iconbtn danger" type="button" title="Supprimer le compte" (click)="remove(account)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="m9 7 .7-2h4.6L15 7"/><path d="m8 7 .8 13h6.4L16 7"/></svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @empty {
+                <tr>
+                  <td colspan="4">
+                    <div class="sa-empty">
+                      <strong>Aucun accès enregistré</strong>
+                      <span>Créez le premier compte avec le formulaire à droite.</span>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
       </div>
     </div>
 
-    <form class="editor-panel" (ngSubmit)="save()">
-      <div class="editor-heading">
-        <span class="eyebrow">{{ editing() ? 'Modification' : 'Création' }}</span>
-        <h2>{{ editing() ? 'Modifier le compte' : 'Créer un compte' }}</h2>
-        <p>{{ editing() ? 'Le mot de passe reste inchangé si le champ est vide.' : 'Le mot de passe initial est requis pour activer l’accès.' }}</p>
+    <form class="sa-card editor" (ngSubmit)="save()">
+      <div class="sa-card-head">
+        <div>
+          <span class="sa-eyebrow">{{ editing() ? 'Modification' : 'Création' }}</span>
+          <h2>{{ editing() ? 'Modifier le compte' : 'Créer un compte' }}</h2>
+        </div>
       </div>
 
-      <label>
-        Nom complet
-        <input type="text" [(ngModel)]="form.name" name="name" autocomplete="name" />
-        <small>Nom affiché dans les journaux d’administration.</small>
-      </label>
+      <div class="sa-card-body editor-body">
+        <label class="sa-field">
+          <span>Nom complet</span>
+          <input class="sa-input" type="text" [(ngModel)]="form.name" name="name" autocomplete="name" placeholder="Prénom et nom" />
+          <small class="sa-hint">Le nom qui apparaît dans les journaux d'administration.</small>
+        </label>
 
-      <label>
-        Email
-        <input type="email" [(ngModel)]="form.email" name="email" autocomplete="email" />
-        <small>Utilisé pour la connexion au panneau super-admin.</small>
-      </label>
+        <label class="sa-field">
+          <span>Email</span>
+          <input class="sa-input" type="email" [(ngModel)]="form.email" name="email" autocomplete="email" placeholder="prenom@moujtahid.ma" />
+          <small class="sa-hint">Sert d'identifiant de connexion à cette console.</small>
+        </label>
 
-      <label>
-        {{ editing() ? 'Nouveau mot de passe' : 'Mot de passe initial' }}
-        <input type="password" [(ngModel)]="form.password" name="password" autocomplete="new-password" />
-        <small>{{ editing() ? 'Laissez vide pour conserver le mot de passe actuel.' : 'Minimum 8 caractères côté API.' }}</small>
-      </label>
+        <label class="sa-field">
+          <span>{{ editing() ? 'Nouveau mot de passe' : 'Mot de passe initial' }}</span>
+          <input class="sa-input" type="password" [(ngModel)]="form.password" name="password" autocomplete="new-password" />
+          <small class="sa-hint">{{ editing() ? 'Laissez vide pour conserver le mot de passe actuel.' : 'Minimum 8 caractères.' }}</small>
+        </label>
 
-      <label>
-        Statut
-        <select [(ngModel)]="form.status" name="status">
-          <option value="active">Actif</option>
-          <option value="suspended">Suspendu</option>
-        </select>
-        <small>Un compte suspendu ne peut plus se connecter.</small>
-      </label>
+        <label class="sa-field">
+          <span>Statut</span>
+          <select class="sa-input" [(ngModel)]="form.status" name="status">
+            <option value="active">Actif</option>
+            <option value="suspended">Suspendu</option>
+          </select>
+          <small class="sa-hint">Un compte suspendu ne peut plus se connecter.</small>
+        </label>
+      </div>
 
-      <div class="editor-actions">
-        <button class="secondary-button" type="button" (click)="newAccount()">Réinitialiser</button>
-        <button class="primary-button" type="submit" [disabled]="saving()">
-          {{ saving() ? 'Enregistrement...' : (editing() ? 'Enregistrer' : 'Créer') }}
+      <div class="sa-modal-foot editor-foot">
+        <button class="sa-btn quiet" type="button" (click)="newAccount()">Réinitialiser</button>
+        <button class="sa-btn primary" type="submit" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement…' : (editing() ? 'Enregistrer' : 'Créer le compte') }}
         </button>
       </div>
     </form>
+
   </section>
 </div>

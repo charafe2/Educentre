@@ -1,180 +1,170 @@
-<div class="page">
+<div class="sa-page catalogue">
 
-  <!-- Page header -->
-  <div class="page-header">
+  <header class="sa-head">
     <div>
-      <h1 class="page-title">Matières</h1>
-      <p class="page-subtitle">Catalogue global des matières, assignées ensuite à chaque centre</p>
+      <span class="sa-eyebrow">Catalogue</span>
+      <h1>Matières</h1>
+      <p class="sa-lede">La liste de référence. Chaque centre ne voit que les matières que vous lui ouvrez.</p>
     </div>
-    <button class="btn-create" (click)="openCreate()">
-      <i class="fa-solid fa-plus"></i>
-      Créer une matière
-    </button>
-  </div>
+    <div class="sa-head-actions">
+      <button class="sa-btn primary" (click)="openCreate()" type="button">
+        <i class="fa-solid fa-plus"></i>
+        Créer une matière
+      </button>
+    </div>
+  </header>
 
-  <!-- Stats row -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-icon icon-total"><i class="fa-solid fa-book"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ totalSubjects() }}</span>
-        <span class="stat-label">Matières total</span>
-      </div>
+  <dl class="sa-figures">
+    <div>
+      <dt>Au catalogue</dt>
+      <dd>{{ totalSubjects() }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-active"><i class="fa-solid fa-circle-check"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ activeSubjects() }}</span>
-        <span class="stat-label">Actives</span>
-      </div>
+    <div class="paid">
+      <dt>Actives</dt>
+      <dd>{{ activeSubjects() }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-students"><i class="fa-solid fa-buildings"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ assignedSubjects() }}</span>
-        <span class="stat-label">Assignées à un centre</span>
-      </div>
+    <div class="accent">
+      <dt>Ouvertes à un centre</dt>
+      <dd>{{ assignedSubjects() }}</dd>
     </div>
-  </div>
+  </dl>
 
   @if (pageError()) {
-    <div class="page-error">
+    <div class="sa-alert">
       <i class="fa-solid fa-circle-exclamation"></i>
       {{ pageError() }}
     </div>
   }
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
-      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+  <div class="sa-toolbar">
+    <div class="sa-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
       <input
-        class="search-input"
-        type="text"
-        placeholder="Rechercher une matière..."
+        type="search"
+        placeholder="Rechercher une matière…"
+        aria-label="Rechercher une matière"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)"
       />
     </div>
-    <div class="filter-tabs">
-      @for (f of [['all','Toutes'],['active','Actives'],['inactive','Inactives']]; track f[0]) {
-        <button
-          [ngClass]="['filter-tab', filterStatus() === f[0] ? 'filter-active' : '']"
-          (click)="filterStatus.set($any(f[0]))"
-        >{{ f[1] }}</button>
+    <div class="sa-segmented" role="group" aria-label="Filtrer par statut">
+      @for (filter of statusFilters; track filter.key) {
+        <button type="button" [class.on]="filterStatus() === filter.key" (click)="filterStatus.set(filter.key)">
+          {{ filter.label }}
+        </button>
       }
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>Matière</th>
-          <th>Statut</th>
-          <th>Centres assignés</th>
-          <th>Créée le</th>
-          <th>Mise à jour</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="6" class="empty-row">Chargement des matières...</td></tr>
-        } @else {
-        @for (subject of filteredSubjects(); track subject.id) {
+  <div class="sa-table-card">
+    <div class="sa-table-scroll">
+      <table class="sa-table">
+        <thead>
           <tr>
-            <td>
-              <div class="centre-cell">
-                <span class="subject-dot" [style.background]="subject.color"></span>
-                <span class="centre-name">{{ subject.name }}</span>
-              </div>
-            </td>
-            <td>
-              <span [ngClass]="['status-badge', subject.status === 'active' ? 'status-active' : 'status-suspended']">
-                <span class="status-dot"></span>
-                {{ subject.status === 'active' ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td class="students-count">{{ subject.assignedCentresCount ?? 0 }}</td>
-            <td class="date-cell">{{ subject.createdAt | date:'dd/MM/yyyy' }}</td>
-            <td class="date-cell">{{ subject.updatedAt | date:'dd/MM/yyyy' }}</td>
-            <td>
-              <div class="actions">
-                <button class="action-btn action-edit" title="Modifier" (click)="openEdit(subject)">
-                  <i class="fa-regular fa-pen-to-square"></i>
-                </button>
-                <button class="action-btn action-delete" title="Supprimer" (click)="deleteSubject(subject)">
-                  <i class="fa-regular fa-trash-can"></i>
-                </button>
-              </div>
-            </td>
+            <th>Matière</th>
+            <th>Statut</th>
+            <th class="num">Centres</th>
+            <th class="num">Créée le</th>
+            <th class="num">Mise à jour</th>
+            <th><span class="sr">Actions</span></th>
           </tr>
-        }
-        @empty {
-          <tr>
-            <td colspan="6" class="empty-row">
-              <i class="fa-solid fa-book"></i>
-              <span>Aucune matière trouvée</span>
-            </td>
-          </tr>
-        }
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4]; track row) {
+              <tr class="loading-row"><td colspan="6"><span class="sa-skeleton"></span></td></tr>
+            }
+          } @else {
+            @for (subject of filteredSubjects(); track subject.id) {
+              <tr>
+                <td>
+                  <span class="named">
+                    <span class="swatch" [style.background]="subject.color"></span>
+                    <span class="sa-idcell-name">{{ subject.name }}</span>
+                  </span>
+                </td>
+                <td>
+                  <span [class]="subject.status === 'active' ? 'sa-badge active' : 'sa-badge inactive'">
+                    {{ subject.status === 'active' ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="num">{{ subject.assignedCentresCount ?? 0 }}</td>
+                <td class="num sa-meta">{{ subject.createdAt | date:'dd/MM/yyyy' }}</td>
+                <td class="num sa-meta">{{ subject.updatedAt | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <div class="sa-actions">
+                    <button class="sa-iconbtn" type="button" title="Modifier la matière" (click)="openEdit(subject)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="sa-iconbtn danger" type="button" title="Supprimer la matière" (click)="deleteSubject(subject)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="sa-empty">
+                    <i class="fa-solid fa-book"></i>
+                    <strong>Aucune matière ne correspond</strong>
+                    <span>Changez le filtre ou ajoutez-en une au catalogue.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
 
-<!-- Create/edit subject modal -->
+<!-- Create / edit subject -->
 @if (showModal()) {
-  <div class="modal-overlay" (click)="showModal.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()">
+  <div class="sa-modal-overlay" (click)="showModal.set(false)">
+    <div class="sa-modal narrow" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
 
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <div class="modal-icon"><i class="fa-solid fa-book"></i></div>
-          <div>
-            <h2 class="modal-title">{{ editingSubjectId() ? 'Modifier la matière' : 'Créer une matière' }}</h2>
-            <p class="modal-subtitle">{{ editingSubjectId() ? 'Mettez à jour le nom ou le statut' : 'Ajoutée au catalogue global, à assigner ensuite aux centres' }}</p>
-          </div>
+      <div class="sa-modal-head">
+        <div>
+          <h2>{{ editingSubjectId() ? 'Modifier la matière' : 'Créer une matière' }}</h2>
+          <p>{{ editingSubjectId() ? 'Le changement s\'applique à tous les centres qui l\'utilisent.' : 'Ajoutée au catalogue, puis ouverte centre par centre.' }}</p>
         </div>
-        <button class="modal-close" (click)="showModal.set(false)">
+        <button class="sa-iconbtn" type="button" (click)="showModal.set(false)" aria-label="Fermer">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="modal-body">
-
+      <div class="sa-modal-body">
         @if (formError()) {
-          <div class="form-error">
+          <div class="sa-alert">
             <i class="fa-solid fa-circle-exclamation"></i>
             {{ formError() }}
           </div>
         }
 
-        <div class="form-grid">
-          <div class="form-group form-full">
-            <label class="form-label">Nom de la matière <span class="req">*</span></label>
-            <input class="form-input" type="text" [(ngModel)]="form.name" placeholder="Mathématiques" />
-          </div>
-          <div class="form-group form-full">
-            <label class="form-label">Statut</label>
-            <select class="form-input" [(ngModel)]="form.status">
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
-        </div>
+        <label class="sa-field">
+          <span>Nom de la matière <b class="req">*</b></span>
+          <input class="sa-input" type="text" [(ngModel)]="form.name" placeholder="Mathématiques" />
+        </label>
 
+        <label class="sa-field">
+          <span>Statut</span>
+          <select class="sa-input" [(ngModel)]="form.status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <small class="sa-hint">Une matière inactive reste au catalogue mais ne peut plus être assignée.</small>
+        </label>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="showModal.set(false)">Annuler</button>
-        <button class="btn-confirm" (click)="submitSave()" [disabled]="saving()">
+      <div class="sa-modal-foot">
+        <button class="sa-btn quiet" type="button" (click)="showModal.set(false)">Annuler</button>
+        <button class="sa-btn primary" type="button" (click)="submitSave()" [disabled]="saving()">
           <i class="fa-solid" [class.fa-plus]="!editingSubjectId()" [class.fa-floppy-disk]="editingSubjectId()"></i>
-          {{ saving() ? 'Enregistrement...' : (editingSubjectId() ? 'Enregistrer' : 'Créer la matière') }}
+          {{ saving() ? 'Enregistrement…' : (editingSubjectId() ? 'Enregistrer' : 'Créer la matière') }}
         </button>
       </div>
 

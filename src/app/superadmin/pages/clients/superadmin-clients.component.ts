@@ -1,11 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicLevel, ClientAccount, Subject, SuperadminApiService } from '../../superadmin-api.service';
 
+type CentreStatus = ClientAccount['status'];
+type StatusFilter = 'all' | CentreStatus;
+
 @Component({
   selector: 'app-superadmin-clients',
-  imports: [NgClass, FormsModule],
+  imports: [FormsModule],
   templateUrl: './superadmin-clients.component.html',
   styleUrl: './superadmin-clients.component.css'
 })
@@ -17,7 +19,18 @@ export class SuperadminClientsComponent implements OnInit {
   pageError = signal('');
 
   searchQuery = signal('');
-  filterStatus = signal<'all' | 'active' | 'trial' | 'suspended'>('all');
+  filterStatus = signal<StatusFilter>('all');
+
+  statusFilters: { key: StatusFilter; label: string }[] = [
+    { key: 'all', label: 'Tous' },
+    { key: 'active', label: 'Actifs' },
+    { key: 'trial', label: 'Essai' },
+    { key: 'suspended', label: 'Suspendus' },
+  ];
+
+  statusLabel(status: CentreStatus): string {
+    return status === 'active' ? 'Actif' : status === 'trial' ? 'Essai' : 'Suspendu';
+  }
 
   filteredClients = computed(() => {
     const q = this.searchQuery().toLowerCase();

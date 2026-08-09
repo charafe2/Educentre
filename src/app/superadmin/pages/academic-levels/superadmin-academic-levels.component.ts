@@ -1,11 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AcademicLevel, SaveAcademicLevelPayload, SuperadminApiService } from '../../superadmin-api.service';
 
+type LevelFilter = 'all' | 'active' | 'inactive';
+
 @Component({
   selector: 'app-superadmin-academic-levels',
-  imports: [NgClass, FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe],
   templateUrl: './superadmin-academic-levels.component.html',
   styleUrl: './superadmin-academic-levels.component.css'
 })
@@ -17,7 +19,13 @@ export class SuperadminAcademicLevelsComponent implements OnInit {
   pageError = signal('');
 
   searchQuery = signal('');
-  filterStatus = signal<'all' | 'active' | 'inactive'>('all');
+  filterStatus = signal<LevelFilter>('all');
+
+  statusFilters: { key: LevelFilter; label: string }[] = [
+    { key: 'all', label: 'Tous' },
+    { key: 'active', label: 'Actifs' },
+    { key: 'inactive', label: 'Inactifs' },
+  ];
 
   filteredLevels = computed(() => {
     const q = this.searchQuery().toLowerCase();

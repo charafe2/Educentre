@@ -1,63 +1,52 @@
-<div class="sa-shell">
+<div class="sa-shell login">
 
-  <!-- Background grid -->
-  <div class="sa-grid"></div>
+  <div class="rule-field" aria-hidden="true"></div>
 
-  <!-- Top bar -->
-  <header class="sa-topbar">
-    <div class="sa-logo">
-      <i class="fa-solid fa-graduation-cap"></i>
+  <header class="topline">
+    <div class="wordmark">
+      <span class="sigil" aria-hidden="true">
+        <svg viewBox="0 0 24 24" role="img">
+          <path d="M5.4 18V6h3.2l3.4 5.8L15.4 6h3.2v12h-2.5v-7.7l-3.2 5.2h-1.8l-3.2-5.2V18H5.4Z" />
+        </svg>
+      </span>
       <span>Moujtahid</span>
     </div>
-    <span class="sa-badge">
-      <i class="fa-solid fa-shield-halved"></i>
-      Accès restreint
-    </span>
+    <span class="restricted">Accès restreint</span>
   </header>
 
-  <!-- Centered card -->
-  <main class="sa-main">
-    <div class="sa-card">
+  <main class="stage">
+    <section class="card">
+      <span class="card-rule" aria-hidden="true"></span>
 
-      <div class="sa-card-header">
-        <div class="sa-icon">
-          <i class="fa-solid fa-user-shield"></i>
-        </div>
-        <h1 class="sa-title">Super Administration</h1>
-        <p class="sa-subtitle">Panneau de contrôle global - accès hautement restreint</p>
-      </div>
-
-      <div class="sa-divider">
-        <span>Authentification requise</span>
+      <div class="card-head">
+        <span class="kicker">Console plateforme</span>
+        <h1>Super administration</h1>
+        <p>Cette console gère tous les centres. Identifiez-vous pour continuer.</p>
       </div>
 
       @if (error()) {
-        <div class="sa-error">
+        <div class="sa-alert">
           <i class="fa-solid fa-triangle-exclamation"></i>
           {{ error() }}
         </div>
       }
 
       <form (ngSubmit)="submit()">
-        <div class="sa-field">
-          <label class="sa-label">Adresse e-mail</label>
-          <div class="sa-input-wrap">
-            <i class="fa-regular fa-envelope sa-input-icon"></i>
-            <input
-              class="sa-input"
-              type="email"
-              [(ngModel)]="email"
-              name="email"
-              placeholder="superadmin@moujtahid.ma"
-              autocomplete="username"
-            />
-          </div>
-        </div>
+        <label class="sa-field">
+          <span>Adresse e-mail</span>
+          <input
+            class="sa-input"
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="superadmin@moujtahid.ma"
+            autocomplete="username"
+          />
+        </label>
 
-        <div class="sa-field">
-          <label class="sa-label">Mot de passe</label>
-          <div class="sa-input-wrap">
-            <i class="fa-solid fa-lock sa-input-icon"></i>
+        <label class="sa-field">
+          <span>Mot de passe</span>
+          <span class="pw">
             <input
               class="sa-input"
               [type]="showPassword() ? 'text' : 'password'"
@@ -66,29 +55,29 @@
               placeholder="••••••••••••"
               autocomplete="current-password"
             />
-            <button type="button" class="sa-toggle-pw" (click)="showPassword.update(v => !v)">
+            <button type="button" class="pw-toggle" (click)="showPassword.update(v => !v)"
+                    [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
               <i class="fa-regular" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
             </button>
-          </div>
-        </div>
+          </span>
+        </label>
 
-        <button type="submit" class="sa-btn" [class.sa-loading]="loading()" [disabled]="loading()">
+        <button type="submit" class="submit" [disabled]="loading()">
           @if (loading()) {
             <i class="fa-solid fa-circle-notch fa-spin"></i>
-            Vérification...
+            Vérification…
           } @else {
-            <i class="fa-solid fa-right-to-bracket"></i>
-            Accéder au panneau
+            Ouvrir la console
+            <i class="fa-solid fa-arrow-right"></i>
           }
         </button>
       </form>
 
-      <div class="sa-footer">
+      <p class="card-foot">
         <i class="fa-solid fa-lock"></i>
-        <span>Session chiffrée · Accès journalisé · Moujtahid © 2025</span>
-      </div>
-
-    </div>
+        Session chiffrée · chaque connexion est journalisée
+      </p>
+    </section>
   </main>
 
 </div>

@@ -1,11 +1,13 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SaveSubjectPayload, Subject, SuperadminApiService } from '../../superadmin-api.service';
 
+type SubjectFilter = 'all' | 'active' | 'inactive';
+
 @Component({
   selector: 'app-superadmin-subjects',
-  imports: [NgClass, FormsModule, DatePipe],
+  imports: [FormsModule, DatePipe],
   templateUrl: './superadmin-subjects.component.html',
   styleUrl: './superadmin-subjects.component.css'
 })
@@ -17,7 +19,13 @@ export class SuperadminSubjectsComponent implements OnInit {
   pageError = signal('');
 
   searchQuery = signal('');
-  filterStatus = signal<'all' | 'active' | 'inactive'>('all');
+  filterStatus = signal<SubjectFilter>('all');
+
+  statusFilters: { key: SubjectFilter; label: string }[] = [
+    { key: 'all', label: 'Toutes' },
+    { key: 'active', label: 'Actives' },
+    { key: 'inactive', label: 'Inactives' },
+  ];
 
   filteredSubjects = computed(() => {
     const q = this.searchQuery().toLowerCase();

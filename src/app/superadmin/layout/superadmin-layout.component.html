@@ -1,7 +1,10 @@
-<div class="sa-shell" [class.collapsed]="sidebarCollapsed()">
-  <aside class="sa-sidebar" aria-label="Navigation super-admin">
-    <div class="sa-sidebar-header">
-      <div class="sa-brand" aria-label="Moujtahid super-admin">
+<div class="sa-shell" [class.collapsed]="sidebarCollapsed()" [class.nav-open]="mobileNavOpen()">
+
+  <div class="sa-scrim" (click)="mobileNavOpen.set(false)" aria-hidden="true"></div>
+
+  <aside class="sa-rail" aria-label="Navigation super-admin">
+    <div class="sa-rail-top">
+      <div class="sa-brand">
         <span class="sa-brand-sigil" aria-hidden="true">
           <svg viewBox="0 0 24 24" role="img">
             <path d="M5.4 18V6h3.2l3.4 5.8L15.4 6h3.2v12h-2.5v-7.7l-3.2 5.2h-1.8l-3.2-5.2V18H5.4Z" />
@@ -9,19 +12,20 @@
         </span>
         <span class="sa-brand-copy">
           <span class="sa-brand-name">Moujtahid</span>
-          <span class="sa-brand-kicker">Super admin</span>
+          <span class="sa-brand-kicker">Console plateforme</span>
         </span>
       </div>
-      <button class="sa-icon-button sa-collapse-btn" (click)="sidebarCollapsed.update(v => !v)" title="Réduire la navigation" type="button">
-        <svg class="sa-action-icon" [class.is-collapsed]="sidebarCollapsed()" viewBox="0 0 24 24" aria-hidden="true">
+      <button class="sa-rail-btn sa-collapse" (click)="sidebarCollapsed.update(v => !v)"
+              [title]="sidebarCollapsed() ? 'Déplier la navigation' : 'Replier la navigation'" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M15 6 9 12l6 6" />
         </svg>
       </button>
     </div>
 
     <nav class="sa-nav">
-      <div class="sa-nav-section">Pilotage</div>
-      <a routerLink="/superadmin/dashboard" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Vue d'ensemble">
+      <p class="sa-nav-section">Pilotage</p>
+      <a routerLink="/superadmin/dashboard" routerLinkActive="on" class="sa-nav-item" title="Vue d'ensemble" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4.5 19.5h15" />
           <path d="M7.2 16V9.5" />
@@ -30,7 +34,7 @@
         </svg>
         <span>Vue d'ensemble</span>
       </a>
-      <a routerLink="/superadmin/clients" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Centres">
+      <a routerLink="/superadmin/clients" routerLinkActive="on" class="sa-nav-item" title="Centres" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M5 20V8.6l7-4 7 4V20" />
           <path d="M9 20v-5h6v5" />
@@ -40,7 +44,7 @@
         </svg>
         <span>Centres</span>
       </a>
-      <a routerLink="/superadmin/invoices" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Factures centres">
+      <a routerLink="/superadmin/invoices" routerLinkActive="on" class="sa-nav-item" title="Factures centres" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M7.2 4h9.6A1.8 1.8 0 0 1 18.6 5.8v14l-2.2-1.3-2.2 1.3-2.2-1.3-2.2 1.3-2.4-1.5V5.8A1.8 1.8 0 0 1 7.2 4Z" />
           <path d="M9.7 8.4h4.8" />
@@ -49,15 +53,15 @@
         </svg>
         <span>Factures</span>
       </a>
-      <a routerLink="/superadmin/tickets" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Tickets Support">
-        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+      <a routerLink="/superadmin/tickets" routerLinkActive="on" class="sa-nav-item" title="Tickets support" (click)="mobileNavOpen.set(false)">
+        <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 0 1-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8Z" />
         </svg>
-        <span>Tickets Support</span>
+        <span>Support</span>
       </a>
 
-      <div class="sa-nav-section">Configuration</div>
-      <a routerLink="/superadmin/subjects" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Matières">
+      <p class="sa-nav-section">Catalogue</p>
+      <a routerLink="/superadmin/subjects" routerLinkActive="on" class="sa-nav-item" title="Matières" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M5.5 5.2h9.4a2.2 2.2 0 0 1 2.2 2.2v11.4H7.7a2.2 2.2 0 0 1-2.2-2.2V5.2Z" />
           <path d="M5.5 16.6h11.6" />
@@ -65,14 +69,14 @@
         </svg>
         <span>Matières</span>
       </a>
-      <a routerLink="/superadmin/academic-levels" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Niveaux">
+      <a routerLink="/superadmin/academic-levels" routerLinkActive="on" class="sa-nav-item" title="Niveaux scolaires" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M4 8.5 12 4.5l8 4-8 4-8-4Z" />
           <path d="M7.2 10.4v4.6c0 1.4 2.1 2.6 4.8 2.6s4.8-1.2 4.8-2.6v-4.6" />
         </svg>
         <span>Niveaux</span>
       </a>
-      <a routerLink="/superadmin/packages" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Packages">
+      <a routerLink="/superadmin/packages" routerLinkActive="on" class="sa-nav-item" title="Packages" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="m12 4.2 7.6 4-7.6 4-7.6-4 7.6-4Z" />
           <path d="m4.4 12.1 7.6 4 7.6-4" />
@@ -80,7 +84,7 @@
         </svg>
         <span>Packages</span>
       </a>
-      <a routerLink="/superadmin/accounts" routerLinkActive="sa-nav-active" class="sa-nav-item" title="Comptes super-admin">
+      <a routerLink="/superadmin/accounts" routerLinkActive="on" class="sa-nav-item" title="Comptes super-admin" (click)="mobileNavOpen.set(false)">
         <svg class="sa-nav-icon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M12 3.8 18.2 6v5.3c0 4-2.4 7.2-6.2 8.9-3.8-1.7-6.2-4.9-6.2-8.9V6L12 3.8Z" />
           <path d="M9.5 12.2 11.2 14l3.4-4" />
@@ -89,16 +93,16 @@
       </a>
     </nav>
 
-    <div class="sa-sidebar-footer">
-      <div class="sa-user">
-        <div class="sa-user-avatar">SA</div>
-        <div class="sa-user-info">
-          <span class="sa-user-name">Super Admin</span>
-          <span class="sa-user-role">Accès plateforme</span>
-        </div>
+    <div class="sa-rail-foot">
+      <div class="sa-operator">
+        <span class="sa-operator-mark">SA</span>
+        <span class="sa-operator-copy">
+          <span class="sa-operator-name">Super Admin</span>
+          <span class="sa-operator-role">Accès plateforme</span>
+        </span>
       </div>
-      <button class="sa-icon-button sa-logout-btn" (click)="logout()" title="Déconnexion" type="button">
-        <svg class="sa-action-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <button class="sa-rail-btn" (click)="logout()" title="Se déconnecter" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M9.5 5.5H6.8A1.8 1.8 0 0 0 5 7.3v9.4a1.8 1.8 0 0 0 1.8 1.8h2.7" />
           <path d="M14.5 8.2 18.3 12l-3.8 3.8" />
           <path d="M18 12H9.5" />
@@ -109,14 +113,22 @@
 
   <div class="sa-main">
     <header class="sa-topbar">
-      <div class="sa-topbar-left">
-        <div class="sa-restricted-badge">
-          <span class="badge-dot"></span>
-          Console Super Administration
-        </div>
-      </div>
+      <button class="sa-menu-btn" type="button" (click)="mobileNavOpen.update(v => !v)" aria-label="Ouvrir la navigation">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>
+      </button>
+
+      <p class="sa-trail">
+        <span>Moujtahid</span>
+        <span class="sa-trail-sep" aria-hidden="true">/</span>
+        <span class="sa-trail-here">Super administration</span>
+      </p>
+
       <div class="sa-topbar-right">
-        <span class="sa-system-chip">API connectée</span>
+        <span class="sa-stamp">{{ today }}</span>
+        <span class="sa-status" title="Liaison avec l'API plateforme">
+          <span class="sa-status-dot"></span>
+          API connectée
+        </span>
       </div>
     </header>
 

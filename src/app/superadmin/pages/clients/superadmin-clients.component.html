@@ -1,342 +1,322 @@
-<div class="page">
+<div class="sa-page clients">
 
-  <!-- Page header -->
-  <div class="page-header">
+  <header class="sa-head">
     <div>
-      <h1 class="page-title">Centres</h1>
-      <p class="page-subtitle">CRUD statique des centres, propriétaires, statuts et packages</p>
+      <span class="sa-eyebrow">Parc client</span>
+      <h1>Centres</h1>
+      <p class="sa-lede">Chaque centre, son propriétaire, son plan et le nombre de sièges qu'il peut ouvrir.</p>
     </div>
-    <button class="btn-create" (click)="openCreate()">
-      <i class="fa-solid fa-plus"></i>
-      Créer un compte
-    </button>
-  </div>
+    <div class="sa-head-actions">
+      <button class="sa-btn primary" (click)="openCreate()" type="button">
+        <i class="fa-solid fa-plus"></i>
+        Créer un compte
+      </button>
+    </div>
+  </header>
 
-  <!-- Stats row -->
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-icon icon-total"><i class="fa-solid fa-buildings"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ totalClients() }}</span>
-        <span class="stat-label">Centres total</span>
-      </div>
+  <dl class="sa-figures">
+    <div>
+      <dt>Centres</dt>
+      <dd>{{ totalClients() }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-active"><i class="fa-solid fa-circle-check"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ activeClients() }}</span>
-        <span class="stat-label">Actifs</span>
-      </div>
+    <div class="paid">
+      <dt>Actifs</dt>
+      <dd>{{ activeClients() }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-trial"><i class="fa-solid fa-hourglass-half"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ trialClients() }}</span>
-        <span class="stat-label">En essai</span>
-      </div>
+    <div class="accent">
+      <dt>En essai</dt>
+      <dd>{{ trialClients() }}</dd>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon icon-students"><i class="fa-solid fa-user-graduate"></i></div>
-      <div class="stat-body">
-        <span class="stat-value">{{ totalStudents() }}</span>
-        <span class="stat-label">Étudiants total</span>
-      </div>
+    <div>
+      <dt>Étudiants inscrits</dt>
+      <dd>{{ totalStudents() }}</dd>
     </div>
-  </div>
+  </dl>
 
   @if (pageError()) {
-    <div class="page-error">
+    <div class="sa-alert">
       <i class="fa-solid fa-circle-exclamation"></i>
       {{ pageError() }}
     </div>
   }
 
-  <!-- Toolbar -->
-  <div class="toolbar">
-    <div class="search-wrap">
-      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+  <div class="sa-toolbar">
+    <div class="sa-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
       <input
-        class="search-input"
-        type="text"
-        placeholder="Rechercher un centre, propriétaire, ville..."
+        type="search"
+        placeholder="Rechercher un centre, un propriétaire, une ville…"
+        aria-label="Rechercher un centre"
         [ngModel]="searchQuery()"
         (ngModelChange)="searchQuery.set($event)"
       />
     </div>
-    <div class="filter-tabs">
-      @for (f of [['all','Tous'],['active','Actifs'],['trial','Essai'],['suspended','Suspendus']]; track f[0]) {
-        <button
-          [ngClass]="['filter-tab', filterStatus() === f[0] ? 'filter-active' : '']"
-          (click)="filterStatus.set($any(f[0]))"
-        >{{ f[1] }}</button>
+    <div class="sa-segmented" role="group" aria-label="Filtrer par statut">
+      @for (filter of statusFilters; track filter.key) {
+        <button type="button" [class.on]="filterStatus() === filter.key" (click)="filterStatus.set(filter.key)">
+          {{ filter.label }}
+        </button>
       }
     </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-card">
-    <table>
-      <thead>
-        <tr>
-          <th>Centre</th>
-          <th>Propriétaire</th>
-          <th>Contact</th>
-          <th>Plan</th>
-          <th>Étudiants</th>
-          <th>Utilisateurs</th>
-          <th>Statut</th>
-          <th>Créé le</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="9" class="empty-row">Chargement des centres...</td></tr>
-        } @else {
-        @for (client of filteredClients(); track client.id) {
+  <div class="sa-table-card">
+    <div class="sa-table-scroll">
+      <table class="sa-table">
+        <thead>
           <tr>
-            <td>
-              <div class="centre-cell">
-                <div class="centre-avatar">{{ client.centreName.slice(0,2).toUpperCase() }}</div>
-                <div>
-                  <span class="centre-name">{{ client.centreName }}</span>
-                  <span class="centre-type">{{ client.centreType }} · {{ client.city }}</span>
-                </div>
-              </div>
-            </td>
-            <td class="owner-name">{{ client.ownerName }}</td>
-            <td>
-              <div class="contact-cell">
-                <span>{{ client.email }}</span>
-                <span class="phone">{{ client.phone }}</span>
-              </div>
-            </td>
-            <td>
-              <span [ngClass]="['plan-badge', 'plan-' + client.plan.toLowerCase()]">{{ client.plan }}</span>
-            </td>
-            <td class="students-count">{{ client.studentsCount }}</td>
-            <td class="users-count-cell">
-              @if (editingMaxUsersId() === client.id) {
-                <div class="max-users-editor">
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    class="max-users-input"
-                    [ngModel]="maxUsersDraft()"
-                    (ngModelChange)="maxUsersDraft.set($event)"
-                  />
-                  <button class="action-btn action-edit" title="Enregistrer" (click)="saveMaxUsers(client)">
-                    <i class="fa-solid fa-check"></i>
-                  </button>
-                  <button class="action-btn" title="Annuler" (click)="cancelEditMaxUsers()">
-                    <i class="fa-solid fa-xmark"></i>
-                  </button>
-                </div>
-              } @else {
-                <span class="users-count-value">{{ client.usersCount }} / {{ client.maxUsers }}</span>
-                <button class="action-btn action-edit" title="Modifier la limite" (click)="startEditMaxUsers(client)">
-                  <i class="fa-regular fa-pen-to-square"></i>
-                </button>
-              }
-            </td>
-            <td>
-              <span [ngClass]="['status-badge', 'status-' + client.status]">
-                <span class="status-dot"></span>
-                {{ client.status === 'active' ? 'Actif' : client.status === 'trial' ? 'Essai' : 'Suspendu' }}
-              </span>
-            </td>
-            <td class="date-cell">{{ client.createdAt }}</td>
-            <td>
-              <div class="actions">
-                <button class="action-btn action-edit" title="Modifier" (click)="openEdit(client)">
-                  <i class="fa-regular fa-pen-to-square"></i>
-                </button>
-                <button
-                  class="action-btn"
-                  [class.action-suspend]="client.status !== 'suspended'"
-                  [class.action-activate]="client.status === 'suspended'"
-                  [title]="client.status === 'suspended' ? 'Réactiver' : 'Suspendre'"
-                  (click)="toggleStatus(client)"
-                >
-                  <i class="fa-solid" [class.fa-ban]="client.status !== 'suspended'" [class.fa-circle-check]="client.status === 'suspended'"></i>
-                </button>
-                <button class="action-btn action-delete" title="Supprimer" (click)="deleteClient(client)">
-                  <i class="fa-regular fa-trash-can"></i>
-                </button>
-              </div>
-            </td>
+            <th>Centre</th>
+            <th>Propriétaire</th>
+            <th>Contact</th>
+            <th>Plan</th>
+            <th class="num">Étudiants</th>
+            <th class="num">Sièges</th>
+            <th>Statut</th>
+            <th class="num">Créé le</th>
+            <th><span class="sr">Actions</span></th>
           </tr>
-        }
-        @empty {
-          <tr>
-            <td colspan="9" class="empty-row">
-              <i class="fa-solid fa-buildings"></i>
-              <span>Aucun client trouvé</span>
-            </td>
-          </tr>
-        }
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <tr class="loading-row">
+                <td colspan="9"><span class="sa-skeleton"></span></td>
+              </tr>
+            }
+          } @else {
+            @for (client of filteredClients(); track client.id) {
+              <tr>
+                <td>
+                  <div class="sa-idcell">
+                    <span class="sa-mark">{{ client.centreName.slice(0, 2) }}</span>
+                    <span class="sa-idcell-copy">
+                      <strong>{{ client.centreName }}</strong>
+                      <small>{{ client.centreType }} · {{ client.city }}</small>
+                    </span>
+                  </div>
+                </td>
+                <td class="sa-strong">{{ client.ownerName }}</td>
+                <td>
+                  <span class="contact">
+                    <span>{{ client.email }}</span>
+                    <span class="sa-meta">{{ client.phone }}</span>
+                  </span>
+                </td>
+                <td>
+                  <span [class]="'plan plan-' + client.plan.toLowerCase()">{{ client.plan }}</span>
+                </td>
+                <td class="num">{{ client.studentsCount }}</td>
+                <td class="num seats">
+                  @if (editingMaxUsersId() === client.id) {
+                    <span class="seat-editor">
+                      <input
+                        type="number" min="1" max="100"
+                        class="sa-input seat-input"
+                        aria-label="Nombre de sièges"
+                        [ngModel]="maxUsersDraft()"
+                        (ngModelChange)="maxUsersDraft.set($event)"
+                      />
+                      <button class="sa-iconbtn" type="button" title="Enregistrer la limite" (click)="saveMaxUsers(client)">
+                        <i class="fa-solid fa-check"></i>
+                      </button>
+                      <button class="sa-iconbtn" type="button" title="Annuler" (click)="cancelEditMaxUsers()">
+                        <i class="fa-solid fa-xmark"></i>
+                      </button>
+                    </span>
+                  } @else {
+                    <span class="seat-value">{{ client.usersCount }} / {{ client.maxUsers }}</span>
+                    <button class="sa-iconbtn" type="button" title="Modifier la limite de sièges" (click)="startEditMaxUsers(client)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                  }
+                </td>
+                <td>
+                  <span [class]="'sa-badge ' + client.status">{{ statusLabel(client.status) }}</span>
+                </td>
+                <td class="num sa-meta">{{ client.createdAt }}</td>
+                <td>
+                  <div class="sa-actions">
+                    <button class="sa-iconbtn" type="button" title="Modifier le centre" (click)="openEdit(client)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button
+                      class="sa-iconbtn" type="button"
+                      [title]="client.status === 'suspended' ? 'Réactiver le centre' : 'Suspendre le centre'"
+                      (click)="toggleStatus(client)"
+                    >
+                      <i class="fa-solid" [class.fa-ban]="client.status !== 'suspended'" [class.fa-circle-check]="client.status === 'suspended'"></i>
+                    </button>
+                    <button class="sa-iconbtn danger" type="button" title="Supprimer le centre" (click)="deleteClient(client)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="9">
+                  <div class="sa-empty">
+                    <i class="fa-solid fa-buildings"></i>
+                    <strong>Aucun centre ne correspond</strong>
+                    <span>Changez le filtre ou créez un nouveau compte.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
   </div>
 
 </div>
 
-<!-- Create/edit account modal -->
+<!-- Create / edit centre -->
 @if (showModal()) {
-  <div class="modal-overlay" (click)="showModal.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()">
+  <div class="sa-modal-overlay" (click)="showModal.set(false)">
+    <div class="sa-modal wide" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
 
-      <div class="modal-header">
-        <div class="modal-header-left">
-          <div class="modal-icon"><i class="fa-solid fa-user-plus"></i></div>
-          <div>
-            <h2 class="modal-title">{{ editingClientId() ? 'Modifier le centre' : 'Créer un compte propriétaire' }}</h2>
-            <p class="modal-subtitle">{{ editingClientId() ? 'Mettez à jour les informations du centre' : 'Le client recevra ses identifiants de connexion' }}</p>
-          </div>
+      <div class="sa-modal-head">
+        <div>
+          <h2>{{ editingClientId() ? 'Modifier le centre' : 'Créer un compte propriétaire' }}</h2>
+          <p>{{ editingClientId() ? 'Les changements prennent effet immédiatement.' : 'Le propriétaire recevra ces identifiants pour se connecter.' }}</p>
         </div>
-        <button class="modal-close" (click)="showModal.set(false)">
+        <button class="sa-iconbtn" type="button" (click)="showModal.set(false)" aria-label="Fermer">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="modal-body">
+      <div class="sa-modal-body">
 
         @if (formError()) {
-          <div class="form-error">
+          <div class="sa-alert">
             <i class="fa-solid fa-circle-exclamation"></i>
             {{ formError() }}
           </div>
         }
 
-        <div class="form-section-label">Informations du centre</div>
-        <div class="form-grid">
-          <div class="form-group form-full">
-            <label class="form-label">Nom du centre <span class="req">*</span></label>
-            <input class="form-input" type="text" [(ngModel)]="form.centreName" placeholder="Centre Al Moujtahid" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Type</label>
-            <select class="form-input" [(ngModel)]="form.centreType">
+        <p class="sa-section-label">Le centre</p>
+        <div class="sa-formgrid">
+          <label class="sa-field span2">
+            <span>Nom du centre <b class="req">*</b></span>
+            <input class="sa-input" type="text" [(ngModel)]="form.centreName" placeholder="Centre Al Moujtahid" />
+          </label>
+          <label class="sa-field">
+            <span>Type</span>
+            <select class="sa-input" [(ngModel)]="form.centreType">
               @for (t of centreTypes; track t) {
                 <option [value]="t">{{ t }}</option>
               }
             </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Ville</label>
-            <input class="form-input" type="text" [(ngModel)]="form.city" placeholder="Casablanca" />
-          </div>
+          </label>
+          <label class="sa-field">
+            <span>Ville</span>
+            <input class="sa-input" type="text" [(ngModel)]="form.city" placeholder="Casablanca" />
+          </label>
         </div>
 
-        <div class="form-section-label">Compte propriétaire</div>
-        <div class="form-grid">
-          <div class="form-group form-full">
-            <label class="form-label">Nom complet <span class="req">*</span></label>
-            <input class="form-input" type="text" [(ngModel)]="form.ownerName" placeholder="Prénom et nom" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Adresse e-mail <span class="req">*</span></label>
-            <input class="form-input" type="email" [(ngModel)]="form.email" placeholder="owner@centre.ma" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Téléphone</label>
-            <input class="form-input" type="tel" [(ngModel)]="form.phone" placeholder="+212 6 00 00 00 00" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Mot de passe @if (!editingClientId()) { <span class="req">*</span> }</label>
-            <div class="pw-wrap">
-              <input class="form-input" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password" [placeholder]="editingClientId() ? 'Laisser vide pour conserver' : 'Min. 6 caractères'" />
-              <button type="button" class="pw-toggle" (click)="showPassword.update(v => !v)">
+        <p class="sa-section-label">Le propriétaire</p>
+        <div class="sa-formgrid">
+          <label class="sa-field span2">
+            <span>Nom complet <b class="req">*</b></span>
+            <input class="sa-input" type="text" [(ngModel)]="form.ownerName" placeholder="Prénom et nom" />
+          </label>
+          <label class="sa-field">
+            <span>Adresse e-mail <b class="req">*</b></span>
+            <input class="sa-input" type="email" [(ngModel)]="form.email" placeholder="owner@centre.ma" />
+          </label>
+          <label class="sa-field">
+            <span>Téléphone</span>
+            <input class="sa-input" type="tel" [(ngModel)]="form.phone" placeholder="+212 6 00 00 00 00" />
+          </label>
+          <label class="sa-field">
+            <span>Mot de passe @if (!editingClientId()) { <b class="req">*</b> }</span>
+            <span class="pw">
+              <input class="sa-input" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="form.password"
+                     [placeholder]="editingClientId() ? 'Laisser vide pour conserver' : 'Min. 6 caractères'" />
+              <button type="button" class="pw-toggle" (click)="showPassword.update(v => !v)"
+                      [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
                 <i class="fa-regular" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
               </button>
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Plan d'abonnement</label>
-            <select class="form-input" [(ngModel)]="form.plan">
+            </span>
+          </label>
+          <label class="sa-field">
+            <span>Plan d'abonnement</span>
+            <select class="sa-input" [(ngModel)]="form.plan">
               @for (p of plans; track p) {
                 <option [value]="p">{{ p }}</option>
               }
             </select>
-          </div>
+          </label>
         </div>
 
-        @if (editingClientId(); as centreId) {
-          <div class="form-section-label">Matières assignées</div>
+        @if (editingClientId()) {
+          <p class="sa-section-label">Matières ouvertes à ce centre</p>
 
           @if (subjectsError()) {
-            <div class="form-error">
+            <div class="sa-alert">
               <i class="fa-solid fa-circle-exclamation"></i>
               {{ subjectsError() }}
             </div>
           }
 
           @if (loadingSubjects()) {
-            <p class="subjects-hint">Chargement des matières...</p>
+            <p class="sa-hint">Chargement des matières…</p>
           } @else {
-            <div class="subject-checkbox-list">
+            <div class="picker">
               @for (subject of allActiveSubjects(); track subject.id) {
-                <label class="subject-checkbox">
-                  <input
-                    type="checkbox"
-                    [checked]="isSubjectAssigned(subject.id)"
-                    (change)="toggleSubjectAssignment(subject.id)"
-                  />
-                  <span class="subject-dot" [style.background]="subject.color"></span>
+                <label class="pick">
+                  <input type="checkbox" [checked]="isSubjectAssigned(subject.id)" (change)="toggleSubjectAssignment(subject.id)" />
+                  <span class="pick-dot" [style.background]="subject.color"></span>
                   {{ subject.name }}
                 </label>
               } @empty {
-                <p class="subjects-hint">Aucune matière active dans le catalogue.</p>
+                <p class="sa-hint">Aucune matière active dans le catalogue.</p>
               }
             </div>
 
-            <div class="subjects-actions">
-              <button type="button" class="btn-confirm" (click)="saveSubjectAssignments()" [disabled]="savingSubjects()">
+            <div class="save-line">
+              <button type="button" class="sa-btn ghost sm" (click)="saveSubjectAssignments()" [disabled]="savingSubjects()">
                 <i class="fa-solid fa-floppy-disk"></i>
-                {{ savingSubjects() ? 'Enregistrement...' : 'Enregistrer les matières' }}
+                {{ savingSubjects() ? 'Enregistrement…' : 'Enregistrer les matières' }}
               </button>
               @if (subjectsSaved()) {
-                <span class="subjects-saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
+                <span class="saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
               }
             </div>
           }
 
-          <div class="form-section-label">Niveaux scolaires assignés</div>
+          <p class="sa-section-label">Niveaux ouverts à ce centre</p>
 
           @if (levelsError()) {
-            <div class="form-error">
+            <div class="sa-alert">
               <i class="fa-solid fa-circle-exclamation"></i>
               {{ levelsError() }}
             </div>
           }
 
           @if (loadingLevels()) {
-            <p class="subjects-hint">Chargement des niveaux...</p>
+            <p class="sa-hint">Chargement des niveaux…</p>
           } @else {
-            <div class="subject-checkbox-list">
+            <div class="picker">
               @for (level of allActiveLevels(); track level.id) {
-                <label class="subject-checkbox">
-                  <input
-                    type="checkbox"
-                    [checked]="isLevelAssigned(level.id)"
-                    (change)="toggleLevelAssignment(level.id)"
-                  />
+                <label class="pick">
+                  <input type="checkbox" [checked]="isLevelAssigned(level.id)" (change)="toggleLevelAssignment(level.id)" />
                   {{ level.name }}
                 </label>
               } @empty {
-                <p class="subjects-hint">Aucun niveau actif dans le catalogue.</p>
+                <p class="sa-hint">Aucun niveau actif dans le catalogue.</p>
               }
             </div>
 
-            <div class="subjects-actions">
-              <button type="button" class="btn-confirm" (click)="saveLevelAssignments()" [disabled]="savingLevels()">
+            <div class="save-line">
+              <button type="button" class="sa-btn ghost sm" (click)="saveLevelAssignments()" [disabled]="savingLevels()">
                 <i class="fa-solid fa-floppy-disk"></i>
-                {{ savingLevels() ? 'Enregistrement...' : 'Enregistrer les niveaux' }}
+                {{ savingLevels() ? 'Enregistrement…' : 'Enregistrer les niveaux' }}
               </button>
               @if (levelsSaved()) {
-                <span class="subjects-saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
+                <span class="saved"><i class="fa-solid fa-circle-check"></i> Enregistré</span>
               }
             </div>
           }
@@ -344,11 +324,11 @@
 
       </div>
 
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="showModal.set(false)">Annuler</button>
-        <button class="btn-confirm" (click)="submitSave()" [disabled]="saving()">
+      <div class="sa-modal-foot">
+        <button class="sa-btn quiet" type="button" (click)="showModal.set(false)">Annuler</button>
+        <button class="sa-btn primary" type="button" (click)="submitSave()" [disabled]="saving()">
           <i class="fa-solid" [class.fa-user-plus]="!editingClientId()" [class.fa-floppy-disk]="editingClientId()"></i>
-          {{ saving() ? 'Enregistrement...' : (editingClientId() ? 'Enregistrer' : 'Créer le compte') }}
+          {{ saving() ? 'Enregistrement…' : (editingClientId() ? 'Enregistrer' : 'Créer le compte') }}
         </button>
       </div>
 

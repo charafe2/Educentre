@@ -1,47 +1,82 @@
 /* ══════════════════════════════════════════════════════════════════
-   Super-admin theme
+   Super-admin console — "Le registre"
    ------------------------------------------------------------------
-   Global (not component-scoped) so custom properties reach every page
-   past Angular's view encapsulation.
+   The design system for the platform operator's console. Global (not
+   component-scoped) so the tokens AND the shared primitives reach every
+   page past Angular's view encapsulation.
 
-   Split deliberately into two blocks:
+   Two things live here:
 
-   1. The `--sa-*` palette lives on :root. These are new names that exist
-      nowhere else, so publishing them globally is harmless — and it is
-      necessary, because several super-admin components declare their
-      local aliases on `:host`, which sits ABOVE `.sa-shell` in the tree.
-      Custom properties inherit downward only, so tokens defined on
-      `.sa-shell` would be invisible to those `:host` blocks.
+   1. The `--sa-*` tokens on :root. New names that exist nowhere else, so
+      publishing them globally is harmless — and necessary, because some
+      super-admin components declare local aliases on `:host`, which sits
+      ABOVE `.sa-shell` in the tree and would never see tokens defined on
+      `.sa-shell` itself (custom properties inherit downward only).
 
-   2. The overrides of SHARED token names (--accent, --surface, …) stay
-      scoped to the super-admin roots, so the tenant app keeps its teal
-      identity untouched.
+   2. The `.sa-*` primitives: page head, ledger figures, meter, table,
+      card, badge, button, field, modal, empty state, skeleton. Every page
+      composes these instead of restating them, which is why the per-page
+      stylesheets are now thin. Component styles still win where they need
+      to — Angular's emulated encapsulation adds an attribute selector,
+      raising their specificity above these class-only rules.
 
-   Blue is the single strong accent against a neutral grey/white base.
-   Semantic status colours (success / warning / danger) are left alone —
-   they carry meaning, not brand.
+   Overrides of SHARED token names (--accent, --surface, …) stay scoped to
+   the super-admin roots so the tenant app keeps its teal identity.
+
+   Palette rationale: graphite rail + warm paper + one antique brass
+   accent. Brass, not blue — the operator must never mistake this console
+   for a tenant's. Status colours are ledger semantics (encaissé /
+   à encaisser / retard), not decoration.
    ══════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Structure ── */
-  --sa-page: #fafafb;
+  /* ── Rail (dark context) ── */
+  --sa-rail: #101215;
+  --sa-rail-raised: #171a1f;
+  --sa-rail-line: #262a31;
+  --sa-rail-ink: #e8e6e1;
+  --sa-rail-muted: #8b909a;
+  --sa-rail-faint: #5d636d;
+
+  /* ── Paper (light context) ── */
+  --sa-page: #f6f6f4;
   --sa-surface: #ffffff;
-  --sa-band: #f1f3f6;
-  --sa-border: #e5e7eb;
-  --sa-border-strong: #d8dbe0;
-  --sa-divider: #eeeef0;
+  --sa-band: #f0efec;
+  --sa-line: #e4e2dc;
+  --sa-line-soft: #eeece7;
 
   /* ── Ink ── */
-  --sa-ink: #1a1d23;
-  --sa-ink-soft: #374151;
-  --sa-muted-strong: #6b7280;
-  --sa-muted: #9ca3af;
+  --sa-ink: #191b1f;
+  --sa-ink-2: #4a4f57;
+  --sa-ink-3: #7c828c;
 
-  /* ── Accent ── */
-  --sa-accent: #2f6fed;
-  --sa-accent-hover: #2559c9;
-  --sa-accent-soft: #bfd4fb;
-  --sa-accent-wash: #eff4fe;
+  /* ── Brass ── */
+  --sa-brass: #9c6f1e;
+  --sa-brass-deep: #7d5816;
+  --sa-brass-lit: #c89b3c;
+  --sa-brass-line: #e6d3a4;
+  --sa-brass-wash: #fbf3e2;
+
+  /* ── Ledger status ── */
+  --sa-paid: #2f6b4f;
+  --sa-paid-wash: #eaf3ee;
+  --sa-due: #9c6f1e;
+  --sa-due-wash: #fbf3e2;
+  --sa-late: #a6392e;
+  --sa-late-wash: #fbecea;
+  --sa-idle: #6b7280;
+  --sa-idle-wash: #f1f1ef;
+
+  /* ── Type ── */
+  --sa-display: 'Archivo', 'Manrope', system-ui, sans-serif;
+  --sa-sans: 'Manrope', system-ui, -apple-system, sans-serif;
+  --sa-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  /* ── Metrics ── */
+  --sa-rail-w: 244px;
+  --sa-rail-w-collapsed: 68px;
+  --sa-topbar-h: 56px;
+  --sa-ease: cubic-bezier(.22, .7, .3, 1);
 }
 
 /* Overrides of names shared with the tenant app — scoped. Applied to the
@@ -51,33 +86,938 @@ app-superadmin-layout,
 app-superadmin-login,
 .sa-shell {
   --primary: var(--sa-ink);
-  --primary-hover: var(--sa-ink-soft);
-  --accent: var(--sa-accent);
-  --accent-light: var(--sa-accent-wash);
-  --accent-glow: rgba(47, 111, 237, .18);
+  --primary-hover: var(--sa-ink-2);
+  --accent: var(--sa-brass);
+  --accent-light: var(--sa-brass-wash);
+  --accent-glow: rgba(156, 111, 30, .16);
 
   --bg-color: var(--sa-page);
   --surface: var(--sa-surface);
   --text-main: var(--sa-ink);
-  --text-muted: var(--sa-muted-strong);
-  --text-light: var(--sa-muted);
-  --border-color: var(--sa-border);
-  --border-dark: var(--sa-border-strong);
+  --text-muted: var(--sa-ink-2);
+  --text-light: var(--sa-ink-3);
+  --border-color: var(--sa-line);
+  --border-dark: #d6d3cb;
 
-  /* Flat: subtle borders and light tints carry the depth, not shadows. */
-  --shadow-sm: 0 1px 2px rgba(26, 29, 35, .04);
-  --shadow-md: 0 2px 6px rgba(26, 29, 35, .05);
-  --shadow-lg: 0 4px 12px rgba(26, 29, 35, .06);
-  --shadow-float: 0 4px 12px rgba(26, 29, 35, .07);
+  /* Hairlines and tints carry the depth here, not shadows. */
+  --shadow-sm: 0 1px 2px rgba(25, 27, 31, .04);
+  --shadow-md: 0 2px 8px rgba(25, 27, 31, .06);
+  --shadow-lg: 0 8px 24px rgba(25, 27, 31, .08);
+  --shadow-float: 0 12px 32px rgba(25, 27, 31, .12);
 
-  /* ~8px throughout, per the brief. */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
 }
 
 .sa-shell {
   background: var(--sa-page);
   color: var(--sa-ink);
+  font-family: var(--sa-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.sa-shell *,
+.sa-shell *::before,
+.sa-shell *::after {
+  box-sizing: border-box;
+}
+
+.sa-shell :focus-visible {
+  outline: 2px solid var(--sa-brass);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+
+/* ══ Motion ══════════════════════════════════════════════════════════
+   One vocabulary: things rise into place, ticks slide, meters unroll.
+   Nothing loops, nothing bounces. */
+
+@keyframes sa-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes sa-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sa-unroll {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+@keyframes sa-pop {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes sa-sweep {
+  from { background-position: 120% 0; }
+  to   { background-position: -20% 0; }
+}
+
+@keyframes sa-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+/* Page enter: each top-level block rises, staggered. Reads as the console
+   drawing itself rather than eight elements animating independently. */
+.sa-page > * {
+  animation: sa-rise .42s var(--sa-ease) both;
+}
+.sa-page > *:nth-child(1) { animation-delay: 0ms; }
+.sa-page > *:nth-child(2) { animation-delay: 45ms; }
+.sa-page > *:nth-child(3) { animation-delay: 90ms; }
+.sa-page > *:nth-child(4) { animation-delay: 135ms; }
+.sa-page > *:nth-child(5) { animation-delay: 175ms; }
+.sa-page > *:nth-child(n+6) { animation-delay: 210ms; }
+
+
+/* ══ Page scaffolding ═══════════════════════════════════════════════ */
+
+.sa-page {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 1440px;
+}
+
+.sa-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--sa-line);
+}
+
+.sa-eyebrow {
+  display: block;
+  font-family: var(--sa-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--sa-brass);
+  margin-bottom: 9px;
+}
+
+.sa-head h1 {
+  font-family: var(--sa-display);
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.15;
+  color: var(--sa-ink);
+  margin: 0;
+}
+
+.sa-lede {
+  margin: 7px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--sa-ink-3);
+  max-width: 62ch;
+}
+
+.sa-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
+/* ══ Ledger figures ═════════════════════════════════════════════════
+   The replacement for boxed stat cards: a hairline-separated strip of
+   mono figures. Dense, scannable, and it keeps the vertical space for
+   the data the operator actually works in. */
+
+.sa-figures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-lg);
+  background: var(--sa-surface);
+  overflow: hidden;
+}
+
+.sa-figures > div {
+  flex: 1 1 150px;
+  min-width: 0;
+  padding: 15px 20px;
+  border-left: 1px solid var(--sa-line-soft);
+  transition: background .18s var(--sa-ease);
+}
+
+.sa-figures > div:first-child { border-left: 0; }
+.sa-figures > div:hover { background: var(--sa-band); }
+
+.sa-figures dt {
+  font-family: var(--sa-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--sa-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sa-figures dd {
+  margin: 6px 0 0;
+  font-family: var(--sa-display);
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--sa-ink);
+  line-height: 1;
+}
+
+.sa-figures dd .sa-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sa-ink-3);
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+
+.sa-figures .accent dd { color: var(--sa-brass); }
+.sa-figures .paid dd   { color: var(--sa-paid); }
+.sa-figures .late dd   { color: var(--sa-late); }
+
+
+/* ══ Meter — the segmented ledger bar ═══════════════════════════════ */
+
+.sa-meter {
+  display: flex;
+  height: 10px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--sa-band);
+}
+
+/* The meter is read, not operated — no hover state, so it never suggests a
+   click that leads nowhere. */
+.sa-meter-seg {
+  transform-origin: left center;
+  animation: sa-unroll .8s var(--sa-ease) both;
+}
+
+.sa-meter-seg.paid { background: var(--sa-paid); animation-delay: .1s; }
+.sa-meter-seg.due  { background: var(--sa-brass); animation-delay: .2s; }
+.sa-meter-seg.late { background: var(--sa-late); animation-delay: .3s; }
+
+.sa-meter-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  margin-top: 16px;
+}
+
+.sa-meter-key > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 12px;
+  position: relative;
+}
+
+.sa-meter-key > div::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 1px;
+}
+
+.sa-meter-key .paid::before { background: var(--sa-paid); }
+.sa-meter-key .due::before  { background: var(--sa-brass); }
+.sa-meter-key .late::before { background: var(--sa-late); }
+
+.sa-meter-key dt,
+.sa-meter-key .key-label {
+  font-family: var(--sa-mono);
+  font-size: 10px;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--sa-ink-3);
+}
+
+.sa-meter-key .key-value {
+  font-family: var(--sa-display);
+  font-size: 19px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+}
+
+
+/* ══ Card ═══════════════════════════════════════════════════════════ */
+
+.sa-card {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sa-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--sa-line-soft);
+}
+
+.sa-card-head h2,
+.sa-card-head h3 {
+  font-family: var(--sa-display);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--sa-ink);
+  margin: 0;
+}
+
+.sa-card-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--sa-ink-3);
+}
+
+.sa-card-body { padding: 20px; }
+
+
+/* ══ Table — the ledger ═════════════════════════════════════════════ */
+
+.sa-table-card {
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.sa-table-scroll { overflow-x: auto; }
+
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sa-table thead th {
+  padding: 11px 16px;
+  text-align: left;
+  font-family: var(--sa-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--sa-ink-3);
+  background: var(--sa-band);
+  border-bottom: 1px solid var(--sa-line);
+  white-space: nowrap;
+}
+
+.sa-table tbody td {
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--sa-line-soft);
+  color: var(--sa-ink-2);
+  vertical-align: middle;
+}
+
+.sa-table tbody tr:last-child td { border-bottom: 0; }
+
+.sa-table tbody tr {
+  transition: background .16s var(--sa-ease);
+}
+
+.sa-table tbody tr:hover { background: var(--sa-band); }
+
+/* The ledger margin: a brass tick in the row's left gutter on hover.
+   Same device as the meter key and the active nav item. */
+.sa-table tbody td:first-child { position: relative; }
+
+.sa-table tbody td:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--sa-brass);
+  opacity: 0;
+  transform: scaleY(.3);
+  transition: opacity .18s var(--sa-ease), transform .18s var(--sa-ease);
+}
+
+.sa-table tbody tr:hover td:first-child::before {
+  opacity: 1;
+  transform: none;
+}
+
+/* An empty or loading row is not a ledger line — no tick, no hover tint. */
+.sa-table tbody tr:has(.sa-empty):hover { background: transparent; }
+.sa-table tbody tr:has(.sa-empty) td:first-child::before { display: none; }
+
+/* Numbers align to a common right edge and share one width per glyph. */
+.sa-table .num,
+.sa-num {
+  font-family: var(--sa-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  color: var(--sa-ink);
+}
+
+.sa-table th.num { text-align: right; }
+.sa-table td.num { text-align: right; }
+
+.sa-table .sa-meta {
+  font-family: var(--sa-mono);
+  font-size: 11.5px;
+  color: var(--sa-ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.sa-table .sa-strong {
+  font-weight: 600;
+  color: var(--sa-ink);
+}
+
+/* Row identity block: mark + name + qualifier */
+.sa-idcell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+}
+
+.sa-mark {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  background: var(--sa-band);
+  border: 1px solid var(--sa-line);
+  font-family: var(--sa-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--sa-ink-2);
+  text-transform: uppercase;
+}
+
+.sa-idcell-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sa-idcell-copy strong,
+.sa-idcell-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--sa-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sa-idcell-copy small,
+.sa-idcell-sub {
+  font-size: 11.5px;
+  color: var(--sa-ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* ══ Badges ═════════════════════════════════════════════════════════ */
+
+.sa-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  font-family: var(--sa-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+.sa-badge::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+.sa-badge.plain::before { display: none; }
+
+.sa-badge.paid,
+.sa-badge.active   { color: var(--sa-paid); background: var(--sa-paid-wash); border-color: #cfe3d8; }
+.sa-badge.due,
+.sa-badge.pending,
+.sa-badge.trial    { color: var(--sa-brass-deep); background: var(--sa-due-wash); border-color: var(--sa-brass-line); }
+.sa-badge.late,
+.sa-badge.suspended{ color: var(--sa-late); background: var(--sa-late-wash); border-color: #f0d2ce; }
+.sa-badge.idle,
+.sa-badge.archived,
+.sa-badge.cancelled,
+.sa-badge.draft,
+.sa-badge.inactive { color: var(--sa-idle); background: var(--sa-idle-wash); border-color: var(--sa-line); }
+
+
+/* ══ Buttons ════════════════════════════════════════════════════════ */
+
+.sa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: var(--sa-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .16s var(--sa-ease), border-color .16s var(--sa-ease),
+              color .16s var(--sa-ease), transform .1s var(--sa-ease);
+}
+
+.sa-btn:active:not(:disabled) { transform: translateY(1px); }
+.sa-btn:disabled { opacity: .5; cursor: not-allowed; }
+.sa-btn i, .sa-btn svg { font-size: 12px; }
+
+.sa-btn.primary {
+  background: var(--sa-ink);
+  color: #fff;
+}
+.sa-btn.primary:hover:not(:disabled) { background: #2b2f36; }
+
+.sa-btn.brass {
+  background: var(--sa-brass);
+  color: #fff;
+}
+.sa-btn.brass:hover:not(:disabled) { background: var(--sa-brass-deep); }
+
+.sa-btn.ghost {
+  background: var(--sa-surface);
+  border-color: var(--sa-line);
+  color: var(--sa-ink-2);
+}
+.sa-btn.ghost:hover:not(:disabled) {
+  border-color: var(--sa-brass-line);
+  background: var(--sa-brass-wash);
+  color: var(--sa-brass-deep);
+}
+
+.sa-btn.quiet {
+  background: transparent;
+  color: var(--sa-ink-3);
+}
+.sa-btn.quiet:hover:not(:disabled) { background: var(--sa-band); color: var(--sa-ink); }
+
+.sa-btn.danger {
+  background: var(--sa-surface);
+  border-color: #f0d2ce;
+  color: var(--sa-late);
+}
+.sa-btn.danger:hover:not(:disabled) { background: var(--sa-late-wash); }
+
+.sa-btn.sm { height: 28px; padding: 0 11px; font-size: 11.5px; }
+
+/* Icon-only actions */
+.sa-iconbtn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sa-ink-3);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background .16s var(--sa-ease), color .16s var(--sa-ease),
+              border-color .16s var(--sa-ease);
+}
+
+.sa-iconbtn:hover {
+  background: var(--sa-brass-wash);
+  border-color: var(--sa-brass-line);
+  color: var(--sa-brass-deep);
+}
+
+.sa-iconbtn.danger:hover {
+  background: var(--sa-late-wash);
+  border-color: #f0d2ce;
+  color: var(--sa-late);
+}
+
+.sa-iconbtn svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sa-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+
+/* ══ Toolbar: search + segmented filter ═════════════════════════════ */
+
+.sa-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.sa-search {
+  position: relative;
+  flex: 1 1 300px;
+  max-width: 420px;
+}
+
+.sa-search i,
+.sa-search svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--sa-ink-3);
+  pointer-events: none;
+}
+
+.sa-search input {
+  width: 100%;
+  height: 34px;
+  padding: 0 12px 0 33px;
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-md);
+  background: var(--sa-surface);
+  font-family: var(--sa-sans);
+  font-size: 13px;
+  color: var(--sa-ink);
+  transition: border-color .16s var(--sa-ease), box-shadow .16s var(--sa-ease);
+}
+
+.sa-search input::placeholder { color: var(--sa-ink-3); }
+
+.sa-search input:focus {
+  outline: none;
+  border-color: var(--sa-brass);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.sa-segmented {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  background: var(--sa-band);
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-md);
+}
+
+.sa-segmented button {
+  padding: 0 12px;
+  height: 26px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  font-family: var(--sa-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sa-ink-3);
+  cursor: pointer;
+  transition: background .16s var(--sa-ease), color .16s var(--sa-ease);
+}
+
+.sa-segmented button:hover { color: var(--sa-ink); }
+
+.sa-segmented button.on {
+  background: var(--sa-surface);
+  color: var(--sa-ink);
+  box-shadow: var(--shadow-sm);
+}
+
+
+/* ══ Fields ═════════════════════════════════════════════════════════ */
+
+.sa-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.sa-field > span,
+.sa-label {
+  font-family: var(--sa-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--sa-ink-3);
+}
+
+.sa-field .req { color: var(--sa-late); }
+
+.sa-hint {
+  font-size: 11.5px;
+  color: var(--sa-ink-3);
+  line-height: 1.45;
+}
+
+/* Deliberately class-only (no element or `.sa-shell` prefix): the base rule
+   must stay below `.sa-input:focus` in specificity, or selects and textareas
+   would keep their resting border while focused. */
+.sa-input {
+  width: 100%;
+  min-height: 34px;
+  padding: 8px 11px;
+  border: 1px solid var(--sa-line);
+  border-radius: var(--radius-md);
+  background: var(--sa-surface);
+  font-family: var(--sa-sans);
+  font-size: 13px;
+  color: var(--sa-ink);
+  transition: border-color .16s var(--sa-ease), box-shadow .16s var(--sa-ease);
+}
+
+.sa-input::placeholder { color: #b3b7bd; }
+
+.sa-input:focus {
+  outline: none;
+  border-color: var(--sa-brass);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+input[type="number"].sa-input,
+input[type="date"].sa-input {
+  font-family: var(--sa-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+}
+
+select.sa-input {
+  appearance: none;
+  padding-right: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237c828c' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+
+textarea.sa-input {
+  resize: vertical;
+  line-height: 1.55;
+  min-height: 72px;
+}
+
+.sa-formgrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.sa-formgrid .span2 { grid-column: 1 / -1; }
+
+
+/* ══ Alerts, empty states, skeletons ════════════════════════════════ */
+
+.sa-alert {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid #f0d2ce;
+  border-left: 2px solid var(--sa-late);
+  background: var(--sa-late-wash);
+  color: #853027;
+  font-size: 12.5px;
+  font-weight: 500;
+  animation: sa-pop .3s var(--sa-ease) both;
+}
+
+.sa-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 52px 20px;
+  text-align: center;
+  color: var(--sa-ink-3);
+  font-size: 13px;
+}
+
+.sa-empty i,
+.sa-empty svg {
+  font-size: 20px;
+  width: 26px;
+  height: 26px;
+  color: var(--sa-line);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.4;
+}
+
+.sa-empty strong {
+  font-family: var(--sa-display);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sa-ink-2);
+}
+
+.sa-skeleton {
+  border-radius: 3px;
+  background: linear-gradient(100deg, var(--sa-band) 30%, #fafaf8 50%, var(--sa-band) 70%);
+  background-size: 220% 100%;
+  animation: sa-sweep 1.4s linear infinite;
+}
+
+
+/* ══ Modal ══════════════════════════════════════════════════════════ */
+
+.sa-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(16, 18, 21, .5);
+  backdrop-filter: blur(3px);
+  animation: sa-fade .2s var(--sa-ease) both;
+}
+
+.sa-modal {
+  width: min(640px, 100%);
+  max-height: min(88vh, 860px);
+  display: flex;
+  flex-direction: column;
+  background: var(--sa-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  animation: sa-pop .26s var(--sa-ease) both;
+}
+
+.sa-modal-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--sa-line-soft);
+}
+
+.sa-modal-head h2 {
+  font-family: var(--sa-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -.015em;
+  color: var(--sa-ink);
+  margin: 0;
+}
+
+.sa-modal-head p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--sa-ink-3);
+}
+
+.sa-modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sa-modal-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--sa-line-soft);
+  background: var(--sa-band);
+}
+
+.sa-section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--sa-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sa-ink-3);
+}
+
+.sa-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--sa-line);
+}
+
+
+/* ══ Reduced motion ═════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-shell *,
+  .sa-shell *::before,
+  .sa-shell *::after,
+  .sa-modal-overlay,
+  .sa-modal,
+  .sa-page > * {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

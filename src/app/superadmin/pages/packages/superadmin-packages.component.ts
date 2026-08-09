@@ -1,6 +1,5 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgClass } from '@angular/common';
 import { PackagePlan, SuperadminApiService } from '../../superadmin-api.service';
 
 const EMPTY_PACKAGE: PackagePlan = {
@@ -18,7 +17,7 @@ const EMPTY_PACKAGE: PackagePlan = {
 
 @Component({
   selector: 'app-superadmin-packages',
-  imports: [FormsModule, NgClass],
+  imports: [FormsModule],
   templateUrl: './superadmin-packages.component.html',
   styleUrl: './superadmin-packages.component.css'
 })

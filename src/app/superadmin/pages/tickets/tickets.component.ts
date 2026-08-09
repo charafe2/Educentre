@@ -9,7 +9,7 @@ import { SuperadminAuthStore } from '../../superadmin-auth.store';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './tickets.component.html',
-  styleUrls: ['./tickets.component.css', './tickets-redesign.css']
+  styleUrl: './tickets.component.css'
 })
 export class TicketsComponent implements OnInit, AfterViewChecked {
   ticketService = inject(SuperadminTicketService);
