@@ -297,24 +297,37 @@
   padding: 1.1rem; height: 340px; overflow-y: auto;
   background: var(--sup-canvas);
 }
+/* The row owns the side, the bubble owns the colour. Splitting them is what
+   lets the caption sit outside the bubble and still hug its edge. */
+.sup-row {
+  display: flex; flex-direction: column;
+  max-width: 74%; align-self: flex-start; align-items: flex-start;
+}
+.sup-row.is-me { align-self: flex-end; align-items: flex-end; }
+
 .sup-msg {
-  max-width: 74%; align-self: flex-start;
   padding: .6rem .8rem; border-radius: 14px;
   background: #fff; border: 1px solid var(--sup-line);
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+  border-bottom-left-radius: 4px;
 }
 .sup-msg.is-me {
-  align-self: flex-end;
   background: linear-gradient(135deg, #0d9488, #0f766e);
   border-color: transparent; color: #fff;
+  border-bottom-left-radius: 14px; border-bottom-right-radius: 4px;
 }
 .sup-msg p { margin: 0; font-size: .855rem; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
-.sup-msg footer {
-  display: flex; align-items: center; justify-content: space-between; gap: .9rem;
-  margin-top: .3rem; font-size: .67rem; font-weight: 600; color: var(--text-light);
+
+.sup-msg-meta {
+  display: flex; align-items: baseline; gap: .5rem;
+  margin-top: .28rem; padding: 0 .35rem;
+  font-size: .67rem; font-weight: 600;
+  /* Outside the bubble now, so it takes the canvas colour rather than
+     inheriting the gradient's white. */
+  color: var(--text-light);
 }
-.sup-msg.is-me footer { color: rgba(255, 255, 255, .78); }
-.sup-msg time { font-family: var(--font-mono); }
+.sup-row.is-me .sup-msg-meta { flex-direction: row-reverse; }
+.sup-msg-meta time { font-family: var(--font-mono); opacity: .8; }
 
 .sup-composer {
   display: flex; gap: .55rem; align-items: center;
@@ -352,7 +365,7 @@
   .sup-list-head { flex-direction: column; align-items: stretch; gap: .6rem; }
   .sup-search input { width: 100%; }
   .sup-ticket { flex-direction: column; align-items: flex-start; gap: .5rem; }
-  .sup-msg { max-width: 88%; }
+  .sup-row { max-width: 88%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -649,14 +649,15 @@
 
               <div class="sup-msgs" #messagesContainer>
                 @for (msg of chatService.messages(); track msg.id) {
-                  <article class="sup-msg"
-                           [class.is-me]="msg.sender_type?.includes('TenantUser')">
-                    <p>{{ msg.content }}</p>
-                    <footer>
-                      <span>{{ (msg.sender_type?.includes('TenantUser') ? 'settings.you' : 'settings.supportTeam') | t }}</span>
+                  <div class="sup-row" [class.is-me]="isMe(msg)">
+                    <article class="sup-msg" [class.is-me]="isMe(msg)">
+                      <p>{{ msg.content }}</p>
+                    </article>
+                    <footer class="sup-msg-meta">
+                      <span>{{ isMe(msg) ? ('settings.you' | t) : (msg.sender?.name || ('settings.supportTeam' | t)) }}</span>
                       <time>{{ msg.created_at | date:'HH:mm' }}</time>
                     </footer>
-                  </article>
+                  </div>
                 }
               </div>
 

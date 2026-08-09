@@ -401,6 +401,19 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
     this.shouldScrollToBottom = true;
   }
 
+  /**
+   * True for messages this centre sent, as opposed to the support team's.
+   *
+   * Tested against the support side rather than our own: sender_type is the
+   * sender's FQCN, and only support replies come from a SuperAdmin. Matching
+   * our own class name is what broke this before — it looked for "TenantUser"
+   * while the backend stores "App\Models\User", so no message ever counted as
+   * ours and the whole thread rendered as incoming.
+   */
+  isMe(msg: any): boolean {
+    return !msg.sender_type?.includes('SuperAdmin');
+  }
+
   sendMessage(event: Event) {
     event.preventDefault();
     const active = this.chatService.activeConversation();
