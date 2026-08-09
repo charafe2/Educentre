@@ -100,4 +100,37 @@ class PackagePlanApiTest extends TestCase
 
         $this->assertSoftDeleted('package_plans', ['id' => $plan->id]);
     }
+
+    public function test_a_soft_deleted_plans_name_stays_reserved(): void
+    {
+        $plan = PackagePlan::create([
+            'name' => 'Pro', 'monthly_price' => 499, 'users_limit' => 10,
+            'students_limit' => 500, 'storage_gb' => 20,
+            'support_level' => 'Standard', 'status' => 'active', 'features' => [],
+        ]);
+        $plan->delete();
+
+        // The DB unique index is not scoped to deleted_at, so validation must
+        // not be either — otherwise this 500s instead of returning 422.
+        $this->actingAs($this->admin(), 'sanctum')
+            ->postJson('/api/v1/superadmin/packages', [
+                'name' => 'Pro', 'monthlyPrice' => 100, 'usersLimit' => 1,
+                'studentsLimit' => 1, 'storageGb' => 1,
+                'supportLevel' => 'Standard', 'status' => 'draft', 'features' => [],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+    }
+
+    public function test_factory_creates_a_persisted_plan_with_overridable_status(): void
+    {
+        $plan = PackagePlan::factory()->create();
+
+        $this->assertDatabaseHas('package_plans', ['id' => $plan->id]);
+
+        $draft = PackagePlan::factory()->create(['status' => 'draft']);
+
+        $this->assertSame('draft', $draft->status);
+        $this->assertDatabaseHas('package_plans', ['id' => $draft->id, 'status' => 'draft']);
+    }
 }

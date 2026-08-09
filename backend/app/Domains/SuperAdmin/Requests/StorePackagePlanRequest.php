@@ -15,7 +15,9 @@ class StorePackagePlanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:120', Rule::unique('package_plans', 'name')->whereNull('deleted_at')],
+            // Matches the DB unique index, which is NOT scoped to deleted_at:
+            // a soft-deleted plan's name stays reserved.
+            'name' => ['required', 'string', 'max:120', Rule::unique('package_plans', 'name')],
             'monthlyPrice' => ['required', 'numeric', 'min:0'],
             'usersLimit' => ['required', 'integer', 'min:0'],
             'studentsLimit' => ['required', 'integer', 'min:0'],

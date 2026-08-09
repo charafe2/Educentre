@@ -2,6 +2,7 @@
 
 namespace App\Domains\Core\Models;
 
+use Database\Factories\PackagePlanFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -28,5 +29,13 @@ class PackagePlan extends Model
                 $plan->uuid = (string) Str::uuid();
             }
         });
+    }
+
+    // Model lives outside App\Models, so Laravel's default factory-name
+    // convention (App\ -> Database\Factories\) can't find it. Point at it
+    // explicitly.
+    protected static function newFactory(): PackagePlanFactory
+    {
+        return PackagePlanFactory::new();
     }
 }
