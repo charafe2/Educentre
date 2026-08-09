@@ -35,12 +35,31 @@ const PERMISSION_OPTIONS: { key: TenantPermissionKey; labelKey: string; icon: st
   { key: 'documents', labelKey: 'nav.documents', icon: 'fa-regular fa-file-lines' },
 ];
 
+/** Fixed set of support categories. Replaces the old free-text "Objectif"
+ *  field so tickets arrive pre-sorted and can be shown with a consistent
+ *  icon and colour on both sides of the conversation. The translated label
+ *  is what gets stored as the conversation subject. */
+const SUPPORT_CATEGORIES: { id: string; labelKey: string; icon: string; tone: string }[] = [
+  { id: 'billing', labelKey: 'settings.supportCatBilling', icon: 'fa-solid fa-file-invoice', tone: 'violet' },
+  { id: 'bug', labelKey: 'settings.supportCatBug', icon: 'fa-solid fa-bug', tone: 'rose' },
+  { id: 'feature', labelKey: 'settings.supportCatFeature', icon: 'fa-solid fa-wand-magic-sparkles', tone: 'teal' },
+  { id: 'other', labelKey: 'settings.supportCatOther', icon: 'fa-solid fa-circle-question', tone: 'slate' },
+];
+
+/** Ticket status → label, icon and colour tone. `open` reads as "needs us",
+ *  hence the warmest colour; anything unrecognised falls back to in-progress. */
+const TICKET_STATUSES: Record<string, { labelKey: string; icon: string; tone: string }> = {
+  open: { labelKey: 'settings.ticketOpen', icon: 'fa-solid fa-circle-dot', tone: 'open' },
+  pending: { labelKey: 'settings.ticketPending', icon: 'fa-solid fa-clock', tone: 'pending' },
+  closed: { labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', tone: 'closed' },
+};
+
 @Component({
   selector: 'app-parametres',
   standalone: true,
   imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe, DatePipe],
   templateUrl: './parametres.component.html',
-  styleUrl: './parametres.component.css'
+  styleUrls: ['./parametres.component.css', './parametres-support.css']
 })
 export class ParametresComponent implements OnInit, AfterViewChecked {
   private centreService = inject(CentreService);
@@ -273,24 +292,35 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
   }
 
   // ── Support ───────────────────────────────────────────────
-  supportForm = { subject: '', message: '' };
+  readonly supportCategories = SUPPORT_CATEGORIES;
+  supportForm = { category: '', message: '' };
   supportError = signal('');
   sendingSupport = signal(false);
   newMessage = '';
 
+  /** The send button only lights up once both fields are usable. */
+  get supportReady(): boolean {
+    return !!this.supportForm.category && this.supportForm.message.trim().length > 0;
+  }
+
   async sendSupportRequest(): Promise<void> {
     this.supportError.set('');
-    const { subject, message } = this.supportForm;
+    const { category, message } = this.supportForm;
 
-    if (!subject.trim() || !message.trim()) {
+    if (!this.supportReady) {
       this.supportError.set(this.t('settings.allFieldsRequired'));
       return;
     }
 
+    // The category label doubles as the subject, so support sees what kind of
+    // request it is before opening it.
+    const chosen = SUPPORT_CATEGORIES.find(c => c.id === category);
+    const subject = this.t(chosen ? chosen.labelKey : 'settings.supportCatOther');
+
     this.sendingSupport.set(true);
     try {
-      await this.centreService.sendSupportRequest(subject.trim(), message.trim());
-      this.supportForm = { subject: '', message: '' };
+      await this.centreService.sendSupportRequest(subject, message.trim());
+      this.supportForm = { category: '', message: '' };
       this.toast.show(this.t('settings.toastSupportSent'));
       this.chatService.loadConversations().subscribe(); // refresh tickets
     } catch (err: unknown) {
@@ -298,6 +328,72 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
     } finally {
       this.sendingSupport.set(false);
     }
+  }
+
+  // ── Support: tri et filtres de la liste des tickets ────────
+  ticketFilter = signal<'all' | 'open' | 'pending' | 'closed'>('all');
+  ticketSearch = signal('');
+
+  ticketCounts = computed(() => {
+    const list = this.chatService.conversations();
+    return {
+      all: list.length,
+      open: list.filter(t => t.status === 'open').length,
+      pending: list.filter(t => t.status === 'pending').length,
+      closed: list.filter(t => t.status === 'closed').length,
+    };
+  });
+
+  filteredTickets = computed(() => {
+    const status = this.ticketFilter();
+    const query = this.ticketSearch().trim().toLowerCase();
+    return this.chatService.conversations()
+      .filter(t => status === 'all' || t.status === status)
+      .filter(t => !query || (t.subject || '').toLowerCase().includes(query));
+  });
+
+  /** Recap tiles double as the status filter — see the template. */
+  statusTiles = computed(() => {
+    const counts = this.ticketCounts();
+    return [
+      { key: 'all' as const, labelKey: 'settings.filterAll', icon: 'fa-solid fa-layer-group', count: counts.all },
+      { key: 'open' as const, labelKey: 'settings.ticketOpen', icon: 'fa-solid fa-circle-dot', count: counts.open },
+      { key: 'pending' as const, labelKey: 'settings.ticketPending', icon: 'fa-solid fa-clock', count: counts.pending },
+      { key: 'closed' as const, labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', count: counts.closed },
+    ];
+  });
+
+  statusMeta(status: string) {
+    return TICKET_STATUSES[status]
+      ?? { labelKey: 'settings.ticketInProgress', icon: 'fa-solid fa-spinner', tone: 'progress' };
+  }
+
+  categoryIcon(id: string): string {
+    return SUPPORT_CATEGORIES.find(c => c.id === id)?.icon ?? 'fa-solid fa-tag';
+  }
+
+  /** Older tickets carry a free-text subject, so match on the translated
+   *  category label and fall back to "Autre" rather than showing nothing. */
+  categoryMeta(subject?: string) {
+    const haystack = (subject || '').toLowerCase();
+    return SUPPORT_CATEGORIES.find(c => haystack.includes(this.t(c.labelKey).toLowerCase()))
+      ?? SUPPORT_CATEGORIES[SUPPORT_CATEGORIES.length - 1];
+  }
+
+  /** "Aujourd'hui, 01:10" beats "09/08/2026 01:10" for scanning a list where
+   *  almost everything is recent. Falls back to a day/month for older items. */
+  ticketDate(iso: string): string {
+    const locale = this.i18n.lang();
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const time = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+
+    if (days === 0) return `${this.t('settings.today')}, ${time}`;
+    if (days === 1) return `${this.t('settings.yesterday')}, ${time}`;
+    return `${date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}, ${time}`;
   }
 
   selectConversation(conv: Conversation) {
