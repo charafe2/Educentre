@@ -17,7 +17,7 @@
 
 .eyebrow {
   margin: 0 0 0.45rem;
-  color: oklch(0.48 0.12 190);
+  color: oklch(0.48 0.12 262);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -64,10 +64,10 @@ h1 {
 }
 
 .primary-link {
-  background: oklch(0.48 0.12 190);
-  color: oklch(0.985 0.008 190);
+  background: oklch(0.48 0.12 262);
+  color: oklch(0.985 0.008 262);
   padding: 0 1rem;
-  border: 1px solid oklch(0.48 0.12 190);
+  border: 1px solid oklch(0.48 0.12 262);
 }
 
 .secondary-link,
@@ -110,7 +110,7 @@ h1 {
 .metric-label { font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
 .metric-panel strong { color: oklch(0.22 0.035 240); font-size: 1.25rem; line-height: 1.1; }
 .metric-panel.warning strong { color: oklch(0.56 0.16 38); }
-.metric-panel.success strong { color: oklch(0.48 0.12 190); }
+.metric-panel.success strong { color: oklch(0.48 0.12 262); }
 
 .dashboard-grid {
   display: grid;
@@ -131,7 +131,7 @@ h1 {
 .panel-header.compact { border-bottom: 0; padding-bottom: 0.35rem; }
 .panel-header h2 { margin-bottom: 0.2rem; color: oklch(0.22 0.035 240); font-size: 1rem; }
 .panel-header p { margin-bottom: 0; }
-.icon-command { width: 38px; padding: 0; color: oklch(0.48 0.12 190); }
+.icon-command { width: 38px; padding: 0; color: oklch(0.48 0.12 262); }
 
 .invoice-list { display: grid; }
 .invoice-row {
@@ -147,7 +147,7 @@ h1 {
 .invoice-side { display: grid; gap: 0.2rem; }
 .invoice-main strong,
 .invoice-side strong { color: oklch(0.24 0.035 240); }
-.invoice-id { color: oklch(0.48 0.12 190); font-size: 0.74rem; font-weight: 800; }
+.invoice-id { color: oklch(0.48 0.12 262); font-size: 0.74rem; font-weight: 800; }
 .invoice-side { justify-items: end; text-align: right; }
 
 .status-pill {
@@ -158,7 +158,7 @@ h1 {
   font-weight: 800;
   border: 1px solid transparent;
 }
-.status-paid { background: oklch(0.94 0.035 190); color: oklch(0.45 0.11 190); border-color: oklch(0.83 0.06 190); }
+.status-paid { background: oklch(0.94 0.035 262); color: oklch(0.45 0.11 262); border-color: oklch(0.83 0.06 262); }
 .status-pending { background: oklch(0.94 0.04 78); color: oklch(0.48 0.11 65); border-color: oklch(0.86 0.07 78); }
 .status-late { background: oklch(0.95 0.025 18); color: oklch(0.56 0.18 20); border-color: oklch(0.86 0.07 20); }
 
@@ -169,7 +169,7 @@ h1 {
 .bar-track { height: 8px; overflow: hidden; border-radius: 999px; background: oklch(0.94 0.008 230); }
 .bar-fill { display: block; height: 100%; border-radius: inherit; }
 .bar-basic { background: oklch(0.58 0.035 235); }
-.bar-pro { background: oklch(0.5 0.12 190); }
+.bar-pro { background: oklch(0.5 0.12 262); }
 .bar-enterprise { background: oklch(0.52 0.15 300); }
 
 @media (max-width: 960px) {

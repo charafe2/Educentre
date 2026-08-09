@@ -1,7 +1,7 @@
 /* ── Shell ───────────────────────────────────────────────── */
 .sa-shell {
   min-height: 100dvh;
-  background: #f1f5f9;
+  background: var(--sa-band);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -49,7 +49,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.25rem 2.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--sa-border);
   background: rgba(255,255,255,0.8);
   backdrop-filter: blur(8px);
 }
@@ -60,11 +60,11 @@
   gap: 0.6rem;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--sa-ink);
   letter-spacing: -0.03em;
 }
 
-.sa-logo i { color: #0d9488; font-size: 1.2rem; }
+.sa-logo i { color: var(--sa-accent); font-size: 1.2rem; }
 
 .sa-badge {
   display: flex;
@@ -96,8 +96,8 @@
 .sa-card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--sa-surface);
+  border: 1px solid var(--sa-border);
   border-radius: 20px;
   padding: 2.5rem;
   box-shadow:
@@ -114,12 +114,12 @@
 
 .sa-icon {
   width: 64px; height: 64px;
-  background: #f0fdfa;
-  border: 1px solid #99f6e4;
+  background: var(--sa-accent-wash);
+  border: 1px solid var(--sa-accent-soft);
   border-radius: 18px;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.6rem;
-  color: #0d9488;
+  color: var(--sa-accent);
   margin: 0 auto 1.25rem;
   box-shadow: 0 4px 14px rgba(13,148,136,0.12);
 }
@@ -127,14 +127,14 @@
 .sa-title {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--sa-ink);
   letter-spacing: -0.04em;
   margin-bottom: 0.4rem;
 }
 
 .sa-subtitle {
   font-size: 0.82rem;
-  color: #94a3b8;
+  color: var(--sa-muted);
   line-height: 1.5;
 }
 
@@ -151,7 +151,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: #e2e8f0;
+  background: var(--sa-border);
 }
 
 .sa-divider span {
@@ -159,7 +159,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #94a3b8;
+  color: var(--sa-muted);
   white-space: nowrap;
 }
 
@@ -192,7 +192,7 @@
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #64748b;
+  color: var(--sa-muted-strong);
   text-transform: uppercase;
   letter-spacing: 0.07em;
   margin-bottom: 0.45rem;
@@ -204,39 +204,39 @@
   position: absolute;
   left: 0.9rem; top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--sa-muted);
   font-size: 0.82rem;
   pointer-events: none;
   transition: color 0.2s;
 }
 
-.sa-input-wrap:focus-within .sa-input-icon { color: #0d9488; }
+.sa-input-wrap:focus-within .sa-input-icon { color: var(--sa-accent); }
 
 .sa-input {
   width: 100%;
   box-sizing: border-box;
   padding: 0.8rem 2.75rem 0.8rem 2.5rem;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
+  background: var(--sa-band);
+  border: 1.5px solid var(--sa-border);
   border-radius: 10px;
   font-size: 0.9rem;
-  color: #0f172a;
+  color: var(--sa-ink);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   font-family: inherit;
 }
 
-.sa-input::placeholder { color: #cbd5e1; }
+.sa-input::placeholder { color: var(--sa-border-strong); }
 
 .sa-input:hover:not(:focus) {
-  border-color: #cbd5e1;
-  background: #fff;
+  border-color: var(--sa-border-strong);
+  background: var(--sa-surface);
 }
 
 .sa-input:focus {
-  border-color: #0d9488;
+  border-color: var(--sa-accent);
   box-shadow: 0 0 0 3px rgba(13,148,136,0.12);
-  background: #fff;
+  background: var(--sa-surface);
 }
 
 .sa-toggle-pw {
@@ -244,19 +244,19 @@
   right: 0.75rem; top: 50%;
   transform: translateY(-50%);
   background: none; border: none; cursor: pointer;
-  color: #94a3b8; font-size: 0.85rem; padding: 0.25rem;
+  color: var(--sa-muted); font-size: 0.85rem; padding: 0.25rem;
   display: flex; align-items: center; justify-content: center;
   transition: color 0.2s;
 }
-.sa-toggle-pw:hover { color: #0f172a; }
+.sa-toggle-pw:hover { color: var(--sa-ink); }
 
 /* ── Submit button ───────────────────────────────────────── */
 .sa-btn {
   width: 100%;
   margin-top: 0.5rem;
   padding: 0.875rem;
-  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
-  color: #fff;
+  background: linear-gradient(135deg, var(--sa-accent-hover) 0%, var(--sa-accent) 100%);
+  color: var(--sa-surface);
   border: none;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -285,7 +285,7 @@
   gap: 0.5rem;
   margin-top: 1.75rem;
   font-size: 0.72rem;
-  color: #94a3b8;
+  color: var(--sa-muted);
 }
 
 .sa-footer i { font-size: 0.65rem; }

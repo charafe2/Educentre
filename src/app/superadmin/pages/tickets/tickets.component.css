@@ -8,8 +8,8 @@
   --tk-soft: var(--text-light);
   --tk-green-bg: var(--success-bg);
   --tk-green-text: var(--success);
-  --tk-blue-bg: #e0e7ff;
-  --tk-blue-text: #4338ca;
+  --tk-blue-bg: var(--sa-accent-soft);
+  --tk-blue-text: var(--sa-accent-hover);
   --tk-red-bg: var(--danger-bg);
   --tk-red-text: var(--danger);
   --tk-amber-bg: var(--warning-bg);
@@ -273,7 +273,7 @@
   padding: 0 6px;
   border-radius: 999px;
   background: var(--tk-red-text);
-  color: #fff;
+  color: var(--sa-surface);
   font-size: 0.62rem;
   font-weight: 800;
 }
@@ -395,11 +395,11 @@
 .tk-action-claim {
   background: var(--tk-accent);
   border-color: transparent;
-  color: #ffffff;
+  color: var(--sa-surface);
 }
 .tk-action-claim:hover {
   background: color-mix(in srgb, var(--tk-accent) 88%, black);
-  color: #ffffff;
+  color: var(--sa-surface);
 }
 
 .tk-select-status,
@@ -505,7 +505,7 @@
 .tk-msg-me .tk-msg-bubble {
   background: linear-gradient(135deg, var(--tk-blue-text), var(--tk-accent));
   border-bottom-right-radius: 4px;
-  color: #ffffff;
+  color: var(--sa-surface);
 }
 
 .tk-msg-text {
@@ -527,7 +527,7 @@
 
 .tk-msg-me .tk-msg-footer {
   opacity: 0.45;
-  color: #ffffff;
+  color: var(--sa-surface);
 }
 
 /* ── Composer ── */
@@ -575,7 +575,7 @@
   border: none;
   border-radius: 10px;
   background: var(--tk-text);
-  color: #ffffff;
+  color: var(--sa-surface);
   cursor: pointer;
   display: grid;
   place-items: center;

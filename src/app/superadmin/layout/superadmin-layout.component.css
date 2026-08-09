@@ -1,16 +1,18 @@
 /* Minimalist super-admin shell */
 :host {
-  --sa-canvas: #f7f6f3;
-  --sa-surface: #ffffff;
-  --sa-surface-muted: #fbfbfa;
-  --sa-line: #eaeaea;
-  --sa-text: #111111;
-  --sa-muted: #787774;
-  --sa-soft: #a3a19d;
+  --sa-canvas: var(--sa-band);
+  /* Intentionally not redeclared — inherits the themed value from :root
+     (src/styles/superadmin-theme.css). Redeclaring it here as
+     `var(--sa-surface)` would be a self-reference and resolve to nothing. */
+  --sa-surface-muted: var(--sa-page);
+  --sa-line: var(--sa-border);
+  --sa-text: var(--sa-ink);
+  --sa-muted: var(--sa-muted-strong);
+  --sa-soft: var(--sa-muted);
   --sa-green-bg: #edf3ec;
   --sa-green-text: #346538;
-  --sa-blue-bg: #e1f3fe;
-  --sa-blue-text: #1f6c9f;
+  --sa-blue-bg: var(--sa-accent-wash);
+  --sa-blue-text: var(--sa-accent);
   --sa-red-bg: #fdebec;
   --sa-red-text: #9f2f2d;
   --sa-ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -41,7 +43,7 @@
   width: 256px;
   flex-shrink: 0;
   margin: 12px 0 12px 12px;
-  border: 1px solid var(--sa-line);
+  border: 1px solid var(--sa-divider);
   border-radius: 12px;
   background: var(--sa-surface);
   display: flex;
@@ -73,7 +75,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 14px;
-  border-bottom: 1px solid var(--sa-line);
+  border-bottom: 1px solid var(--sa-divider);
 }
 
 .sa-brand {
@@ -91,8 +93,8 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  background: #111111;
-  color: #ffffff;
+  background: var(--sa-ink);
+  color: var(--sa-surface);
 }
 
 .sa-brand-sigil svg {
@@ -138,11 +140,11 @@
   place-items: center;
   transition: transform 180ms var(--sa-ease), background 180ms var(--sa-ease), border-color 180ms var(--sa-ease), color 180ms var(--sa-ease);
 }
-.sa-icon-button:hover { background: #ffffff; border-color: #dededa; color: var(--sa-text); }
+.sa-icon-button:hover { background: var(--sa-surface); border-color: var(--sa-border); color: var(--sa-text); }
 .sa-icon-button:active { transform: scale(0.98); }
 .sa-icon-button:focus-visible,
 .sa-nav-item:focus-visible {
-  outline: 2px solid rgba(52, 101, 56, 0.28);
+  outline: 2px solid var(--sa-accent);
   outline-offset: 2px;
 }
 
@@ -204,20 +206,31 @@
   text-align: center;
   text-overflow: ellipsis;
 }
-.sa-nav-icon { color: #5f5d59; justify-self: start; }
+.sa-nav-icon { color: var(--sa-muted-strong); justify-self: start; }
 .sa-nav-item:hover {
-  background: #fbfbfa;
+  background: var(--sa-page);
   border-color: var(--sa-line);
   color: var(--sa-text);
 }
 .sa-nav-item:active { transform: scale(0.99); }
+/* Active reads as dark text with a small blue dot — the accent marks
+   position rather than filling the row, so one colour stays dominant. */
 .sa-nav-item.sa-nav-active {
-  background: var(--sa-green-bg);
-  border-color: rgba(52, 101, 56, 0.14);
-  color: var(--sa-green-text);
+  background: var(--sa-band);
+  border-color: transparent;
+  color: var(--sa-ink);
   font-weight: 750;
 }
-.sa-nav-item.sa-nav-active .sa-nav-icon { color: var(--sa-green-text); }
+.sa-nav-item.sa-nav-active .sa-nav-icon { color: var(--sa-ink); }
+/* ::after is an empty 24px spacer in the third grid column — reused here
+   as the indicator rather than adding another element. */
+.sa-nav-item.sa-nav-active::after {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sa-accent);
+  justify-self: end;
+}
 
 .sa-sidebar-footer {
   display: flex;
@@ -230,8 +243,12 @@
 .sa-user-avatar {
   width: 32px;
   height: 32px;
-  color: var(--sa-green-text);
-  background: var(--sa-green-bg);
+  /* Circular with a subtle ring, per the brief — overrides the 8px radius
+     it otherwise shares with the brand sigil. */
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--sa-surface), 0 0 0 3px var(--sa-border);
+  color: var(--sa-accent);
+  background: var(--sa-accent-wash);
   font-size: 0.72rem;
   font-weight: 800;
 }

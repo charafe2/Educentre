@@ -6,11 +6,11 @@
    ══════════════════════════════════════════════════════════════════ */
 
 :host {
-  --tk-page: #f7f8fa;
+  --tk-page: var(--sa-page);
   --tk-dot-open: #16a34a;
   --tk-dot-pending: #f59e0b;
-  --tk-dot-progress: #2563eb;
-  --tk-dot-closed: #9ca3af;
+  --tk-dot-progress: var(--sa-accent);
+  --tk-dot-closed: var(--sa-muted);
 }
 
 /* Two white cards floating on a warm neutral page, rather than one box
@@ -29,7 +29,7 @@
 .tk-chat-panel {
   border: 1px solid var(--tk-line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--sa-surface);
   box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .05);
   overflow: hidden;
   min-height: 0;
@@ -65,7 +65,7 @@
 .tk-search input::placeholder { color: var(--tk-soft); }
 .tk-search input:focus {
   outline: none;
-  background: #fff;
+  background: var(--sa-surface);
   border-color: var(--tk-accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
@@ -78,7 +78,7 @@
 }
 /* Softened so the selection never competes with the status dot. */
 .tk-ticket-item.tk-active {
-  background: #f1f5f9;
+  background: var(--sa-band);
   box-shadow: inset 3px 0 0 var(--tk-accent);
 }
 
@@ -93,15 +93,15 @@
   font-size: .68rem;
   font-weight: 800;
   letter-spacing: .02em;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--sa-border);
+  color: var(--sa-muted-strong);
 }
-.tk-ticket-avatar[data-tone="0"], .tk-msg-avatar[data-tone="0"] { background: #dbeafe; color: #1d4ed8; }
+.tk-ticket-avatar[data-tone="0"], .tk-msg-avatar[data-tone="0"] { background: var(--sa-accent-wash); color: var(--sa-accent-hover); }
 .tk-ticket-avatar[data-tone="1"], .tk-msg-avatar[data-tone="1"] { background: #dcfce7; color: #15803d; }
 .tk-ticket-avatar[data-tone="2"], .tk-msg-avatar[data-tone="2"] { background: #fef3c7; color: #b45309; }
 .tk-ticket-avatar[data-tone="3"], .tk-msg-avatar[data-tone="3"] { background: #fce7f3; color: #be185d; }
 .tk-ticket-avatar[data-tone="4"], .tk-msg-avatar[data-tone="4"] { background: #ede9fe; color: #6d28d9; }
-.tk-ticket-avatar[data-tone="5"], .tk-msg-avatar[data-tone="5"] { background: #ccfbf1; color: #0f766e; }
+.tk-ticket-avatar[data-tone="5"], .tk-msg-avatar[data-tone="5"] { background: var(--sa-accent-wash); color: var(--sa-accent-hover); }
 
 .tk-ticket-subject {
   margin-top: 2px;
@@ -195,14 +195,14 @@
 /* The status control carries its own colour, matching the list dots. */
 .tk-select-status[data-status="open"]        { background: #dcfce7; color: #15803d; border-color: transparent; }
 .tk-select-status[data-status="pending"]     { background: #fef3c7; color: #b45309; border-color: transparent; }
-.tk-select-status[data-status="in_progress"] { background: #dbeafe; color: #1d4ed8; border-color: transparent; }
+.tk-select-status[data-status="in_progress"] { background: var(--sa-accent-wash); color: var(--sa-accent-hover); border-color: transparent; }
 
 .tk-notes-toggle {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   border: 1px solid var(--tk-line);
-  background: #fff;
+  background: var(--sa-surface);
   color: var(--tk-muted);
   font-family: inherit;
   font-weight: 680;
@@ -243,7 +243,7 @@
   padding: 5px 14px;
   border: 1px solid var(--tk-line);
   border-radius: 999px;
-  background: #fff;
+  background: var(--sa-surface);
   color: var(--tk-muted);
   font-family: inherit;
   font-size: .73rem;
@@ -285,7 +285,7 @@
   box-shadow: none;
 }
 .tk-msg .tk-msg-bubble {
-  background: #fff;
+  background: var(--sa-surface);
   border: 1px solid var(--tk-line);
   border-top-left-radius: 4px;
   color: var(--tk-text);
@@ -295,7 +295,7 @@
   border-color: transparent;
   border-top-left-radius: 14px;
   border-top-right-radius: 4px;
-  color: #fff;
+  color: var(--sa-surface);
 }
 .tk-msg-text { font-size: .84rem; }
 
@@ -308,7 +308,7 @@
   flex-shrink: 0;
   padding: 14px 16px;
   border-inline-start: 1px solid var(--tk-line);
-  background: color-mix(in srgb, var(--tk-amber-bg) 42%, #fff);
+  background: color-mix(in srgb, var(--tk-amber-bg) 42%, var(--sa-surface));
   overflow-y: auto;
 }
 .tk-notes-drawer header {
@@ -335,14 +335,14 @@
   margin-top: 0;
   flex: 1;
   min-height: 150px;
-  background: #fff;
+  background: var(--sa-surface);
 }
 .tk-notes-save {
   padding: 8px 14px;
   border: none;
   border-radius: 8px;
   background: var(--tk-amber-text);
-  color: #fff;
+  color: var(--sa-surface);
   font-family: inherit;
   font-size: .78rem;
   font-weight: 700;
@@ -351,20 +351,20 @@
 .tk-notes-save:hover { filter: brightness(.94); }
 
 /* ── Composer: SLA strip + pill input + solid send ── */
-.tk-composer { padding: 0; border-top: 1px solid var(--tk-line); background: #fff; }
+.tk-composer { padding: 0; border-top: 1px solid var(--tk-line); background: var(--sa-surface); }
 
 .tk-sla {
   margin: 0;
   padding: 8px 18px;
   border-bottom: 1px solid var(--tk-line);
-  background: #f8fafc;
+  background: var(--sa-band);
   font-size: .72rem;
   font-weight: 650;
   color: var(--tk-muted);
 }
 .tk-sla[data-status="open"]    { background: #f0fdf4; color: #15803d; }
 .tk-sla[data-status="pending"] { background: #fffbeb; color: #b45309; }
-.tk-sla[data-status="closed"]  { background: #f8fafc; color: var(--tk-soft); }
+.tk-sla[data-status="closed"]  { background: var(--sa-band); color: var(--tk-soft); }
 
 .tk-composer-form {
   display: flex;
@@ -385,7 +385,7 @@
 }
 .tk-composer-input:focus {
   outline: none;
-  background: #fff;
+  background: var(--sa-surface);
   border-color: var(--tk-accent);
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
@@ -401,7 +401,7 @@
   border: none;
   border-radius: 999px;
   background: linear-gradient(135deg, var(--tk-blue-text), var(--tk-accent));
-  color: #fff;
+  color: var(--sa-surface);
   font-family: inherit;
   font-size: .8rem;
   font-weight: 700;
@@ -413,7 +413,7 @@
   transform: translateY(-1px);
   box-shadow: 0 8px 18px var(--accent-glow);
 }
-.tk-send-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+.tk-send-btn:disabled { background: var(--sa-border-strong); cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* ── Responsive ── */
 @media (max-width: 1100px) {

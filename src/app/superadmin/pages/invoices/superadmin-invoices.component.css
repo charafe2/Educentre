@@ -24,7 +24,7 @@
   padding: 2rem;
   border-radius: 2rem;
   background:
-    radial-gradient(circle at 8% 0%, oklch(0.78 0.08 185 / 0.18), transparent 34%),
+    radial-gradient(circle at 8% 0%, oklch(0.78 0.08 262 / 0.18), transparent 34%),
     linear-gradient(135deg, oklch(0.985 0.006 230), oklch(0.96 0.012 250));
   box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.76), 0 30px 80px oklch(0.22 0.04 250 / 0.08);
 }
@@ -36,8 +36,8 @@
   min-height: 24px;
   padding: 0 0.7rem;
   border-radius: 999px;
-  background: oklch(0.93 0.025 190);
-  color: oklch(0.43 0.11 190);
+  background: oklch(0.93 0.025 262);
+  color: oklch(0.43 0.11 262);
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.16em;
@@ -103,7 +103,7 @@
 .pill-action:active { transform: scale(0.98); }
 .pill-action[disabled], .ghost-button[disabled] { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-.pill-action.primary { background: oklch(0.47 0.12 190); }
+.pill-action.primary { background: oklch(0.47 0.12 262); }
 .ghost-button {
   min-height: 34px;
   padding: 0 0.75rem;
@@ -165,7 +165,7 @@ input, select, textarea {
 textarea { padding-top: 0.75rem; resize: vertical; }
 input:focus, select:focus, textarea:focus {
   background: oklch(0.99 0.004 230);
-  box-shadow: inset 0 1px 1px oklch(1 0 0 / 0.9), 0 0 0 3px oklch(0.65 0.08 190 / 0.24);
+  box-shadow: inset 0 1px 1px oklch(1 0 0 / 0.9), 0 0 0 3px oklch(0.65 0.08 262 / 0.24);
 }
 
 @media (max-width: 760px) {
@@ -189,13 +189,13 @@ input:focus, select:focus, textarea:focus {
 .invoice-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; padding: 1rem; border-top: 1px solid oklch(0.92 0.01 235); }
 .invoice-item:first-child { border-top: 0; }
 .invoice-item div:first-child { display: grid; gap: 0.22rem; }
-.invoice-number { color: oklch(0.47 0.12 190); font-size: 0.74rem; font-weight: 900; }
+.invoice-number { color: oklch(0.47 0.12 262); font-size: 0.74rem; font-weight: 900; }
 .invoice-item strong { color: oklch(0.19 0.032 250); }
 .invoice-item small { color: oklch(0.55 0.03 245); }
 .invoice-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.45rem; flex-wrap: wrap; }
 .invoice-status { padding: 0.28rem 0.68rem; border-radius: 999px; font-size: 0.72rem; font-weight: 900; }
 .invoice-status.pending { background: oklch(0.94 0.04 78); color: oklch(0.48 0.11 65); }
-.invoice-status.paid { background: oklch(0.93 0.04 190); color: oklch(0.43 0.11 190); }
+.invoice-status.paid { background: oklch(0.93 0.04 262); color: oklch(0.43 0.11 262); }
 .invoice-status.late { background: oklch(0.95 0.026 20); color: oklch(0.54 0.17 25); }
 .invoice-status.cancelled { background: oklch(0.93 0.01 245); color: oklch(0.46 0.03 245); }
 @media (max-width: 980px) { .invoice-grid { grid-template-columns: 1fr; } .invoice-item { grid-template-columns: 1fr; } .invoice-actions { justify-content: flex-start; } }

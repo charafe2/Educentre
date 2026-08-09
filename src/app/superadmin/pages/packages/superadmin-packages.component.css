@@ -1,6 +1,6 @@
 .packages-page { display: flex; flex-direction: column; gap: 1.25rem; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; }
-.eyebrow { margin: 0 0 0.4rem; color: oklch(0.48 0.12 190); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+.eyebrow { margin: 0 0 0.4rem; color: oklch(0.48 0.12 262); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { margin-bottom: 0.35rem; color: oklch(0.22 0.035 240); font-size: 1.6rem; letter-spacing: 0; }
 p { margin-bottom: 0; color: oklch(0.52 0.03 235); font-size: 0.9rem; line-height: 1.5; }
@@ -24,11 +24,11 @@ p { margin-bottom: 0; color: oklch(0.52 0.03 235); font-size: 0.9rem; line-heigh
 .plan-list { display: grid; padding: 0.45rem; gap: 0.35rem; }
 .plan-item { text-align: left; display: grid; gap: 0.32rem; padding: 0.9rem; border-radius: 7px; border: 1px solid transparent; background: transparent; cursor: pointer; font: inherit; }
 .plan-item:hover { background: oklch(0.97 0.006 220); }
-.plan-item.selected { background: oklch(0.94 0.035 190); border-color: oklch(0.82 0.06 190); }
+.plan-item.selected { background: oklch(0.94 0.035 262); border-color: oklch(0.82 0.06 262); }
 .plan-title { color: oklch(0.22 0.035 240); font-weight: 850; }
 .plan-meta { color: oklch(0.52 0.03 235); font-size: 0.8rem; }
 .status-pill { width: fit-content; border-radius: 999px; padding: 0.2rem 0.55rem; font-size: 0.72rem; font-weight: 850; border: 1px solid transparent; }
-.status-active { background: oklch(0.94 0.035 190); color: oklch(0.45 0.11 190); border-color: oklch(0.83 0.06 190); }
+.status-active { background: oklch(0.94 0.035 262); color: oklch(0.45 0.11 262); border-color: oklch(0.83 0.06 262); }
 .status-draft { background: oklch(0.94 0.04 78); color: oklch(0.48 0.11 65); border-color: oklch(0.86 0.07 78); }
 .status-archived { background: oklch(0.94 0.008 235); color: oklch(0.48 0.03 235); border-color: oklch(0.85 0.012 235); }
 
@@ -37,13 +37,13 @@ p { margin-bottom: 0; color: oklch(0.52 0.03 235); font-size: 0.9rem; line-heigh
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: 1.15rem; }
 label { display: grid; gap: 0.42rem; color: oklch(0.42 0.034 235); font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.045em; }
 input, select { width: 100%; box-sizing: border-box; min-height: 40px; border-radius: 8px; border: 1px solid oklch(0.88 0.012 230); background: oklch(0.98 0.006 220); color: oklch(0.22 0.035 240); padding: 0 0.75rem; font: inherit; font-size: 0.88rem; outline: none; }
-input:focus, select:focus { border-color: oklch(0.52 0.12 190); box-shadow: 0 0 0 3px oklch(0.7 0.08 190 / 0.18); background: oklch(0.995 0.004 220); }
+input:focus, select:focus { border-color: oklch(0.52 0.12 262); box-shadow: 0 0 0 3px oklch(0.7 0.08 262 / 0.18); background: oklch(0.995 0.004 220); }
 
 .features-block { padding: 0 1.15rem 1.15rem; }
 .features-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 0.85rem; }
 .features-header h3 { color: oklch(0.22 0.035 240); font-size: 0.95rem; margin-bottom: 0; }
 .feature-add { display: flex; gap: 0.45rem; min-width: min(360px, 100%); }
-.icon-btn { width: 40px; border: 1px solid oklch(0.48 0.12 190); color: oklch(0.985 0.008 190); background: oklch(0.48 0.12 190); }
+.icon-btn { width: 40px; border: 1px solid oklch(0.48 0.12 262); color: oklch(0.985 0.008 262); background: oklch(0.48 0.12 262); }
 .feature-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .feature-chip { display: inline-flex; align-items: center; gap: 0.45rem; min-height: 32px; padding: 0 0.35rem 0 0.7rem; border-radius: 999px; background: oklch(0.96 0.009 230); border: 1px solid oklch(0.88 0.012 230); color: oklch(0.28 0.035 240); font-size: 0.82rem; font-weight: 700; }
 .feature-chip button { width: 24px; height: 24px; border-radius: 999px; border: 0; background: transparent; color: oklch(0.58 0.028 235); cursor: pointer; }

@@ -1,16 +1,16 @@
 :host {
-  --page-bg: #f7f6f3;
-  --surface: #ffffff;
-  --surface-muted: #fbfbfa;
-  --line: #eaeaea;
-  --text: #111111;
-  --muted: #787774;
+  --page-bg: var(--sa-band);
+  --surface: var(--sa-surface);
+  --surface-muted: var(--sa-page);
+  --line: var(--sa-border);
+  --text: var(--sa-ink);
+  --muted: var(--sa-muted-strong);
   --green-bg: #edf3ec;
   --green-text: #346538;
   --red-bg: #fdebec;
   --red-text: #9f2f2d;
-  --blue-bg: #e1f3fe;
-  --blue-text: #1f6c9f;
+  --blue-bg: var(--sa-accent-wash);
+  --blue-text: var(--sa-accent);
   --yellow-bg: #fbf3db;
   --yellow-text: #956400;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -94,11 +94,11 @@
 .primary-button {
   min-height: 38px;
   padding: 0 14px;
-  color: #ffffff;
-  background: #111111;
-  border-color: #111111;
+  color: var(--sa-surface);
+  background: var(--sa-ink);
+  border-color: var(--sa-ink);
 }
-.primary-button:hover { background: #333333; border-color: #333333; }
+.primary-button:hover { background: var(--sa-ink-soft); border-color: var(--sa-ink-soft); }
 .primary-button:active,
 .secondary-button:active,
 .icon-action:active { transform: scale(0.98); }
@@ -110,7 +110,7 @@
   color: var(--text);
   background: var(--surface-muted);
 }
-.secondary-button:hover { background: #ffffff; }
+.secondary-button:hover { background: var(--sa-surface); }
 
 .inline-alert {
   padding: 12px 14px;
@@ -191,7 +191,7 @@
 }
 .account-record:last-child { border-bottom: 0; }
 .account-record:hover,
-.account-record.selected { background: #fbfbfa; }
+.account-record.selected { background: var(--sa-page); }
 
 .account-main {
   display: flex;
@@ -212,8 +212,8 @@
   height: 38px;
   flex-shrink: 0;
   border-radius: 8px;
-  background: #111111;
-  color: #ffffff;
+  background: var(--sa-ink);
+  color: var(--sa-surface);
   font-size: 0.74rem;
   font-weight: 800;
 }
@@ -244,7 +244,7 @@
   height: 32px;
   display: grid;
   place-items: center;
-  background: #ffffff;
+  background: var(--sa-surface);
   color: var(--muted);
 }
 .icon-action:hover { color: var(--text); background: var(--surface-muted); }
@@ -286,7 +286,7 @@ select {
   box-sizing: border-box;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--sa-surface);
   color: var(--text);
   padding: 0 10px;
   font: inherit;
@@ -295,7 +295,7 @@ select {
   transition: border-color 180ms var(--ease), background 180ms var(--ease);
 }
 input:focus,
-select:focus { border-color: #c8c7c3; background: #fbfbfa; }
+select:focus { border-color: var(--sa-border-strong); background: var(--sa-page); }
 
 .editor-actions {
   display: flex;
