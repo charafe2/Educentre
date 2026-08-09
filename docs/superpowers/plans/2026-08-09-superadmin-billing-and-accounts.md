@@ -1072,6 +1072,7 @@ use App\Domains\SuperAdmin\Services\InvoiceNumberGenerator;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class CentreInvoiceController extends Controller
 {
@@ -1093,18 +1094,25 @@ class CentreInvoiceController extends Controller
     {
         $data = $request->validated();
 
-        $invoice = CentreInvoice::create([
-            'invoice_number' => $this->numbers->nextFor($data['issuedAt']),
-            'centre_id' => $data['centreId'],
-            'package_plan_id' => $data['packagePlanId'] ?? null,
-            'package_name' => $data['packageName'],
-            'amount' => $data['amount'],
-            'issued_at' => $data['issuedAt'],
-            'due_date' => $data['dueDate'],
-            'paid_at' => $data['paidAt'] ?? null,
-            'status' => $data['status'],
-            'notes' => $data['notes'] ?? null,
-        ]);
+        // Numbering and insert share one transaction on purpose. The generator
+        // locks the year's rows, but that lock lifts when ITS transaction
+        // commits — so generating and inserting separately would let two
+        // concurrent creates take the same number and collide on the unique
+        // index. Wrapping both keeps the lock held until the row exists.
+        $invoice = DB::transaction(function () use ($data) {
+            return CentreInvoice::create([
+                'invoice_number' => $this->numbers->nextFor($data['issuedAt']),
+                'centre_id' => $data['centreId'],
+                'package_plan_id' => $data['packagePlanId'] ?? null,
+                'package_name' => $data['packageName'],
+                'amount' => $data['amount'],
+                'issued_at' => $data['issuedAt'],
+                'due_date' => $data['dueDate'],
+                'paid_at' => $data['paidAt'] ?? null,
+                'status' => $data['status'],
+                'notes' => $data['notes'] ?? null,
+            ]);
+        });
 
         return $this->success(
             data: CentreInvoiceResource::make($invoice->load(['centre', 'packagePlan'])),
