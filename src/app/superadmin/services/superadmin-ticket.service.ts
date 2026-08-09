@@ -18,6 +18,8 @@ export interface Ticket {
   unread_count?: number;
   user?: any;
   agent?: any;
+  /** Eager-loaded by the ticket index so the list can show a preview line. */
+  latest_message?: { content: string; created_at: string } | null;
 }
 
 export interface Message {
@@ -220,7 +222,12 @@ export class SuperadminTicketService {
               event.conversation_id
             );
           }
-          newList[ticketIndex] = { ...newList[ticketIndex], updated_at: event.created_at };
+          // Keep the inbox preview line in step with what just arrived.
+          newList[ticketIndex] = {
+            ...newList[ticketIndex],
+            updated_at: event.created_at,
+            latest_message: { content: event.content, created_at: event.created_at },
+          };
 
           // Move to top
           const ticket = newList.splice(ticketIndex, 1)[0];

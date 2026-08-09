@@ -64,6 +64,34 @@ class ChatApiTest extends TestCase
         $this->assertSame('Problème de facturation', $payload['subject']);
     }
 
+    public function test_conversation_exposes_its_latest_message(): void
+    {
+        $user = $this->chatUser();
+
+        $conversation = \App\Domains\Support\Models\Conversation::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'status' => 'open',
+            'subject' => 'Facturation',
+        ]);
+
+        foreach (['Premier message', 'Deuxième message', 'Dernier message'] as $content) {
+            $conversation->messages()->create([
+                'sender_type' => User::class,
+                'sender_id' => $user->id,
+                'content' => $content,
+                'is_read' => false,
+            ]);
+        }
+
+        // The agent inbox renders this as the preview line under each subject,
+        // so it must be the newest message rather than the first one written.
+        $this->assertSame(
+            'Dernier message',
+            $conversation->fresh()->latestMessage->content
+        );
+    }
+
     public function test_broadcasting_auth_is_reachable_under_the_api_prefix(): void
     {
         $user = $this->chatUser();

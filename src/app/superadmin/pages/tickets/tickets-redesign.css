@@ -1,0 +1,438 @@
+/* ══════════════════════════════════════════════════════════════════
+   Agent inbox redesign.
+   Loaded AFTER tickets.component.css (see styleUrls), so equal-specificity
+   rules here win. Kept separate to stay under the 16 kB per-file style
+   budget — the base file is already at it.
+   ══════════════════════════════════════════════════════════════════ */
+
+:host {
+  --tk-page: #f7f8fa;
+  --tk-dot-open: #16a34a;
+  --tk-dot-pending: #f59e0b;
+  --tk-dot-progress: #2563eb;
+  --tk-dot-closed: #9ca3af;
+}
+
+/* Two white cards floating on a warm neutral page, rather than one box
+   split by a divider — the gap is what creates the depth. */
+.tk-shell {
+  grid-template-columns: minmax(300px, 24%) minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: 0;
+  background: var(--tk-page);
+  overflow: visible;
+}
+
+.tk-list-panel,
+.tk-chat-panel {
+  border: 1px solid var(--tk-line);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .05);
+  overflow: hidden;
+  min-height: 0;
+}
+.tk-list-panel { border-right: 1px solid var(--tk-line); }
+
+/* ── Search ── */
+.tk-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 0 16px 10px;
+}
+.tk-search svg {
+  position: absolute;
+  inset-inline-start: 11px;
+  width: 15px; height: 15px;
+  color: var(--tk-soft);
+  pointer-events: none;
+}
+.tk-search input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border: 1px solid var(--tk-line);
+  border-radius: 999px;
+  background: var(--tk-page);
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 550;
+  color: var(--tk-text);
+  transition: border-color 140ms var(--tk-ease), background 140ms var(--tk-ease);
+}
+.tk-search input::placeholder { color: var(--tk-soft); }
+.tk-search input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* ── Ticket rows ── */
+.tk-ticket-item {
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 16px;
+}
+/* Softened so the selection never competes with the status dot. */
+.tk-ticket-item.tk-active {
+  background: #f1f5f9;
+  box-shadow: inset 3px 0 0 var(--tk-accent);
+}
+
+/* A stable colour per requester, so repeat names become recognisable
+   before they're read. */
+.tk-ticket-avatar,
+.tk-msg-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .02em;
+  background: #e2e8f0;
+  color: #475569;
+}
+.tk-ticket-avatar[data-tone="0"], .tk-msg-avatar[data-tone="0"] { background: #dbeafe; color: #1d4ed8; }
+.tk-ticket-avatar[data-tone="1"], .tk-msg-avatar[data-tone="1"] { background: #dcfce7; color: #15803d; }
+.tk-ticket-avatar[data-tone="2"], .tk-msg-avatar[data-tone="2"] { background: #fef3c7; color: #b45309; }
+.tk-ticket-avatar[data-tone="3"], .tk-msg-avatar[data-tone="3"] { background: #fce7f3; color: #be185d; }
+.tk-ticket-avatar[data-tone="4"], .tk-msg-avatar[data-tone="4"] { background: #ede9fe; color: #6d28d9; }
+.tk-ticket-avatar[data-tone="5"], .tk-msg-avatar[data-tone="5"] { background: #ccfbf1; color: #0f766e; }
+
+.tk-ticket-subject {
+  margin-top: 2px;
+  font-size: .78rem;
+  font-weight: 680;
+  color: var(--tk-text);
+}
+
+/* Preview line — the whole point of the list is triage without opening. */
+.tk-ticket-preview {
+  margin-top: 2px;
+  font-size: .73rem;
+  font-weight: 500;
+  color: var(--tk-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dot + label reads faster than a solid pill and leaves the pill weight
+   free for the unread count. */
+.tk-status-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--tk-muted);
+}
+.tk-status-dot i {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--tk-dot-closed);
+  flex-shrink: 0;
+}
+.tk-status-dot[data-status="open"] i        { background: var(--tk-dot-open); }
+.tk-status-dot[data-status="pending"] i     { background: var(--tk-dot-pending); }
+.tk-status-dot[data-status="in_progress"] i { background: var(--tk-dot-progress); }
+
+/* ══════════════════ Right panel ══════════════════ */
+
+/* ── Header: subject dominant, controls as small pills on the right ── */
+.tk-chat-header {
+  align-items: center;
+  gap: 12px;
+  padding: 13px 18px;
+  min-height: 0;
+}
+.tk-chat-header-left {
+  display: block;
+  margin-top: 0;
+  min-width: 0;
+}
+.tk-chat-subject {
+  display: block;
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 780;
+  letter-spacing: -.015em;
+  color: var(--tk-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-chat-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: .73rem;
+  font-weight: 550;
+  color: var(--tk-soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tk-chat-ref { font-family: var(--font-mono); font-weight: 700; color: var(--tk-muted); }
+
+.tk-chat-actions { align-items: center; gap: 6px; }
+.tk-select-status,
+.tk-select-assign,
+.tk-notes-toggle,
+.tk-action-btn {
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: .74rem;
+}
+.tk-select-status { padding-inline-end: 26px; font-weight: 700; }
+.tk-select-assign { padding-inline-end: 26px; }
+
+/* The status control carries its own colour, matching the list dots. */
+.tk-select-status[data-status="open"]        { background: #dcfce7; color: #15803d; border-color: transparent; }
+.tk-select-status[data-status="pending"]     { background: #fef3c7; color: #b45309; border-color: transparent; }
+.tk-select-status[data-status="in_progress"] { background: #dbeafe; color: #1d4ed8; border-color: transparent; }
+
+.tk-notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--tk-line);
+  background: #fff;
+  color: var(--tk-muted);
+  font-family: inherit;
+  font-weight: 680;
+  cursor: pointer;
+  transition: all 160ms var(--tk-ease);
+}
+.tk-notes-toggle:hover { color: var(--tk-text); background: var(--tk-page); }
+.tk-notes-toggle.active {
+  background: var(--tk-amber-bg);
+  border-color: color-mix(in srgb, var(--tk-amber-text) 25%, transparent);
+  color: var(--tk-amber-text);
+}
+
+/* ── Thread + notes drawer side by side ── */
+.tk-thread-wrap {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.tk-thread {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ── Messages: tight, consistent rhythm instead of a scattered column ── */
+.tk-messages {
+  gap: 14px;
+  padding: 18px 22px;
+  background: var(--tk-page);
+  justify-content: flex-start;
+}
+
+.tk-more-link {
+  align-self: center;
+  padding: 5px 14px;
+  border: 1px solid var(--tk-line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--tk-muted);
+  font-family: inherit;
+  font-size: .73rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 160ms var(--tk-ease);
+}
+.tk-more-link:hover { color: var(--tk-accent); border-color: var(--tk-accent); }
+
+.tk-msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 76%;
+  align-self: flex-start;
+}
+/* Avatar sits on the outer edge, so the sender is identifiable from the
+   same side the bubble is anchored to. */
+.tk-msg.tk-msg-me {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.tk-msg-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tk-msg-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: .7rem;
+}
+.tk-msg.tk-msg-me .tk-msg-head { flex-direction: row-reverse; }
+.tk-msg-author { font-weight: 750; color: var(--tk-text); }
+.tk-msg-timestamp { font-weight: 550; color: var(--tk-soft); }
+
+.tk-msg-bubble {
+  padding: 10px 14px;
+  border-radius: 14px;
+  line-height: 1.5;
+  box-shadow: none;
+}
+.tk-msg .tk-msg-bubble {
+  background: #fff;
+  border: 1px solid var(--tk-line);
+  border-top-left-radius: 4px;
+  color: var(--tk-text);
+}
+.tk-msg.tk-msg-me .tk-msg-bubble {
+  background: linear-gradient(135deg, var(--tk-blue-text), var(--tk-accent));
+  border-color: transparent;
+  border-top-left-radius: 14px;
+  border-top-right-radius: 4px;
+  color: #fff;
+}
+.tk-msg-text { font-size: .84rem; }
+
+/* ── Notes drawer ── */
+.tk-notes-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 290px;
+  flex-shrink: 0;
+  padding: 14px 16px;
+  border-inline-start: 1px solid var(--tk-line);
+  background: color-mix(in srgb, var(--tk-amber-bg) 42%, #fff);
+  overflow-y: auto;
+}
+.tk-notes-drawer header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: .8rem;
+  font-weight: 750;
+  color: var(--tk-amber-text);
+}
+.tk-notes-drawer header button {
+  display: grid; place-items: center;
+  width: 24px; height: 24px;
+  border: none; border-radius: 6px;
+  background: transparent;
+  color: var(--tk-amber-text);
+  cursor: pointer;
+}
+.tk-notes-drawer header button:hover { background: rgba(0, 0, 0, .06); }
+.tk-notes-drawer header button svg { width: 14px; height: 14px; }
+.tk-notes-hint { margin: 0; font-size: .7rem; font-weight: 550; color: var(--tk-muted); }
+.tk-notes-drawer .tk-notes-textarea {
+  margin-top: 0;
+  flex: 1;
+  min-height: 150px;
+  background: #fff;
+}
+.tk-notes-save {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--tk-amber-text);
+  color: #fff;
+  font-family: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.tk-notes-save:hover { filter: brightness(.94); }
+
+/* ── Composer: SLA strip + pill input + solid send ── */
+.tk-composer { padding: 0; border-top: 1px solid var(--tk-line); background: #fff; }
+
+.tk-sla {
+  margin: 0;
+  padding: 8px 18px;
+  border-bottom: 1px solid var(--tk-line);
+  background: #f8fafc;
+  font-size: .72rem;
+  font-weight: 650;
+  color: var(--tk-muted);
+}
+.tk-sla[data-status="open"]    { background: #f0fdf4; color: #15803d; }
+.tk-sla[data-status="pending"] { background: #fffbeb; color: #b45309; }
+.tk-sla[data-status="closed"]  { background: #f8fafc; color: var(--tk-soft); }
+
+.tk-composer-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+}
+.tk-composer-input {
+  flex: 1;
+  padding: 11px 18px;
+  border: 1px solid var(--tk-line);
+  border-radius: 999px;
+  background: var(--tk-page);
+  font-family: inherit;
+  font-size: .84rem;
+  color: var(--tk-text);
+  transition: border-color 140ms var(--tk-ease), background 140ms var(--tk-ease);
+}
+.tk-composer-input:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--tk-accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+/* Coloured by default — replying is the primary action on this screen. */
+.tk-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  width: auto;
+  height: auto;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--tk-blue-text), var(--tk-accent));
+  color: #fff;
+  font-family: inherit;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 140ms var(--tk-ease), box-shadow 140ms var(--tk-ease);
+}
+.tk-send-btn svg { width: 16px; height: 16px; }
+.tk-send-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px var(--accent-glow);
+}
+.tk-send-btn:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .tk-notes-drawer { width: 240px; }
+}
+@media (max-width: 900px) {
+  :host { height: auto; }
+  .tk-shell { grid-template-columns: 1fr; }
+  .tk-list-panel { max-height: 46vh; }
+  .tk-thread-wrap { flex-direction: column; }
+  .tk-notes-drawer {
+    width: auto;
+    border-inline-start: none;
+    border-top: 1px solid var(--tk-line);
+  }
+  .tk-msg { max-width: 90%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-send-btn, .tk-more-link, .tk-notes-toggle, .tk-search input { transition: none; }
+  .tk-send-btn:hover:not(:disabled) { transform: none; }
+}

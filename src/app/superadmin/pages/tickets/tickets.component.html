@@ -31,6 +31,15 @@
       <span class="tk-list-count">{{ getTicketCount('all') }}</span>
     </header>
 
+    <div class="tk-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+      </svg>
+      <input type="search" [(ngModel)]="search" name="ticketSearch"
+             placeholder="Rechercher un client, un centre, un objet…"
+             aria-label="Rechercher un ticket" />
+    </div>
+
     <div class="tk-filters">
       <button class="tk-filter-btn" [class.active]="filterStatus === 'all'" (click)="filterStatus = 'all'">
         Tous <span class="tk-filter-count">{{ getTicketCount('all') }}</span>
@@ -57,23 +66,23 @@
            [class.tk-has-unread]="ticket.unread_count && ticket.unread_count > 0"
            (click)="selectTicket(ticket)"
            (dblclick)="onDoubleClickTicket(ticket)">
-        <div class="tk-ticket-avatar" [class.tk-avatar-open]="ticket.status === 'open'" [class.tk-avatar-pending]="ticket.status === 'pending'">
+        <div class="tk-ticket-avatar" [attr.data-tone]="avatarTone(ticket.user?.name)">
           {{ getInitials(ticket.user?.name) }}
         </div>
         <div class="tk-ticket-body">
           <div class="tk-ticket-top">
             <span class="tk-ticket-name">{{ ticket.user?.name || 'Utilisateur' }}</span>
-            <span class="tk-ticket-time">{{ ticket.updated_at | date:'HH:mm' }}</span>
-          </div>
-          <div class="tk-ticket-meta">
-            <span class="tk-ticket-tenant">{{ ticket.user?.tenant?.name || '—' }}</span>
+            <span class="tk-ticket-time">{{ relativeTime(ticket.updated_at) }}</span>
           </div>
           <div class="tk-ticket-subject">
             {{ ticket.subject || 'Objet non défini' }}
           </div>
+          <div class="tk-ticket-preview">
+            {{ ticket.latest_message?.content || ticket.user?.tenant?.name || '—' }}
+          </div>
           <div class="tk-ticket-bottom">
-            <span class="tk-status-pill" [class.tk-status-open]="ticket.status === 'open'" [class.tk-status-closed]="ticket.status === 'closed'" [class.tk-status-pending]="ticket.status === 'pending'">
-              {{ ticket.status === 'open' ? 'Ouvert' : (ticket.status === 'pending' ? 'En attente' : 'Fermé') }}
+            <span class="tk-status-dot" [attr.data-status]="ticket.status">
+              <i></i>{{ statusLabel(ticket.status) }}
             </span>
             <span *ngIf="ticket.unread_count && ticket.unread_count > 0" class="tk-unread-badge">
               {{ ticket.unread_count }}
@@ -91,33 +100,42 @@
       <!-- Chat Header -->
       <header class="tk-chat-header">
         <div class="tk-chat-header-left">
-          <div class="tk-chat-avatar" [class.tk-avatar-open]="active.status === 'open'" [class.tk-avatar-pending]="active.status === 'pending'">
-            {{ getInitials(active.user?.name) }}
-          </div>
-          <div class="tk-chat-identity">
-            <span class="tk-chat-subject">Objet : {{ active.subject || 'Objet non défini' }}</span>
-            <span class="tk-chat-sub">
-              <span class="tk-chat-name-small">{{ active.user?.name }}</span> · {{ active.user?.tenant?.name }} · {{ active.user?.email }}
-            </span>
-          </div>
+          <h2 class="tk-chat-subject">{{ active.subject || 'Objet non défini' }}</h2>
+          <p class="tk-chat-sub">
+            <span class="tk-chat-ref">#{{ active.id }}</span>
+            <span aria-hidden="true">·</span>
+            {{ frenchDate(active.created_at) }}
+            <span aria-hidden="true">·</span>
+            {{ active.user?.name }} — {{ active.user?.tenant?.name || '—' }}
+          </p>
         </div>
+
         <div class="tk-chat-actions">
           <button *ngIf="active.status === 'pending'" class="tk-action-btn tk-action-claim" (click)="claimTicket()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/></svg>
             Accepter
           </button>
-          
-          <select *ngIf="active.status !== 'closed'" class="tk-select-status" [ngModel]="active.status" (ngModelChange)="updateStatus($event)">
+
+          <select *ngIf="active.status !== 'closed'" class="tk-select-status" [attr.data-status]="active.status"
+                  [ngModel]="active.status" (ngModelChange)="updateStatus($event)" aria-label="Statut du ticket">
             <option value="pending">En attente</option>
             <option value="open">Ouvert</option>
             <option value="in_progress">En cours</option>
             <option value="closed">Fermé</option>
           </select>
-          
-          <select *ngIf="active.status !== 'closed'" class="tk-select-assign" [ngModel]="active.agent_id" (ngModelChange)="assignTicket($event)">
-            <option [ngValue]="null" disabled>Assigner à...</option>
+
+          <select *ngIf="active.status !== 'closed'" class="tk-select-assign"
+                  [ngModel]="active.agent_id" (ngModelChange)="assignTicket($event)" aria-label="Assigner le ticket">
+            <option [ngValue]="null" disabled>Assigner à…</option>
             <option *ngFor="let sa of superadmins" [ngValue]="sa.id">{{ sa.name }}</option>
           </select>
+
+          <button *ngIf="active.status !== 'closed'" class="tk-notes-toggle"
+                  [class.active]="notesOpen" (click)="notesOpen = !notesOpen"
+                  [attr.aria-expanded]="notesOpen" aria-label="Notes internes">
+            <i class="fa-solid fa-note-sticky"></i>
+            Notes
+          </button>
 
           <div *ngIf="active.status === 'closed'" class="tk-resolved-chip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -126,49 +144,71 @@
         </div>
       </header>
 
-      <!-- Internal Notes -->
-      <div class="tk-internal-notes" *ngIf="active.status !== 'closed'">
-        <details>
-          <summary><i class="fa-solid fa-eye-slash" style="margin-right: 6px;"></i>Notes internes (visibles uniquement par le support)</summary>
-          <div class="tk-notes-content">
-            <textarea [(ngModel)]="editedNotes" placeholder="Ajouter une note interne..." class="tk-notes-textarea"></textarea>
-            <button class="tk-action-btn tk-action-claim" (click)="saveNotes()" style="margin-top: 8px;">Enregistrer les notes</button>
-          </div>
-        </details>
-      </div>
+      <!-- Thread + internal notes drawer -->
+      <div class="tk-thread-wrap">
+        <div class="tk-thread">
+          <div class="tk-messages" #messagesContainer>
+            <button *ngIf="hiddenMessageCount() > 0 && !showAllMessages"
+                    class="tk-more-link" (click)="showAllMessages = true">
+              + {{ hiddenMessageCount() }} réponse{{ hiddenMessageCount() > 1 ? 's' : '' }} précédente{{ hiddenMessageCount() > 1 ? 's' : '' }}
+            </button>
 
-      <!-- Messages -->
-      <div class="tk-messages" #messagesContainer>
-        <div *ngFor="let msg of ticketService.messages()"
-             class="tk-msg"
-             [class.tk-msg-me]="isMe(msg)"
-             [class.tk-msg-them]="!isMe(msg)">
-          <div class="tk-msg-bubble">
-            <p class="tk-msg-text">{{ msg.content }}</p>
-            <div class="tk-msg-footer">
-              <span class="tk-msg-author">{{ isMe(msg) ? 'Vous' : (msg.sender?.name || 'Client') }}</span>
-              <span class="tk-msg-timestamp">{{ msg.created_at | date:'HH:mm' }}</span>
-            </div>
+            <article *ngFor="let msg of visibleMessages()"
+                     class="tk-msg" [class.tk-msg-me]="isMe(msg)">
+              <div class="tk-msg-avatar" [attr.data-tone]="avatarTone(isMe(msg) ? 'support' : msg.sender?.name)">
+                {{ getInitials(isMe(msg) ? 'Support' : (msg.sender?.name || 'Client')) }}
+              </div>
+              <div class="tk-msg-main">
+                <div class="tk-msg-head">
+                  <span class="tk-msg-author">{{ isMe(msg) ? 'Vous' : (msg.sender?.name || 'Client') }}</span>
+                  <span class="tk-msg-timestamp">{{ relativeTime(msg.created_at) }}</span>
+                </div>
+                <div class="tk-msg-bubble">
+                  <p class="tk-msg-text">{{ msg.content }}</p>
+                </div>
+              </div>
+            </article>
           </div>
+
+          <!-- Composer -->
+          <footer class="tk-composer" [class.tk-composer-disabled]="active.status === 'closed'">
+            <p class="tk-sla" [attr.data-status]="active.status">
+              <ng-container *ngIf="active.status === 'closed'; else slaOpen">
+                Ticket résolu · clos le {{ frenchDate(active.updated_at) }}
+              </ng-container>
+              <ng-template #slaOpen>
+                Ticket {{ statusLabel(active.status).toLowerCase() }} · SLA : réponse attendue avant {{ slaDeadline(active) }}
+              </ng-template>
+            </p>
+            <form (submit)="sendMessage($event)" class="tk-composer-form">
+              <input
+                type="text"
+                [(ngModel)]="newMessage"
+                name="message"
+                class="tk-composer-input"
+                [placeholder]="active.status === 'closed' ? 'Ce ticket est résolu' : 'Écrire une réponse…'"
+                [disabled]="active.status === 'closed'"
+                autocomplete="off" />
+              <button type="submit" class="tk-send-btn" [disabled]="!newMessage.trim() || active.status === 'closed'">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
+                Répondre
+              </button>
+            </form>
+          </footer>
         </div>
-      </div>
 
-      <!-- Composer -->
-      <footer class="tk-composer" [class.tk-composer-disabled]="active.status === 'closed'">
-        <form (submit)="sendMessage($event)" class="tk-composer-form">
-          <input
-            type="text"
-            [(ngModel)]="newMessage"
-            name="message"
-            class="tk-composer-input"
-            [placeholder]="active.status === 'closed' ? 'Ce ticket est résolu' : 'Écrire un message…'"
-            [disabled]="active.status === 'closed'"
-            autocomplete="off" />
-          <button type="submit" class="tk-send-btn" [disabled]="!newMessage.trim() || active.status === 'closed'">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>
-          </button>
-        </form>
-      </footer>
+        <aside class="tk-notes-drawer" *ngIf="notesOpen && active.status !== 'closed'">
+          <header>
+            <span><i class="fa-solid fa-eye-slash"></i> Notes internes</span>
+            <button (click)="notesOpen = false" aria-label="Fermer les notes">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </header>
+          <p class="tk-notes-hint">Visibles uniquement par l'équipe support.</p>
+          <textarea [(ngModel)]="editedNotes" placeholder="Ajouter une note interne…" class="tk-notes-textarea"></textarea>
+          <button class="tk-notes-save" (click)="saveNotes()">Enregistrer</button>
+        </aside>
+      </div>
 
     </ng-container>
 

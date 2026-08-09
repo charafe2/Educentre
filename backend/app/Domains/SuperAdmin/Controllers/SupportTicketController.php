@@ -12,7 +12,7 @@ class SupportTicketController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Conversation::with(['user', 'agent', 'user.tenant'])
+        $query = Conversation::with(['user', 'agent', 'user.tenant', 'latestMessage'])
             ->withCount(['messages as unread_count' => function ($query) {
                 $query->where('is_read', false)->where('sender_type', \App\Models\User::class);
             }]);
