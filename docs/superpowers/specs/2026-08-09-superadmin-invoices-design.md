@@ -1,7 +1,10 @@
-# Superadmin centre invoices and package plans
+# Superadmin centre invoices, package plans and accounts
 
 **Date:** 2026-08-09
 **Status:** approved, not yet implemented
+
+**Decisions taken:** accounts folded into scope; `late` removed from the invoice
+create form; centre deletion blocked while invoices reference it.
 
 ## Problem
 
@@ -28,13 +31,17 @@ requires to work.
 
 ## Scope
 
-In scope: `package_plans` and `centre_invoices` — schema, models, controllers,
-routes, validation, serialization, tests. Plus one frontend change: removing the
-`late` option from the invoice create form (see below).
+In scope: `package_plans`, `centre_invoices`, and **superadmin accounts** — schema,
+models, controllers, routes, validation, serialization, tests. Plus one frontend
+change: removing the `late` option from the invoice create form (see below).
 
-Out of scope: the superadmin overview and accounts APIs, centre write endpoints,
-Stripe/payment collection, PDF generation, emailing invoices to centres, and any
-change to the existing `subscriptions` table.
+Accounts was folded in after all three pages were confirmed failing in production
+with the same message and the same cause. It is a third slice of the same problem
+and follows the same pattern, so it ships together rather than as a separate spec.
+
+Out of scope: the superadmin overview API, centre write endpoints (create, update,
+delete, toggle-status), Stripe/payment collection, PDF generation, emailing invoices
+to centres, and any change to the existing `subscriptions` table.
 
 ## Placement
 
@@ -96,6 +103,27 @@ the invoice records the plan's name *as it was when issued*, so renaming or dele
 a plan never rewrites accounting history. The foreign key is for linking; the string
 is the record.
 
+### `super_admins` — additive change
+
+The table exists with `id, uuid, name, email, password, timestamps`. The accounts
+page reads two fields it does not have:
+
+| Column | Type | Notes |
+|---|---|---|
+| `status` | string, default `active` | `active` \| `suspended` |
+| `last_login_at` | datetime nullable | stamped by `SuperAdminAuthController::login` |
+
+A suspended account is refused at login. `SuperAdminAuthController::login` also sets
+`last_login_at` on success, which is the only change to existing behaviour.
+
+**The existing `GET /superadmins` route stays as it is.** The tickets page uses it to
+populate the assignee dropdown and depends on its current shape, which
+`SuperAdminResource` renders as `{name, email, role}`. The accounts page needs
+`{id, uuid, name, email, status, lastLoginAt, createdAt}` — a different shape for a
+different consumer. Adding fields to the shared resource would change what the
+tickets dropdown receives, so accounts gets its own `SuperAdminAccountResource` and
+the two endpoints stay independent.
+
 ## Derived `late` status
 
 `late` is never stored. `CentreInvoiceResource` reports it when an invoice is
@@ -133,6 +161,14 @@ All routes join the existing `auth:sanctum` + `superadmin` group in
 | POST | `/invoices` | create; number generated server-side |
 | POST | `/invoices/{id}/mark-paid` | sets `status=paid`, `paid_at=now()` |
 | DELETE | `/invoices/{id}` | soft delete |
+| GET | `/accounts` | list superadmin accounts |
+| POST | `/accounts` | create; password required |
+| PUT | `/accounts/{id}` | update; password optional, only rehashed when sent |
+| POST | `/accounts/{id}/toggle-status` | flips `active` ↔ `suspended` |
+| DELETE | `/accounts/{id}` | delete |
+
+An account cannot suspend or delete itself — both are refused with 422 rather than
+letting the last reachable superadmin lock everyone out.
 
 Responses use the existing `ApiResponse` trait envelope (`{success, data}`).
 
@@ -183,6 +219,13 @@ Unit-level coverage for the two pieces of real logic:
 2. **Derived status** — a `pending` invoice due yesterday serializes as `late`; one
    due today or tomorrow stays `pending`; a `paid` invoice past its due date stays
    `paid`.
+3. **Account self-protection** — an account cannot suspend or delete itself.
+4. **Suspended login** — a suspended account is refused, and a successful login
+   stamps `last_login_at`.
+5. **Centre deletion is blocked** while invoices reference it.
+6. **The tickets assignee dropdown still works** — `GET /superadmins` keeps its
+   existing `{name, email, role}` shape after accounts ships. This is the one place
+   the new work could silently break something that currently functions.
 
 Requires a new `SuperAdminFactory` (the model uses `HasFactory` but no factory
 exists).
