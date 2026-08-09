@@ -59,6 +59,17 @@ class InvoiceNumberGeneratorTest extends TestCase
         $this->assertSame('FAC-2026-0002', $this->generator()->nextFor('2026-05-01'));
     }
 
+    public function test_the_sequence_survives_the_four_digit_rollover(): void
+    {
+        $this->invoiceNumbered('FAC-2026-9999', '2026-06-01');
+
+        // String ordering would put 9999 above 10000 and reissue it.
+        $this->assertSame('FAC-2026-10000', $this->generator()->nextFor('2026-06-02'));
+
+        $this->invoiceNumbered('FAC-2026-10000', '2026-06-02');
+        $this->assertSame('FAC-2026-10001', $this->generator()->nextFor('2026-06-03'));
+    }
+
     public function test_the_factory_persists_a_valid_invoice(): void
     {
         $invoice = CentreInvoice::factory()->create();

@@ -22,7 +22,7 @@ class InvoiceNumberGenerator
             $last = CentreInvoice::withTrashed()
                 ->where('invoice_number', 'like', $prefix.'%')
                 ->lockForUpdate()
-                ->orderByDesc('invoice_number')
+                ->orderByRaw('LENGTH(invoice_number) DESC, invoice_number DESC')
                 ->value('invoice_number');
 
             $next = $last === null
