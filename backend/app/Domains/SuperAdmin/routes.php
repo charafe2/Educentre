@@ -2,6 +2,7 @@
 
 use App\Domains\SuperAdmin\Controllers\AcademicLevelController;
 use App\Domains\SuperAdmin\Controllers\CentreController;
+use App\Domains\SuperAdmin\Controllers\PackagePlanController;
 use App\Domains\SuperAdmin\Controllers\SubjectController;
 use App\Domains\SuperAdmin\Controllers\SupportTicketController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAuthController;
@@ -63,6 +64,14 @@ Route::prefix('superadmin')->group(function () {
             Route::get('/{centreId}/academic-levels', [CentreController::class, 'academicLevels']);
             Route::put('/{centreId}/academic-levels', [CentreController::class, 'syncAcademicLevels']);
             Route::patch('/{centreId}/max-users', [CentreController::class, 'updateMaxUsers']);
+        });
+
+        // Packages
+        Route::prefix('packages')->group(function () {
+            Route::get('/', [PackagePlanController::class, 'index']);
+            Route::post('/', [PackagePlanController::class, 'store']);
+            Route::put('/{id}', [PackagePlanController::class, 'update']);
+            Route::delete('/{id}', [PackagePlanController::class, 'destroy']);
         });
     });
 });
