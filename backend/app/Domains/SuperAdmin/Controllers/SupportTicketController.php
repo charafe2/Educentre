@@ -83,7 +83,9 @@ class SupportTicketController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $message
+            // Loaded so the sender's name is on the message the console appends,
+            // matching what the initial thread fetch returns.
+            'data' => $message->load('sender')
         ]);
     }
 

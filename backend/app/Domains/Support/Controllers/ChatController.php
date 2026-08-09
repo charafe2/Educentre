@@ -64,7 +64,9 @@ class ChatController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $message
+            // Loaded so the appended message carries a sender name, matching
+            // what the initial thread fetch returns.
+            'data' => $message->load('sender')
         ]);
     }
 

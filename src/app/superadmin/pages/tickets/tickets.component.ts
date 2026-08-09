@@ -68,6 +68,19 @@ export class TicketsComponent implements OnInit, AfterViewChecked {
     return msg.sender_type?.includes('SuperAdmin');
   }
 
+  /**
+   * Name shown under a message. Realtime and just-sent messages can arrive
+   * without the sender relation, so fall back to the ticket's own client rather
+   * than the generic label the thread used to degrade to.
+   */
+  senderName(msg: any): string {
+    if (this.isMe(msg)) return 'Vous';
+
+    return msg.sender?.name
+      || this.ticketService.activeTicket()?.user?.name
+      || 'Client';
+  }
+
   sendMessage(event: Event) {
     event.preventDefault();
     const active = this.ticketService.activeTicket();

@@ -49,6 +49,17 @@ export class ChatWidgetComponent {
     return msg.sender_type?.includes('User');
   }
 
+  /**
+   * Name shown under a message. Messages appended in realtime may arrive
+   * without the sender relation, so fall back to a role label rather than
+   * showing nothing.
+   */
+  senderName(msg: any): string {
+    if (this.isMe(msg)) return 'Vous';
+
+    return msg.sender?.name || 'Support';
+  }
+
   initConversation() {
     this.chatService.loadConversations().subscribe(res => {
       if (res.success && res.data.length > 0) {

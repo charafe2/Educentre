@@ -59,11 +59,16 @@
 
         <div
           *ngFor="let msg of chatService.messages()"
-          class="cw-msg"
-          [ngClass]="isMe(msg) ? 'cw-msg-me' : 'cw-msg-them'"
+          class="cw-row"
+          [ngClass]="isMe(msg) ? 'cw-row-me' : 'cw-row-them'"
         >
-          {{ msg.content }}
-          <div class="cw-msg-time">{{ msg.created_at | date:'shortTime' }}</div>
+          <div class="cw-msg" [ngClass]="isMe(msg) ? 'cw-msg-me' : 'cw-msg-them'">
+            {{ msg.content }}
+          </div>
+          <div class="cw-msg-meta">
+            <span class="cw-msg-author">{{ senderName(msg) }}</span>
+            <span class="cw-msg-time">{{ msg.created_at | date:'shortTime' }}</span>
+          </div>
         </div>
       </div>
 

@@ -235,8 +235,23 @@
   font-size: 0.82rem;
   max-width: 220px;
 }
-.cw-msg {
+/* The row owns the side; the bubble inside it owns the colour. Keeping those
+   separate is what lets the caption sit under the bubble and stay aligned. */
+.cw-row {
+  display: flex;
+  flex-direction: column;
   max-width: 82%;
+}
+.cw-row-them {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+.cw-row-me {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.cw-msg {
   padding: 10px 14px;
   border-radius: 14px;
   font-size: 0.85rem;
@@ -244,25 +259,33 @@
   box-shadow: var(--shadow-sm);
 }
 .cw-msg-them {
-  align-self: flex-start;
   background: var(--cw-surface);
   border: 1px solid var(--cw-line);
   border-bottom-left-radius: 4px;
   color: var(--cw-text);
 }
 .cw-msg-me {
-  align-self: flex-end;
   background: linear-gradient(135deg, var(--cw-gradient-start), var(--cw-gradient-end));
   border-bottom-right-radius: 4px;
   color: #fff;
 }
-.cw-msg-time {
+
+.cw-msg-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   margin-top: 4px;
+  padding: 0 4px;
   font-size: 0.64rem;
   font-weight: 600;
-  opacity: 0.6;
-  text-align: right;
+  /* Sits on the canvas now, not inside the bubble, so it needs its own colour
+     rather than inheriting the bubble's white. */
+  color: var(--cw-muted);
 }
+.cw-row-me .cw-msg-meta { flex-direction: row-reverse; }
+
+.cw-msg-author { color: var(--cw-text); }
+.cw-msg-time { opacity: 0.75; }
 
 /* ── Composer ── */
 .cw-composer {

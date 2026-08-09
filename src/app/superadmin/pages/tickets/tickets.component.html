@@ -159,12 +159,12 @@
                 {{ getInitials(isMe(msg) ? 'Support' : (msg.sender?.name || 'Client')) }}
               </div>
               <div class="tk-msg-main">
-                <div class="tk-msg-head">
-                  <span class="tk-msg-author">{{ isMe(msg) ? 'Vous' : (msg.sender?.name || 'Client') }}</span>
-                  <span class="tk-msg-timestamp">{{ relativeTime(msg.created_at) }}</span>
-                </div>
                 <div class="tk-msg-bubble">
                   <p class="tk-msg-text">{{ msg.content }}</p>
+                </div>
+                <div class="tk-msg-meta">
+                  <span class="tk-msg-author">{{ senderName(msg) }}</span>
+                  <span class="tk-msg-timestamp">{{ relativeTime(msg.created_at) }}</span>
                 </div>
               </div>
             </article>

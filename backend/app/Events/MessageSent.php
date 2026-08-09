@@ -37,6 +37,12 @@ class MessageSent implements ShouldBroadcast
             'conversation_id' => $this->message->conversation->uuid,
             'sender_id' => $this->message->sender->uuid ?? $this->message->sender_id,
             'sender_type' => $this->message->sender_type,
+            // Without this the receiving client has no name to show and falls
+            // back to a generic label on every realtime message.
+            'sender' => [
+                'uuid' => $this->message->sender->uuid ?? null,
+                'name' => $this->message->sender->name ?? null,
+            ],
             'content' => $this->message->content,
             'is_read' => $this->message->is_read,
             'created_at' => $this->message->created_at->toIso8601String(),

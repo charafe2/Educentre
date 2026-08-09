@@ -562,14 +562,15 @@
 
 .tk-msg-main { min-width: 0; }
 
-.tk-msg-head {
+.tk-msg-meta {
   display: flex;
   align-items: baseline;
   gap: 9px;
-  margin-bottom: 5px;
+  margin-top: 5px;
 }
 
-.tk-msg-me .tk-msg-head { flex-direction: row-reverse; }
+/* Own messages sit on the right, so their caption reads from the right edge. */
+.tk-msg-me .tk-msg-meta { flex-direction: row-reverse; }
 
 .tk-msg-author {
   font-size: 12px;
