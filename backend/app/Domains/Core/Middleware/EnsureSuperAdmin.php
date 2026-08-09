@@ -16,11 +16,24 @@ class EnsureSuperAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() instanceof SuperAdmin) {
+        $user = $request->user();
+
+        if (!$user instanceof SuperAdmin) {
             return response()->json([
                 'success' => false,
                 'data' => null,
                 'message' => 'Accès réservé au super administrateur.',
+                'errors' => null,
+            ], 403);
+        }
+
+        // Tokens are revoked on suspension, but a request already in flight — or
+        // a token missed by a failed revoke — must not slip through.
+        if (!$user->is_active) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Ce compte est suspendu.',
                 'errors' => null,
             ], 403);
         }

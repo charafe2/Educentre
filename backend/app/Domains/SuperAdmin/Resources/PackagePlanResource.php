@@ -21,6 +21,9 @@ class PackagePlanResource extends JsonResource
             'supportLevel' => $this->support_level,
             'status' => $this->status,
             'features' => $this->features ?? [],
+            // Only present when the caller loaded the count. Tells the UI why a
+            // plan can't be deleted without a second round-trip.
+            'invoiceCount' => $this->whenCounted('invoices', fn () => (int) $this->invoices_count),
         ];
     }
 }

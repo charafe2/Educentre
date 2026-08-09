@@ -6,70 +6,107 @@ use App\Domains\Core\Models\PackagePlan;
 use App\Domains\SuperAdmin\Requests\StorePackagePlanRequest;
 use App\Domains\SuperAdmin\Requests\UpdatePackagePlanRequest;
 use App\Domains\SuperAdmin\Resources\PackagePlanResource;
+use App\Domains\SuperAdmin\Services\PackagePlanService;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PackagePlanController extends Controller
 {
     use ApiResponse;
 
-    public function index(): JsonResponse
-    {
-        $plans = PackagePlan::orderBy('monthly_price')->get();
+    public function __construct(private readonly PackagePlanService $plans) {}
 
-        return $this->success(
-            data: PackagePlanResource::collection($plans),
-            // JSON_PRESERVE_ZERO_FRACTION keeps whole-number monthlyPrice
-            // values (e.g. 199.0) encoded as floats, not ints, on the wire
-            // — the frontend does arithmetic on this field.
-            options: JSON_PRESERVE_ZERO_FRACTION,
+    public function index(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'status' => ['nullable', Rule::in(PackagePlan::STATUSES)],
+            'search' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        return $this->respond(
+            PackagePlanResource::collection($this->plans->list($filters))
         );
+    }
+
+    public function show(int $id): JsonResponse
+    {
+        return $this->respond(PackagePlanResource::make($this->plans->find($id)));
     }
 
     public function store(StorePackagePlanRequest $request): JsonResponse
     {
-        $plan = PackagePlan::create($this->attributes($request->validated()));
-
-        return $this->success(
-            data: PackagePlanResource::make($plan),
+        return $this->respond(
+            PackagePlanResource::make($this->plans->create($request->validated())),
             message: 'Package créé.',
             code: 201,
-            options: JSON_PRESERVE_ZERO_FRACTION,
         );
     }
 
     public function update(UpdatePackagePlanRequest $request, int $id): JsonResponse
     {
         $plan = PackagePlan::findOrFail($id);
-        $plan->update($this->attributes($request->validated()));
 
-        return $this->success(
-            data: PackagePlanResource::make($plan->fresh()),
+        return $this->respond(
+            PackagePlanResource::make($this->plans->update($plan, $request->validated())),
             message: 'Package mis à jour.',
-            options: JSON_PRESERVE_ZERO_FRACTION,
+        );
+    }
+
+    public function duplicate(int $id): JsonResponse
+    {
+        $plan = PackagePlan::findOrFail($id);
+
+        return $this->respond(
+            PackagePlanResource::make($this->plans->duplicate($plan)),
+            message: 'Package dupliqué.',
+            code: 201,
+        );
+    }
+
+    public function archive(int $id): JsonResponse
+    {
+        $plan = PackagePlan::findOrFail($id);
+
+        return $this->respond(
+            PackagePlanResource::make($this->plans->archive($plan)),
+            message: 'Package archivé.',
         );
     }
 
     public function destroy(int $id): JsonResponse
     {
-        PackagePlan::findOrFail($id)->delete();
+        $plan = PackagePlan::findOrFail($id);
+
+        // A billed plan is referenced by accounting history. Archiving hides it
+        // from new sales without breaking the trail; deleting would not.
+        if ($plan->isInUse()) {
+            return $this->error(
+                'Ce package a déjà été facturé et ne peut pas être supprimé. Archivez-le à la place.',
+                null,
+                422,
+            );
+        }
+
+        $this->plans->delete($plan);
 
         return $this->success(message: 'Package supprimé.');
     }
 
-    /** Maps the camelCase payload onto snake_case columns. */
-    private function attributes(array $validated): array
+    /**
+     * JSON_PRESERVE_ZERO_FRACTION keeps whole-number monthlyPrice values
+     * (e.g. 199.0) encoded as floats, not ints, on the wire — the frontend
+     * does arithmetic on this field.
+     */
+    private function respond(mixed $data, string $message = '', int $code = 200): JsonResponse
     {
-        return [
-            'name' => $validated['name'],
-            'monthly_price' => $validated['monthlyPrice'],
-            'users_limit' => $validated['usersLimit'],
-            'students_limit' => $validated['studentsLimit'],
-            'storage_gb' => $validated['storageGb'],
-            'support_level' => $validated['supportLevel'],
-            'status' => $validated['status'],
-            'features' => $validated['features'] ?? [],
-        ];
+        return $this->success(
+            data: $data,
+            message: $message,
+            code: $code,
+            options: JSON_PRESERVE_ZERO_FRACTION,
+        );
     }
 }

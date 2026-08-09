@@ -3,6 +3,7 @@
 namespace App\Domains\Core\Models;
 
 use Database\Factories\CentreInvoiceFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +13,18 @@ use Illuminate\Support\Str;
 class CentreInvoice extends Model
 {
     use HasFactory, SoftDeletes;
+
+    /** Statuses that can be stored. "late" is never stored — see displayStatus(). */
+    public const STATUS_PENDING = 'pending';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STORED_STATUSES = [self::STATUS_PENDING, self::STATUS_PAID, self::STATUS_CANCELLED];
+
+    /** Derived only: a pending invoice whose due date has passed. */
+    public const STATUS_LATE = 'late';
 
     protected $fillable = [
         'uuid', 'invoice_number', 'centre_id', 'package_plan_id', 'package_name',
@@ -47,9 +60,33 @@ class CentreInvoice extends Model
     /** True when this invoice is unpaid and its due date has already passed. */
     public function isLate(): bool
     {
-        return $this->status === 'pending'
+        return $this->status === self::STATUS_PENDING
             && $this->due_date !== null
             && $this->due_date->lt(today());
+    }
+
+    /**
+     * The status callers see. "late" is computed from the due date rather than
+     * stored, so it can never drift out of sync with the calendar.
+     */
+    public function displayStatus(): string
+    {
+        return $this->isLate() ? self::STATUS_LATE : $this->status;
+    }
+
+    /**
+     * Filters on the *display* status, so "late" resolves to the same rows the
+     * API reports as late instead of matching a column value that never exists.
+     */
+    public function scopeWithDisplayStatus(Builder $query, string $status): Builder
+    {
+        return match ($status) {
+            self::STATUS_LATE => $query->where('status', self::STATUS_PENDING)
+                ->whereDate('due_date', '<', today()),
+            self::STATUS_PENDING => $query->where('status', self::STATUS_PENDING)
+                ->whereDate('due_date', '>=', today()),
+            default => $query->where('status', $status),
+        };
     }
 
     // Model lives outside App\Models, so Laravel's default factory-name

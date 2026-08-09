@@ -56,9 +56,14 @@ class SuperAdminAuthController extends Controller
         return $this->success(data: SuperAdminResource::make($request->user()));
     }
 
+    /**
+     * Assignable operators, used by the tickets page. Suspended accounts are
+     * excluded — a ticket must not be handed to someone who can't sign in.
+     */
     public function index(): JsonResponse
     {
-        $superadmins = \App\Models\SuperAdmin::all();
+        $superadmins = \App\Models\SuperAdmin::active()->orderBy('name')->get();
+
         return $this->success(data: SuperAdminResource::collection($superadmins));
     }
 }

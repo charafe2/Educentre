@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class SuperAdminAuthService
 {
+    public function __construct(private readonly SuperAdminAccountService $accounts) {}
+
     public function login(SuperAdminLoginDTO $dto, string $throttleKey): array
     {
         $superAdmin = SuperAdmin::where('email', $dto->email)->first();
@@ -20,9 +22,18 @@ class SuperAdminAuthService
             throw new AuthenticationException('Email ou mot de passe incorrect.');
         }
 
+        // Checked after the password so a suspended account is indistinguishable
+        // from a wrong password to anyone who doesn't already know the credentials.
+        if (! $superAdmin->is_active) {
+            RateLimiter::hit($throttleKey);
+            throw new AuthenticationException('Ce compte est suspendu.');
+        }
+
         RateLimiter::clear($throttleKey);
 
         $token = $superAdmin->createToken('superadmin-auth-token', ['*'], now()->addDays(7))->plainTextToken;
+
+        $this->accounts->recordLogin($superAdmin);
 
         SuperAdminLoggedIn::dispatch($superAdmin);
 

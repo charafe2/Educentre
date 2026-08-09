@@ -2,8 +2,10 @@
 
 use App\Domains\SuperAdmin\Controllers\AcademicLevelController;
 use App\Domains\SuperAdmin\Controllers\CentreController;
+use App\Domains\SuperAdmin\Controllers\CentreInvoiceController;
 use App\Domains\SuperAdmin\Controllers\PackagePlanController;
 use App\Domains\SuperAdmin\Controllers\SubjectController;
+use App\Domains\SuperAdmin\Controllers\SuperAdminAccountController;
 use App\Domains\SuperAdmin\Controllers\SupportTicketController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAuthController;
 use Illuminate\Support\Facades\Route;
@@ -24,8 +26,18 @@ Route::prefix('superadmin')->group(function () {
             Route::get('me', [SuperAdminAuthController::class, 'me']);
         });
 
-        // Superadmins
+        // Assignable operators (tickets page)
         Route::get('superadmins', [SuperAdminAuthController::class, 'index']);
+
+        // Superadmin account management
+        Route::prefix('accounts')->group(function () {
+            Route::get('/', [SuperAdminAccountController::class, 'index']);
+            Route::post('/', [SuperAdminAccountController::class, 'store']);
+            Route::get('/{id}', [SuperAdminAccountController::class, 'show']);
+            Route::put('/{id}', [SuperAdminAccountController::class, 'update']);
+            Route::post('/{id}/toggle-status', [SuperAdminAccountController::class, 'toggleStatus']);
+            Route::delete('/{id}', [SuperAdminAccountController::class, 'destroy']);
+        });
 
         // Tickets
         Route::prefix('tickets')->group(function () {
@@ -70,8 +82,22 @@ Route::prefix('superadmin')->group(function () {
         Route::prefix('packages')->group(function () {
             Route::get('/', [PackagePlanController::class, 'index']);
             Route::post('/', [PackagePlanController::class, 'store']);
+            Route::get('/{id}', [PackagePlanController::class, 'show']);
             Route::put('/{id}', [PackagePlanController::class, 'update']);
+            Route::post('/{id}/duplicate', [PackagePlanController::class, 'duplicate']);
+            Route::post('/{id}/archive', [PackagePlanController::class, 'archive']);
             Route::delete('/{id}', [PackagePlanController::class, 'destroy']);
+        });
+
+        // Centre invoices
+        Route::prefix('invoices')->group(function () {
+            Route::get('/', [CentreInvoiceController::class, 'index']);
+            Route::post('/', [CentreInvoiceController::class, 'store']);
+            Route::get('/{id}', [CentreInvoiceController::class, 'show']);
+            Route::post('/{id}/mark-paid', [CentreInvoiceController::class, 'markPaid']);
+            Route::post('/{id}/mark-unpaid', [CentreInvoiceController::class, 'markUnpaid']);
+            Route::post('/{id}/cancel', [CentreInvoiceController::class, 'cancel']);
+            Route::delete('/{id}', [CentreInvoiceController::class, 'destroy']);
         });
     });
 });

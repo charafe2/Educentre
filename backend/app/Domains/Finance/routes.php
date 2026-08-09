@@ -10,3 +10,6 @@ Route::middleware('staff')->prefix('payments')->group(function () {
     Route::post('/{id}/mark-paid', [PaymentController::class, 'markAsPaid']);
     Route::delete('/{id}', [PaymentController::class, 'destroy']);
 });
+
+// Webhook endpoint (must be public to receive events from Stripe)
+Route::post('/webhooks/stripe', [\App\Domains\Finance\Controllers\StripeWebhookController::class, 'handle']);

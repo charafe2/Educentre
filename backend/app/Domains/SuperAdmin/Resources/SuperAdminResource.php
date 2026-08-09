@@ -10,6 +10,10 @@ class SuperAdminResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            // The tickets page binds assignment options to `id`; without it the
+            // assignee dropdown submits undefined.
+            'id' => $this->id,
+            'uuid' => $this->uuid,
             'name' => $this->name,
             'email' => $this->email,
             'role' => 'superadmin',
