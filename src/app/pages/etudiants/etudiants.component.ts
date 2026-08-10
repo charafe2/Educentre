@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { forkJoin, of, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -29,7 +30,16 @@ export class EtudiantsComponent {
   private academicLevelsService = inject(AcademicLevelsService);
   private toast = inject(ToastService);
   private i18n = inject(TranslationService);
+  private route = inject(ActivatedRoute);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
+
+  constructor() {
+    this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(params => {
+      if (params['action'] === 'add') {
+        this.openAdd();
+      }
+    });
+  }
 
   searchTerm = signal('');
   selectedLevel = signal('');
@@ -81,7 +91,6 @@ export class EtudiantsComponent {
   formData = {
     firstName: '',
     lastName: '',
-    birthDate: '',
     school: '',
     level: '',
     status: 'active' as 'active' | 'inactive',
@@ -115,7 +124,7 @@ export class EtudiantsComponent {
 
   openAdd(): void {
     this.formData = {
-      firstName: '', lastName: '', birthDate: '', school: '',
+      firstName: '', lastName: '', school: '',
       level: '', status: 'active',
       parentName: '', parentPhone: '', parentWhatsapp: '',
     };
@@ -136,7 +145,6 @@ export class EtudiantsComponent {
     this.formData = {
       firstName: s.firstName,
       lastName: s.lastName,
-      birthDate: s.birthDate,
       school: s.school,
       level: s.level,
       status: s.status,

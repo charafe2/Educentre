@@ -222,15 +222,9 @@
           <input class="form-input" type="text" [(ngModel)]="formData.lastName" [placeholder]="'students.lastNamePlaceholder' | t" />
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">{{ 'students.birthDate' | t }}</label>
-          <input class="form-input" type="date" [(ngModel)]="formData.birthDate" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">{{ 'students.school' | t }}</label>
-          <input class="form-input" type="text" [(ngModel)]="formData.school" [placeholder]="'students.schoolPlaceholder' | t" />
-        </div>
+      <div class="form-group">
+        <label class="form-label">{{ 'students.school' | t }}</label>
+        <input class="form-input" type="text" [(ngModel)]="formData.school" [placeholder]="'students.schoolPlaceholder' | t" />
       </div>
       <div class="form-row">
         <div class="form-group">

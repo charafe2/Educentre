@@ -4,7 +4,7 @@
       <h1>{{ 'dashboard.title' | t }}</h1>
       <p>{{ 'dashboard.subtitle' | t }}</p>
     </div>
-    <button class="btn-primary">
+    <button class="btn-primary" [routerLink]="['/etudiants']" [queryParams]="{ action: 'add' }">
       <i class="fa-solid fa-plus"></i>
       {{ 'dashboard.newEnrollment' | t }}
     </button>
