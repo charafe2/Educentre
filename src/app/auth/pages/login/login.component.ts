@@ -40,9 +40,4 @@ export class LoginComponent {
       this.loading.set(false);
     }
   }
-
-  fillDemo() {
-    this.email = 'admin@moujtahid.ma';
-    this.password = 'admin123456789';
-  }
 }
