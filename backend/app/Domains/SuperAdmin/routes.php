@@ -6,6 +6,7 @@ use App\Domains\SuperAdmin\Controllers\CentreInvoiceController;
 use App\Domains\SuperAdmin\Controllers\PackagePlanController;
 use App\Domains\SuperAdmin\Controllers\SubjectController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAccountController;
+use App\Domains\SuperAdmin\Controllers\SuperAdminOverviewController;
 use App\Domains\SuperAdmin\Controllers\SupportTicketController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAuthController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::prefix('superadmin')->group(function () {
             Route::post('logout', [SuperAdminAuthController::class, 'logout']);
             Route::get('me', [SuperAdminAuthController::class, 'me']);
         });
+
+        // Console landing page (payments overview)
+        Route::get('overview', SuperAdminOverviewController::class);
 
         // Assignable operators (tickets page)
         Route::get('superadmins', [SuperAdminAuthController::class, 'index']);
