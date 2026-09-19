@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ApiResponse } from '../models/api-response.model';
+import { ApiResponse, PaginatedApiResponse } from '../models/api-response.model';
 
 export interface SuperAdminInvoice {
   id: string;
@@ -138,6 +138,28 @@ export interface SaveSubjectPayload {
   status: Subject['status'];
   color?: string;
   bgColor?: string;
+}
+
+export interface AuditLogEntry {
+  id: number;
+  centreId: number | null;
+  centreName: string;
+  module: string;
+  action: string;
+  description: string;
+  actorName: string;
+  createdAt: string;
+}
+
+export interface AuditLogFilters {
+  centreId?: number;
+  module?: string;
+  action?: string;
+  from?: string;
+  to?: string;
+  search?: string;
+  page?: number;
+  perPage?: number;
 }
 
 export interface AcademicLevel {
@@ -302,6 +324,22 @@ export class SuperadminApiService {
     return this.data(
       this.http.put<ApiResponse<{ levelIds: number[] }>>(`${this.baseUrl}/centres/${centreId}/academic-levels`, { levelIds })
     ).then(res => res.levelIds);
+  }
+
+  getAuditLogs(filters: AuditLogFilters = {}): Promise<PaginatedApiResponse<AuditLogEntry>> {
+    const params: Record<string, string> = {};
+    if (filters.centreId) params['centreId'] = String(filters.centreId);
+    if (filters.module) params['module'] = filters.module;
+    if (filters.action) params['action'] = filters.action;
+    if (filters.from) params['from'] = filters.from;
+    if (filters.to) params['to'] = filters.to;
+    if (filters.search) params['search'] = filters.search;
+    if (filters.page) params['page'] = String(filters.page);
+    if (filters.perPage) params['per_page'] = String(filters.perPage);
+
+    return firstValueFrom(
+      this.http.get<PaginatedApiResponse<AuditLogEntry>>(`${this.baseUrl}/audit-logs`, { params })
+    );
   }
 
   private async data<T>(request: Observable<ApiResponse<T>>): Promise<T> {

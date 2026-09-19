@@ -1,6 +1,7 @@
 <?php
 
 use App\Domains\SuperAdmin\Controllers\AcademicLevelController;
+use App\Domains\SuperAdmin\Controllers\AuditLogController;
 use App\Domains\SuperAdmin\Controllers\CentreController;
 use App\Domains\SuperAdmin\Controllers\CentreInvoiceController;
 use App\Domains\SuperAdmin\Controllers\PackagePlanController;
@@ -32,6 +33,9 @@ Route::prefix('superadmin')->group(function () {
 
         // Assignable operators (tickets page)
         Route::get('superadmins', [SuperAdminAuthController::class, 'index']);
+
+        // Audit log (per-school user activity monitoring)
+        Route::get('audit-logs', [AuditLogController::class, 'index']);
 
         // Superadmin account management
         Route::prefix('accounts')->group(function () {

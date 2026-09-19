@@ -11,11 +11,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+use App\Domains\Core\Traits\Auditable;
 use App\Domains\Core\Traits\BelongsToTenant;
 
 class Payment extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes, Auditable;
+
+    protected static string $auditModule = 'Paiements';
 
     protected static function booted(): void
     {
@@ -60,5 +63,13 @@ class Payment extends Model
     public function courseClass(): BelongsTo
     {
         return $this->belongsTo(CourseClass::class, 'class_id');
+    }
+
+    public function auditLabel(): string
+    {
+        $student = $this->student;
+        $studentName = $student ? "{$student->first_name} {$student->last_name}" : 'Élève supprimé';
+
+        return "Paiement de {$studentName} — {$this->amount} MAD";
     }
 }

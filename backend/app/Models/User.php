@@ -12,12 +12,25 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Domains\Core\Traits\Auditable;
 use App\Domains\Core\Traits\BelongsToTenant;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant;
+    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant, Auditable;
+
+    /**
+     * Module label under which this model's CRUD is audited.
+     */
+    protected static string $auditModule = 'Utilisateurs';
+
+    /**
+     * `last_login_at` is touched by Eloquent on every login (see
+     * AuthService::login) — on its own it must not count as an audited
+     * "modification" of the user record.
+     */
+    protected static array $auditIgnore = ['last_login_at'];
 
     protected static function booted(): void
     {
@@ -65,5 +78,10 @@ class User extends Authenticatable
     public function centre(): HasOne
     {
         return $this->hasOne(Centre::class, 'tenant_id', 'tenant_id');
+    }
+
+    public function auditLabel(): string
+    {
+        return "{$this->name} ({$this->role})";
     }
 }

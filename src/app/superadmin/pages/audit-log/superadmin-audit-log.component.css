@@ -1,0 +1,43 @@
+/* Journal d'audit — everything structural comes from the console system
+   (superadmin-theme.css); only the filter row layout and pagination bar
+   are specific to this page. */
+
+.audit-toolbar {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.audit-toolbar .sa-search {
+  flex: 1 1 240px;
+}
+
+.audit-toolbar select.sa-input,
+.audit-toolbar input[type='date'].sa-input {
+  width: auto;
+  min-height: 36px;
+}
+
+.loading-row td { padding: 15px 16px; }
+.loading-row .sa-skeleton { display: block; height: 13px; }
+.loading-row td::before { display: none; }
+
+.audit-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-top: 1px solid var(--sa-line);
+}
+
+.audit-pagination-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+@media (max-width: 720px) {
+  .audit-toolbar select.sa-input,
+  .audit-toolbar input[type='date'].sa-input {
+    width: 100%;
+  }
+}

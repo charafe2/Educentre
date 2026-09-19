@@ -2,6 +2,7 @@
 
 namespace App\Domains\Teachers\Models;
 
+use App\Domains\Core\Traits\Auditable;
 use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Planning\Models\CourseClass;
 use App\Models\User;
@@ -14,7 +15,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Teacher extends Model
 {
-    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes, Auditable;
+
+    protected static string $auditModule = 'Professeurs';
 
     protected $fillable = [
         'tenant_id',
@@ -43,5 +46,12 @@ class Teacher extends Model
     public function classes(): HasMany
     {
         return $this->hasMany(CourseClass::class, 'teacher_id');
+    }
+
+    public function auditLabel(): string
+    {
+        $name = $this->user?->name ?? 'professeur supprimé';
+
+        return "{$name}" . ($this->specialty ? " ({$this->specialty})" : '');
     }
 }

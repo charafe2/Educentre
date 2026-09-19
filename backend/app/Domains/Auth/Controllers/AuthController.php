@@ -3,6 +3,7 @@
 namespace App\Domains\Auth\Controllers;
 
 use App\Domains\Auth\DTOs\LoginDTO;
+use App\Domains\Auth\Events\UserLoggedOut;
 use App\Domains\Auth\Requests\ChangePasswordRequest;
 use App\Domains\Auth\Requests\LoginRequest;
 use App\Domains\Auth\Resources\UserResource;
@@ -188,7 +189,10 @@ class AuthController extends Controller
     )]
     public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $user = $request->user();
+        $user->currentAccessToken()->delete();
+
+        UserLoggedOut::dispatch($user);
 
         return $this->success(
             message: 'Déconnexion réussie.'
