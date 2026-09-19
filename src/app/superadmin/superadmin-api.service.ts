@@ -42,7 +42,7 @@ export interface ClientAccount {
   ownerName: string;
   email: string;
   phone: string;
-  plan: 'Basique' | 'Pro' | 'Enterprise';
+  plan: 'Débutant' | 'Pro' | 'Sur devis';
   status: 'active' | 'suspended' | 'trial';
   createdAt: string;
   studentsCount: number;

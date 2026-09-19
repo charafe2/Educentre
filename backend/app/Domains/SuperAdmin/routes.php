@@ -75,6 +75,10 @@ Route::prefix('superadmin')->group(function () {
         // Centres
         Route::prefix('centres')->group(function () {
             Route::get('/', [CentreController::class, 'index']);
+            Route::post('/', [CentreController::class, 'store']);
+            Route::put('/{id}', [CentreController::class, 'update']);
+            Route::delete('/{id}', [CentreController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [CentreController::class, 'toggleStatus']);
             Route::get('/{centreId}/subjects', [CentreController::class, 'subjects']);
             Route::put('/{centreId}/subjects', [CentreController::class, 'syncSubjects']);
             Route::get('/{centreId}/academic-levels', [CentreController::class, 'academicLevels']);

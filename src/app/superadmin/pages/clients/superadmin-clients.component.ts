@@ -59,7 +59,7 @@ export class SuperadminClientsComponent implements OnInit {
   saving = signal(false);
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique', 'Musique', 'Sport'];
-  plans: ClientAccount['plan'][] = ['Basique', 'Pro', 'Enterprise'];
+  plans: ClientAccount['plan'][] = ['Débutant', 'Pro', 'Sur devis'];
 
   // Subjects assignment (independent of the centre-details form/save above)
   allActiveSubjects = signal<Subject[]>([]);
