@@ -2,20 +2,19 @@
 
 namespace App\Domains\Teachers\Models;
 
-use App\Models\Tenant;
-use App\Models\User;
+use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Planning\Models\CourseClass;
+use App\Models\User;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class Teacher extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -35,8 +34,6 @@ class Teacher extends Model
         'fixed_monthly_salary' => 'decimal:2',
         'rate_per_student' => 'decimal:2',
     ];
-
-    
 
     public function user(): BelongsTo
     {

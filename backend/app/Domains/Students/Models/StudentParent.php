@@ -2,14 +2,13 @@
 
 namespace App\Domains\Students\Models;
 
-use App\Models\Tenant;
+use App\Domains\Core\Traits\BelongsToTenant;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
-
-use App\Domains\Core\Traits\BelongsToTenant;
 
 /**
  * Authenticatable in its own right (mirrors App\Models\SuperAdmin) — a
@@ -18,7 +17,7 @@ use App\Domains\Core\Traits\BelongsToTenant;
  */
 class StudentParent extends Authenticatable
 {
-    use BelongsToTenant, HasApiTokens, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasApiTokens, HasFactory, HasUuid, SoftDeletes;
 
     protected $table = 'parents';
 
@@ -45,8 +44,6 @@ class StudentParent extends Authenticatable
         'is_primary' => 'boolean',
         'password' => 'hashed',
     ];
-
-
 
     public function student(): BelongsTo
     {

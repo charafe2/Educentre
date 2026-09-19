@@ -4,6 +4,7 @@ namespace App\Domains\Notifications\Models;
 
 use App\Domains\Core\Traits\BelongsToTenant;
 use App\Models\User;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Notification extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
