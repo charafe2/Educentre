@@ -3,7 +3,6 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
 }
 
 .panel-header {
@@ -28,7 +27,7 @@
   font-weight: 600;
   cursor: pointer;
   padding: 0.4rem 0.8rem;
-  border-radius: 5px;
+  border-radius: 3px;
   transition: all 0.2s;
 }
 
@@ -96,14 +95,13 @@ tr:last-child td {
   opacity: 0.72;
   background: var(--surface);
   border: 1px solid var(--border-dark);
-  border-radius: 5px;
+  border-radius: 3px;
   padding: 0.25rem 0.75rem;
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-main);
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
+  transition: opacity 0.2s, background-color 0.2s;
 }
 
 .table-row:hover .row-action,
@@ -167,7 +165,7 @@ tr:last-child td {
   font-variant-numeric: tabular-nums;
   background: var(--bg-color);
   padding: 0.1rem 0.3rem;
-  border-radius: 4px;
+  border-radius: 3px;
   border: 1px solid var(--border-color);
   display: inline-block;
   width: fit-content;
@@ -178,7 +176,7 @@ tr:last-child td {
   align-items: center;
   gap: 0.4rem;
   padding: 0.3rem 0.7rem;
-  border-radius: 5px;
+  border-radius: 3px;
   font-size: 0.75rem;
   font-weight: 600;
   border: 1px solid transparent;

@@ -3,7 +3,7 @@
   <!-- Logo + toggle -->
   <div class="logo-row">
     <div class="logo">
-      <i class="fa-solid fa-graduation-cap"></i>
+      <img src="/logo.png" alt="Moujtahid" class="logo-mark" />
       <span class="logo-text">Moujtahid</span>
     </div>
     <button class="toggle-btn" type="button" (click)="toggle()" [title]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | t" [attr.aria-label]="(collapsed() ? 'nav.expandMenu' : 'nav.collapseMenu') | t">
@@ -40,7 +40,6 @@
               <i class="fa-regular fa-user"></i>
               <span class="nav-text">{{ 'nav.students' | t }}</span>
             </div>
-            <span class="shortcut">G E</span>
           </a>
         </li>
       }
@@ -81,7 +80,6 @@
               <i class="fa-regular fa-calendar"></i>
               <span class="nav-text">{{ 'nav.calendar' | t }}</span>
             </div>
-            <span class="shortcut">G C</span>
           </a>
         </li>
       }

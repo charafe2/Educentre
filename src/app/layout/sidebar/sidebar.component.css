@@ -11,6 +11,23 @@
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
+
+  /* Same local overrides as the dashboard page and topbar (sharper radii,
+     deeper palette) — shared chrome, reaches every authenticated page. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  --accent: #0b6a60;
+  --accent-light: #c7e6e0;
+  --accent-glow: rgba(11, 106, 96, 0.22);
+
+  --text-muted: #47536b;
+  --text-light: #7c8aa0;
+
+  --border-color: #dbe3e2;
+  --border-dark: #c3cfce;
 }
 
 .sidebar.collapsed {
@@ -39,9 +56,10 @@
   overflow: hidden;
 }
 
-.logo i {
-  font-size: 1.25rem;
-  color: var(--accent);
+.logo-mark {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
@@ -71,7 +89,6 @@
   color: var(--text-light);
   font-size: 0.65rem;
   transition: all 0.2s;
-  box-shadow: var(--shadow-sm);
 }
 
 .toggle-btn:hover {
@@ -144,9 +161,9 @@ nav { flex: 1; overflow-y: auto; }
 
 .nav-item.active {
   background-color: var(--accent-light);
-  color: #08766f;
+  color: color-mix(in srgb, var(--accent) 82%, black);
   font-weight: 600;
-  border-color: rgba(13, 148, 136, 0.14);
+  border-color: color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .nav-item i {
@@ -183,7 +200,7 @@ nav { flex: 1; overflow-y: auto; }
   color: var(--text-light);
   border: 1px solid var(--border-dark);
   padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  border-radius: 3px;
   font-family: monospace;
   background: var(--surface);
   flex-shrink: 0;

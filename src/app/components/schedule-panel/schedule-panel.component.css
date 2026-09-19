@@ -3,7 +3,6 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-color);
   padding: 1.5rem;
-  box-shadow: var(--shadow-sm);
 }
 
 .panel-header {
@@ -78,7 +77,7 @@
 /* Active item - highlighted row */
 .timeline-item.active {
   background-color: var(--accent-light);
-  border-color: rgba(13, 148, 136, 0.2);
+  border-color: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .timeline-item.active:hover {
@@ -225,8 +224,6 @@
 .quick-btn:hover {
   border-color: var(--border-dark);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
-  transform: translateY(-1px);
 }
 
 .quick-btn i {
