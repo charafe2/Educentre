@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('settings')->middleware('staff')->group(function () {
     Route::get('centre', [SettingsController::class, 'centre']);
     Route::put('centre', [SettingsController::class, 'updateCentre']);
+    Route::get('subscription', [SettingsController::class, 'subscription']);
     Route::post('support-request', [SettingsController::class, 'sendSupportRequest']);
 
     Route::get('users', [SettingsUsersController::class, 'index']);

@@ -2,7 +2,7 @@ import { Component, signal, inject, OnInit, computed, ViewChild, ElementRef, Aft
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { CentreService } from '../../services/centre.service';
+import { CentreService, SubscriptionInfo } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
@@ -52,6 +52,14 @@ const TICKET_STATUSES: Record<string, { labelKey: string; icon: string; tone: st
   open: { labelKey: 'settings.ticketOpen', icon: 'fa-solid fa-circle-dot', tone: 'open' },
   pending: { labelKey: 'settings.ticketPending', icon: 'fa-solid fa-clock', tone: 'pending' },
   closed: { labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', tone: 'closed' },
+};
+
+/** Subscription.status → label key and badge tone. */
+const SUBSCRIPTION_STATUSES: Record<string, { labelKey: string; tone: string }> = {
+  active: { labelKey: 'settings.active', tone: 'active' },
+  suspended: { labelKey: 'settings.subscriptionStatusSuspended', tone: 'warning' },
+  expired: { labelKey: 'settings.subscriptionStatusExpired', tone: 'danger' },
+  cancelled: { labelKey: 'settings.subscriptionStatusCancelled', tone: 'danger' },
 };
 
 @Component({
@@ -110,16 +118,31 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
   userFormError = signal('');
   savingUser = signal(false);
 
-  // `label` holds a translation key, resolved in the template via `| t`.
-  subscriptionFeatures = [
-    { label: 'settings.featureUnlimitedStudents', included: true },
-    { label: 'settings.featureUnlimitedTeachers', included: true },
-    { label: 'settings.featureAutoWhatsapp', included: true },
-    { label: 'settings.featureReportsAnalytics', included: true },
-    { label: 'settings.featureCloudBackup', included: true },
-    { label: 'settings.featurePrioritySupport', included: false },
-    { label: 'settings.featureCustomApi', included: false },
-  ];
+  // ── Subscription ──────────────────────────────────────────
+  subscription = this.centreService.subscription;
+  subscriptionLoading = this.centreService.subscriptionLoading;
+  subscriptionError = this.centreService.subscriptionError;
+  requestingUpgrade = signal(false);
+
+  subscriptionStatusMeta(status: SubscriptionInfo['status']) {
+    return SUBSCRIPTION_STATUSES[status] ?? { labelKey: 'settings.active', tone: 'active' };
+  }
+
+  async requestUpgrade(): Promise<void> {
+    this.requestingUpgrade.set(true);
+    try {
+      await this.centreService.sendSupportRequest(
+        this.t('settings.upgradeRequestSubject'),
+        this.t('settings.upgradeRequestMessage'),
+      );
+      this.toast.show(this.t('settings.toastUpgradeRequestSent'));
+      this.chatService.loadConversations().subscribe(); // so it shows up under Support too
+    } catch (err: unknown) {
+      this.toast.show(extractValidationError(err, this.t('settings.saveError')), 'error');
+    } finally {
+      this.requestingUpgrade.set(false);
+    }
+  }
 
   notifSettings = {
     paymentReminder: true,
@@ -135,6 +158,7 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
       this.usersService.load();
     }
     this.chatService.loadConversations().subscribe();
+    this.centreService.loadSubscription();
   }
 
   ngAfterViewChecked() {
