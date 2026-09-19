@@ -4,13 +4,21 @@ namespace App\Domains\Students\Models;
 
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class StudentParent extends Model
+use App\Domains\Core\Traits\BelongsToTenant;
+
+/**
+ * Authenticatable in its own right (mirrors App\Models\SuperAdmin) — a
+ * parent logs in with their own phone+password and gets their own Sanctum
+ * token, separate from the centre's staff `users` table.
+ */
+class StudentParent extends Authenticatable
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasApiTokens, HasFactory, SoftDeletes;
 
     protected $table = 'parents';
 
@@ -23,18 +31,22 @@ class StudentParent extends Model
         'phone',
         'whatsapp_phone',
         'email',
+        'password',
         'relation',
         'is_primary',
     ];
 
-    protected $casts = [
-        'is_primary' => 'boolean',
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    protected $casts = [
+        'is_primary' => 'boolean',
+        'password' => 'hashed',
+    ];
+
+
 
     public function student(): BelongsTo
     {

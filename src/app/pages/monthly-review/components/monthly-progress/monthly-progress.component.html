@@ -1,0 +1,28 @@
+<div class="progress-header">
+  <div class="progress-title-row">
+    <div>
+      <h1 class="progress-title">{{ 'monthlyReview.title' | t }}</h1>
+      <p class="progress-step">{{ stepLabel }}</p>
+    </div>
+    <div class="progress-percent">{{ completionPercent }}%</div>
+  </div>
+
+  <div class="progress-bar-track" role="progressbar" [attr.aria-valuenow]="completionPercent" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar-fill" [style.width.%]="completionPercent"></div>
+  </div>
+
+  <div class="progress-steps">
+    @for (slide of slides; track slide.id; let i = $index) {
+      <button
+        type="button"
+        class="progress-step-pill"
+        [class.active]="i === activeIndex"
+        [class.done]="i < activeIndex"
+        (click)="stepSelect.emit(i)"
+      >
+        <i class="progress-step-icon" [class]="slide.icon"></i>
+        <span>{{ slide.label | t }}</span>
+      </button>
+    }
+  </div>
+</div>

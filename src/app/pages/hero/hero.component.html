@@ -27,8 +27,7 @@
       </div>
 
       <div class="nav__actions">
-        <a routerLink="/login" class="nav__sign-in">Connexion</a>
-        <a routerLink="/login" class="btn-nav">Commencer</a>
+        <a routerLink="/login" class="btn-nav">Commencer votre démo</a>
         <button class="nav__hamburger" id="lp-hamburger"
                 aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="lp-mobile-menu">
           <span></span><span></span><span></span>
@@ -41,7 +40,6 @@
       <a href="#lp-hiw"       class="nav__mobile-link">Comment ça marche</a>
       <a href="#lp-pricing"   class="nav__mobile-link">Tarifs</a>
       <a href="#lp-faq"       class="nav__mobile-link">FAQ</a>
-      <a routerLink="/login"  class="nav__mobile-link">Connexion</a>
     </div>
   </nav>
 
@@ -51,9 +49,11 @@
     <section class="hero" aria-label="Accroche principale">
       
 
-      <!-- Headline built char-by-char by JS. aria-label provides accessible text. -->
+      <!-- Headline built char-by-char by JS. aria-label provides accessible text —
+           keep this in sync with the JS text in hero.component.ts and the noscript
+           fallback in src/index.html so the H1 is always the same keyword-rich phrase. -->
       <h1 class="hero__headline" id="lp-headline"
-          aria-label="Gérez votre centre avec précision"></h1>
+          aria-label="Gérez votre centre de soutien scolaire"></h1>
 
       <p class="hero__subhead" id="lp-subhead">
         Moujtahid unifie planification, présences, paiements et analyses
@@ -80,7 +80,7 @@
               <div class="mockup__dot"></div>
               <div class="mockup__dot"></div>
             </div>
-            <div class="mockup__url">app.moujtahid.ma/tableau-de-bord</div>
+            <div class="mockup__url">app.moujtahide.ma/tableau-de-bord</div>
           </div>
           <div class="mockup__content">
             <aside class="mockup__sidebar">
@@ -167,7 +167,7 @@
         </header>
 
         <div class="bento">
-          <!-- Carte large — Planification -->
+          <!-- Carte large - Planification -->
           <article class="bento__card bento__card--wide" aria-labelledby="feat-planning">
             <div class="bento__text">
               <div class="bento__icon" aria-hidden="true">
@@ -239,7 +239,7 @@
               </svg>
             </div>
             <h3 class="bento__title" id="feat-analyses">Analyses pédagogiques</h3>
-            <p class="bento__body">Des tableaux de bord par élève qui identifient qui progresse et qui a besoin d'aide — des données que vos enseignants exploiteront vraiment.</p>
+            <p class="bento__body">Des tableaux de bord par élève qui identifient qui progresse et qui a besoin d'aide - des données que vos enseignants exploiteront vraiment.</p>
           </article>
 
           <article class="bento__card" aria-labelledby="feat-parents">
@@ -624,7 +624,9 @@
           </div>
 
           <div class="parent-phone">
-            <img src="assets/photos/phone.png" alt="">
+            <img src="assets/photos/phone.png"
+                 alt="Application parents Moujtahid affichant présences, notes et paiements sur un smartphone"
+                 loading="lazy" decoding="async" width="300" height="600">
           </div>
 
           <div class="parent-schoolbag">
@@ -1035,6 +1037,21 @@
             </div></div>
           </div>
 
+          <!-- Must stay in sync with HOME_FAQ in core/seo/schema.ts (7th entry) —
+               Google requires the FAQPage structured data to match visible content. -->
+          <div class="faq__item">
+            <button class="faq__trigger" aria-expanded="false" aria-controls="faq-a7">
+              <span class="faq__question">Moujtahid convient-il à tous les types de centres au Maroc ?</span>
+              <svg class="faq__chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+                   stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 8l5 5 5-5"/>
+              </svg>
+            </button>
+            <div class="faq__answer-wrap" id="faq-a7"><div class="faq__answer-inner">
+              <p class="faq__answer">Oui. Moujtahid est un logiciel de gestion scolaire conçu au Maroc, pensé d'abord pour les centres de soutien scolaire, et adopté aussi par des écoles privées, centres de langues et centres de formation. Facturation en dirhams, villes marocaines intégrées et alertes SMS locales : tout est adapté au marché marocain.</p>
+            </div></div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -1069,17 +1086,7 @@
           <ul class="footer__links">
             <li><a href="#lp-features" class="footer__link">Fonctionnalités</a></li>
             <li><a href="#lp-pricing"  class="footer__link">Tarifs</a></li>
-            <li><a href="#"            class="footer__link">Nouveautés</a></li>
-            <li><a href="#"            class="footer__link">Feuille de route</a></li>
-          </ul>
-        </div>
-        <div>
-          <p class="footer__col-title">Entreprise</p>
-          <ul class="footer__links">
-            <li><a href="#" class="footer__link">À propos</a></li>
-            <li><a href="#" class="footer__link">Blog</a></li>
-            <li><a href="#" class="footer__link">Carrières</a></li>
-            <li><a href="#" class="footer__link">Presse</a></li>
+            <li><a routerLink="/blog" class="footer__link">Blog</a></li>
           </ul>
         </div>
         <div>
@@ -1095,9 +1102,10 @@
       <div class="footer__bottom">
         <p class="footer__copy">&copy; 2025 Moujtahid. Tous droits réservés.</p>
         <div class="footer__legal">
-          <a href="#">Confidentialité</a>
-          <a href="#">Conditions</a>
-          <a href="#">Cookies</a>
+          <a routerLink="/politique-de-confidentialite">Confidentialité</a>
+          <a routerLink="/conditions-generales-utilisation">Conditions</a>
+          <a routerLink="/politique-de-cookies">Cookies</a>
+          <a routerLink="/mentions-legales">Mentions légales</a>
         </div>
       </div>
     </div>

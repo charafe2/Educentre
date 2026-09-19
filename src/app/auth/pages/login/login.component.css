@@ -213,20 +213,6 @@
 .btn-submit.loading { opacity: 0.75; cursor: not-allowed; }
 .btn-submit[disabled] { cursor: not-allowed; }
 
-/* Demo hint */
-.demo-hint {
-  display: flex; align-items: center; gap: 0.5rem;
-  margin-top: 1rem;
-  font-size: 0.8rem; color: var(--text-light);
-}
-
-.demo-btn {
-  background: none; border: none;
-  color: var(--accent); font-size: 0.8rem;
-  font-weight: 600; cursor: pointer; padding: 0;
-  text-decoration: underline; text-underline-offset: 2px;
-}
-
 /* Bottom switch link */
 .form-switch {
   text-align: center; margin-top: 1.5rem;

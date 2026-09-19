@@ -1,0 +1,173 @@
+<div class="sa-page catalogue">
+
+  <header class="sa-head">
+    <div>
+      <span class="sa-eyebrow">Catalogue</span>
+      <h1>Matières</h1>
+      <p class="sa-lede">La liste de référence. Chaque centre ne voit que les matières que vous lui ouvrez.</p>
+    </div>
+    <div class="sa-head-actions">
+      <button class="sa-btn primary" (click)="openCreate()" type="button">
+        <i class="fa-solid fa-plus"></i>
+        Créer une matière
+      </button>
+    </div>
+  </header>
+
+  <dl class="sa-figures">
+    <div>
+      <dt>Au catalogue</dt>
+      <dd>{{ totalSubjects() }}</dd>
+    </div>
+    <div class="paid">
+      <dt>Actives</dt>
+      <dd>{{ activeSubjects() }}</dd>
+    </div>
+    <div class="accent">
+      <dt>Ouvertes à un centre</dt>
+      <dd>{{ assignedSubjects() }}</dd>
+    </div>
+  </dl>
+
+  @if (pageError()) {
+    <div class="sa-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ pageError() }}
+    </div>
+  }
+
+  <div class="sa-toolbar">
+    <div class="sa-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="search"
+        placeholder="Rechercher une matière…"
+        aria-label="Rechercher une matière"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <div class="sa-segmented" role="group" aria-label="Filtrer par statut">
+      @for (filter of statusFilters; track filter.key) {
+        <button type="button" [class.on]="filterStatus() === filter.key" (click)="filterStatus.set(filter.key)">
+          {{ filter.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="sa-table-card">
+    <div class="sa-table-scroll">
+      <table class="sa-table">
+        <thead>
+          <tr>
+            <th>Matière</th>
+            <th>Statut</th>
+            <th class="num">Centres</th>
+            <th class="num">Créée le</th>
+            <th class="num">Mise à jour</th>
+            <th><span class="sr">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4]; track row) {
+              <tr class="loading-row"><td colspan="6"><span class="sa-skeleton"></span></td></tr>
+            }
+          } @else {
+            @for (subject of filteredSubjects(); track subject.id) {
+              <tr>
+                <td>
+                  <span class="named">
+                    <span class="swatch" [style.background]="subject.color"></span>
+                    <span class="sa-idcell-name">{{ subject.name }}</span>
+                  </span>
+                </td>
+                <td>
+                  <span [class]="subject.status === 'active' ? 'sa-badge active' : 'sa-badge inactive'">
+                    {{ subject.status === 'active' ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td class="num">{{ subject.assignedCentresCount ?? 0 }}</td>
+                <td class="num sa-meta">{{ subject.createdAt | date:'dd/MM/yyyy' }}</td>
+                <td class="num sa-meta">{{ subject.updatedAt | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <div class="sa-actions">
+                    <button class="sa-iconbtn" type="button" title="Modifier la matière" (click)="openEdit(subject)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="sa-iconbtn danger" type="button" title="Supprimer la matière" (click)="deleteSubject(subject)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="sa-empty">
+                    <i class="fa-solid fa-book"></i>
+                    <strong>Aucune matière ne correspond</strong>
+                    <span>Changez le filtre ou ajoutez-en une au catalogue.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Create / edit subject -->
+@if (showModal()) {
+  <div class="sa-modal-overlay" (click)="showModal.set(false)">
+    <div class="sa-modal narrow" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+      <div class="sa-modal-head">
+        <div>
+          <h2>{{ editingSubjectId() ? 'Modifier la matière' : 'Créer une matière' }}</h2>
+          <p>{{ editingSubjectId() ? 'Le changement s\'applique à tous les centres qui l\'utilisent.' : 'Ajoutée au catalogue, puis ouverte centre par centre.' }}</p>
+        </div>
+        <button class="sa-iconbtn" type="button" (click)="showModal.set(false)" aria-label="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sa-modal-body">
+        @if (formError()) {
+          <div class="sa-alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ formError() }}
+          </div>
+        }
+
+        <label class="sa-field">
+          <span>Nom de la matière <b class="req">*</b></span>
+          <input class="sa-input" type="text" [(ngModel)]="form.name" placeholder="Mathématiques" />
+        </label>
+
+        <label class="sa-field">
+          <span>Statut</span>
+          <select class="sa-input" [(ngModel)]="form.status">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <small class="sa-hint">Une matière inactive reste au catalogue mais ne peut plus être assignée.</small>
+        </label>
+      </div>
+
+      <div class="sa-modal-foot">
+        <button class="sa-btn quiet" type="button" (click)="showModal.set(false)">Annuler</button>
+        <button class="sa-btn primary" type="button" (click)="submitSave()" [disabled]="saving()">
+          <i class="fa-solid" [class.fa-plus]="!editingSubjectId()" [class.fa-floppy-disk]="editingSubjectId()"></i>
+          {{ saving() ? 'Enregistrement…' : (editingSubjectId() ? 'Enregistrer' : 'Créer la matière') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

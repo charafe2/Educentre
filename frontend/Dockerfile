@@ -2,8 +2,12 @@ FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
-COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json public ./
+COPY angular.json tsconfig.json tsconfig.app.json tsconfig.spec.json ./
+COPY public/ ./public/
+COPY scripts/ ./scripts/
 COPY src/ src/
+# Runs `ng build` (prerenders public routes) then the postbuild sitemap/robots
+# generator (scripts/generate-sitemap.mjs) — both must find their files above.
 RUN npm run build -- --configuration production
 
 FROM nginx:1.27-alpine AS serve

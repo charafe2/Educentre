@@ -2,19 +2,41 @@
 
 namespace App\Domains\SuperAdmin\Services;
 
-use App\Domains\SuperAdmin\Models\PackagePlan;
+use App\Domains\Core\Models\PackagePlan;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class PackagePlanService
 {
-    public function all(): Collection
-    {
-        $this->ensureDefaultsExist();
+    /** Guards the copy-name search from looping forever on absurd input. */
+    private const MAX_COPY_SUFFIX = 50;
 
+    /**
+     * @param  array{status?: string|null, search?: string|null}  $filters
+     * @return Collection<int, PackagePlan>
+     */
+    public function list(array $filters = []): Collection
+    {
         return PackagePlan::query()
-            ->orderByRaw("case status when 'active' then 1 when 'draft' then 2 else 3 end")
+            ->withCount('invoices')
+            ->when(
+                filled($filters['status'] ?? null),
+                fn ($query) => $query->withStatus($filters['status'])
+            )
+            ->when(
+                filled($filters['search'] ?? null),
+                fn ($query) => $query->search($filters['search'])
+            )
+            // Cheapest first, then by name so equally-priced plans keep a stable
+            // order across requests.
             ->orderBy('monthly_price')
+            ->orderBy('name')
             ->get();
+    }
+
+    public function find(int $id): PackagePlan
+    {
+        return PackagePlan::withCount('invoices')->findOrFail($id);
     }
 
     public function create(array $data): PackagePlan
@@ -22,76 +44,82 @@ class PackagePlanService
         return PackagePlan::create($this->attributes($data));
     }
 
-    public function update(PackagePlan $packagePlan, array $data): PackagePlan
+    public function update(PackagePlan $plan, array $data): PackagePlan
     {
-        $packagePlan->update($this->attributes($data));
+        $plan->update($this->attributes($data));
 
-        return $packagePlan->refresh();
+        return $plan->fresh()->loadCount('invoices');
     }
 
-    public function delete(PackagePlan $packagePlan): void
+    /**
+     * Copies a plan as a draft under a free name.
+     *
+     * Naming is resolved here rather than by the caller because "<name> copie"
+     * collides the second time you duplicate the same plan, and the name column
+     * is unique.
+     */
+    public function duplicate(PackagePlan $plan): PackagePlan
     {
-        $packagePlan->delete();
+        return PackagePlan::create([
+            'name' => $this->availableCopyName($plan->name),
+            'monthly_price' => $plan->monthly_price,
+            'users_limit' => $plan->users_limit,
+            'students_limit' => $plan->students_limit,
+            'storage_gb' => $plan->storage_gb,
+            'support_level' => $plan->support_level,
+            // A copy always starts as a draft — never silently sell a new plan.
+            'status' => PackagePlan::STATUS_DRAFT,
+            'features' => $plan->features ?? [],
+        ]);
     }
 
-    public function ensureDefaultsExist(): void
+    public function archive(PackagePlan $plan): PackagePlan
     {
-        if (PackagePlan::query()->exists()) {
-            return;
+        $plan->update(['status' => PackagePlan::STATUS_ARCHIVED]);
+
+        return $plan->fresh()->loadCount('invoices');
+    }
+
+    public function delete(PackagePlan $plan): void
+    {
+        $plan->delete();
+    }
+
+    /**
+     * The plan name still counts as taken while soft-deleted, so the copy
+     * suffix has to skip trashed rows too — otherwise create() hits the DB
+     * unique index and 500s.
+     */
+    private function availableCopyName(string $name): string
+    {
+        $base = Str::limit($name, 100, '').' copie';
+
+        for ($suffix = 0; $suffix <= self::MAX_COPY_SUFFIX; $suffix++) {
+            $candidate = $suffix === 0 ? $base : $base.' '.($suffix + 1);
+
+            $taken = PackagePlan::withTrashed()->where('name', $candidate)->exists();
+
+            if (! $taken) {
+                return $candidate;
+            }
         }
 
-        foreach ($this->defaultPlans() as $plan) {
-            PackagePlan::create($this->attributes($plan));
-        }
+        // Fall back to something guaranteed free rather than failing the request.
+        return $base.' '.Str::lower(Str::random(6));
     }
 
-    private function attributes(array $data): array
+    /** Maps the camelCase payload onto snake_case columns. */
+    private function attributes(array $validated): array
     {
         return [
-            'name' => $data['name'],
-            'monthly_price' => $data['monthlyPrice'],
-            'users_limit' => $data['usersLimit'],
-            'students_limit' => $data['studentsLimit'],
-            'storage_gb' => $data['storageGb'],
-            'support_level' => $data['supportLevel'],
-            'status' => $data['status'],
-            'features' => array_values($data['features'] ?? []),
-        ];
-    }
-
-    private function defaultPlans(): array
-    {
-        return [
-            [
-                'name' => 'Basique',
-                'monthlyPrice' => 690,
-                'usersLimit' => 3,
-                'studentsLimit' => 120,
-                'storageGb' => 5,
-                'supportLevel' => 'Standard',
-                'status' => 'active',
-                'features' => ['Gestion étudiants', 'Paiements parents', 'Planning simple'],
-            ],
-            [
-                'name' => 'Pro',
-                'monthlyPrice' => 1490,
-                'usersLimit' => 12,
-                'studentsLimit' => 600,
-                'storageGb' => 25,
-                'supportLevel' => 'Prioritaire',
-                'status' => 'active',
-                'features' => ['Analytiques avancées', 'Documents', 'Présence détaillée', 'Portail parents'],
-            ],
-            [
-                'name' => 'Enterprise',
-                'monthlyPrice' => 2990,
-                'usersLimit' => 40,
-                'studentsLimit' => 2500,
-                'storageGb' => 100,
-                'supportLevel' => 'Dédié',
-                'status' => 'active',
-                'features' => ['Multi-sites', 'Exports avancés', 'Accompagnement dédié', 'Contrôles d’accès'],
-            ],
+            'name' => $validated['name'],
+            'monthly_price' => $validated['monthlyPrice'],
+            'users_limit' => $validated['usersLimit'],
+            'students_limit' => $validated['studentsLimit'],
+            'storage_gb' => $validated['storageGb'],
+            'support_level' => $validated['supportLevel'],
+            'status' => $validated['status'],
+            'features' => array_values($validated['features'] ?? []),
         ];
     }
 }

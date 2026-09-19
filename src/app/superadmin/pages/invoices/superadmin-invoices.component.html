@@ -1,25 +1,59 @@
-<div class="premium-page reveal-in">
-  <section class="premium-hero invoice-hero">
+<div class="sa-page invoices">
+
+  <header class="sa-head">
     <div>
-      <span class="eyebrow">Facturation centres</span>
-      <h1>Créer les factures des centres</h1>
-      <p>Émettez une facture liée au centre et au package, puis suivez son règlement depuis le panneau global.</p>
+      <span class="sa-eyebrow">Facturation</span>
+      <h1>Factures centres</h1>
+      <p class="sa-lede">Émettez une facture rattachée à un centre et à son package, puis suivez son règlement ici.</p>
     </div>
-    <div class="hero-ledger">
-      <span><small>À encaisser</small><strong>{{ pendingAmount() }} MAD</strong></span>
-      <span><small>Payé</small><strong>{{ paidAmount() }} MAD</strong></span>
+    <div class="sa-head-actions">
+      <button class="sa-btn ghost" type="button" (click)="load()" [disabled]="loading()">
+        <i class="fa-solid fa-rotate"></i>
+        Actualiser
+      </button>
     </div>
-  </section>
+  </header>
 
-  @if (error()) { <div class="premium-alert">{{ error() }}</div> }
+  <dl class="sa-figures">
+    <div>
+      <dt>Factures émises</dt>
+      <dd>{{ invoices().length }}</dd>
+    </div>
+    <div class="paid">
+      <dt>Encaissé</dt>
+      <dd>{{ paidAmount() | number:'1.0-0' }}<span class="sa-unit">MAD</span></dd>
+    </div>
+    <div class="accent">
+      <dt>À encaisser</dt>
+      <dd>{{ pendingAmount() | number:'1.0-0' }}<span class="sa-unit">MAD</span></dd>
+    </div>
+    <div class="late">
+      <dt>En retard</dt>
+      <dd>{{ lateAmount() | number:'1.0-0' }}<span class="sa-unit">MAD</span></dd>
+    </div>
+  </dl>
 
-  <section class="invoice-grid">
-    <div class="double-shell form-shell">
-      <form class="inner-core invoice-form" (ngSubmit)="createInvoice()">
-        <div class="editor-title"><span class="eyebrow">Nouvelle facture</span><h2>Émission</h2></div>
+  @if (error()) {
+    <div class="sa-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ error() }}
+    </div>
+  }
 
-        <label>Centre
-          <select [(ngModel)]="form.centreId" name="centreId">
+  <section class="split">
+
+    <form class="sa-card issue" (ngSubmit)="createInvoice()">
+      <div class="sa-card-head">
+        <div>
+          <h2>Émettre une facture</h2>
+          <p>Le montant se pré-remplit depuis le package choisi.</p>
+        </div>
+      </div>
+
+      <div class="sa-card-body issue-body">
+        <label class="sa-field">
+          <span>Centre</span>
+          <select class="sa-input" [(ngModel)]="form.centreId" name="centreId">
             <option [ngValue]="0">Sélectionner un centre</option>
             @for (centre of centres(); track centre.id) {
               <option [ngValue]="centre.id">{{ centre.centreName }} · {{ centre.city }}</option>
@@ -27,8 +61,9 @@
           </select>
         </label>
 
-        <label>Package
-          <select [ngModel]="form.packagePlanId" name="packagePlanId" (ngModelChange)="applyPackage($event)">
+        <label class="sa-field">
+          <span>Package</span>
+          <select class="sa-input" [ngModel]="form.packagePlanId" name="packagePlanId" (ngModelChange)="applyPackage($event)">
             <option [ngValue]="null">Sélectionner un package</option>
             @for (plan of packages(); track plan.id) {
               <option [ngValue]="plan.id">{{ plan.name }} · {{ plan.monthlyPrice }} MAD</option>
@@ -36,58 +71,93 @@
           </select>
         </label>
 
-        <div class="split-fields">
-          <label>Montant MAD<input type="number" min="0" [(ngModel)]="form.amount" name="amount" /></label>
-          <label>Statut
-            <select [(ngModel)]="form.status" name="status">
+        <div class="sa-formgrid">
+          <label class="sa-field">
+            <span>Montant MAD</span>
+            <input class="sa-input" type="number" min="0" [(ngModel)]="form.amount" name="amount" />
+          </label>
+          <label class="sa-field">
+            <span>Statut</span>
+            <select class="sa-input" [(ngModel)]="form.status" name="status">
               <option value="pending">À encaisser</option>
               <option value="paid">Payée</option>
               <option value="late">En retard</option>
               <option value="cancelled">Annulée</option>
             </select>
           </label>
+          <label class="sa-field">
+            <span>Émission</span>
+            <input class="sa-input" type="date" [(ngModel)]="form.issuedAt" name="issuedAt" />
+          </label>
+          <label class="sa-field">
+            <span>Échéance</span>
+            <input class="sa-input" type="date" [(ngModel)]="form.dueDate" name="dueDate" />
+          </label>
         </div>
 
-        <div class="split-fields">
-          <label>Émission<input type="date" [(ngModel)]="form.issuedAt" name="issuedAt" /></label>
-          <label>Échéance<input type="date" [(ngModel)]="form.dueDate" name="dueDate" /></label>
-        </div>
+        <label class="sa-field">
+          <span>Note</span>
+          <textarea class="sa-input" rows="3" [(ngModel)]="form.notes" name="notes"
+                    placeholder="Visible sur la facture du centre"></textarea>
+        </label>
 
-        <label>Note<textarea rows="3" [(ngModel)]="form.notes" name="notes"></textarea></label>
-
-        <button class="pill-action primary" type="submit" [disabled]="saving()">
-          {{ saving() ? 'Création' : 'Créer la facture' }}
-          <span>↗</span>
+        <button class="sa-btn brass issue-submit" type="submit" [disabled]="saving()">
+          <i class="fa-solid fa-file-invoice"></i>
+          {{ saving() ? 'Création…' : 'Créer la facture' }}
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
 
-    <div class="double-shell ledger-shell">
-      <div class="inner-core ledger-core">
-        <div class="panel-head"><div><strong>{{ invoices().length }}</strong><small>factures</small></div><button class="ghost-button" (click)="load()">Actualiser</button></div>
-        <div class="invoice-list">
-          @if (loading()) {
-            <div class="empty-line">Chargement...</div>
-          } @else {
-            @for (invoice of invoices(); track invoice.id) {
-              <article class="invoice-item">
-                <div>
-                  <span class="invoice-number">{{ invoice.invoiceNumber }}</span>
-                  <strong>{{ invoice.centreName }}</strong>
-                  <small>{{ invoice.packageName }} · {{ invoice.dueDate | date:'dd/MM/yyyy' }}</small>
-                </div>
-                <div class="invoice-actions">
-                  <span [ngClass]="['invoice-status', invoice.status]">{{ statusLabel(invoice.status) }}</span>
-                  <strong>{{ invoice.amount }} MAD</strong>
-                  <button class="ghost-button" (click)="markPaid(invoice)" [disabled]="invoice.status === 'paid'">Payée</button>
-                  <button class="ghost-button danger" (click)="remove(invoice)">Supprimer</button>
-                </div>
-              </article>
-            }
-            @empty { <div class="empty-line">Aucune facture centre pour le moment.</div> }
-          }
+    <div class="sa-card register">
+      <div class="sa-card-head">
+        <div>
+          <h2>Registre</h2>
+          <p>{{ invoices().length }} factures, la plus récente en tête</p>
         </div>
       </div>
+
+      <div class="entries">
+        @if (loading()) {
+          @for (row of [1, 2, 3, 4]; track row) {
+            <div class="entry entry-loading">
+              <span class="sa-skeleton" style="width: 46%; height: 13px;"></span>
+              <span class="sa-skeleton" style="width: 22%; height: 13px;"></span>
+            </div>
+          }
+        } @else {
+          @for (invoice of invoices(); track invoice.id) {
+            <article class="entry" [attr.data-tone]="statusTone(invoice.status)">
+              <div class="entry-id">
+                <span class="entry-number">{{ invoice.invoiceNumber }}</span>
+                <span class="entry-centre">{{ invoice.centreName }}</span>
+                <span class="entry-sub">{{ invoice.packageName }} · échéance {{ invoice.dueDate | date:'dd/MM/yyyy' }}</span>
+              </div>
+
+              <div class="entry-right">
+                <span class="entry-amount">{{ invoice.amount | number:'1.0-0' }} MAD</span>
+                <span [class]="'sa-badge ' + statusTone(invoice.status)">{{ statusLabel(invoice.status) }}</span>
+              </div>
+
+              <div class="entry-actions">
+                <button class="sa-btn ghost sm" type="button" (click)="markPaid(invoice)" [disabled]="invoice.status === 'paid'">
+                  Marquer payée
+                </button>
+                <button class="sa-iconbtn danger" type="button" title="Supprimer la facture" (click)="remove(invoice)">
+                  <i class="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
+            </article>
+          }
+          @empty {
+            <div class="sa-empty">
+              <i class="fa-regular fa-file-lines"></i>
+              <strong>Le registre est vide</strong>
+              <span>Émettez la première facture avec le formulaire à gauche.</span>
+            </div>
+          }
+        }
+      </div>
     </div>
+
   </section>
 </div>

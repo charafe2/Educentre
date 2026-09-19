@@ -4,15 +4,18 @@ import {
   Component,
   ElementRef,
   EventEmitter,
+  Inject,
   OnDestroy,
   Output,
+  PLATFORM_ID,
   ViewChild,
 } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { concat, interval, Subscription, timer } from 'rxjs';
 import { map, take, tap } from 'rxjs/operators';
 
 const INTRO_TITLE = 'Moujtahid';
-const TYPEWRITER_TEXT = 'plateforme numero 1 pour la gestion des centres scolaires';
+const TYPEWRITER_TEXT = 'Gérez. Simplifiez. Excellez.';
 const TYPEWRITER_SPEED_MS = 55;
 const DELETE_SPEED_MS = 45;
 
@@ -31,9 +34,15 @@ export class VideoHeroComponent implements AfterViewInit, OnDestroy {
 
   private subscriptions = new Subscription();
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    @Inject(PLATFORM_ID) private platformId: object,
+  ) {}
 
   ngAfterViewInit(): void {
+    // Intro animation + video autoplay are browser-only; skip during prerender/SSR.
+    if (!isPlatformBrowser(this.platformId)) return;
+
     this.startIntroSequence();
 
     const video = this.introVideo?.nativeElement;

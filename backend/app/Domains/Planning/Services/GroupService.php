@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 class GroupService
 {
-    public function all(): Collection
+    public function all(int $tenantId): Collection
     {
-        return Group::with('enrollments')->get();
+        return Group::with('enrollments')->where('tenant_id', $tenantId)->get();
     }
 
     public function create(array $data): Group
@@ -23,7 +23,8 @@ class GroupService
         ]);
 
         if (!empty($data['studentIds'])) {
-            Enrollment::where('class_id', $data['classeId'])
+            Enrollment::where('tenant_id', $data['tenant_id'])
+                ->where('class_id', $data['classeId'])
                 ->whereIn('student_id', $data['studentIds'])
                 ->update(['group_id' => $group->id]);
         }
@@ -31,18 +32,21 @@ class GroupService
         return $group->load('enrollments');
     }
 
-    public function updateCapacity(int $id, int $maxCapacity): Group
+    public function updateCapacity(int $id, int $tenantId, int $maxCapacity): Group
     {
-        $group = Group::findOrFail($id);
+        $group = Group::where('tenant_id', $tenantId)->findOrFail($id);
         $group->update(['max_capacity' => $maxCapacity]);
         return $group;
     }
 
-    public function moveStudent(int $studentId, ?int $fromGroupId, int $toGroupId): void
+    public function moveStudent(int $tenantId, int $studentId, ?int $fromGroupId, int $toGroupId): void
     {
-        $toGroup = Group::with('courseClass')->findOrFail($toGroupId);
+        $toGroup = Group::with('courseClass')
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($toGroupId);
 
-        $enrollment = Enrollment::where('student_id', $studentId)
+        $enrollment = Enrollment::where('tenant_id', $tenantId)
+            ->where('student_id', $studentId)
             ->where('class_id', $toGroup->class_id)
             ->first();
 
@@ -50,7 +54,8 @@ class GroupService
             $enrollment->update(['group_id' => $toGroupId]);
 
             if ($fromGroupId !== null && $fromGroupId !== $toGroupId) {
-                Enrollment::where('student_id', $studentId)
+                Enrollment::where('tenant_id', $tenantId)
+                    ->where('student_id', $studentId)
                     ->where('group_id', $fromGroupId)
                     ->where('id', '!=', $enrollment->id)
                     ->update(['group_id' => null]);
@@ -63,12 +68,15 @@ class GroupService
             return;
         }
 
-        $fromGroup = Group::with('courseClass')->find($fromGroupId);
+        $fromGroup = Group::with('courseClass')
+            ->where('tenant_id', $tenantId)
+            ->find($fromGroupId);
         if (!$fromGroup || !$this->isSameSubjectAndLevel($fromGroup, $toGroup)) {
             return;
         }
 
-        Enrollment::where('student_id', $studentId)
+        Enrollment::where('tenant_id', $tenantId)
+            ->where('student_id', $studentId)
             ->where('group_id', $fromGroupId)
             ->update([
                 'class_id' => $toGroup->class_id,

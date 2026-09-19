@@ -49,6 +49,41 @@ class StudentAttritionRiskService
             ->values();
     }
 
+    /**
+     * Same rule as all(), scoped to a single student — used for reactive
+     * checks (e.g. right after attendance is marked) instead of recomputing
+     * risk for an entire tenant just to check one student.
+     */
+    public function checkStudent(int $tenantId, int $studentId): ?array
+    {
+        $windowEnd = CarbonImmutable::now();
+        $windowStart = $windowEnd->subDays(self::LOOKBACK_DAYS - 1)->startOfDay();
+        $currentMonth = $windowEnd->startOfMonth();
+
+        $student = Student::query()
+            ->where('tenant_id', $tenantId)
+            ->where('id', $studentId)
+            ->where('is_active', true)
+            ->with([
+                'parents',
+                'attendances' => fn ($query) => $query
+                    ->where('tenant_id', $tenantId)
+                    ->whereBetween('attended_on', [$windowStart->toDateString(), $windowEnd->toDateString()]),
+                'payments' => fn ($query) => $query
+                    ->where('tenant_id', $tenantId)
+                    ->whereIn('status', ['pending', 'overdue'])
+                    ->where('period_month', '<=', $currentMonth)
+                    ->orderBy('period_month'),
+            ])
+            ->first();
+
+        if ($student === null) {
+            return null;
+        }
+
+        return $this->riskFor($student, $windowStart, $windowEnd);
+    }
+
     public function paginate(int $tenantId, int $page = 1, int $perPage = 8): array
     {
         $students = $this->all($tenantId);

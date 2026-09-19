@@ -1,0 +1,27 @@
+<div class="payment-row">
+  <div class="avatar" [style.background-color]="row.avatarColor">{{ initials }}</div>
+
+  <div class="payment-info">
+    <span class="student-name">{{ row.studentName }}</span>
+    <span class="student-meta">{{ row.className }} · Prof. {{ row.teacherName }}</span>
+  </div>
+
+  <div class="payment-due">
+    <span class="due-amount">{{ formattedAmount }}</span>
+    <span class="due-date"><i class="fa-regular fa-clock"></i> {{ formattedDueDate }}</span>
+  </div>
+
+  <div class="payment-actions">
+    @if (row.phone) {
+      <button type="button" class="icon-action" (click)="contactParent.emit()" [title]="'monthlyReview.payments.contactParent' | t">
+        <i class="fa-brands fa-whatsapp"></i>
+      </button>
+    }
+    <button type="button" class="icon-action" (click)="viewStudent.emit()" [title]="'monthlyReview.payments.viewStudent' | t">
+      <i class="fa-regular fa-eye"></i>
+    </button>
+    <button type="button" class="btn-mark-paid" (click)="markPaid.emit()">
+      {{ 'monthlyReview.payments.markPaid' | t }}
+    </button>
+  </div>
+</div>

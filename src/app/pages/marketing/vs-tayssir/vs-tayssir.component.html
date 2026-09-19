@@ -1,0 +1,102 @@
+<app-marketing-layout>
+  <section class="mkt-hero">
+    <p class="mkt-kicker">Comparatif</p>
+    <h1>Moujtahid vs Tayssir Académie</h1>
+    <p class="mkt-lead">
+      Moujtahid et Tayssir Académie sont deux logiciels marocains de gestion de centre, tous deux
+      en français et facturés en dirhams. Voici un comparatif honnête, fondé sur les informations
+      publiques des deux éditeurs, pour vous aider à choisir.
+    </p>
+    <div class="mkt-hero__actions">
+      <a routerLink="/login" class="mkt-btn mkt-btn--primary">Essai gratuit 30 jours</a>
+      <a href="/#lp-pricing" class="mkt-btn mkt-btn--ghost">Voir les tarifs Moujtahid en MAD</a>
+    </div>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Comparatif détaillé</h2>
+    <p class="mkt-section__intro">
+      Comparatif basé sur les sites publics de chaque éditeur en 2026. Les tarifs et
+      fonctionnalités peuvent évoluer — vérifiez toujours directement auprès de l'éditeur avant de
+      vous engager.
+    </p>
+    <div class="mkt-compare-wrap">
+      <table class="mkt-compare">
+        <caption>Moujtahid comparé à Tayssir Académie (édité par MJ Tech Solution)</caption>
+        <thead>
+          <tr>
+            <th scope="col">Critère</th>
+            <th scope="col">Moujtahid</th>
+            <th scope="col">Tayssir Académie</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Facturation</th>
+            <td>Mensuelle : 189 MAD/mois (Débutant), 289 MAD/mois (Pro)</td>
+            <td>Annuelle : 500 DH, 3 500 DH ou 5 000 DH/an selon la formule</td>
+          </tr>
+          <tr>
+            <th scope="row">Essai avant engagement</th>
+            <td>30 jours gratuits (Pro) ; formule Débutant gratuite à vie, sans carte bancaire</td>
+            <td>Démo gratuite sur demande ; remboursement 30 jours sur la formule Pro</td>
+          </tr>
+          <tr>
+            <th scope="row">Langue</th>
+            <td>Français</td>
+            <td>Français</td>
+          </tr>
+          <tr>
+            <th scope="row">Présences</th>
+            <td>Suivi en un appui par élève, alertes SMS automatiques aux parents</td>
+            <td>Suivi des absences intégré au module administration</td>
+          </tr>
+          <tr>
+            <th scope="row">Paiements</th>
+            <td>Facturation automatisée en MAD, liens de paiement en ligne</td>
+            <td>Module finance dédié (paiements, caisse, dépenses)</td>
+          </tr>
+          <tr>
+            <th scope="row">Ressources humaines</th>
+            <td>Non proposé comme module dédié</td>
+            <td>Module RH avec planning et paie des enseignants</td>
+          </tr>
+          <tr>
+            <th scope="row">Application mobile</th>
+            <td>Une application, iOS et Android, pour enseignants, parents et administrateurs</td>
+            <td>Applications séparées pour enseignants et pour élèves/parents</td>
+          </tr>
+          <tr>
+            <th scope="row">Ancienneté de l'éditeur</th>
+            <td>Éditeur récent, en croissance</td>
+            <td>MJ Tech Solution accompagne les établissements marocains depuis 2008</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="mkt-compare-note">
+      Sources : sites publics de <a href="https://moujtahide.ma" rel="noopener">Moujtahid</a> et de
+      <a href="https://academie.tayssir.school/" target="_blank" rel="noopener nofollow">Tayssir Académie</a>, consultés en 2026.
+    </p>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Où se situe Moujtahid</h2>
+    <p class="mkt-section__intro">
+      Les deux solutions couvrent les besoins de base d'un centre marocain. La différence la plus
+      concrète est la facturation : Moujtahid est mensuel et sans engagement annuel, avec une
+      formule gratuite à vie pour démarrer sans risque. Moujtahid met l'accent sur la planification
+      automatisée (détection de conflits de salles et d'enseignants) et les alertes SMS de
+      présence en temps réel. Si la gestion de la paie des enseignants est une priorité, le module
+      RH de Tayssir Académie est un point à considérer.
+    </p>
+  </section>
+
+  <app-faq-section
+    [items]="faqItems"
+    title="Questions fréquentes : Moujtahid vs Tayssir Académie"
+    headingId="faq-vs-tayssir"
+  ></app-faq-section>
+
+  <app-related-pages [currentPath]="page.path"></app-related-pages>
+</app-marketing-layout>

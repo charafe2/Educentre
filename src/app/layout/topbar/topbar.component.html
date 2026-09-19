@@ -1,7 +1,7 @@
 <header class="topbar">
   <div class="search-container">
     <i class="fa-solid fa-magnifying-glass"></i>
-    <input type="search" class="search-input" aria-label="Rechercher" placeholder="Rechercher des élèves, transactions...">
+    <input type="search" class="search-input" [attr.aria-label]="'common.search' | t" [attr.placeholder]="'topbar.searchPlaceholder' | t">
     <div class="search-shortcut">
       <span>Ctrl</span>
       <span>K</span>
@@ -9,48 +9,75 @@
   </div>
 
   <div class="topbar-actions">
-    <button class="icon-btn" type="button" aria-label="Actions rapides">
-      <i class="fa-solid fa-bolt"></i>
-    </button>
+    <app-language-switcher />
     <div class="notification-wrapper" (click)="$event.stopPropagation()">
       <button
         class="icon-btn notification-trigger"
         type="button"
-        aria-label="Notifications"
+        [attr.aria-label]="'topbar.notifications' | t"
         aria-haspopup="menu"
         [attr.aria-expanded]="isNotificationsOpen"
         (click)="toggleNotifications($event)"
       >
         <i class="fa-regular fa-bell"></i>
-        @if (unreadCount > 0) {
+        @if (unreadCount() > 0) {
           <span class="badge"></span>
         }
       </button>
 
       @if (isNotificationsOpen) {
-        <section class="notifications-panel" role="menu" aria-label="Notifications">
+        <section class="notifications-panel" role="menu" [attr.aria-label]="'topbar.notifications' | t">
           <header class="notifications-header">
-            <h2>Notifications</h2>
-            <button type="button" class="mark-read-btn" (click)="markAllAsRead($event)">
-              Mark all as read
-            </button>
+            <h2>{{ 'topbar.notifications' | t }}</h2>
+            @if (unreadCount() > 0) {
+              <button type="button" class="mark-read-btn" (click)="markAllAsRead($event)">
+                {{ 'topbar.markAllRead' | t }}
+              </button>
+            }
           </header>
 
           <div class="notifications-list">
-            @for (notification of notifications; track notification.id) {
-              <article class="notification-item" [class.notification-item--unread]="notification.unread" role="menuitem">
-                <div class="notification-avatar" aria-hidden="true">{{ notification.initials }}</div>
-                <div class="notification-copy">
-                  <p>
-                    <strong>{{ notification.name }}</strong>
-                    {{ notification.message }}
-                  </p>
-                  <span>{{ notification.time }}</span>
-                </div>
-                @if (notification.unread) {
-                  <span class="notification-dot" aria-label="Unread"></span>
-                }
-              </article>
+            @if (loading()) {
+              <div class="notifications-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <span>{{ 'topbar.notificationsLoading' | t }}</span>
+              </div>
+            } @else if (notifications().length === 0) {
+              <div class="notifications-state">
+                <i class="fa-regular fa-bell-slash"></i>
+                <span>{{ 'topbar.notificationsEmpty' | t }}</span>
+              </div>
+            } @else {
+              @for (notification of notifications(); track notification.id) {
+                <article
+                  class="notification-item"
+                  [class.notification-item--unread]="!notification.isRead"
+                  role="menuitem"
+                  (click)="onNotificationClick(notification, $event)"
+                >
+                  <div class="notification-avatar" aria-hidden="true">
+                    <i [class]="iconFor(notification.type)"></i>
+                  </div>
+                  <div class="notification-copy">
+                    <p>
+                      <strong>{{ notification.title }}</strong>
+                      {{ notification.message }}
+                    </p>
+                    <span>{{ timeAgo(notification.createdAt) }}</span>
+                  </div>
+                  @if (!notification.isRead) {
+                    <span class="notification-dot" aria-label="Unread"></span>
+                  }
+                  <button
+                    type="button"
+                    class="notification-delete"
+                    [attr.aria-label]="'topbar.deleteNotification' | t"
+                    (click)="deleteNotification(notification, $event)"
+                  >
+                    <i class="fa-regular fa-xmark"></i>
+                  </button>
+                </article>
+              }
             }
           </div>
         </section>
@@ -60,7 +87,7 @@
       <button
         class="user-profile"
         type="button"
-        aria-label="Menu utilisateur"
+        [attr.aria-label]="'topbar.userMenu' | t"
         aria-haspopup="menu"
         [attr.aria-expanded]="isProfileOpen"
         (click)="toggleProfile($event)"
@@ -69,26 +96,26 @@
       </button>
 
       @if (isProfileOpen) {
-        <section class="profile-menu" role="menu" aria-label="Menu utilisateur">
+        <section class="profile-menu" role="menu" [attr.aria-label]="'topbar.userMenu' | t">
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-regular fa-user"></i>
-            <span>Profile</span>
+            <span>{{ 'common.profile' | t }}</span>
           </a>
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-regular fa-credit-card"></i>
-            <span>Subscription</span>
+            <span>{{ 'common.subscription' | t }}</span>
             <span class="profile-menu__pill">PRO</span>
           </a>
           <a routerLink="/parametres" class="profile-menu__item" role="menuitem">
             <i class="fa-solid fa-gear"></i>
-            <span>Settings</span>
+            <span>{{ 'common.settings' | t }}</span>
           </a>
 
           <div class="profile-menu__divider" aria-hidden="true"></div>
 
           <button type="button" class="profile-menu__item profile-menu__item--danger" role="menuitem" (click)="logout($event)">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
-            <span>Sign Out</span>
+            <span>{{ 'common.signOut' | t }}</span>
           </button>
         </section>
       }

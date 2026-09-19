@@ -1,0 +1,74 @@
+<app-marketing-layout>
+  <section class="mkt-hero">
+    <p class="mkt-kicker">Guide d'achat</p>
+    <h1>Le meilleur logiciel de gestion de centre au Maroc : comment le choisir</h1>
+    <p class="mkt-lead">
+      Vous cherchez le meilleur logiciel de gestion de centre au Maroc — centre de soutien
+      scolaire, centre de langues ou école privée ? Le bon choix dépend de critères concrets :
+      la langue, la monnaie, le suivi des présences, la communication avec les parents et le prix.
+      Ce guide détaille ces critères et explique clairement où se situe Moujtahid.
+    </p>
+    <div class="mkt-hero__actions">
+      <a routerLink="/login" class="mkt-btn mkt-btn--primary">Essai gratuit 30 jours</a>
+      <a href="/#lp-pricing" class="mkt-btn mkt-btn--ghost">Voir les tarifs en MAD</a>
+    </div>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Les critères d'un bon logiciel de gestion de centre au Maroc</h2>
+    <p class="mkt-section__intro">
+      Au Maroc, un logiciel de gestion de centre doit correspondre aux usages locaux. Voici les
+      critères à vérifier avant de choisir, quel que soit le type de centre.
+    </p>
+    <div class="mkt-grid">
+      <div class="mkt-card">
+        <h3>Interface et support en français</h3>
+        <p>Un logiciel réellement en français, sans traduction approximative, avec un support qui comprend le contexte marocain.</p>
+      </div>
+      <div class="mkt-card">
+        <h3>Facturation en dirhams (MAD)</h3>
+        <p>Les paiements, reçus et impayés doivent être gérés en dirhams, sans conversion ni devise étrangère.</p>
+      </div>
+      <div class="mkt-card">
+        <h3>Présences et alertes aux parents</h3>
+        <p>La prise de présence rapide et l'alerte automatique aux parents en cas d'absence sont essentielles pour un centre.</p>
+      </div>
+      <div class="mkt-card">
+        <h3>Groupes, sessions et emplois du temps</h3>
+        <p>La gestion des groupes, des niveaux et des plannings doit s'adapter aussi bien au soutien scolaire qu'aux centres de langues.</p>
+      </div>
+      <div class="mkt-card">
+        <h3>Application mobile pour les parents</h3>
+        <p>Une application où les parents suivent présences, notes et paiements renforce la confiance et la rétention.</p>
+      </div>
+      <div class="mkt-card">
+        <h3>Prix transparent et essai gratuit</h3>
+        <p>Des tarifs clairs en dirhams et un essai gratuit permettent de tester avant de s'engager, sans surprise.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="mkt-section">
+    <h2>Où se situe Moujtahid</h2>
+    <p class="mkt-section__intro">
+      Moujtahid coche l'ensemble de ces critères : conçu au Maroc, entièrement en français et
+      facturé en dirhams (MAD). Il gère les présences avec alertes automatiques aux parents, les
+      groupes et sessions, et propose une application mobile pour les parents. Deux formules
+      mensuelles sont disponibles — Débutant à 189 MAD et Pro à 289 MAD — avec un essai gratuit
+      de 30 jours. Il s'adresse aux centres de soutien scolaire, aux centres de langues et aux
+      écoles privées, de Casablanca à Marrakech.
+    </p>
+    <div class="mkt-hero__actions">
+      <a routerLink="/logiciel-gestion-centre-soutien-scolaire" class="mkt-btn mkt-btn--ghost">Pour un centre de soutien scolaire</a>
+      <a routerLink="/logiciel-gestion-centre-de-langues" class="mkt-btn mkt-btn--ghost">Pour un centre de langues</a>
+    </div>
+  </section>
+
+  <app-faq-section
+    [items]="faqItems"
+    title="Questions fréquentes : choisir un logiciel de gestion de centre"
+    headingId="faq-meilleur-logiciel"
+  ></app-faq-section>
+
+  <app-related-pages [currentPath]="page.path"></app-related-pages>
+</app-marketing-layout>

@@ -23,7 +23,6 @@ export interface TeacherSummary {
 @Injectable({ providedIn: 'root' })
 export class TeachersService {
   private http = inject(HttpClient);
-  private pageCache = new Map<string, PaginatedApiResponse<Teacher, TeacherSummary>>();
   private lastPageFilters: TeacherPageFilters = { page: 1, perPage: 8 };
 
   teachers = signal<Teacher[]>([]);
@@ -50,13 +49,6 @@ export class TeachersService {
   loadTeacherPage(filters: TeacherPageFilters = this.lastPageFilters): void {
     const normalized = { page: 1, perPage: 8, ...filters };
     this.lastPageFilters = normalized;
-    const key = this.cacheKey(normalized);
-    const cached = this.pageCache.get(key);
-
-    if (cached) {
-      this.applyPage(cached);
-      return;
-    }
 
     this.loadingPage.set(true);
     this.http.get<PaginatedApiResponse<Teacher, TeacherSummary>>(`${environment.apiUrl}/v1/teachers`, {
@@ -64,7 +56,6 @@ export class TeachersService {
     }).subscribe({
       next: res => {
         if (res.success) {
-          this.pageCache.set(key, res);
           this.applyPage(res);
         }
       },
@@ -109,7 +100,6 @@ export class TeachersService {
   }
 
   private refreshLists(): void {
-    this.pageCache.clear();
     this.loadTeachers();
     this.loadTeacherPage(this.lastPageFilters);
   }
@@ -130,14 +120,5 @@ export class TeachersService {
     if (filters.status) params = params.set('status', filters.status);
 
     return params;
-  }
-
-  private cacheKey(filters: TeacherPageFilters): string {
-    return JSON.stringify({
-      page: filters.page ?? 1,
-      perPage: filters.perPage ?? 8,
-      search: filters.search ?? '',
-      status: filters.status ?? '',
-    });
   }
 }

@@ -1,4 +1,17 @@
+import siteConfig from './site.config.json';
+
+// Dev environment. `siteUrl` is the canonical base used for <link rel="canonical">,
+// og:url, sitemap entries, etc. It is the single source of truth shared with the
+// production build (environment.prod.ts) and the sitemap generator via
+// src/environments/site.config.json — never hardcode a domain anywhere else.
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api',
+  apiUrl: '/api',
+  siteUrl: siteConfig.siteUrl.development,
+  reverb: {
+    key: 'local_reverb_key',
+    host: '127.0.0.1',
+    port: 8080,
+    scheme: 'http'
+  }
 };

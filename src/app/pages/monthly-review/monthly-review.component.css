@@ -1,0 +1,30 @@
+/* Fill the remaining height inside .main-wrapper (flex column: topbar + this)
+   instead of relying on the page-level scroll other routes use — the
+   carousel is meant to occupy the full content area, with each slide
+   scrolling internally via `.slide-inner` when its own content is tall. */
+:host {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.review-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.review-carousel-wrap {
+  flex: 1;
+  min-height: 0;
+}
+
+.carousel-slide {
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+}

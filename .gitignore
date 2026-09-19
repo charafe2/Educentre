@@ -1,5 +1,5 @@
 # ============================================================
-# SaaS Centre — Monorepo .gitignore
+# SaaS Centre - Monorepo .gitignore
 # ============================================================
 
 # ── Secrets & environment ────────────────────────────────────
@@ -7,6 +7,7 @@
 .env.*
 !.env.example
 !.env.docker
+!.env.monitor.example
 
 # ── Node / npm ───────────────────────────────────────────────
 node_modules/
@@ -84,3 +85,6 @@ Thumbs.db
 *.bak
 *.orig
 *.tmp
+
+# ── Superpowers scratch workspaces ───────────────────────────
+.superpowers/

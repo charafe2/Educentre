@@ -1,14 +1,17 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { StatCardComponent, StatCardData } from '../../components/stat-card/stat-card.component';
 import { RecentInscriptionsComponent } from '../../components/recent-inscriptions/recent-inscriptions.component';
 import { SchedulePanelComponent } from '../../components/schedule-panel/schedule-panel.component';
 import { StudentsService } from '../../services/students.service';
 import { PaymentsService } from '../../services/payments.service';
 import { AttendanceService } from '../../services/attendance.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [StatCardComponent, RecentInscriptionsComponent, SchedulePanelComponent],
+  imports: [RouterLink, StatCardComponent, RecentInscriptionsComponent, SchedulePanelComponent, TranslatePipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -16,6 +19,7 @@ export class DashboardComponent {
   private studentsService = inject(StudentsService);
   private paymentsService = inject(PaymentsService);
   private attendanceService = inject(AttendanceService);
+  private i18n = inject(TranslationService);
 
   private currentMonth = (() => {
     const d = new Date();
@@ -44,11 +48,13 @@ export class DashboardComponent {
 
   private attendanceRate = computed(() => this.attendanceService.getAttendanceRate());
 
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
+
   stats = computed<StatCardData[]>(() => [
     {
-      title: 'Étudiants Actifs',
+      title: this.t('dashboard.activeStudents'),
       value: this.activeCount().toString(),
-      trendLabel: `${this.studentsService.students().length} inscrits total`,
+      trendLabel: this.t('dashboard.totalEnrolled', { count: this.studentsService.students().length }),
       trendType: 'up',
       iconClass: 'fa-solid fa-users',
       iconColorClass: 'icon-blue',
@@ -56,9 +62,9 @@ export class DashboardComponent {
       sparkColor: 'var(--accent)',
     },
     {
-      title: 'Revenus Mensuels',
-      value: `${this.monthlyRevenue().toLocaleString('fr-MA')}<span style="font-size:1.2rem;color:var(--text-light);margin-left:2px;">Dhs</span>`,
-      trendLabel: 'Paiements du mois',
+      title: this.t('dashboard.monthlyRevenue'),
+      value: `${this.monthlyRevenue().toLocaleString('fr-MA')}<span style="font-size:1.2rem;color:var(--text-light);margin-left:2px;">${this.t('common.currency')}</span>`,
+      trendLabel: this.t('dashboard.monthPayments'),
       trendType: 'up',
       iconClass: 'fa-solid fa-wallet',
       iconColorClass: 'icon-green',
@@ -66,9 +72,9 @@ export class DashboardComponent {
       sparkColor: 'var(--success)',
     },
     {
-      title: 'Présence',
+      title: this.t('dashboard.attendance'),
       value: `${this.attendanceRate()}<span style="font-size:1.2rem;color:var(--text-light);">%</span>`,
-      trendLabel: 'Toutes séances',
+      trendLabel: this.t('dashboard.allSessions'),
       trendType: 'neutral',
       iconClass: 'fa-regular fa-calendar-check',
       iconColorClass: 'icon-orange',
@@ -76,9 +82,9 @@ export class DashboardComponent {
       sparkColor: 'var(--warning)',
     },
     {
-      title: 'Impayés',
+      title: this.t('dashboard.unpaid'),
       value: this.overdueCount().toString(),
-      trendLabel: `${this.overdueAmount().toLocaleString('fr-MA')} Dhs`,
+      trendLabel: `${this.overdueAmount().toLocaleString('fr-MA')} ${this.t('common.currency')}`,
       trendType: 'down',
       iconClass: 'fa-solid fa-triangle-exclamation',
       iconColorClass: 'icon-red',

@@ -2,15 +2,19 @@
 
 namespace App\Domains\Students\Services;
 
+use App\Domains\Notifications\Services\NotificationService;
 use App\Domains\Students\Models\Enrollment;
 use App\Domains\Students\Models\Student;
 use App\Domains\Students\Models\StudentParent;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class StudentService
 {
+    public function __construct(private readonly NotificationService $notificationService) {}
+
     public function all(int $tenantId): Collection
     {
         return Student::query()
@@ -44,7 +48,7 @@ class StudentService
 
     public function create(array $data): Student
     {
-        return DB::transaction(function () use ($data) {
+        $student = DB::transaction(function () use ($data) {
             $tenantId = $data['tenant_id'];
 
             $student = Student::create([
@@ -68,6 +72,11 @@ class StudentService
                     'last_name' => $names[1] ?? '',
                     'phone' => $data['parentPhone'] ?? null,
                     'whatsapp_phone' => $data['parentWhatsapp'] ?? null,
+                    // TODO(backend): no "invite parent to set their own password"
+                    // flow exists yet — everyone gets this same default so the
+                    // parent app login (phone + this password) works immediately
+                    // after enrollment. Replace once a real invite/reset flow ships.
+                    'password' => Hash::make('parent2026'),
                     'is_primary' => true,
                 ]);
             }
@@ -84,6 +93,10 @@ class StudentService
 
             return $student->load(['enrollments', 'parents']);
         });
+
+        $this->notificationService->notifyStudentRegistered($student);
+
+        return $student;
     }
 
     public function update(int $tenantId, int $id, array $data): Student

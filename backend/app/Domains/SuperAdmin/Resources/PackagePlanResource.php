@@ -13,13 +13,17 @@ class PackagePlanResource extends JsonResource
             'id' => $this->id,
             'uuid' => $this->uuid,
             'name' => $this->name,
+            // Cast to float: the frontend does arithmetic on this.
             'monthlyPrice' => (float) $this->monthly_price,
-            'usersLimit' => $this->users_limit,
-            'studentsLimit' => $this->students_limit,
-            'storageGb' => $this->storage_gb,
+            'usersLimit' => (int) $this->users_limit,
+            'studentsLimit' => (int) $this->students_limit,
+            'storageGb' => (int) $this->storage_gb,
             'supportLevel' => $this->support_level,
             'status' => $this->status,
             'features' => $this->features ?? [],
+            // Only present when the caller loaded the count. Tells the UI why a
+            // plan can't be deleted without a second round-trip.
+            'invoiceCount' => $this->whenCounted('invoices', fn () => (int) $this->invoices_count),
         ];
     }
 }

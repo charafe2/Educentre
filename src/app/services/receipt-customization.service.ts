@@ -1,8 +1,9 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Classe } from '../models/classe.model';
 import { Document } from '../models/document.model';
 import { Payment } from '../models/payment.model';
 import { Student } from '../models/student.model';
+import { AuthStore } from '../auth/auth.store';
 
 export interface ReceiptCustomizationSettings {
   logoDataUrl: string;
@@ -31,7 +32,7 @@ export interface ReceiptPreviewData {
   reference: string;
 }
 
-const STORAGE_KEY = 'moujtahid_receipt_customization_v1';
+const STORAGE_KEY_PREFIX = 'moujtahid_receipt_customization_v1';
 
 export const DEFAULT_RECEIPT_SETTINGS: ReceiptCustomizationSettings = {
   logoDataUrl: '',
@@ -62,12 +63,15 @@ export const SAMPLE_RECEIPT_DATA: ReceiptPreviewData = {
 
 @Injectable({ providedIn: 'root' })
 export class ReceiptCustomizationService {
+  // Namespaced per logged-in user so one tenant's receipt branding (logo,
+  // center name, address) never bleeds into another tenant's session.
+  private auth = inject(AuthStore);
   settings = signal<ReceiptCustomizationSettings>(this.loadSettings());
 
   save(settings: ReceiptCustomizationSettings): void {
     const normalized = this.normalize(settings);
     this.settings.set(normalized);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    localStorage.setItem(this.storageKey(), JSON.stringify(normalized));
   }
 
   reset(): ReceiptCustomizationSettings {
@@ -123,9 +127,14 @@ export class ReceiptCustomizationService {
     URL.revokeObjectURL(url);
   }
 
+  private storageKey(): string {
+    const uuid = this.auth.user()?.uuid;
+    return uuid ? `${STORAGE_KEY_PREFIX}.${uuid}` : STORAGE_KEY_PREFIX;
+  }
+
   private loadSettings(): ReceiptCustomizationSettings {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(this.storageKey());
       if (!raw) return { ...DEFAULT_RECEIPT_SETTINGS };
       return this.normalize({ ...DEFAULT_RECEIPT_SETTINGS, ...JSON.parse(raw) });
     } catch {

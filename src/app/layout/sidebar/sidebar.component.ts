@@ -1,27 +1,37 @@
 import { Component, signal, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive, Router } from '@angular/router';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NgClass } from '@angular/common';
-import { AuthService } from '../../auth/auth.service';
+import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
+import { TranslatePipe } from '../../i18n/translate.pipe';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, NgClass],
+  standalone: true,
+  imports: [RouterLink, RouterLinkActive, NgClass, TranslatePipe],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css'
 })
 export class SidebarComponent {
-  private auth = inject(AuthService);
-  private router = inject(Router);
+  auth = inject(AuthStore);
 
   collapsed = signal(false);
   user = this.auth.user;
+  isOwner = this.auth.isOwner;
 
   toggle() {
     this.collapsed.update(v => !v);
   }
 
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+  /** Whether the current user may see the given sidebar tab. */
+  canSee(key: TenantPermissionKey): boolean {
+    return this.auth.canAccess(key);
+  }
+
+  async logout(): Promise<void> {
+    await this.auth.logout();
+    // Hard reload (not router.navigate) so every app-root singleton service
+    // (student/teacher/payment caches, etc.) is torn down — an SPA-only nav
+    // would let the next login on this tab inherit this tenant's cached data.
+    window.location.href = '/login';
   }
 }

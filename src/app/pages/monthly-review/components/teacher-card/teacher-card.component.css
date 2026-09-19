@@ -1,0 +1,132 @@
+:host {
+  display: block;
+}
+
+.teacher-card {
+  background-color: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  height: 100%;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.teacher-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-float);
+  border-color: var(--border-dark);
+}
+
+.teacher-card.is-paid {
+  background-color: var(--success-bg);
+  border-color: transparent;
+}
+
+.teacher-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.status-paid { color: var(--success); background-color: rgba(255,255,255,0.6); }
+.status-due { color: var(--warning); background-color: var(--warning-bg); }
+
+.teacher-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+
+.teacher-specialty {
+  margin: -0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.teacher-amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.25rem;
+}
+
+.amount-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.amount-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.teacher-actions {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+.btn-mark-paid, .btn-view-details {
+  flex: 1;
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-mark-paid {
+  border: none;
+  background-color: var(--accent);
+  color: #fff;
+}
+
+.btn-mark-paid:hover { opacity: 0.9; transform: translateY(-1px); }
+
+.btn-view-details {
+  border: 1px solid var(--border-dark);
+  background-color: transparent;
+  color: var(--text-muted);
+}
+
+.btn-view-details:hover { background-color: var(--bg-color); color: var(--text-main); }

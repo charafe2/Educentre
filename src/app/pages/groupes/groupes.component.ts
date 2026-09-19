@@ -4,10 +4,14 @@ import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ClassesService } from '../../services/classes.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
+import { SubjectsService } from '../../services/subjects.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { ToastService } from '../../services/toast.service';
 import { Group } from '../../models/group.model';
 import { Classe } from '../../models/classe.model';
 import { Student } from '../../models/student.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 interface SubjectView {
   classe: Classe;
@@ -25,7 +29,7 @@ interface LevelView {
 @Component({
   selector: 'app-groupes',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslatePipe],
   templateUrl: './groupes.component.html',
   styleUrl: './groupes.component.css',
 })
@@ -34,9 +38,15 @@ export class GroupesComponent {
   private classesService = inject(ClassesService);
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
+  private subjectsService = inject(SubjectsService);
+  private academicLevelsService = inject(AcademicLevelsService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   allTeachers = this.teachersService.teachers;
+  allSubjects = this.subjectsService.subjects;
+  allLevels = this.academicLevelsService.levels;
 
   editingClasse = signal<Classe | null>(null);
   editForm = {
@@ -70,7 +80,7 @@ export class GroupesComponent {
       teacherId: +this.editForm.teacherId,
       status: this.editForm.status,
     }).subscribe(() => {
-      this.toast.show('Classe mise à jour');
+      this.toast.show(this.t('groups.toastClassUpdated'));
       this.editingClasse.set(null);
     });
   }
@@ -291,11 +301,11 @@ export class GroupesComponent {
   }
 
   absenceLabel(student: Student): string {
-    return student.totalSessions === 0 ? '—' : `${student.absenceCount}abs`;
+    return student.totalSessions === 0 ? '-' : `${student.absenceCount}abs`;
   }
 
   formatMoney(amount: number): string {
-    return amount.toLocaleString('fr-MA') + ' dh';
+    return amount.toLocaleString('fr-MA') + ' ' + this.t('common.currency');
   }
 
   onSearch(event: Event): void {
@@ -328,9 +338,9 @@ export class GroupesComponent {
     this.groupsService.createEmptyGroup(subject.classe.id, nextGroupNumber).subscribe({
       next: () => {
         this.groupsService.loadGroups();
-        this.toast.show('Nouveau groupe créé');
+        this.toast.show(this.t('groups.toastGroupCreated'));
       },
-      error: () => this.toast.show('Erreur lors de la création', 'error'),
+      error: () => this.toast.show(this.t('groups.toastCreateError'), 'error'),
     });
   }
 
@@ -349,7 +359,7 @@ export class GroupesComponent {
     this.groupsService.updateCapacity(groupId, val).subscribe({
       error: () => this.groupsService.loadGroups(),
     });
-    this.toast.show('Limite mise à jour');
+    this.toast.show(this.t('groups.toastLimitUpdated'));
     this.editingCapacityGroupId.set(null);
   }
 
@@ -412,11 +422,11 @@ export class GroupesComponent {
     this.groupsService.moveStudent(studentId, null, group.id).subscribe({
       next: () => {
         this.closeStudentPicker();
-        this.toast.show('Élève ajouté');
+        this.toast.show(this.t('groups.toastStudentAdded'));
       },
       error: () => {
         this.groupsService.loadGroups();
-        this.toast.show('Erreur lors de l\'ajout', 'error');
+        this.toast.show(this.t('groups.toastAddError'), 'error');
       },
     });
   }
@@ -490,11 +500,11 @@ export class GroupesComponent {
       const fromClasse = fromClasseId !== undefined ? this.classesService.getById(fromClasseId) : undefined;
       const toClasse = toClasseId !== undefined ? this.classesService.getById(toClasseId) : undefined;
       if (fromClasse && toClasse && fromClasse.level !== toClasse.level) {
-        this.toast.show('Impossible : niveaux différents');
+        this.toast.show(this.t('groups.toastDiffLevels'));
       } else if (fromClasse && toClasse && !this.isSameSubjectAndLevel(fromClasse, toClasse)) {
-        this.toast.show('Élève déjà inscrit dans cette matière');
+        this.toast.show(this.t('groups.toastAlreadyEnrolled'));
       } else {
-        this.toast.show('Déplacement impossible');
+        this.toast.show(this.t('groups.toastMoveImpossible'));
       }
       return;
     }
@@ -509,18 +519,18 @@ export class GroupesComponent {
       const classe = this.classesService.getById(classeId);
       this.pendingFullDrop.set({
         studentId: ds.studentId, fromGroupId: ds.fromGroupId, toGroupId,
-        classeId, studentName: student ? `${student.firstName} ${student.lastName}` : '—',
-        className: classe?.name ?? '—',
+        classeId, studentName: student ? `${student.firstName} ${student.lastName}` : '-',
+        className: classe?.name ?? '-',
       });
       return;
     }
 
     this.swapStudentLocally(ds.studentId, ds.fromGroupId, toGroupId);
     this.groupsService.moveStudent(ds.studentId, ds.fromGroupId, toGroupId).subscribe({
-      next: () => this.toast.show('Élève déplacé'),
+      next: () => this.toast.show(this.t('groups.toastStudentMoved')),
       error: () => {
         this.groupsService.loadGroups();
-        this.toast.show('Erreur lors du déplacement', 'error');
+        this.toast.show(this.t('groups.toastMoveError'), 'error');
       },
     });
   }
@@ -536,12 +546,12 @@ export class GroupesComponent {
     this.swapStudentLocally(pending.studentId, pending.fromGroupId, pending.toGroupId);
     this.groupsService.moveStudent(pending.studentId, pending.fromGroupId, pending.toGroupId).subscribe({
       next: () => {
-        this.toast.show('Élève ajouté');
+        this.toast.show(this.t('groups.toastStudentAdded'));
         this.pendingFullDrop.set(null);
       },
       error: () => {
         this.groupsService.loadGroups();
-        this.toast.show('Erreur lors de l\'ajout', 'error');
+        this.toast.show(this.t('groups.toastAddError'), 'error');
       },
     });
   }
@@ -556,10 +566,10 @@ export class GroupesComponent {
     this.groupsService.createGroup(pending.classeId, nextGroupNumber, pending.studentId).subscribe({
       next: (res) => {
         this.groupsService.loadGroups();
-        this.toast.show('Nouveau groupe créé et élève déplacé');
+        this.toast.show(this.t('groups.toastGroupCreatedMoved'));
         this.pendingFullDrop.set(null);
       },
-      error: () => this.toast.show('Erreur lors de la création', 'error'),
+      error: () => this.toast.show(this.t('groups.toastCreateError'), 'error'),
     });
   }
 

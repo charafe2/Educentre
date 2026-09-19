@@ -2,17 +2,62 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>Moujtahid | Gestion Scolaire Premium</title>
+  <title>Gestion des Centres de Soutien Scolaire et Langues | Maroc</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+  <!-- ============ SEO ============ -->
+  <meta name="description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Moujtahid">
+  <meta name="theme-color" content="#0071e3">
+  <meta name="geo.region" content="MA">
+  <meta name="geo.placename" content="Maroc">
+  <link rel="canonical" href="https://moujtahide.ma/">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Moujtahid">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://moujtahide.ma/">
+  <meta property="og:title" content="Gestion des Centres de Soutien Scolaire et Langues | Maroc">
+  <meta property="og:description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
+  <meta property="og:image" content="https://moujtahide.ma/assets/photos/excel2.png">
+  <meta property="og:image:width" content="1667">
+  <meta property="og:image:height" content="944">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gestion des Centres de Soutien Scolaire et Langues | Maroc">
+  <meta name="twitter:description" content="Moujtahid : logiciel de gestion des centres de soutien scolaire, de langues et des écoles au Maroc. Paiements en MAD, appli parents. Essai gratuit.">
+  <meta name="twitter:image" content="https://moujtahide.ma/assets/photos/excel2.png">
+
+  <!--
+    Structured data (JSON-LD) is now injected per-page by SeoService — see
+    src/app/core/seo/schema.ts (homepage graph) — so it stays in sync with the
+    app instead of being duplicated here.
+  -->
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="favicon.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
   <app-root></app-root>
+  <!--
+    No <h1> here on purpose: the app always renders exactly one <h1>
+    (#lp-headline in hero.component.html — see the SEO comment there), so a
+    second one in this fallback would create a duplicate-H1 issue for anyone
+    (or any crawler) parsing raw HTML with JS disabled.
+  -->
+  <noscript>
+    <p>Moujtahid est le logiciel de gestion des centres de soutien scolaire et de langues au Maroc : planification, présences, paiements en dirhams et analyses. Activez JavaScript pour utiliser l'application.</p>
+  </noscript>
 </body>
 </html>

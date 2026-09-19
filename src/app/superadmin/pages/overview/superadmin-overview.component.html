@@ -1,109 +1,136 @@
-<div class="overview-page">
-  <section class="hero-band">
+<div class="sa-page overview">
+
+  <header class="sa-head">
     <div>
-      <p class="eyebrow">Super administration</p>
-      <h1>Vue générale des paiements centres</h1>
-      <p class="intro">Suivi des factures octroyées aux centres, statuts d'encaissement et répartition des packages.</p>
+      <span class="sa-eyebrow">Période en cours</span>
+      <h1>Où en est l'encaissement</h1>
+      <p class="sa-lede">L'état des factures émises aux centres, du package facturé jusqu'au règlement.</p>
     </div>
-    <div class="hero-actions">
-      <a routerLink="/superadmin/clients" class="secondary-link">
+    <div class="sa-head-actions">
+      <a routerLink="/superadmin/clients" class="sa-btn ghost">
         <i class="fa-solid fa-buildings"></i>
         Centres
       </a>
-      <a routerLink="/superadmin/packages" class="primary-link">
-        <i class="fa-solid fa-layer-group"></i>
-        Packages
+      <a routerLink="/superadmin/invoices" class="sa-btn primary">
+        <i class="fa-solid fa-file-invoice"></i>
+        Émettre une facture
       </a>
     </div>
-  </section>
+  </header>
 
   @if (error()) {
-    <div class="inline-error">
+    <div class="sa-alert">
       <i class="fa-solid fa-circle-exclamation"></i>
       {{ error() }}
     </div>
   }
 
-  <section class="metric-grid" aria-label="Indicateurs facturation">
-    <article class="metric-panel">
-      <span class="metric-label">Facturé ce mois</span>
-      <strong>{{ totalRevenue() | number:'1.0-0' }} MAD</strong>
-      <small>{{ invoices().length }} factures centres</small>
-    </article>
-    <article class="metric-panel">
-      <span class="metric-label">À encaisser</span>
-      <strong>{{ pendingAmount() | number:'1.0-0' }} MAD</strong>
-      <small>Relances prévues cette semaine</small>
-    </article>
-    <article class="metric-panel warning">
-      <span class="metric-label">Retards</span>
-      <strong>{{ lateAmount() | number:'1.0-0' }} MAD</strong>
-      <small>1 centre à vérifier</small>
-    </article>
-    <article class="metric-panel success">
-      <span class="metric-label">Factures payées</span>
-      <strong>{{ paidCount() }}</strong>
-      <small>Paiements confirmés</small>
-    </article>
+  <!-- The month's money as a single instrument. -->
+  <section class="ledger" aria-label="Encaissement de la période">
+    <div class="ledger-top">
+      <div class="ledger-total">
+        <span class="ledger-caption">Facturé aux centres</span>
+        <p class="ledger-amount">
+          {{ totalRevenue() | number:'1.0-0' }}<span class="ledger-currency">MAD</span>
+        </p>
+        <span class="ledger-note">{{ invoices().length }} factures · {{ paidCount() }} réglées</span>
+      </div>
+      <div class="ledger-rate">
+        <span class="ledger-rate-value">{{ collectedShare() }}<small>%</small></span>
+        <span class="ledger-caption">encaissé</span>
+      </div>
+    </div>
+
+    <div class="sa-meter" role="img"
+         [attr.aria-label]="collectedShare() + '% des factures de la période sont encaissées'">
+      @for (segment of segments(); track segment.key) {
+        @if (segment.share > 0) {
+          <span [class]="'sa-meter-seg ' + segment.key" [style.width.%]="segment.share"></span>
+        }
+      }
+    </div>
+
+    <div class="sa-meter-key">
+      @for (segment of segments(); track segment.key) {
+        <div [class]="segment.key">
+          <span class="key-label">{{ segment.label }}</span>
+          <span class="key-value">{{ segment.amount | number:'1.0-0' }} <small>MAD</small></span>
+        </div>
+      }
+    </div>
   </section>
 
-  <section class="dashboard-grid">
-    <div class="panel invoices-panel">
-      <div class="panel-header">
+  <section class="split">
+    <div class="sa-card">
+      <div class="sa-card-head">
         <div>
           <h2>Factures centres</h2>
-          <p>Dernières factures émises par package</p>
+          <p>Les dernières émissions, par package</p>
         </div>
-        <button class="icon-command" title="Exporter">
-          <i class="fa-solid fa-download"></i>
-        </button>
+        <a routerLink="/superadmin/invoices" class="sa-btn ghost sm">Tout voir</a>
       </div>
 
-      <div class="invoice-list">
+      <div class="rows">
         @if (loading()) {
-          <article class="invoice-row skeleton-row"><div></div><div></div></article>
-          <article class="invoice-row skeleton-row"><div></div><div></div></article>
+          @for (row of [1, 2, 3, 4]; track row) {
+            <div class="row row-loading">
+              <span class="sa-skeleton" style="width: 42%; height: 13px;"></span>
+              <span class="sa-skeleton" style="width: 18%; height: 13px;"></span>
+            </div>
+          }
         } @else {
-        @for (invoice of invoices(); track invoice.id) {
-          <article class="invoice-row">
-            <div class="invoice-main">
-              <span class="invoice-id">{{ invoice.id }}</span>
-              <strong>{{ invoice.centre }}</strong>
-              <small>{{ invoice.city }} · Package {{ invoice.packageName }}</small>
+          @for (invoice of invoices(); track invoice.id) {
+            <article class="row" [attr.data-tone]="statusTone(invoice.status)">
+              <div class="row-id">
+                <span class="row-ref">{{ invoice.id }}</span>
+                <span class="row-name">{{ invoice.centre }}</span>
+                <span class="row-sub">{{ invoice.city }} · {{ invoice.packageName }}</span>
+              </div>
+              <div class="row-figures">
+                <span class="row-amount">{{ invoice.amount | number:'1.0-0' }} MAD</span>
+                <span [class]="'sa-badge ' + statusTone(invoice.status)">
+                  {{ statusLabel(invoice.status) }}
+                </span>
+                <span class="row-due">Échéance {{ invoice.dueDate }}</span>
+              </div>
+            </article>
+          }
+          @empty {
+            <div class="sa-empty">
+              <i class="fa-regular fa-file-lines"></i>
+              <strong>Aucune facture sur la période</strong>
+              <span>Émettez la première depuis l'écran Factures.</span>
             </div>
-            <div class="invoice-side">
-              <strong>{{ invoice.amount | number:'1.0-0' }} MAD</strong>
-              <span [ngClass]="['status-pill', 'status-' + invoice.status]">{{ statusLabel(invoice.status) }}</span>
-              <small>Échéance {{ invoice.dueDate }}</small>
-            </div>
-          </article>
-        }
-        @empty {
-          <article class="empty-state">Aucune facture centre disponible.</article>
-        }
+          }
         }
       </div>
     </div>
 
-    <aside class="panel packages-panel">
-      <div class="panel-header compact">
+    <aside class="sa-card">
+      <div class="sa-card-head">
         <div>
-          <h2>Packages actifs</h2>
-          <p>Répartition des centres</p>
+          <h2>Packages</h2>
+          <p>Ce que chaque offre rapporte</p>
         </div>
       </div>
 
-      <div class="package-stack">
+      <div class="mix">
         @for (item of packageMix(); track item.name) {
-          <div class="package-line">
-            <div class="package-topline">
-              <span class="package-name">{{ item.name }}</span>
-              <strong>{{ item.revenue | number:'1.0-0' }} MAD</strong>
+          <div class="mix-line">
+            <div class="mix-top">
+              <span class="mix-name">{{ item.name }}</span>
+              <span class="mix-revenue">{{ item.revenue | number:'1.0-0' }} MAD</span>
             </div>
-            <div class="bar-track">
-              <span [ngClass]="['bar-fill', 'bar-' + item.tone]" [style.width.%]="item.centres * 2"></span>
+            <div class="mix-track">
+              <span class="mix-fill" [style.width.%]="packageShare(item.centres)"></span>
             </div>
-            <small>{{ item.centres }} centres abonnés</small>
+            <span class="mix-note">{{ item.centres }} centres abonnés</span>
+          </div>
+        }
+        @empty {
+          <div class="sa-empty">
+            <strong>Catalogue vide</strong>
+            <span>Créez un package pour commencer à facturer.</span>
           </div>
         }
       </div>

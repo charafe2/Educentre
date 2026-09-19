@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Domains\Core\Traits\BelongsToTenant;
+
 class SessionAttendance extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected static function booted(): void
     {
@@ -34,10 +36,7 @@ class SessionAttendance extends Model
         'attended_on' => 'date',
     ];
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    
 
     public function session(): BelongsTo
     {

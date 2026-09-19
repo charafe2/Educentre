@@ -1,0 +1,36 @@
+<div class="lp">
+  <nav class="nav" [class.nav--scrolled]="scrolled()" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <a routerLink="/" class="nav__logo" aria-label="Accueil Moujtahid">Moujtahid<span>.</span></a>
+
+      <div class="nav__links" role="list">
+        <a href="/#lp-features" class="nav__link" role="listitem">Fonctionnalités</a>
+        <a href="/#lp-hiw"      class="nav__link" role="listitem">Comment ça marche</a>
+        <a href="/#lp-pricing"  class="nav__link" role="listitem">Tarifs</a>
+        <a href="/#lp-faq"      class="nav__link" role="listitem">FAQ</a>
+      </div>
+
+      <div class="nav__actions">
+        <a routerLink="/login" class="btn-nav">Commencer votre démo</a>
+        <app-flag-language-switcher />
+        <button
+          class="nav__hamburger"
+          [class.open]="mobileMenuOpen()"
+          aria-label="Ouvrir le menu"
+          [attr.aria-expanded]="mobileMenuOpen()"
+          aria-controls="legal-mobile-menu"
+          (click)="toggleMobileMenu()"
+        >
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="nav__mobile" id="legal-mobile-menu" [class.open]="mobileMenuOpen()" aria-label="Menu mobile">
+      <a href="/#lp-features" class="nav__mobile-link" (click)="closeMobileMenu()">Fonctionnalités</a>
+      <a href="/#lp-hiw"      class="nav__mobile-link" (click)="closeMobileMenu()">Comment ça marche</a>
+      <a href="/#lp-pricing"  class="nav__mobile-link" (click)="closeMobileMenu()">Tarifs</a>
+      <a href="/#lp-faq"      class="nav__mobile-link" (click)="closeMobileMenu()">FAQ</a>
+    </div>
+  </nav>
+</div>

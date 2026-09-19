@@ -1,20 +1,20 @@
 import { inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { filter, map, take } from 'rxjs';
+import { AuthStore } from './auth.store';
 
 export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth = inject(AuthStore);
   const router = inject(Router);
 
-  if (auth.isLoggedIn()) {
-    return true;
-  }
-
-  const token = localStorage.getItem('auth_token');
-  if (token) {
-    // Token exists but user not loaded yet — auth service will load it
-    return true;
-  }
-
-  return router.createUrlTree(['/login']);
+  // On a hard refresh the store rehydrates the session asynchronously
+  // (tryLoadUser -> GET /auth/me). Wait until that has finished before
+  // deciding, otherwise the guard fires while user is still null and
+  // bounces an authenticated user to /login.
+  return toObservable(auth.initialized).pipe(
+    filter((initialized) => initialized),
+    take(1),
+    map(() => (auth.isLoggedIn() ? true : router.parseUrl('/login'))),
+  );
 };

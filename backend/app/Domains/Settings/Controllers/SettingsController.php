@@ -2,12 +2,16 @@
 
 namespace App\Domains\Settings\Controllers;
 
+use App\Domains\Settings\Requests\SendSupportRequestRequest;
 use App\Domains\Settings\Requests\UpdateSettingsRequest;
 use App\Domains\Settings\Resources\SettingsResource;
 use App\Domains\Settings\Services\SettingsService;
 use App\Http\Controllers\Controller;
+use App\Mail\SupportRequestMail;
+use App\Models\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use OpenApi\Attributes as OA;
 
 #[OA\Tag(name: 'Settings', description: 'Paramètres du centre')]
@@ -48,7 +52,7 @@ class SettingsController extends Controller
     )]
     public function centre(Request $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $tenant = Tenant::findOrFail($request->user()->tenant_id);
 
         return $this->success(
             data: SettingsResource::make($tenant),
@@ -80,7 +84,7 @@ class SettingsController extends Controller
     )]
     public function updateCentre(UpdateSettingsRequest $request): JsonResponse
     {
-        $tenant = $request->user()->tenant;
+        $tenant = Tenant::findOrFail($request->user()->tenant_id);
 
         $this->settingsService->updateCentre($tenant, $request->validated());
 
@@ -88,5 +92,32 @@ class SettingsController extends Controller
             data: SettingsResource::make($tenant->fresh()),
             message: 'Informations du centre mises à jour.',
         );
+    }
+
+    public function sendSupportRequest(SendSupportRequestRequest $request): JsonResponse
+    {
+        $user = $request->user();
+
+        // Create a conversation (ticket)
+        $conversation = \App\Domains\Support\Models\Conversation::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'subject' => $request->validated('subject'),
+        ]);
+
+        // Create the first message with the body
+        $message = $conversation->messages()->create([
+            'sender_type' => get_class($user),
+            'sender_id' => $user->id,
+            'content' => $request->validated('message'),
+            'is_read' => false,
+        ]);
+
+        // Broadcast to superadmins
+        broadcast(new \App\Events\NewTicketCreated($conversation));
+        broadcast(new \App\Events\MessageSent($message->load('sender', 'conversation')))->toOthers();
+
+        return $this->success(null, 'Votre demande a été envoyée au support.');
     }
 }

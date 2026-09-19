@@ -2,67 +2,88 @@
 
 namespace App\Domains\SuperAdmin\Services;
 
-use App\Models\Tenant;
-use App\Models\User;
+use App\Models\SuperAdmin;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Hash;
 
 class SuperAdminAccountService
 {
-    public function all(): Collection
+    /**
+     * @param  array{status?: string|null, search?: string|null}  $filters
+     * @return Collection<int, SuperAdmin>
+     */
+    public function list(array $filters = []): Collection
     {
-        return User::query()
-            ->where('role', 'superadmin')
-            ->latest('created_at')
+        return SuperAdmin::query()
+            ->when(
+                filled($filters['status'] ?? null),
+                fn ($query) => $query->where('is_active', $filters['status'] === 'active')
+            )
+            ->when(
+                filled($filters['search'] ?? null),
+                fn ($query) => $query->where(function ($inner) use ($filters) {
+                    $term = '%'.$filters['search'].'%';
+                    $inner->where('name', 'like', $term)->orWhere('email', 'like', $term);
+                })
+            )
+            ->orderBy('name')
             ->get();
     }
 
-    public function create(array $data): User
+    public function create(array $data): SuperAdmin
     {
-        return User::create([
-            'tenant_id' => $this->platformTenant()->id,
+        return SuperAdmin::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => 'superadmin',
-            'status' => $data['status'],
+            // Hashed by the model's 'hashed' cast.
+            'password' => $data['password'],
+            'is_active' => ($data['status'] ?? 'active') === 'active',
         ]);
     }
 
-    public function update(User $account, array $data): User
+    public function update(SuperAdmin $account, array $data): SuperAdmin
     {
+        $wasActive = $account->is_active;
+
         $attributes = [
             'name' => $data['name'],
             'email' => $data['email'],
-            'status' => $data['status'],
+            'is_active' => ($data['status'] ?? $account->status()) === 'active',
         ];
 
-        if (! empty($data['password'])) {
-            $attributes['password'] = Hash::make($data['password']);
+        // An omitted or blank password means "leave it alone" — the console
+        // sends the field on every save, empty when it isn't being changed.
+        if (filled($data['password'] ?? null)) {
+            $attributes['password'] = $data['password'];
         }
 
         $account->update($attributes);
 
-        return $account->refresh();
+        if ($wasActive && ! $account->is_active) {
+            $account->revokeAllTokens();
+        }
+
+        return $account->fresh();
     }
 
-    public function toggleStatus(User $account): User
+    public function toggleStatus(SuperAdmin $account): SuperAdmin
     {
-        $account->update(['status' => $account->status === 'active' ? 'suspended' : 'active']);
+        $account->update(['is_active' => ! $account->is_active]);
 
-        return $account->refresh();
+        if (! $account->is_active) {
+            $account->revokeAllTokens();
+        }
+
+        return $account->fresh();
     }
 
-    public function delete(User $account): void
+    public function delete(SuperAdmin $account): void
     {
+        $account->revokeAllTokens();
         $account->delete();
     }
 
-    private function platformTenant(): Tenant
+    public function recordLogin(SuperAdmin $account): void
     {
-        return Tenant::firstOrCreate(
-            ['slug' => 'platform'],
-            ['name' => 'Plateforme Moujtahid', 'status' => 'active']
-        );
+        $account->forceFill(['last_login_at' => now()])->save();
     }
 }

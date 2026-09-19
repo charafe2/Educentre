@@ -1,0 +1,168 @@
+<div class="sa-page catalogue">
+
+  <header class="sa-head">
+    <div>
+      <span class="sa-eyebrow">Catalogue</span>
+      <h1>Niveaux scolaires</h1>
+      <p class="sa-lede">Le référentiel commun, de la primaire au bac. Chaque centre ne voit que les niveaux que vous lui ouvrez.</p>
+    </div>
+    <div class="sa-head-actions">
+      <button class="sa-btn primary" (click)="openCreate()" type="button">
+        <i class="fa-solid fa-plus"></i>
+        Créer un niveau
+      </button>
+    </div>
+  </header>
+
+  <dl class="sa-figures">
+    <div>
+      <dt>Au catalogue</dt>
+      <dd>{{ totalLevels() }}</dd>
+    </div>
+    <div class="paid">
+      <dt>Actifs</dt>
+      <dd>{{ activeLevels() }}</dd>
+    </div>
+    <div class="accent">
+      <dt>Ouverts à un centre</dt>
+      <dd>{{ assignedLevels() }}</dd>
+    </div>
+  </dl>
+
+  @if (pageError()) {
+    <div class="sa-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ pageError() }}
+    </div>
+  }
+
+  <div class="sa-toolbar">
+    <div class="sa-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="search"
+        placeholder="Rechercher un niveau…"
+        aria-label="Rechercher un niveau"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <div class="sa-segmented" role="group" aria-label="Filtrer par statut">
+      @for (filter of statusFilters; track filter.key) {
+        <button type="button" [class.on]="filterStatus() === filter.key" (click)="filterStatus.set(filter.key)">
+          {{ filter.label }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="sa-table-card">
+    <div class="sa-table-scroll">
+      <table class="sa-table">
+        <thead>
+          <tr>
+            <th>Niveau</th>
+            <th>Statut</th>
+            <th class="num">Centres</th>
+            <th class="num">Créé le</th>
+            <th class="num">Mis à jour</th>
+            <th><span class="sr">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4]; track row) {
+              <tr class="loading-row"><td colspan="6"><span class="sa-skeleton"></span></td></tr>
+            }
+          } @else {
+            @for (level of filteredLevels(); track level.id) {
+              <tr>
+                <td><span class="sa-idcell-name">{{ level.name }}</span></td>
+                <td>
+                  <span [class]="level.status === 'active' ? 'sa-badge active' : 'sa-badge inactive'">
+                    {{ level.status === 'active' ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                <td class="num">{{ level.assignedCentresCount ?? 0 }}</td>
+                <td class="num sa-meta">{{ level.createdAt | date:'dd/MM/yyyy' }}</td>
+                <td class="num sa-meta">{{ level.updatedAt | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <div class="sa-actions">
+                    <button class="sa-iconbtn" type="button" title="Modifier le niveau" (click)="openEdit(level)">
+                      <i class="fa-regular fa-pen-to-square"></i>
+                    </button>
+                    <button class="sa-iconbtn danger" type="button" title="Supprimer le niveau" (click)="deleteLevel(level)">
+                      <i class="fa-regular fa-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="sa-empty">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <strong>Aucun niveau ne correspond</strong>
+                    <span>Changez le filtre ou ajoutez-en un au catalogue.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Create / edit level -->
+@if (showModal()) {
+  <div class="sa-modal-overlay" (click)="showModal.set(false)">
+    <div class="sa-modal narrow" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+      <div class="sa-modal-head">
+        <div>
+          <h2>{{ editingLevelId() ? 'Modifier le niveau' : 'Créer un niveau' }}</h2>
+          <p>{{ editingLevelId() ? 'Le changement s\'applique à tous les centres qui l\'utilisent.' : 'Ajouté au catalogue, puis ouvert centre par centre.' }}</p>
+        </div>
+        <button class="sa-iconbtn" type="button" (click)="showModal.set(false)" aria-label="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sa-modal-body">
+        @if (formError()) {
+          <div class="sa-alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ formError() }}
+          </div>
+        }
+
+        <label class="sa-field">
+          <span>Nom du niveau <b class="req">*</b></span>
+          <input class="sa-input" type="text" [(ngModel)]="form.name" placeholder="1ère Bac" />
+        </label>
+
+        <label class="sa-field">
+          <span>Statut</span>
+          <select class="sa-input" [(ngModel)]="form.status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+          <small class="sa-hint">Un niveau inactif reste au catalogue mais ne peut plus être assigné.</small>
+        </label>
+      </div>
+
+      <div class="sa-modal-foot">
+        <button class="sa-btn quiet" type="button" (click)="showModal.set(false)">Annuler</button>
+        <button class="sa-btn primary" type="button" (click)="submitSave()" [disabled]="saving()">
+          <i class="fa-solid" [class.fa-plus]="!editingLevelId()" [class.fa-floppy-disk]="editingLevelId()"></i>
+          {{ saving() ? 'Enregistrement…' : (editingLevelId() ? 'Enregistrer' : 'Créer le niveau') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

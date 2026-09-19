@@ -2,8 +2,8 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="page-title">
-      <h1>Paramètres</h1>
-      <p>Configuration du centre et du système</p>
+      <h1>{{ 'settings.title' | t }}</h1>
+      <p>{{ 'settings.subtitle' | t }}</p>
     </div>
   </div>
 
@@ -14,10 +14,11 @@
       @for (tab of tabs; track tab.id) {
         <button
           [ngClass]="['tab-item', activeTab() === tab.id ? 'tab-active' : '']"
+          [attr.data-tab]="tab.id"
           (click)="setTab(tab.id)"
         >
           <i [class]="tab.icon"></i>
-          <span>{{ tab.label }}</span>
+          <span>{{ tab.label | t }}</span>
           <i class="fa-solid fa-chevron-right tab-arrow"></i>
         </button>
       }
@@ -29,15 +30,15 @@
       <!-- Centre Info -->
       @if (activeTab() === 'centre') {
         <div class="settings-section">
-          <h3 class="section-title">Informations du centre</h3>
-          <p class="section-desc">Modifiez les informations principales de votre établissement.</p>
+          <h3 class="section-title">{{ 'settings.centreTitle' | t }}</h3>
+          <p class="section-desc">{{ 'settings.centreDesc' | t }}</p>
           <div class="form-grid">
             <div class="form-group form-full">
-              <label class="form-label">Nom du centre</label>
+              <label class="form-label">{{ 'settings.centreName' | t }}</label>
               <input class="form-input" type="text" [(ngModel)]="centreForm.name" />
             </div>
             <div class="form-group">
-              <label class="form-label">Type</label>
+              <label class="form-label">{{ 'settings.type' | t }}</label>
               <select class="form-input" [(ngModel)]="centreForm.type">
                 @for (t of centreTypes; track t) {
                   <option [value]="t">{{ t }}</option>
@@ -45,31 +46,31 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">Ville</label>
+              <label class="form-label">{{ 'settings.city' | t }}</label>
               <input class="form-input" type="text" [(ngModel)]="centreForm.city" />
             </div>
             <div class="form-group form-full">
-              <label class="form-label">Adresse</label>
+              <label class="form-label">{{ 'settings.address' | t }}</label>
               <input class="form-input" type="text" [(ngModel)]="centreForm.address" />
             </div>
             <div class="form-group">
-              <label class="form-label">Téléphone</label>
+              <label class="form-label">{{ 'settings.phone' | t }}</label>
               <input class="form-input" type="tel" [(ngModel)]="centreForm.phone" />
             </div>
             <div class="form-group">
-              <label class="form-label">WhatsApp</label>
+              <label class="form-label">{{ 'settings.whatsapp' | t }}</label>
               <input class="form-input" type="tel" [(ngModel)]="centreForm.whatsapp" />
             </div>
           </div>
           <div class="form-actions">
-            <button class="btn-secondary" (click)="resetCentreForm()">Annuler</button>
+            <button class="btn-secondary" (click)="resetCentreForm()">{{ 'common.cancel' | t }}</button>
             <button class="btn-primary" (click)="saveCentreForm()" [disabled]="saving()">
               @if (saving()) {
                 <i class="fa-solid fa-circle-notch fa-spin"></i>
-                Enregistrement...
+                {{ 'settings.saving' | t }}
               } @else {
                 <i class="fa-solid fa-floppy-disk"></i>
-                Enregistrer
+                {{ 'common.save' | t }}
               }
             </button>
           </div>
@@ -81,10 +82,10 @@
         <div class="settings-section receipt-settings-section">
           <div class="receipt-settings-heading">
             <div>
-              <h3 class="section-title">Personnalisation du reçu</h3>
-              <p class="section-desc">Personnalisez l'apparence des reçus de paiement générés par votre centre.</p>
+              <h3 class="section-title">{{ 'settings.receiptTitle' | t }}</h3>
+              <p class="section-desc">{{ 'settings.receiptDesc' | t }}</p>
             </div>
-            <span class="receipt-live-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Aperçu en direct</span>
+            <span class="receipt-live-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> {{ 'settings.livePreview' | t }}</span>
           </div>
 
           <div class="receipt-settings-layout">
@@ -100,53 +101,53 @@
                 <div>
                   <label class="btn-secondary receipt-upload-btn">
                     <i class="fa-solid fa-upload"></i>
-                    Importer le logo
+                    {{ 'settings.importLogo' | t }}
                     <input type="file" accept="image/*" (change)="onReceiptLogoSelected($event)" hidden>
                   </label>
                   @if (receiptForm.logoDataUrl) {
-                    <button class="receipt-link-btn" type="button" (click)="clearReceiptLogo()">Retirer le logo</button>
+                    <button class="receipt-link-btn" type="button" (click)="clearReceiptLogo()">{{ 'settings.removeLogo' | t }}</button>
                   }
                 </div>
               </div>
 
               <div class="form-grid receipt-form-grid">
                 <div class="form-group form-full">
-                  <label class="form-label">Nom du centre</label>
+                  <label class="form-label">{{ 'settings.centreName' | t }}</label>
                   <input class="form-input" type="text" [(ngModel)]="receiptForm.centerName" placeholder="Centre Excel Mathématiques" />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Couleur principale</label>
+                  <label class="form-label">{{ 'settings.mainColor' | t }}</label>
                   <div class="receipt-color-field">
-                    <input type="color" [(ngModel)]="receiptForm.accentColor" aria-label="Couleur principale du reçu">
+                    <input type="color" [(ngModel)]="receiptForm.accentColor" [attr.aria-label]="'settings.mainColorAria' | t">
                     <input class="form-input" type="text" [(ngModel)]="receiptForm.accentColor" />
                   </div>
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Téléphone</label>
+                  <label class="form-label">{{ 'settings.phone' | t }}</label>
                   <input class="form-input" type="tel" [(ngModel)]="receiptForm.phone" placeholder="06 12 34 56 78" />
                 </div>
 
                 <div class="form-group form-full">
-                  <label class="form-label">Adresse du centre</label>
+                  <label class="form-label">{{ 'settings.centreAddress' | t }}</label>
                   <input class="form-input" type="text" [(ngModel)]="receiptForm.address" placeholder="123, Rue des Écoles, Casablanca" />
                 </div>
 
                 <div class="form-group form-full">
-                  <label class="form-label">Note de bas de reçu</label>
-                  <textarea class="form-input receipt-textarea" [(ngModel)]="receiptForm.footerNote" rows="3" placeholder="Merci pour votre confiance."></textarea>
+                  <label class="form-label">{{ 'settings.receiptFooterNote' | t }}</label>
+                  <textarea class="form-input receipt-textarea" [(ngModel)]="receiptForm.footerNote" rows="3" [placeholder]="'settings.footerNotePlaceholder' | t"></textarea>
                 </div>
               </div>
 
               <div class="form-actions receipt-actions">
                 <button class="btn-secondary" type="button" (click)="resetReceiptSettings()">
                   <i class="fa-solid fa-rotate-left"></i>
-                  Réinitialiser
+                  {{ 'settings.reset' | t }}
                 </button>
                 <button class="btn-primary" type="button" (click)="saveReceiptSettings()">
                   <i class="fa-solid fa-floppy-disk"></i>
-                  Enregistrer le modèle
+                  {{ 'settings.saveTemplate' | t }}
                 </button>
               </div>
             </div>
@@ -167,19 +168,35 @@
         <div class="settings-section">
           <div class="panel-header" style="margin-bottom:1.5rem;">
             <div>
-              <h3 class="section-title" style="margin:0;">Matières & Classes</h3>
-              <p class="section-desc" style="margin:0.25rem 0 0;">Gérez les matières et classes de votre centre.</p>
+              <h3 class="section-title" style="margin:0;">{{ 'settings.matieresTitle' | t }}</h3>
+              <p class="section-desc" style="margin:0.25rem 0 0;">{{ 'settings.matieresDesc' | t }}</p>
             </div>
             <button class="btn-primary btn-sm" (click)="openAddMatiere()">
               <i class="fa-solid fa-plus"></i>
-              Ajouter une classe
+              {{ 'settings.addClass' | t }}
             </button>
+          </div>
+
+          <div class="subject-library">
+            <div class="subject-library-header">
+              <span class="subject-library-title">{{ 'settings.subjectLibrary' | t }}</span>
+              <span class="subject-library-hint">{{ 'settings.subjectLibraryHint' | t }}</span>
+            </div>
+            <div class="subject-chips">
+              @for (s of allSubjects(); track s.id) {
+                <div class="subject-chip">
+                  <span>{{ s.name }}</span>
+                </div>
+              } @empty {
+                <p class="subject-library-empty">{{ 'settings.noSubjectsAssigned' | t }}</p>
+              }
+            </div>
           </div>
 
           @if (classesByLevel().length === 0) {
             <div class="matieres-empty">
               <i class="fa-solid fa-book-open"></i>
-              <p>Aucune classe. Commencez par en ajouter une.</p>
+              <p>{{ 'settings.noClasses' | t }}</p>
             </div>
           }
 
@@ -187,19 +204,19 @@
             <div class="level-group">
               <div class="level-group-header">
                 <span class="level-group-label">{{ group.level }}</span>
-                <span class="level-group-count">{{ group.classes.length }} classe{{ group.classes.length > 1 ? 's' : '' }}</span>
+                <span class="level-group-count">{{ 'settings.classCount' | t: { count: group.classes.length, plural: group.classes.length > 1 ? 's' : '' } }}</span>
               </div>
               <div class="table-wrapper">
                 <table>
                   <thead>
                     <tr>
-                      <th>Classe</th>
-                      <th>Matière</th>
-                      <th>Professeur</th>
-                      <th>Capacité</th>
-                      <th>Prix / mois</th>
-                      <th>Statut</th>
-                      <th>Actions</th>
+                      <th>{{ 'settings.colClass' | t }}</th>
+                      <th>{{ 'settings.colSubject' | t }}</th>
+                      <th>{{ 'settings.colTeacher' | t }}</th>
+                      <th>{{ 'settings.colCapacity' | t }}</th>
+                      <th>{{ 'settings.colPriceMonth' | t }}</th>
+                      <th>{{ 'common.status' | t }}</th>
+                      <th>{{ 'common.actions' | t }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -213,19 +230,19 @@
                         </td>
                         <td>{{ c.subject }}</td>
                         <td>{{ getTeacherName(c.teacherId) }}</td>
-                        <td>{{ c.maxCapacity }} élèves</td>
-                        <td>{{ c.monthlyPrice }} dh</td>
+                        <td>{{ 'settings.studentsUnit' | t: { count: c.maxCapacity } }}</td>
+                        <td>{{ 'settings.priceDh' | t: { price: c.monthlyPrice } }}</td>
                         <td>
                           <span [class]="'status-badge status-' + c.status">
-                            {{ c.status === 'active' ? 'Actif' : 'Inactif' }}
+                            {{ (c.status === 'active' ? 'common.active' : 'common.inactive') | t }}
                           </span>
                         </td>
                         <td>
                           <div class="action-btns">
-                            <button class="action-btn" (click)="openEditMatiere(c)" title="Modifier">
+                            <button class="action-btn" (click)="openEditMatiere(c)" [title]="'common.edit' | t">
                               <i class="fa-regular fa-pen-to-square"></i>
                             </button>
-                            <button class="action-btn danger-btn" (click)="deleteMatiere(c)" title="Supprimer">
+                            <button class="action-btn danger-btn" (click)="deleteMatiere(c)" [title]="'common.delete' | t">
                               <i class="fa-regular fa-trash-can"></i>
                             </button>
                           </div>
@@ -243,38 +260,57 @@
       <!-- Users -->
       @if (activeTab() === 'users') {
         <div class="settings-section">
-          <div class="panel-header" style="margin-bottom:1.5rem;">
-            <h3 class="section-title" style="margin:0;">Utilisateurs</h3>
-            <button class="btn-primary btn-sm" (click)="openAddUser()">
+          <div class="panel-header" style="margin-bottom:0.5rem;">
+            <h3 class="section-title" style="margin:0;">{{ 'settings.usersTitle' | t }}</h3>
+            <button class="btn-primary btn-sm" [disabled]="usersService.atCapacity()" (click)="openAddUser()">
               <i class="fa-solid fa-plus"></i>
-              Ajouter
+              {{ 'settings.add' | t }}
             </button>
           </div>
+          <p class="section-desc" style="margin-bottom:1.5rem;">
+            {{ 'settings.usersSeatCount' | t: { count: usersService.usersCount(), max: usersService.maxUsers() } }}
+            @if (usersService.atCapacity()) {
+              <span class="seat-limit-warning">{{ 'settings.usersAtCapacity' | t }}</span>
+            }
+          </p>
           <div class="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  <th>Nom</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th>Dernière connexion</th>
-                  <th>Actions</th>
+                  <th>{{ 'settings.colName' | t }}</th>
+                  <th>{{ 'settings.colEmail' | t }}</th>
+                  <th>{{ 'settings.colRole' | t }}</th>
+                  <th>{{ 'settings.colPermissions' | t }}</th>
+                  <th>{{ 'common.actions' | t }}</th>
                 </tr>
               </thead>
               <tbody>
-                @for (user of users(); track user.id) {
+                @for (user of usersService.users(); track user.uuid) {
                   <tr class="table-row">
                     <td><strong>{{ user.name }}</strong></td>
                     <td>{{ user.email }}</td>
                     <td>
-                      <span [ngClass]="['role-badge', 'role-' + user.roleType]">{{ user.role }}</span>
+                      <span [ngClass]="['role-badge', user.is_owner ? 'role-admin' : 'role-manager']">
+                        {{ user.is_owner ? ('settings.roleOwner' | t) : user.role }}
+                      </span>
                     </td>
-                    <td>{{ user.lastLogin }}</td>
+                    <td>
+                      @if (user.is_owner) {
+                        <span class="permissions-summary">{{ 'settings.allTabs' | t }}</span>
+                      } @else {
+                        <span class="permissions-summary">{{ (user.permissions ?? []).length }} / {{ permissionOptions.length }}</span>
+                      }
+                    </td>
                     <td>
                       <div class="action-btns">
-                        <button class="action-btn danger-btn" (click)="deleteUser(user)">
-                          <i class="fa-regular fa-trash-can"></i>
-                        </button>
+                        @if (!user.is_owner) {
+                          <button class="action-btn" (click)="openEditUser(user)">
+                            <i class="fa-regular fa-pen-to-square"></i>
+                          </button>
+                          <button class="action-btn danger-btn" (click)="deleteUser(user)">
+                            <i class="fa-regular fa-trash-can"></i>
+                          </button>
+                        }
                       </div>
                     </td>
                   </tr>
@@ -288,8 +324,8 @@
       <!-- Security -->
       @if (activeTab() === 'securite') {
         <div class="settings-section">
-          <h3 class="section-title">Changer le mot de passe</h3>
-          <p class="section-desc">Assurez-vous que votre nouveau mot de passe contient au moins 6 caractères.</p>
+          <h3 class="section-title">{{ 'settings.changePasswordTitle' | t }}</h3>
+          <p class="section-desc">{{ 'settings.changePasswordDesc' | t }}</p>
 
           @if (passwordError()) {
             <div class="pw-error">
@@ -300,7 +336,7 @@
 
           <div class="pw-form">
             <div class="form-group form-full">
-              <label class="form-label">Mot de passe actuel</label>
+              <label class="form-label">{{ 'settings.currentPassword' | t }}</label>
               <div class="pw-input-wrapper">
                 <i class="fa-solid fa-lock pw-icon"></i>
                 <input
@@ -308,7 +344,7 @@
                   [type]="showCurrent() ? 'text' : 'password'"
                   [(ngModel)]="passwordForm.current"
                   name="current"
-                  placeholder="Votre mot de passe actuel"
+                  [placeholder]="'settings.currentPasswordPlaceholder' | t"
                 />
                 <button type="button" class="pw-toggle" (click)="showCurrent.update(v => !v)">
                   <i class="fa-regular" [class.fa-eye]="!showCurrent()" [class.fa-eye-slash]="showCurrent()"></i>
@@ -319,7 +355,7 @@
             <div class="pw-divider"></div>
 
             <div class="form-group form-full">
-              <label class="form-label">Nouveau mot de passe</label>
+              <label class="form-label">{{ 'settings.newPassword' | t }}</label>
               <div class="pw-input-wrapper">
                 <i class="fa-solid fa-key pw-icon"></i>
                 <input
@@ -327,7 +363,7 @@
                   [type]="showNew() ? 'text' : 'password'"
                   [(ngModel)]="passwordForm.newPw"
                   name="newPw"
-                  placeholder="Minimum 6 caractères"
+                  [placeholder]="'settings.newPasswordPlaceholder' | t"
                 />
                 <button type="button" class="pw-toggle" (click)="showNew.update(v => !v)">
                   <i class="fa-regular" [class.fa-eye]="!showNew()" [class.fa-eye-slash]="showNew()"></i>
@@ -336,7 +372,7 @@
             </div>
 
             <div class="form-group form-full">
-              <label class="form-label">Confirmer le nouveau mot de passe</label>
+              <label class="form-label">{{ 'settings.confirmNewPassword' | t }}</label>
               <div class="pw-input-wrapper">
                 <i class="fa-solid fa-key pw-icon"></i>
                 <input
@@ -344,7 +380,7 @@
                   [type]="showConfirm() ? 'text' : 'password'"
                   [(ngModel)]="passwordForm.confirm"
                   name="confirm"
-                  placeholder="Répéter le nouveau mot de passe"
+                  [placeholder]="'settings.confirmNewPasswordPlaceholder' | t"
                 />
                 <button type="button" class="pw-toggle" (click)="showConfirm.update(v => !v)">
                   <i class="fa-regular" [class.fa-eye]="!showConfirm()" [class.fa-eye-slash]="showConfirm()"></i>
@@ -356,7 +392,7 @@
           <div class="form-actions">
             <button class="btn-primary" (click)="changePassword()">
               <i class="fa-solid fa-shield-halved"></i>
-              Mettre à jour le mot de passe
+              {{ 'settings.updatePassword' | t }}
             </button>
           </div>
         </div>
@@ -365,40 +401,40 @@
       <!-- Subscription -->
       @if (activeTab() === 'subscription') {
         <div class="settings-section">
-          <h3 class="section-title">Abonnement</h3>
+          <h3 class="section-title">{{ 'settings.subscriptionTitle' | t }}</h3>
           <div class="subscription-card">
             <div class="sub-header">
               <div>
-                <span class="plan-name">Plan Pro</span>
-                <span class="plan-badge">Actif</span>
+                <span class="plan-name">{{ 'settings.planPro' | t }}</span>
+                <span class="plan-badge">{{ 'settings.active' | t }}</span>
               </div>
               <div class="plan-price">
-                <strong>450 Dhs</strong><span>/mois</span>
+                <strong>450 {{ 'common.currency' | t }}</strong><span>{{ 'settings.perMonth' | t }}</span>
               </div>
             </div>
             <div class="sub-info">
               <div class="sub-detail">
                 <i class="fa-regular fa-calendar"></i>
-                Renouvellement : <strong>01/06/2025</strong>
+                {{ 'settings.renewalLabel' | t }} : <strong>01/06/2025</strong>
               </div>
               <div class="sub-detail">
                 <i class="fa-solid fa-shield-halved"></i>
-                Paiement sécurisé par carte bancaire
+                {{ 'settings.securePayment' | t }}
               </div>
             </div>
           </div>
-          <h4 class="features-title">Fonctionnalités incluses</h4>
+          <h4 class="features-title">{{ 'settings.includedFeatures' | t }}</h4>
           <div class="features-list">
             @for (f of subscriptionFeatures; track f.label) {
               <div [ngClass]="['feature-item', f.included ? '' : 'feature-excluded']">
                 <i [ngClass]="f.included ? 'fa-solid fa-check feature-check' : 'fa-solid fa-xmark feature-cross'"></i>
-                <span>{{ f.label }}</span>
+                <span>{{ f.label | t }}</span>
               </div>
             }
           </div>
           <button class="btn-primary" style="margin-top:1.5rem;">
             <i class="fa-solid fa-arrow-up"></i>
-            Passer à Enterprise
+            {{ 'settings.upgradeEnterprise' | t }}
           </button>
         </div>
       }
@@ -406,13 +442,13 @@
       <!-- Notifications -->
       @if (activeTab() === 'notifications') {
         <div class="settings-section">
-          <h3 class="section-title">Paramètres de notifications</h3>
-          <p class="section-desc">Configurez quand et comment vous recevez des notifications.</p>
+          <h3 class="section-title">{{ 'settings.notificationsTitle' | t }}</h3>
+          <p class="section-desc">{{ 'settings.notificationsDesc' | t }}</p>
           <div class="notif-list">
             <div class="notif-item">
               <div class="notif-info">
-                <span class="notif-label">Rappels de paiement</span>
-                <span class="notif-desc">Envoyer des rappels aux parents avant échéance</span>
+                <span class="notif-label">{{ 'settings.paymentReminders' | t }}</span>
+                <span class="notif-desc">{{ 'settings.paymentRemindersDesc' | t }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="notifSettings.paymentReminder" />
@@ -421,8 +457,8 @@
             </div>
             <div class="notif-item">
               <div class="notif-info">
-                <span class="notif-label">Alertes d'absence</span>
-                <span class="notif-desc">Notifier les parents en cas d'absence</span>
+                <span class="notif-label">{{ 'settings.absenceAlerts' | t }}</span>
+                <span class="notif-desc">{{ 'settings.absenceAlertsDesc' | t }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="notifSettings.absenceAlert" />
@@ -431,8 +467,8 @@
             </div>
             <div class="notif-item">
               <div class="notif-info">
-                <span class="notif-label">Nouvelle inscription</span>
-                <span class="notif-desc">Alerte lors d'une nouvelle inscription</span>
+                <span class="notif-label">{{ 'settings.newEnrollmentNotif' | t }}</span>
+                <span class="notif-desc">{{ 'settings.newEnrollmentNotifDesc' | t }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="notifSettings.newEnrollment" />
@@ -441,8 +477,8 @@
             </div>
             <div class="notif-item">
               <div class="notif-info">
-                <span class="notif-label">Notifications WhatsApp</span>
-                <span class="notif-desc">Utiliser WhatsApp pour les communications</span>
+                <span class="notif-label">{{ 'settings.whatsappNotifications' | t }}</span>
+                <span class="notif-desc">{{ 'settings.whatsappNotificationsDesc' | t }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="notifSettings.whatsappNotifs" />
@@ -451,8 +487,8 @@
             </div>
             <div class="notif-item">
               <div class="notif-info">
-                <span class="notif-label">Rapports par email</span>
-                <span class="notif-desc">Recevoir les rapports hebdomadaires par email</span>
+                <span class="notif-label">{{ 'settings.emailReports' | t }}</span>
+                <span class="notif-desc">{{ 'settings.emailReportsDesc' | t }}</span>
               </div>
               <label class="toggle">
                 <input type="checkbox" [(ngModel)]="notifSettings.emailReports" />
@@ -463,51 +499,182 @@
           <div style="margin-top:1.5rem;">
             <button class="btn-primary" (click)="saveNotifications()">
               <i class="fa-solid fa-floppy-disk"></i>
-              Enregistrer les préférences
+              {{ 'settings.savePreferences' | t }}
             </button>
           </div>
         </div>
       }
 
-      <!-- Integrations -->
-      @if (activeTab() === 'integrations') {
-        <div class="settings-section">
-          <h3 class="section-title">Intégrations</h3>
-          <p class="section-desc">Connectez votre centre avec des services externes.</p>
-          <div class="integrations-list">
-            <div class="integration-card">
-              <div class="int-icon wa-icon"><i class="fa-brands fa-whatsapp"></i></div>
-              <div class="int-info">
-                <strong>WhatsApp Business</strong>
-                <span>Envoi automatique de messages aux parents</span>
-              </div>
-              <span class="status-badge status-active">Connecté</span>
-            </div>
-            <div class="integration-card">
-              <div class="int-icon google-icon"><i class="fa-brands fa-google"></i></div>
-              <div class="int-info">
-                <strong>Google Calendar</strong>
-                <span>Synchronisation du planning des cours</span>
-              </div>
-              <button class="btn-secondary btn-sm">Connecter</button>
-            </div>
-            <div class="integration-card">
-              <div class="int-icon sms-icon"><i class="fa-solid fa-comment-sms"></i></div>
-              <div class="int-info">
-                <strong>SMS Gateway</strong>
-                <span>Envoi de SMS aux parents et étudiants</span>
-              </div>
-              <button class="btn-secondary btn-sm">Connecter</button>
-            </div>
-            <div class="integration-card">
-              <div class="int-icon stripe-icon"><i class="fa-brands fa-stripe"></i></div>
-              <div class="int-info">
-                <strong>Paiement en ligne</strong>
-                <span>Permettre les paiements par carte bancaire</span>
-              </div>
-              <button class="btn-secondary btn-sm">Configurer</button>
-            </div>
+      <!-- Support -->
+      @if (activeTab() === 'support') {
+        <div class="sup">
+
+          <!-- Status recap. Each tile is also the filter for that status, so the
+               summary and the filter chips are one control instead of two. -->
+          <div class="sup-stats" role="group" [attr.aria-label]="'settings.filterByStatus' | t">
+            @for (tile of statusTiles(); track tile.key) {
+              <button type="button"
+                      class="sup-stat"
+                      [attr.data-tone]="tile.key"
+                      [class.is-on]="ticketFilter() === tile.key"
+                      [attr.aria-pressed]="ticketFilter() === tile.key"
+                      (click)="ticketFilter.set(tile.key)">
+                <span class="sup-stat-ico"><i [class]="tile.icon"></i></span>
+                <span class="sup-stat-num">{{ tile.count }}</span>
+                <span class="sup-stat-lbl">{{ tile.labelKey | t }}</span>
+              </button>
+            }
           </div>
+
+          <div class="sup-grid">
+
+            <!-- ── Nouvelle demande ── -->
+            <section class="sup-card sup-compose">
+              <header class="sup-compose-head">
+                <span class="sup-compose-ico"><i class="fa-solid fa-headset"></i></span>
+                <div>
+                  <h3>{{ 'settings.supportTitle' | t }}</h3>
+                  <p>{{ 'settings.supportDesc' | t }}</p>
+                </div>
+              </header>
+
+              <div class="sup-compose-body">
+                @if (supportError()) {
+                  <p class="sup-alert" role="alert">
+                    <i class="fa-solid fa-circle-exclamation"></i>{{ supportError() }}
+                  </p>
+                }
+
+                <div class="sup-field">
+                  <label class="sup-label" for="supCat">{{ 'settings.supportCategory' | t }}</label>
+                  <div class="sup-select-wrap">
+                    <span class="sup-select-ico"><i [class]="categoryIcon(supportForm.category)"></i></span>
+                    <select id="supCat" class="sup-select" name="supportCategory"
+                            [(ngModel)]="supportForm.category">
+                      <option value="" disabled>{{ 'settings.supportCategoryPlaceholder' | t }}</option>
+                      @for (cat of supportCategories; track cat.id) {
+                        <option [value]="cat.id">{{ cat.labelKey | t }}</option>
+                      }
+                    </select>
+                    <i class="fa-solid fa-chevron-down sup-select-caret"></i>
+                  </div>
+                </div>
+
+                <div class="sup-field">
+                  <label class="sup-label" for="supMsg">{{ 'settings.supportMessage' | t }}</label>
+                  <div class="sup-textarea-wrap">
+                    <textarea id="supMsg" class="sup-textarea" rows="7" maxlength="500"
+                              name="supportMessage"
+                              [(ngModel)]="supportForm.message"
+                              [placeholder]="'settings.supportMessagePlaceholder' | t"></textarea>
+                    <span class="sup-count"
+                          [class.is-near]="supportForm.message.length > 440">
+                      {{ supportForm.message.length }}/500
+                    </span>
+                  </div>
+                </div>
+
+                <button type="button" class="sup-send"
+                        [class.is-ready]="supportReady"
+                        [disabled]="sendingSupport() || !supportReady"
+                        (click)="sendSupportRequest()">
+                  <i class="fa-solid" [class.fa-paper-plane]="!sendingSupport()"
+                     [class.fa-circle-notch]="sendingSupport()"
+                     [class.sup-spin]="sendingSupport()"></i>
+                  {{ (sendingSupport() ? 'settings.supportSending' : 'settings.supportSend') | t }}
+                </button>
+              </div>
+            </section>
+
+            <!-- ── Historique ── -->
+            <section class="sup-card sup-list">
+              <header class="sup-list-head">
+                <h3>{{ 'settings.myTickets' | t }}</h3>
+                <div class="sup-search">
+                  <i class="fa-solid fa-magnifying-glass"></i>
+                  <input type="search"
+                         [ngModel]="ticketSearch()"
+                         (ngModelChange)="ticketSearch.set($event)"
+                         name="ticketSearch"
+                         [placeholder]="'settings.searchTickets' | t"
+                         [attr.aria-label]="'settings.searchTickets' | t" />
+                </div>
+              </header>
+
+              <div class="sup-list-body">
+                @for (ticket of filteredTickets(); track ticket.id) {
+                  <button type="button" class="sup-ticket"
+                          [attr.data-tone]="statusMeta(ticket.status).tone"
+                          [class.is-active]="chatService.activeConversation()?.id === ticket.id"
+                          (click)="selectConversation(ticket)">
+                    <span class="sup-ticket-main">
+                      <span class="sup-ticket-title">
+                        <i [class]="categoryMeta(ticket.subject).icon"></i>
+                        <span class="sup-ticket-label">{{ ticket.subject || ('settings.supportCatOther' | t) }}</span>
+                      </span>
+                      <span class="sup-ticket-meta">
+                        <span class="sup-ref">#{{ ticket.id }}</span>
+                        <span aria-hidden="true">·</span>
+                        {{ ticketDate(ticket.updated_at) }}
+                      </span>
+                    </span>
+                    <span class="sup-badge">
+                      <i [class]="statusMeta(ticket.status).icon"></i>
+                      {{ statusMeta(ticket.status).labelKey | t }}
+                    </span>
+                  </button>
+                } @empty {
+                  <div class="sup-empty">
+                    <i class="fa-regular fa-folder-open"></i>
+                    <p>{{ (chatService.conversations().length ? 'settings.noTicketsMatch' : 'settings.noTickets') | t }}</p>
+                  </div>
+                }
+              </div>
+            </section>
+          </div>
+
+          <!-- ── Conversation ── -->
+          @if (chatService.activeConversation(); as active) {
+            <section class="sup-card sup-thread" [attr.data-tone]="statusMeta(active.status).tone">
+              <header class="sup-thread-head">
+                <div class="sup-thread-id">
+                  <span class="sup-ref">#{{ active.id }}</span>
+                  <h3>{{ active.subject || ('settings.supportCatOther' | t) }}</h3>
+                </div>
+                <span class="sup-badge">
+                  <i [class]="statusMeta(active.status).icon"></i>
+                  {{ statusMeta(active.status).labelKey | t }}
+                </span>
+              </header>
+
+              <div class="sup-msgs" #messagesContainer>
+                @for (msg of chatService.messages(); track msg.id) {
+                  <div class="sup-row" [class.is-me]="isMe(msg)">
+                    <article class="sup-msg" [class.is-me]="isMe(msg)">
+                      <p>{{ msg.content }}</p>
+                    </article>
+                    <footer class="sup-msg-meta">
+                      <span>{{ isMe(msg) ? ('settings.you' | t) : (msg.sender?.name || ('settings.supportTeam' | t)) }}</span>
+                      <time>{{ msg.created_at | date:'HH:mm' }}</time>
+                    </footer>
+                  </div>
+                }
+              </div>
+
+              <form class="sup-composer" (submit)="sendMessage($event)">
+                <input type="text" [(ngModel)]="newMessage" name="message" autocomplete="off"
+                       [placeholder]="(active.status === 'closed' ? 'settings.threadClosed'
+                                     : active.status === 'pending' ? 'settings.threadPending'
+                                     : 'settings.writeMessage') | t"
+                       [disabled]="active.status === 'closed' || active.status === 'pending'" />
+                <button type="submit"
+                        [disabled]="!newMessage.trim() || active.status === 'closed' || active.status === 'pending'"
+                        [attr.aria-label]="'settings.supportSend' | t">
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </form>
+            </section>
+          }
         </div>
       }
 
@@ -518,7 +685,7 @@
 <!-- Add / Edit Matière Modal -->
 @if (showMatiereModal()) {
   <app-modal
-    [title]="editingMatiere() ? 'Modifier la classe' : 'Nouvelle classe'"
+    [title]="(editingMatiere() ? 'settings.modalEditClass' : 'settings.modalNewClass') | t"
     size="md"
     (closed)="showMatiereModal.set(false)"
   >
@@ -526,49 +693,66 @@
       <div class="form-grid modal-grid">
 
         <div class="form-group form-full">
-          <label class="form-label">Nom de la classe <span class="required">*</span></label>
+          <label class="form-label">{{ 'settings.className' | t }} <span class="required">*</span></label>
           <input class="form-input" type="text" [(ngModel)]="matiereForm.name" placeholder="Ex : Maths 2Bac A" />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Matière <span class="required">*</span></label>
-          <input class="form-input" type="text" [(ngModel)]="matiereForm.subject" placeholder="Ex : Mathématiques" />
+          <label class="form-label">{{ 'settings.subjectRequired' | t }} <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="matiereForm.subject">
+            <option value="" disabled>{{ 'settings.selectASubject' | t }}</option>
+            @for (s of allSubjects(); track s.id) {
+              <option [ngValue]="s.name">{{ s.name }}</option>
+            }
+          </select>
+          @if (allSubjects().length === 0) {
+            <p class="field-hint">{{ 'settings.noSubjectAvailable' | t }}</p>
+          }
         </div>
 
         <div class="form-group">
-          <label class="form-label">Niveau <span class="required">*</span></label>
-          <input class="form-input" type="text" [(ngModel)]="matiereForm.level" placeholder="Ex : 2ème Bac" />
+          <label class="form-label">{{ 'settings.level' | t }} <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="matiereForm.level">
+            <option value="" disabled>{{ 'students.chooseLevel' | t }}</option>
+            @for (l of allLevels(); track l.id) {
+              <option [ngValue]="l.name">{{ l.name }}</option>
+            }
+          </select>
+          @if (allLevels().length === 0) {
+            <p class="field-hint">{{ 'settings.noLevelAvailable' | t }}</p>
+          }
         </div>
 
         <div class="form-group">
-          <label class="form-label">Prix mensuel (dh)</label>
-          <input class="form-input" type="number" [(ngModel)]="matiereForm.monthlyPrice" min="0" placeholder="350" />
+          <label class="form-label">{{ 'settings.monthlyPrice' | t }} <span class="required">*</span></label>
+          <input class="form-input" type="number" [(ngModel)]="matiereForm.monthlyPrice" min="0" placeholder="Ex : 350" />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Capacité max</label>
-          <input class="form-input" type="number" [(ngModel)]="matiereForm.maxCapacity" min="1" placeholder="15" />
+          <label class="form-label">{{ 'settings.maxCapacity' | t }} <span class="required">*</span></label>
+          <input class="form-input" type="number" [(ngModel)]="matiereForm.maxCapacity" min="1" placeholder="Ex : 15" />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Professeur</label>
+          <label class="form-label">{{ 'settings.colTeacher' | t }} <span class="required">*</span></label>
           <select class="form-input" [(ngModel)]="matiereForm.teacherId">
+            <option [ngValue]="null" disabled>{{ 'settings.selectATeacher' | t }}</option>
             @for (t of allTeachers(); track t.id) {
-              <option [value]="t.id">{{ t.firstName }} {{ t.lastName }}</option>
+              <option [ngValue]="t.id">{{ t.firstName }} {{ t.lastName }}</option>
             }
           </select>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Statut</label>
+          <label class="form-label">{{ 'common.status' | t }}</label>
           <select class="form-input" [(ngModel)]="matiereForm.status">
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
+            <option value="active">{{ 'common.active' | t }}</option>
+            <option value="inactive">{{ 'common.inactive' | t }}</option>
           </select>
         </div>
 
         <div class="form-group form-full">
-          <label class="form-label">Couleur</label>
+          <label class="form-label">{{ 'settings.color' | t }}</label>
           <div class="color-presets">
             @for (preset of colorPresets; track preset.color) {
               <button
@@ -585,43 +769,64 @@
       </div>
     </div>
     <div class="form-footer">
-      <button class="btn-secondary" (click)="showMatiereModal.set(false)">Annuler</button>
+      <button class="btn-secondary" (click)="showMatiereModal.set(false)">{{ 'common.cancel' | t }}</button>
       <button class="btn-primary" (click)="submitMatiere()">
         <i class="fa-solid fa-floppy-disk"></i>
-        {{ editingMatiere() ? 'Enregistrer' : 'Ajouter' }}
+        {{ (editingMatiere() ? 'common.save' : 'common.add') | t }}
       </button>
     </div>
   </app-modal>
 }
 
-<!-- Add User Modal -->
+<!-- Add/Edit User Modal -->
 @if (showUserModal()) {
-  <app-modal title="Ajouter un utilisateur" size="sm" (closed)="showUserModal.set(false)">
+  <app-modal
+    [title]="(editingUserUuid() ? 'settings.modalEditUser' : 'settings.modalAddUser') | t"
+    size="sm" (closed)="showUserModal.set(false)"
+  >
     <div class="form-body">
       <div class="form-group">
-        <label class="form-label">Nom complet</label>
-        <input class="form-input" type="text" [(ngModel)]="userForm.name" placeholder="Prénom Nom" />
+        <label class="form-label">{{ 'settings.fullName' | t }}</label>
+        <input class="form-input" type="text" [(ngModel)]="userForm.name" [placeholder]="'settings.fullNamePlaceholder' | t" />
       </div>
+      @if (!editingUserUuid()) {
+        <div class="form-group">
+          <label class="form-label">{{ 'teachers.email' | t }}</label>
+          <input class="form-input" type="email" [(ngModel)]="userForm.email" placeholder="email@centre.ma" />
+        </div>
+        <p class="section-desc" style="margin-top:-0.5rem;">{{ 'settings.samePasswordAsOwner' | t }}</p>
+      }
+
       <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" type="email" [(ngModel)]="userForm.email" placeholder="email@centre.ma" />
+        <label class="form-label">{{ 'settings.permissionsLabel' | t }}</label>
+        <p class="section-desc" style="margin:0 0 0.75rem;">{{ 'settings.permissionsDesc' | t }}</p>
+        <div class="permissions-grid">
+          @for (option of permissionOptions; track option.key) {
+            <label class="permission-checkbox">
+              <input
+                type="checkbox"
+                [checked]="userForm.permissions.includes(option.key)"
+                (change)="togglePermission(option.key)"
+              />
+              <i [class]="option.icon"></i>
+              <span>{{ option.labelKey | t }}</span>
+            </label>
+          }
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Rôle</label>
-        <select class="form-select" [(ngModel)]="userForm.roleType"
-          (ngModelChange)="userForm.role = $event === 'admin' ? 'Administrateur' : $event === 'teacher' ? 'Professeur' : $event === 'manager' ? 'Gestionnaire' : 'Comptable'">
-          <option value="admin">Administrateur</option>
-          <option value="teacher">Professeur</option>
-          <option value="manager">Gestionnaire</option>
-          <option value="accountant">Comptable</option>
-        </select>
-      </div>
+
+      @if (userFormError()) {
+        <div class="pw-error">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ userFormError() }}
+        </div>
+      }
     </div>
     <div class="form-footer">
-      <button class="btn-secondary" (click)="showUserModal.set(false)">Annuler</button>
-      <button class="btn-primary" (click)="submitUser()">
-        <i class="fa-solid fa-plus"></i>
-        Ajouter
+      <button class="btn-secondary" (click)="showUserModal.set(false)">{{ 'common.cancel' | t }}</button>
+      <button class="btn-primary" [disabled]="savingUser()" (click)="submitUser()">
+        <i class="fa-solid" [ngClass]="editingUserUuid() ? 'fa-check' : 'fa-plus'"></i>
+        {{ (editingUserUuid() ? 'common.save' : 'common.add') | t }}
       </button>
     </div>
   </app-modal>

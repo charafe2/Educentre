@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Domains\Core\Models\Centre;
-use App\Domains\Core\Models\Subscription;
 use App\Domains\Finance\Models\Payment;
+use App\Domains\Planning\Models\AcademicLevel;
+use App\Domains\Planning\Models\Subject;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -59,8 +61,28 @@ class Tenant extends Model
         return $this->hasMany(Payment::class);
     }
 
-    public function subscriptions(): HasMany
+    public function subjects(): BelongsToMany
     {
-        return $this->hasMany(Subscription::class);
+        return $this->belongsToMany(Subject::class, 'subject_tenant');
+    }
+
+    public function academicLevels(): BelongsToMany
+    {
+        return $this->belongsToMany(AcademicLevel::class, 'academic_level_tenant');
+    }
+
+    /**
+     * Seat cap for "Paramètres > Utilisateurs". Stored inside the existing
+     * `settings` JSON bucket (no dedicated column) so it's superadmin-editable
+     * without a schema change. Defaults to 5 when not explicitly set.
+     */
+    public function getMaxUsersAttribute(): int
+    {
+        return (int) ($this->settings['max_users'] ?? 5);
+    }
+
+    public function setMaxUsers(int $maxUsers): void
+    {
+        $this->update(['settings' => [...($this->settings ?? []), 'max_users' => $maxUsers]]);
     }
 }

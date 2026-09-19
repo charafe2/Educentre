@@ -1,132 +1,165 @@
-<div class="packages-page">
-  <div class="page-header">
+<div class="sa-page packages">
+
+  <header class="sa-head">
     <div>
-      <p class="eyebrow">Configuration commerciale</p>
-      <h1>Modification des packages</h1>
-      <p>Gérez les offres que vous attribuez aux centres et les limites visibles côté facturation.</p>
+      <span class="sa-eyebrow">Offre commerciale</span>
+      <h1>Packages</h1>
+      <p class="sa-lede">Ce que chaque offre inclut et ce qu'elle coûte. Les limites définies ici s'appliquent aux centres qui y sont abonnés.</p>
     </div>
-    <button class="btn-secondary" (click)="duplicateSelected()" [disabled]="saving() || loading()">
-      <i class="fa-regular fa-copy"></i>
-      Dupliquer
-    </button>
-  </div>
+    <div class="sa-head-actions">
+      <button class="sa-btn ghost" type="button" (click)="duplicateSelected()" [disabled]="saving() || loading()">
+        <i class="fa-regular fa-copy"></i>
+        Dupliquer
+      </button>
+    </div>
+  </header>
+
+  <dl class="sa-figures">
+    <div class="paid">
+      <dt>Packages actifs</dt>
+      <dd>{{ activePackages() }}</dd>
+    </div>
+    <div class="accent">
+      <dt>Revenu catalogue</dt>
+      <dd>{{ projectedRevenue() }}<span class="sa-unit">MAD / mois</span></dd>
+    </div>
+    <div>
+      <dt>En cours d'édition</dt>
+      <dd class="editing-name">{{ selectedPackage().name || '—' }}</dd>
+    </div>
+  </dl>
 
   @if (error()) {
-    <div class="page-error">
+    <div class="sa-alert">
       <i class="fa-solid fa-circle-exclamation"></i>
       {{ error() }}
     </div>
   }
 
-  <section class="summary-row">
-    <article>
-      <span>Packages actifs</span>
-      <strong>{{ activePackages() }}</strong>
-    </article>
-    <article>
-      <span>Revenu catalogue</span>
-      <strong>{{ projectedRevenue() }} MAD</strong>
-    </article>
-    <article>
-      <span>Package sélectionné</span>
-      <strong>{{ selectedPackage().name }}</strong>
-    </article>
-  </section>
+  <section class="bench">
 
-  <section class="workbench">
-    <aside class="plan-list" aria-label="Liste des packages">
-      @if (loading()) {
-        <div class="plan-loading">Chargement...</div>
-      } @else {
-      @for (plan of packages(); track plan.id) {
-        <button class="plan-item" [class.selected]="selectedId() === plan.id" (click)="selectPackage(plan.id)">
-          <span class="plan-title">{{ plan.name }}</span>
-          <span class="plan-meta">{{ plan.monthlyPrice }} MAD/mois · {{ plan.studentsLimit }} étudiants</span>
-          <span [ngClass]="['status-pill', 'status-' + plan.status]">{{ plan.status === 'active' ? 'Actif' : plan.status === 'draft' ? 'Brouillon' : 'Archivé' }}</span>
-        </button>
-      }
-      }
+    <aside class="sa-card plans" aria-label="Liste des packages">
+      <div class="sa-card-head">
+        <div><h2>Catalogue</h2></div>
+      </div>
+      <div class="plan-list">
+        @if (loading()) {
+          @for (row of [1, 2, 3]; track row) {
+            <div class="plan-item plan-loading"><span class="sa-skeleton" style="width: 60%; height: 13px;"></span></div>
+          }
+        } @else {
+          @for (plan of packages(); track plan.id) {
+            <button class="plan-item" type="button" [class.on]="selectedId() === plan.id" (click)="selectPackage(plan.id)">
+              <span class="plan-top">
+                <span class="plan-name">{{ plan.name }}</span>
+                <span [class]="'sa-badge plain ' + plan.status">
+                  {{ plan.status === 'active' ? 'Actif' : plan.status === 'draft' ? 'Brouillon' : 'Archivé' }}
+                </span>
+              </span>
+              <span class="plan-meta">{{ plan.monthlyPrice }} MAD/mois · {{ plan.studentsLimit }} étudiants</span>
+            </button>
+          }
+          @empty {
+            <div class="sa-empty">
+              <strong>Aucun package</strong>
+              <span>Dupliquez une offre pour en créer une.</span>
+            </div>
+          }
+        }
+      </div>
     </aside>
 
-    <div class="editor-panel">
-      <div class="editor-header">
+    <div class="sa-card editor">
+      <div class="sa-card-head">
         <div>
-          <h2>{{ selectedPackage().name }}</h2>
-          <p>Les modifications sont enregistrées via l'API super-admin.</p>
+          <h2>{{ selectedPackage().name || 'Sélectionnez un package' }}</h2>
+          <p>Les modifications sont écrites dès l'enregistrement.</p>
         </div>
         <div class="editor-actions">
-          <button class="btn-secondary" (click)="saveSelected()" [disabled]="saving() || !selectedPackage().id">
-            <i class="fa-solid fa-floppy-disk"></i>
-            {{ saving() ? 'Sauvegarde...' : 'Enregistrer' }}
+          <button class="sa-btn danger sm" type="button" (click)="archiveSelected()" [disabled]="saving() || !selectedPackage().id">
+            <i class="fa-solid fa-box-archive"></i>
+            {{ selectedPackage().status === 'archived' ? 'Restaurer' : 'Archiver' }}
           </button>
-          <button class="btn-danger" (click)="archiveSelected()" [disabled]="saving() || !selectedPackage().id">
-          <i class="fa-solid fa-box-archive"></i>
-          {{ selectedPackage().status === 'archived' ? 'Restaurer' : 'Archiver' }}
+          <button class="sa-btn primary sm" type="button" (click)="saveSelected()" [disabled]="saving() || !selectedPackage().id">
+            <i class="fa-solid fa-floppy-disk"></i>
+            {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
           </button>
         </div>
       </div>
 
-      <div class="form-grid">
-        <label>
-          Nom du package
-          <input type="text" [ngModel]="selectedPackage().name" (ngModelChange)="updateSelected('name', $event)" />
-        </label>
-        <label>
-          Prix mensuel MAD
-          <input type="number" min="0" [ngModel]="selectedPackage().monthlyPrice" (ngModelChange)="updateSelected('monthlyPrice', +$event)" />
-        </label>
-        <label>
-          Utilisateurs inclus
-          <input type="number" min="1" [ngModel]="selectedPackage().usersLimit" (ngModelChange)="updateSelected('usersLimit', +$event)" />
-        </label>
-        <label>
-          Étudiants inclus
-          <input type="number" min="1" [ngModel]="selectedPackage().studentsLimit" (ngModelChange)="updateSelected('studentsLimit', +$event)" />
-        </label>
-        <label>
-          Stockage GB
-          <input type="number" min="1" [ngModel]="selectedPackage().storageGb" (ngModelChange)="updateSelected('storageGb', +$event)" />
-        </label>
-        <label>
-          Support
-          <select [ngModel]="selectedPackage().supportLevel" (ngModelChange)="updateSelected('supportLevel', $event)">
-            <option value="Standard">Standard</option>
-            <option value="Prioritaire">Prioritaire</option>
-            <option value="Dédié">Dédié</option>
-          </select>
-        </label>
-        <label>
-          Statut
-          <select [ngModel]="selectedPackage().status" (ngModelChange)="updateSelected('status', $event)">
-            <option value="active">Actif</option>
-            <option value="draft">Brouillon</option>
-            <option value="archived">Archivé</option>
-          </select>
-        </label>
-      </div>
+      <div class="sa-card-body editor-body">
+        <p class="sa-section-label">Identité et prix</p>
+        <div class="sa-formgrid">
+          <label class="sa-field span2">
+            <span>Nom du package</span>
+            <input class="sa-input" type="text" [ngModel]="selectedPackage().name" (ngModelChange)="updateSelected('name', $event)" />
+          </label>
+          <label class="sa-field">
+            <span>Prix mensuel MAD</span>
+            <input class="sa-input" type="number" min="0" [ngModel]="selectedPackage().monthlyPrice" (ngModelChange)="updateSelected('monthlyPrice', +$event)" />
+          </label>
+          <label class="sa-field">
+            <span>Statut</span>
+            <select class="sa-input" [ngModel]="selectedPackage().status" (ngModelChange)="updateSelected('status', $event)">
+              <option value="active">Actif</option>
+              <option value="draft">Brouillon</option>
+              <option value="archived">Archivé</option>
+            </select>
+          </label>
+        </div>
 
-      <div class="features-block">
-        <div class="features-header">
-          <h3>Fonctionnalités incluses</h3>
+        <p class="sa-section-label">Ce que le centre obtient</p>
+        <div class="sa-formgrid">
+          <label class="sa-field">
+            <span>Utilisateurs inclus</span>
+            <input class="sa-input" type="number" min="1" [ngModel]="selectedPackage().usersLimit" (ngModelChange)="updateSelected('usersLimit', +$event)" />
+          </label>
+          <label class="sa-field">
+            <span>Étudiants inclus</span>
+            <input class="sa-input" type="number" min="1" [ngModel]="selectedPackage().studentsLimit" (ngModelChange)="updateSelected('studentsLimit', +$event)" />
+          </label>
+          <label class="sa-field">
+            <span>Stockage GB</span>
+            <input class="sa-input" type="number" min="1" [ngModel]="selectedPackage().storageGb" (ngModelChange)="updateSelected('storageGb', +$event)" />
+          </label>
+          <label class="sa-field">
+            <span>Support</span>
+            <select class="sa-input" [ngModel]="selectedPackage().supportLevel" (ngModelChange)="updateSelected('supportLevel', $event)">
+              <option value="Standard">Standard</option>
+              <option value="Prioritaire">Prioritaire</option>
+              <option value="Dédié">Dédié</option>
+            </select>
+          </label>
+        </div>
+
+        <p class="sa-section-label">Fonctionnalités incluses</p>
+        <div class="features">
           <div class="feature-add">
-            <input type="text" [(ngModel)]="featureDraft" placeholder="Ajouter une fonctionnalité" (keyup.enter)="addFeature()" />
-            <button class="icon-btn" (click)="addFeature()" title="Ajouter">
+            <input class="sa-input" type="text" [(ngModel)]="featureDraft"
+                   placeholder="Ajouter une fonctionnalité" aria-label="Nouvelle fonctionnalité"
+                   (keyup.enter)="addFeature()" />
+            <button class="sa-btn ghost" type="button" (click)="addFeature()">
               <i class="fa-solid fa-plus"></i>
+              Ajouter
             </button>
           </div>
-        </div>
 
-        <div class="feature-list">
-          @for (feature of selectedPackage().features; track feature) {
-            <span class="feature-chip">
-              {{ feature }}
-              <button (click)="removeFeature(feature)" title="Retirer">
-                <i class="fa-solid fa-xmark"></i>
-              </button>
-            </span>
-          }
+          <div class="feature-list">
+            @for (feature of selectedPackage().features; track feature) {
+              <span class="feature">
+                {{ feature }}
+                <button type="button" (click)="removeFeature(feature)" [attr.aria-label]="'Retirer ' + feature">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </span>
+            }
+            @empty {
+              <p class="sa-hint">Aucune fonctionnalité listée pour ce package.</p>
+            }
+          </div>
         </div>
       </div>
     </div>
+
   </section>
 </div>

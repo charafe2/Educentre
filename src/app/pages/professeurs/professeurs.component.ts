@@ -9,6 +9,8 @@ import { ModalComponent } from '../../components/modal/modal.component';
 import { Teacher } from '../../models/teacher.model';
 import { Classe } from '../../models/classe.model';
 import { Group } from '../../models/group.model';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
 
 interface TeacherForm {
   firstName: string; lastName: string; email: string; phone: string;
@@ -27,7 +29,7 @@ interface TeacherRow {
 
 @Component({
   selector: 'app-professeurs',
-  imports: [NgClass, FormsModule, ModalComponent],
+  imports: [NgClass, FormsModule, ModalComponent, TranslatePipe],
   templateUrl: './professeurs.component.html',
   styleUrl: './professeurs.component.css',
 })
@@ -36,6 +38,8 @@ export class ProfesseursComponent {
   private classesService = inject(ClassesService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
+  private i18n = inject(TranslationService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   searchTerm = signal('');
   statusFilter = signal('');
@@ -68,8 +72,8 @@ export class ProfesseursComponent {
   resultCount = computed(() => this.pagination().total);
   pageRangeLabel = computed(() => {
     const page = this.pagination();
-    if (!page.total) return '0 resultat';
-    return `${page.from ?? 0}-${page.to ?? 0} sur ${page.total}`;
+    if (!page.total) return this.t('teachers.noResult');
+    return this.t('teachers.rangeLabel', { from: page.from ?? 0, to: page.to ?? 0, total: page.total });
   });
 
   showModal = signal(false);
@@ -132,34 +136,34 @@ export class ProfesseursComponent {
     if (editing) {
       this.teachersService.update(editing.id, payload).subscribe({
         next: () => {
-          this.toast.show('Professeur mis à jour');
+          this.toast.show(this.t('teachers.toastUpdated'));
           this.classesService.loadClasses();
           this.showModal.set(false);
         },
-        error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
+        error: () => this.toast.show(this.t('teachers.toastError'), 'error'),
       });
     } else {
       this.teachersService.add(payload).subscribe({
         next: () => {
-          this.toast.show('Professeur ajouté');
+          this.toast.show(this.t('teachers.toastAdded'));
           this.classesService.loadClasses();
           this.showModal.set(false);
         },
-        error: () => this.toast.show("Erreur lors de l'enregistrement", 'error'),
+        error: () => this.toast.show(this.t('teachers.toastError'), 'error'),
       });
     }
   }
 
   deleteTeacher(t: Teacher): void {
-    if (!confirm(`Supprimer le professeur ${t.firstName} ${t.lastName} ?`)) return;
+    if (!confirm(this.t('teachers.confirmDelete', { name: `${t.firstName} ${t.lastName}` }))) return;
 
     this.classesService.classes()
       .filter(c => c.teacherId === t.id)
       .forEach(c => this.classesService.update(c.id, { teacherId: null }).subscribe());
 
     this.teachersService.delete(t.id).subscribe({
-      next: () => this.toast.show('Professeur supprimé', 'info'),
-      error: () => this.toast.show('Erreur lors de la suppression', 'error'),
+      next: () => this.toast.show(this.t('teachers.toastDeleted'), 'info'),
+      error: () => this.toast.show(this.t('teachers.toastDeleteError'), 'error'),
     });
   }
 
@@ -168,11 +172,11 @@ export class ProfesseursComponent {
   }
 
   formatSalary(amount: number): string {
-    return amount.toLocaleString('fr-MA') + ' Dhs';
+    return amount.toLocaleString('fr-MA') + ' ' + this.t('common.currency');
   }
 
   getPaymentModeLabel(mode: string): string {
-    return mode === 'fixed' ? 'Fixe' : 'Par étudiant';
+    return mode === 'fixed' ? this.t('teachers.paymentFixe') : this.t('teachers.paymentPerStudent');
   }
 
   onSearch(event: Event): void {

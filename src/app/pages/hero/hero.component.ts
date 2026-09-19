@@ -1,11 +1,14 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  ViewEncapsulation, PLATFORM_ID, Inject,
+  ViewEncapsulation, PLATFORM_ID, Inject, inject,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
+import { SeoService } from '../../core/seo/seo.service';
+import { PUBLIC_PAGES } from '../../core/seo/public-pages';
+import { buildHomeSchema } from '../../core/seo/schema';
 
 type IntroState = 'active' | 'dismissed';
 
@@ -43,9 +46,16 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   private _sectionMotionAbort?: AbortController;
   private _introDismissed = false;
 
+  private readonly seo = inject(SeoService);
+
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
   ngOnInit() {
+    // SEO must run on both server (prerender) and browser, so it comes before the
+    // browser-only DOM work below.
+    this.seo.setPageSeo(PUBLIC_PAGES.home);
+    this.seo.setSchema(buildHomeSchema());
+
     if (!isPlatformBrowser(this.platformId)) return;
     this._savedBg = document.body.style.backgroundColor;
     document.body.style.backgroundColor = '#ffffff';
@@ -94,9 +104,12 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     const headline = document.getElementById('lp-headline');
     if (!headline) return;
 
+    // Keep in sync with the aria-label on #lp-headline in hero.component.html
+    // and the noscript fallback in src/index.html, so the H1 reads as the same
+    // keyword-rich phrase whether JS runs, fails, or never loads.
     const line1 = 'Gérez votre centre';
-    const line2Prefix = 'avec ';  // non-breaking space keeps "avec précision" together on breaks
-    const line2Accent = 'précision.';
+    const line2Prefix = 'de ';
+    const line2Accent = 'soutien scolaire';
 
     let idx = 0;
     const charSpan = (ch: string, accent = false): string => {
@@ -123,7 +136,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, reduced ? 80 : 520);
   }
 
-  // ─── 2. Smart nav — shadow + compact + active section ───────────
+  // ─── 2. Smart nav - shadow + compact + active section ───────────
   private _initNavBehavior() {
     const nav = document.getElementById('lp-nav');
     const hamburger = document.getElementById('lp-hamburger');
@@ -183,7 +196,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -48px 0px' });
 
-    // Section headers — each child staggers independently
+    // Section headers - each child staggers independently
     document.querySelectorAll('.lp .section__header .reveal').forEach((el, i) => {
       (el as HTMLElement).dataset['delay'] = String(i * 100);
       observer.observe(el);
@@ -376,7 +389,7 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 950);
   }
 
-  // ─── 6. Number counter — easeOutExpo via RAF ────────────────────
+  // ─── 6. Number counter - easeOutExpo via RAF ────────────────────
   private _initCounters() {
     const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
 

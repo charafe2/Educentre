@@ -1,4 +1,4 @@
-# 🚀 `RULES.md` — Modern SaaS ERP Architecture Guide (2026 Edition)
+# 🚀 `RULES.md` - Modern SaaS ERP Architecture Guide (2026 Edition)
 
 # 🏫 Project Overview
 

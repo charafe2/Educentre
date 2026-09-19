@@ -1,0 +1,33 @@
+<div class="lang-switcher" (click)="$event.stopPropagation()">
+  <button
+    type="button"
+    class="lang-trigger"
+    [attr.aria-expanded]="isOpen()"
+    aria-haspopup="menu"
+    [attr.aria-label]="'language.label' | t"
+    (click)="toggle($event)"
+  >
+    <i class="fa-solid fa-globe"></i>
+    <span class="lang-code">{{ current | uppercase }}</span>
+  </button>
+
+  @if (isOpen()) {
+    <div class="lang-menu" role="menu">
+      @for (lang of languages; track lang.code) {
+        <button
+          type="button"
+          class="lang-item"
+          role="menuitemradio"
+          [attr.aria-checked]="lang.code === current"
+          [class.active]="lang.code === current"
+          (click)="select(lang.code, $event)"
+        >
+          <span>{{ lang.label }}</span>
+          @if (lang.code === current) {
+            <i class="fa-solid fa-check"></i>
+          }
+        </button>
+      }
+    </div>
+  }
+</div>

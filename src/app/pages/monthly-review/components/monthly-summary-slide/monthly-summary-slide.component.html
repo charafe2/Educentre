@@ -1,0 +1,30 @@
+<div class="slide-inner">
+  <div class="slide-header">
+    <div>
+      <h2 class="slide-title">{{ 'monthlyReview.summary.title' | t }}</h2>
+      <p class="slide-subtitle">{{ 'monthlyReview.summary.subtitle' | t }}</p>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    @for (kpi of kpis(); track kpi.key) {
+      <app-summary-card [kpi]="kpi" />
+    }
+  </div>
+
+  @if (revenueTrend().length > 0) {
+    <div class="chart-card">
+      <span class="chart-title">{{ 'monthlyReview.summary.chartTitle' | t }}</span>
+      <div class="chart-bars">
+        @for (point of revenueTrend(); track point.month) {
+          <div class="chart-bar-col">
+            <div class="chart-bar-track">
+              <div class="chart-bar-fill" [style.height.%]="point.heightPct"></div>
+            </div>
+            <span class="chart-bar-label">{{ point.month.slice(5) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -185,13 +185,64 @@
 .lp .btn-primary {
   position: relative; overflow: hidden;
   display: inline-flex; align-items: center; gap: var(--space-2);
-  padding: 16px var(--space-8);
-  background: var(--color-blue); color: var(--color-white);
-  font-size: 17px; font-weight: 500; border-radius: var(--radius-full);
-  transition: background var(--dur-fast), transform var(--dur-fast);
+  padding: 17px var(--space-10);
+  background: linear-gradient(135deg, #2a95ff 0%, var(--color-blue) 46%, #0057b3 100%);
+  color: var(--color-white);
+  font-size: 17px; font-weight: 600; letter-spacing: 0.01em;
+  border-radius: var(--radius-full);
+  box-shadow:
+    0 8px 22px rgba(0,113,227,0.36),
+    0 2px 6px rgba(0,113,227,0.24),
+    inset 0 1px 0 rgba(255,255,255,0.28);
+  transition: transform var(--dur-fast) var(--ease-out),
+              box-shadow var(--dur-base) var(--ease-out);
+  animation: btnPrimaryGlow 2.8s ease-in-out infinite;
 }
-.lp .btn-primary:hover { background: var(--color-blue-dark); }
-.lp .btn-primary:active { transform: scale(0.97); }
+/* Light sweep that draws the eye toward the primary action */
+.lp .btn-primary::after {
+  content: ''; position: absolute; top: 0; left: -80%;
+  width: 55%; height: 100%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.5), transparent);
+  transform: skewX(-20deg);
+  animation: btnPrimaryShine 4s ease-in-out 1.2s infinite;
+}
+.lp .btn-primary svg {
+  position: relative; z-index: 1;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.lp .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 16px 34px rgba(0,113,227,0.46),
+    0 5px 14px rgba(0,113,227,0.30),
+    inset 0 1px 0 rgba(255,255,255,0.34);
+  animation-play-state: paused;
+}
+.lp .btn-primary:hover svg { transform: translateX(4px); }
+.lp .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+@keyframes btnPrimaryGlow {
+  0%, 100% {
+    box-shadow:
+      0 8px 22px rgba(0,113,227,0.36),
+      0 2px 6px rgba(0,113,227,0.24),
+      inset 0 1px 0 rgba(255,255,255,0.28);
+  }
+  50% {
+    box-shadow:
+      0 12px 30px rgba(0,113,227,0.52),
+      0 3px 10px rgba(0,113,227,0.32),
+      inset 0 1px 0 rgba(255,255,255,0.28);
+  }
+}
+@keyframes btnPrimaryShine {
+  0%   { left: -80%; }
+  40%, 100% { left: 140%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp .btn-primary { animation: none; }
+  .lp .btn-primary::after { animation: none; opacity: 0; }
+}
 
 .lp .btn-ghost {
   display: inline-flex; align-items: center; gap: var(--space-2);
@@ -293,7 +344,7 @@
   }
 }
 
-/* Reveal — base (instant for reduced-motion) */
+/* Reveal - base (instant for reduced-motion) */
 .lp .reveal { opacity: 0; }
 .lp .reveal.visible { opacity: 1; }
 
@@ -1829,7 +1880,7 @@
 .lp .footer { background: var(--color-black); border-top: 1px solid rgba(255,255,255,0.07); padding: var(--space-20) var(--space-6) var(--space-12); }
 .lp .footer__inner { max-width: var(--max-width); margin: 0 auto; }
 .lp .footer__grid { display: grid; grid-template-columns: 1fr; gap: var(--space-12); margin-bottom: var(--space-16); }
-@media (min-width: 640px) { .lp .footer__grid { grid-template-columns: 2fr 1fr 1fr 1fr; gap: var(--space-8); } }
+@media (min-width: 640px) { .lp .footer__grid { grid-template-columns: 2fr 1fr 1fr; gap: var(--space-8); } }
 .lp .footer__logo { font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--color-white); display: block; margin-bottom: var(--space-4); }
 .lp .footer__logo span { color: var(--color-blue); }
 .lp .footer__brand-desc { font-size: 14px; color: rgba(255,255,255,0.38); line-height: 1.65; max-width: 240px; }
@@ -1845,12 +1896,12 @@
 
 
 /* =====================================================================
-   ANIMATIONS — wrapped in prefers-reduced-motion: no-preference
+   ANIMATIONS - wrapped in prefers-reduced-motion: no-preference
    GPU-composited properties only: transform and opacity.
    ===================================================================== */
 @media (prefers-reduced-motion: no-preference) {
 
-  /* ── 10. Ambient gradient breathe — hero background ── */
+  /* ── 10. Ambient gradient breathe - hero background ── */
   .lp .hero::before {
     content: '';
     position: absolute; inset: 0;
@@ -1883,7 +1934,7 @@
     to { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
   }
 
-  /* ── Hero supporting elements — enhanced motion ── */
+  /* ── Hero supporting elements - enhanced motion ── */
   .lp .hero__overline {
     transform: translateY(16px);
   }
@@ -1902,7 +1953,7 @@
   }
   .lp .hero__mockup-wrap.visible { transform: translateY(0); }
 
-  /* ── 2. Section reveals — cinematic entrance ── */
+  /* ── 2. Section reveals - cinematic entrance ── */
   .lp .reveal {
     transform: translateY(28px);
     will-change: transform, opacity;
@@ -1910,7 +1961,7 @@
   }
   .lp .reveal.visible { transform: translateY(0); }
 
-  /* ── Bento cards — scale entrance ── */
+  /* ── Bento cards - scale entrance ── */
   .lp .bento__card {
     transform: scale(0.97) translateY(16px);
     will-change: transform, opacity;
@@ -1918,7 +1969,7 @@
   }
   .lp .bento__card.visible { transform: scale(1) translateY(0); }
 
-  /* ── Testimonials — cascade scale + translate ── */
+  /* ── Testimonials - cascade scale + translate ── */
   .lp .t-card {
     transform: translateY(32px) scale(0.96);
     will-change: transform, opacity;
@@ -2096,3 +2147,48 @@
   }
 
 } /* end @media (prefers-reduced-motion: no-preference) */
+
+/* ═══════════════ Hero trust microcopy ═══════════════ */
+.lp .hero__ctas { margin-bottom: var(--space-5); }
+.lp .hero__trust {
+  display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 auto var(--space-16);
+  color: var(--color-gray-500);
+  font-size: 13px; letter-spacing: 0.01em;
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-out) 0.55s;
+}
+.lp .hero__trust.visible { opacity: 1; }
+
+/* ═══════════════ Demo form - states ═══════════════ */
+.lp .demo-form__submit:disabled {
+  opacity: 0.65;
+  cursor: default;
+  box-shadow: none;
+}
+
+.lp .demo-form__success {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-3);
+  min-height: 320px;
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+.lp .demo-form__success-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: rgba(7, 145, 116, 0.12);
+  color: #079174;
+}
+.lp .demo-form__success-icon svg { width: 34px; height: 34px; }
+.lp .demo-form__success h3 {
+  color: #071034;
+  font-size: 21px; font-weight: 780; line-height: 1.2;
+}
+.lp .demo-form__success p {
+  max-width: 360px;
+  color: #516078;
+  font-size: 14.5px; line-height: 1.6;
+}

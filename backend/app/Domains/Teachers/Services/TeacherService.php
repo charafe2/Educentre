@@ -51,9 +51,11 @@ class TeacherService
         ];
     }
 
-    public function find(int $id): Teacher
+    public function find(int $id, int $tenantId): Teacher
     {
-        return Teacher::with(['user', 'classes'])->findOrFail($id);
+        return Teacher::with(['user', 'classes'])
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($id);
     }
 
     public function create(array $data): Teacher
@@ -86,10 +88,12 @@ class TeacherService
         });
     }
 
-    public function update(int $id, array $data): Teacher
+    public function update(int $id, int $tenantId, array $data): Teacher
     {
-        return DB::transaction(function () use ($id, $data) {
-            $teacher = Teacher::with('user')->findOrFail($id);
+        return DB::transaction(function () use ($id, $tenantId, $data) {
+            $teacher = Teacher::with('user')
+                ->where('tenant_id', $tenantId)
+                ->findOrFail($id);
 
             if ($teacher->user) {
                 $teacher->user->update([
@@ -115,9 +119,9 @@ class TeacherService
         });
     }
 
-    public function delete(int $id): void
+    public function delete(int $id, int $tenantId): void
     {
-        $teacher = Teacher::findOrFail($id);
+        $teacher = Teacher::where('tenant_id', $tenantId)->findOrFail($id);
         $teacher->delete();
     }
 

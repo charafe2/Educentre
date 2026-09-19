@@ -270,6 +270,9 @@ class MoroccanDemoSeeder extends Seeder
                 'phone' => sprintf('06%08d', 20000000 + $student['index']),
                 'whatsapp_phone' => sprintf('06%08d', 20000000 + $student['index']),
                 'email' => sprintf('parent.demo.%04d@example.ma', $student['index'] + 1),
+                // Same demo password for every seeded parent — matches what
+                // the mobile app's mock data used before it hit a real API.
+                'password' => Hash::make('parent2026'),
                 'relation' => $student['index'] % 2 === 0 ? 'father' : 'mother',
                 'is_primary' => true,
                 'created_at' => $now,

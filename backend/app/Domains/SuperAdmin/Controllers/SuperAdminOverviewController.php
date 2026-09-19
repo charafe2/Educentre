@@ -2,60 +2,107 @@
 
 namespace App\Domains\SuperAdmin\Controllers;
 
-use App\Domains\SuperAdmin\Models\CentreInvoice;
-use App\Domains\SuperAdmin\Services\PackagePlanService;
+use App\Domains\Core\Models\CentreInvoice;
+use App\Domains\Core\Models\PackagePlan;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class SuperAdminOverviewController extends Controller
 {
-    public function __construct(private readonly PackagePlanService $packagePlanService) {}
+    /** Rows shown in the "Factures centres" panel. */
+    private const RECENT_INVOICE_LIMIT = 8;
 
-    public function __invoke(Request $request): JsonResponse
+    /**
+     * Payment overview for the superadmin console landing page.
+     *
+     * Shape is dictated by SuperAdminOverview in
+     * src/app/superadmin/superadmin-api.service.ts — keep them in step.
+     */
+    public function __invoke(): JsonResponse
     {
-        abort_unless($request->user()?->role === 'superadmin', 403, 'Accès super-admin requis.');
-
+        // Cancelled invoices are excluded outright: they are not owed money, and
+        // the frontend's status union is only paid | pending | late, so letting
+        // one through would render an unstyled badge.
         $invoices = CentreInvoice::query()
-            ->with('tenant.centre')
+            ->with('centre:id,name,city')
+            ->where('status', '!=', CentreInvoice::STATUS_CANCELLED)
             ->latest('issued_at')
             ->latest('id')
             ->get();
 
-        $invoiceRows = $invoices->take(8)->values()->map(fn (CentreInvoice $invoice) => [
-            'id' => $invoice->invoice_number,
-            'centre' => $invoice->tenant?->centre?->name ?? $invoice->tenant?->name ?? 'Centre',
-            'city' => $invoice->tenant?->centre?->city ?? '',
-            'packageName' => $invoice->package_name,
-            'amount' => (float) $invoice->amount,
-            'dueDate' => $invoice->due_date?->format('d/m/Y'),
-            'status' => match ($invoice->status) {
-                'paid' => 'paid',
-                'late' => 'late',
-                default => 'pending',
-            },
-        ]);
-
-        $packageMix = $this->packagePlanService->all()->map(function ($plan) use ($invoices) {
-            $matchingInvoices = $invoices->where('package_name', $plan->name);
-
-            return [
-                'name' => $plan->name,
-                'centres' => $matchingInvoices->pluck('tenant_id')->unique()->count(),
-                'revenue' => (float) $matchingInvoices->sum('amount'),
-                'tone' => strtolower($plan->name) === 'basique' ? 'basic' : strtolower($plan->name),
-            ];
-        })->values();
+        // "late" is derived from the due date rather than stored, so bucket on
+        // displayStatus() here instead of grouping by the status column.
+        $byStatus = $invoices->groupBy(fn (CentreInvoice $invoice) => $invoice->displayStatus());
 
         return $this->success([
-            'invoices' => $invoiceRows,
-            'packageMix' => $packageMix,
+            'invoices' => $this->recentInvoices($invoices),
+            'packageMix' => $this->packageMix($invoices),
             'summary' => [
                 'totalRevenue' => (float) $invoices->sum('amount'),
-                'pendingAmount' => (float) $invoices->where('status', 'pending')->sum('amount'),
-                'lateAmount' => (float) $invoices->where('status', 'late')->sum('amount'),
-                'paidCount' => $invoices->where('status', 'paid')->count(),
+                'pendingAmount' => (float) $this->bucket($byStatus, CentreInvoice::STATUS_PENDING)->sum('amount'),
+                'lateAmount' => (float) $this->bucket($byStatus, CentreInvoice::STATUS_LATE)->sum('amount'),
+                'paidCount' => $this->bucket($byStatus, CentreInvoice::STATUS_PAID)->count(),
             ],
         ]);
+    }
+
+    /** @param  Collection<int, CentreInvoice>  $invoices */
+    private function recentInvoices(Collection $invoices): array
+    {
+        return $invoices
+            ->take(self::RECENT_INVOICE_LIMIT)
+            ->map(fn (CentreInvoice $invoice) => [
+                'id' => $invoice->invoice_number,
+                'centre' => $invoice->centre?->name ?? '-',
+                'city' => $invoice->centre?->city ?? '-',
+                'packageName' => $invoice->package_name,
+                'amount' => (float) $invoice->amount,
+                // Printed verbatim by the template, so format it here.
+                'dueDate' => $invoice->due_date?->format('d/m/Y'),
+                'status' => $invoice->displayStatus(),
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Revenue and reach per plan. Driven off the catalogue rather than the
+     * invoices, so a plan nobody has bought still appears with zeroes.
+     *
+     * @param  Collection<int, CentreInvoice>  $invoices
+     */
+    private function packageMix(Collection $invoices): array
+    {
+        return PackagePlan::query()
+            ->orderBy('monthly_price')
+            ->get()
+            ->map(function (PackagePlan $plan) use ($invoices) {
+                // Match on the foreign key, not package_name: the name is
+                // denormalised onto the invoice and may be a historic label.
+                $matching = $invoices->where('package_plan_id', $plan->id);
+
+                return [
+                    'name' => $plan->name,
+                    'centres' => $matching->pluck('centre_id')->unique()->count(),
+                    'revenue' => (float) $matching->sum('amount'),
+                    'tone' => $this->tone($plan->name),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    /** @param  Collection<string, Collection<int, CentreInvoice>>  $byStatus */
+    private function bucket(Collection $byStatus, string $status): Collection
+    {
+        return $byStatus->get($status) ?? collect();
+    }
+
+    private function tone(string $planName): string
+    {
+        $name = mb_strtolower($planName);
+
+        return $name === 'basique' ? 'basic' : $name;
     }
 }

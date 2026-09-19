@@ -318,6 +318,13 @@ td {
   border-radius: var(--radius-sm);
 }
 
+.amount-value {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+  white-space: nowrap;
+}
+
 /* ── Group Tags ── */
 .classes-list { display: flex; flex-direction: column; gap: 0.3rem; flex-wrap: wrap; }
 

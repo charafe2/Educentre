@@ -1,0 +1,22 @@
+<div class="review-page">
+  <app-monthly-progress
+    [slides]="slides"
+    [activeIndex]="activeIndex()"
+    [completionPercent]="completionPercent()"
+    (stepSelect)="setActiveIndex($event)"
+  />
+
+  <div class="review-carousel-wrap">
+    <app-review-carousel
+      [activeIndex]="activeIndex()"
+      [total]="slides.length"
+      (activeIndexChange)="setActiveIndex($event)"
+    >
+      <div class="carousel-slide"><app-teacher-salary-slide /></div>
+      <div class="carousel-slide"><app-student-payment-slide /></div>
+      <div class="carousel-slide"><app-monthly-summary-slide /></div>
+      <div class="carousel-slide"><app-tasks-slide /></div>
+      <div class="carousel-slide"><app-ai-insights-slide /></div>
+    </app-review-carousel>
+  </div>
+</div>

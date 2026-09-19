@@ -1,0 +1,17 @@
+<ul class="task-list">
+  @for (task of tasks; track task.id) {
+    <li class="task-item" [class.done]="doneMap[task.id]" (click)="toggle.emit(task.id)">
+      <span class="task-checkbox">
+        @if (doneMap[task.id]) {
+          <i class="fa-solid fa-check"></i>
+        }
+      </span>
+      <div class="task-copy">
+        <span class="task-label">{{ task.label | t }}</span>
+        @if (task.description) {
+          <span class="task-description">{{ task.description | t }}</span>
+        }
+      </div>
+    </li>
+  }
+</ul>

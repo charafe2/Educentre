@@ -1,11 +1,11 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { CentreInvoice, ClientAccount, CreateCentreInvoicePayload, PackagePlan, SuperadminApiService } from '../../superadmin-api.service';
 
 @Component({
   selector: 'app-superadmin-invoices',
-  imports: [FormsModule, NgClass, DatePipe],
+  imports: [FormsModule, DatePipe, DecimalPipe],
   templateUrl: './superadmin-invoices.component.html',
   styleUrl: './superadmin-invoices.component.css'
 })
@@ -21,8 +21,13 @@ export class SuperadminInvoicesComponent implements OnInit {
 
   form: CreateCentreInvoicePayload = this.emptyForm();
 
-  pendingAmount = computed(() => this.invoices().filter(i => i.status === 'pending').reduce((sum, i) => sum + i.amount, 0));
-  paidAmount = computed(() => this.invoices().filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0));
+  private sumWhere(status: CentreInvoice['status']): number {
+    return this.invoices().filter(i => i.status === status).reduce((sum, i) => sum + i.amount, 0);
+  }
+
+  pendingAmount = computed(() => this.sumWhere('pending'));
+  paidAmount = computed(() => this.sumWhere('paid'));
+  lateAmount = computed(() => this.sumWhere('late'));
 
   ngOnInit(): void { void this.load(); }
 
@@ -99,5 +104,10 @@ export class SuperadminInvoicesComponent implements OnInit {
 
   statusLabel(status: CentreInvoice['status']): string {
     return status === 'paid' ? 'Payée' : status === 'late' ? 'En retard' : status === 'cancelled' ? 'Annulée' : 'À encaisser';
+  }
+
+  /** Maps an invoice state onto the console's ledger tones. */
+  statusTone(status: CentreInvoice['status']): string {
+    return status === 'paid' ? 'paid' : status === 'late' ? 'late' : status === 'cancelled' ? 'idle' : 'due';
   }
 }

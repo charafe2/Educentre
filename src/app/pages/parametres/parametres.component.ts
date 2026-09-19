@@ -1,55 +1,97 @@
-import { Component, signal, inject, OnInit, computed } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { Component, signal, inject, OnInit, computed, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CentreService } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
+import { SubjectsService } from '../../services/subjects.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
 import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
-import { AuthService } from '../../auth/auth.service';
+import { SettingsUsersService, TenantUser } from '../../services/settings-users.service';
+import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { ReceiptPreviewComponent } from '../../components/receipt-preview/receipt-preview.component';
 import { Classe } from '../../models/classe.model';
 import { ReceiptCustomizationService, ReceiptCustomizationSettings } from '../../services/receipt-customization.service';
+import { TranslatePipe } from '../../i18n/translate.pipe';
+import { TranslationService } from '../../i18n/translation.service';
+import { ChatService, Conversation, Message } from '../../services/chat.service';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  roleType: 'admin' | 'manager' | 'teacher' | 'accountant';
-  lastLogin: string;
-}
+/** Checkbox list shown when adding/editing a user — mirrors the sidebar tabs
+ *  (see layout/sidebar) and the backend's TenantPermissions::KEYS. Reuses the
+ *  existing `nav.*` labels so the checkbox wording always matches what the
+ *  granted user will actually see in their own sidebar. */
+const PERMISSION_OPTIONS: { key: TenantPermissionKey; labelKey: string; icon: string }[] = [
+  { key: 'revue-mensuelle', labelKey: 'nav.monthlyReview', icon: 'fa-solid fa-clipboard-check' },
+  { key: 'etudiants', labelKey: 'nav.students', icon: 'fa-regular fa-user' },
+  { key: 'groupes', labelKey: 'nav.groups', icon: 'fa-solid fa-people-group' },
+  { key: 'professeurs', labelKey: 'nav.teachers', icon: 'fa-solid fa-chalkboard-user' },
+  { key: 'finances', labelKey: 'nav.finances', icon: 'fa-regular fa-credit-card' },
+  { key: 'calendrier', labelKey: 'nav.calendar', icon: 'fa-regular fa-calendar' },
+  { key: 'analytiques', labelKey: 'nav.analytics', icon: 'fa-solid fa-chart-line' },
+  { key: 'documents', labelKey: 'nav.documents', icon: 'fa-regular fa-file-lines' },
+];
+
+/** Fixed set of support categories. Replaces the old free-text "Objectif"
+ *  field so tickets arrive pre-sorted and can be shown with a consistent
+ *  icon and colour on both sides of the conversation. The translated label
+ *  is what gets stored as the conversation subject. */
+const SUPPORT_CATEGORIES: { id: string; labelKey: string; icon: string; tone: string }[] = [
+  { id: 'billing', labelKey: 'settings.supportCatBilling', icon: 'fa-solid fa-file-invoice', tone: 'violet' },
+  { id: 'bug', labelKey: 'settings.supportCatBug', icon: 'fa-solid fa-bug', tone: 'rose' },
+  { id: 'feature', labelKey: 'settings.supportCatFeature', icon: 'fa-solid fa-wand-magic-sparkles', tone: 'teal' },
+  { id: 'other', labelKey: 'settings.supportCatOther', icon: 'fa-solid fa-circle-question', tone: 'slate' },
+];
+
+/** Ticket status → label, icon and colour tone. `open` reads as "needs us",
+ *  hence the warmest colour; anything unrecognised falls back to in-progress. */
+const TICKET_STATUSES: Record<string, { labelKey: string; icon: string; tone: string }> = {
+  open: { labelKey: 'settings.ticketOpen', icon: 'fa-solid fa-circle-dot', tone: 'open' },
+  pending: { labelKey: 'settings.ticketPending', icon: 'fa-solid fa-clock', tone: 'pending' },
+  closed: { labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', tone: 'closed' },
+};
 
 @Component({
   selector: 'app-parametres',
-  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent],
+  standalone: true,
+  imports: [NgClass, FormsModule, ModalComponent, ReceiptPreviewComponent, TranslatePipe, DatePipe],
   templateUrl: './parametres.component.html',
-  styleUrl: './parametres.component.css'
+  styleUrls: ['./parametres.component.css', './parametres-support.css']
 })
-export class ParametresComponent implements OnInit {
+export class ParametresComponent implements OnInit, AfterViewChecked {
   private centreService = inject(CentreService);
   private studentsService = inject(StudentsService);
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
+  private subjectsService = inject(SubjectsService);
+  private academicLevelsService = inject(AcademicLevelsService);
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
-  private auth = inject(AuthService);
+  private auth = inject(AuthStore);
+  usersService = inject(SettingsUsersService);
   private receiptCustomization = inject(ReceiptCustomizationService);
+  private i18n = inject(TranslationService);
+  chatService = inject(ChatService);
+  private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   activeTab = signal('centre');
 
+  @ViewChild('messagesContainer') private messagesContainer!: ElementRef;
+  shouldScrollToBottom = false;
+
+  // `label` holds a translation key, resolved in the template via `| t`.
   tabs = [
-    { id: 'centre', label: 'Informations du centre', icon: 'fa-solid fa-building' },
-    { id: 'receipt', label: 'Personnalisation du reçu', icon: 'fa-solid fa-receipt' },
-    { id: 'matieres', label: 'Matières & Classes', icon: 'fa-solid fa-book-open' },
-    { id: 'users', label: 'Utilisateurs', icon: 'fa-solid fa-users' },
-    { id: 'securite', label: 'Sécurité', icon: 'fa-solid fa-lock' },
-    { id: 'subscription', label: 'Abonnement', icon: 'fa-solid fa-credit-card' },
-    { id: 'notifications', label: 'Notifications', icon: 'fa-solid fa-bell' },
-    { id: 'integrations', label: 'Intégrations', icon: 'fa-solid fa-plug' },
+    { id: 'centre', label: 'settings.tabCentre', icon: 'fa-solid fa-building' },
+    { id: 'receipt', label: 'settings.tabReceipt', icon: 'fa-solid fa-receipt' },
+    { id: 'matieres', label: 'settings.tabMatieres', icon: 'fa-solid fa-book-open' },
+    { id: 'users', label: 'settings.tabUsers', icon: 'fa-solid fa-users' },
+    { id: 'securite', label: 'settings.tabSecurity', icon: 'fa-solid fa-lock' },
+    { id: 'subscription', label: 'settings.tabSubscription', icon: 'fa-solid fa-credit-card' },
+    { id: 'notifications', label: 'settings.tabNotifications', icon: 'fa-solid fa-bell' },
+    { id: 'support', label: 'settings.tabSupport', icon: 'fa-solid fa-headset' },
   ];
 
   centreForm = { ...this.centreService.centreInfo() };
@@ -59,25 +101,24 @@ export class ParametresComponent implements OnInit {
 
   centreTypes = ['Soutien scolaire', 'Langue', 'Informatique', 'Artistique'];
 
-  users = signal<User[]>([
-    { id: 1, name: 'Ahmed Berrada', email: 'a.berrada@centre.ma', role: 'Administrateur', roleType: 'admin', lastLogin: '08/05/2025' },
-    { id: 2, name: 'Rachid Mansouri', email: 'r.mansouri@centre.ma', role: 'Professeur', roleType: 'teacher', lastLogin: '07/05/2025' },
-    { id: 3, name: 'Samira Bouazza', email: 's.bouazza@centre.ma', role: 'Professeur', roleType: 'teacher', lastLogin: '08/05/2025' },
-    { id: 4, name: 'Khadija Alami', email: 'k.alami@centre.ma', role: 'Gestionnaire', roleType: 'manager', lastLogin: '06/05/2025' },
-    { id: 5, name: 'Younes Tazi', email: 'y.tazi@centre.ma', role: 'Comptable', roleType: 'accountant', lastLogin: '05/05/2025' },
-  ]);
+  isOwner = this.auth.isOwner;
+  permissionOptions = PERMISSION_OPTIONS;
 
   showUserModal = signal(false);
-  userForm = { name: '', email: '', role: 'Professeur', roleType: 'teacher' as User['roleType'] };
+  editingUserUuid = signal<string | null>(null);
+  userForm = { name: '', email: '', permissions: [] as TenantPermissionKey[] };
+  userFormError = signal('');
+  savingUser = signal(false);
 
+  // `label` holds a translation key, resolved in the template via `| t`.
   subscriptionFeatures = [
-    { label: 'Étudiants illimités', included: true },
-    { label: 'Professeurs illimités', included: true },
-    { label: 'Envoi WhatsApp automatique', included: true },
-    { label: 'Rapports & Analytiques', included: true },
-    { label: 'Sauvegarde cloud', included: true },
-    { label: 'Support prioritaire', included: false },
-    { label: 'API personnalisée', included: false },
+    { label: 'settings.featureUnlimitedStudents', included: true },
+    { label: 'settings.featureUnlimitedTeachers', included: true },
+    { label: 'settings.featureAutoWhatsapp', included: true },
+    { label: 'settings.featureReportsAnalytics', included: true },
+    { label: 'settings.featureCloudBackup', included: true },
+    { label: 'settings.featurePrioritySupport', included: false },
+    { label: 'settings.featureCustomApi', included: false },
   ];
 
   notifSettings = {
@@ -90,6 +131,21 @@ export class ParametresComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCentreSettings();
+    if (this.isOwner()) {
+      this.usersService.load();
+    }
+    this.chatService.loadConversations().subscribe();
+  }
+
+  ngAfterViewChecked() {
+    if (this.shouldScrollToBottom) {
+      try {
+        if (this.messagesContainer) {
+          this.messagesContainer.nativeElement.scrollTop = this.messagesContainer.nativeElement.scrollHeight;
+        }
+      } catch (_) {}
+      this.shouldScrollToBottom = false;
+    }
   }
 
   async loadCentreSettings(): Promise<void> {
@@ -101,9 +157,9 @@ export class ParametresComponent implements OnInit {
     this.saving.set(true);
     try {
       await this.centreService.update({ ...this.centreForm });
-      this.toast.show('Informations du centre enregistrées');
+      this.toast.show(this.t('settings.toastCentreSaved'));
     } catch (err: unknown) {
-      const message = extractValidationError(err);
+      const message = extractValidationError(err, this.t('settings.saveError'));
       this.toast.show(message);
     } finally {
       this.saving.set(false);
@@ -137,45 +193,75 @@ export class ParametresComponent implements OnInit {
   saveReceiptSettings(): void {
     this.receiptCustomization.save({ ...this.receiptForm });
     this.receiptForm = { ...this.receiptCustomization.settings() };
-    this.toast.show('Personnalisation du reçu enregistrée');
+    this.toast.show(this.t('settings.toastReceiptSaved'));
   }
 
   resetReceiptSettings(): void {
     this.receiptForm = this.receiptCustomization.reset();
-    this.toast.show('Modèle de reçu réinitialisé', 'info');
+    this.toast.show(this.t('settings.toastReceiptReset'), 'info');
   }
 
   openAddUser(): void {
-    this.userForm = { name: '', email: '', role: 'Professeur', roleType: 'teacher' };
+    this.editingUserUuid.set(null);
+    this.userForm = { name: '', email: '', permissions: [] };
+    this.userFormError.set('');
     this.showUserModal.set(true);
   }
 
-  submitUser(): void {
-    const id = Math.max(...this.users().map(u => u.id)) + 1;
-    this.users.update(list => [...list, {
-      id,
-      name: this.userForm.name,
-      email: this.userForm.email,
-      role: this.userForm.role,
-      roleType: this.userForm.roleType,
-      lastLogin: '—',
-    }]);
-    this.toast.show('Utilisateur ajouté');
-    this.showUserModal.set(false);
+  openEditUser(u: TenantUser): void {
+    this.editingUserUuid.set(u.uuid);
+    this.userForm = { name: u.name, email: u.email, permissions: [...(u.permissions ?? [])] };
+    this.userFormError.set('');
+    this.showUserModal.set(true);
   }
 
-  deleteUser(u: User): void {
-    if (confirm(`Supprimer l'utilisateur ${u.name} ?`)) {
-      this.users.update(list => list.filter(x => x.id !== u.id));
-      this.toast.show('Utilisateur supprimé', 'info');
+  togglePermission(key: TenantPermissionKey): void {
+    const current = this.userForm.permissions;
+    this.userForm.permissions = current.includes(key)
+      ? current.filter(k => k !== key)
+      : [...current, key];
+  }
+
+  submitUser(): void {
+    this.userFormError.set('');
+    if (!this.userForm.name.trim() || this.userForm.permissions.length === 0) {
+      this.userFormError.set(this.t('settings.userFormRequired'));
+      return;
     }
+
+    const editingUuid = this.editingUserUuid();
+    this.savingUser.set(true);
+
+    const request$ = editingUuid
+      ? this.usersService.update(editingUuid, { name: this.userForm.name.trim(), permissions: this.userForm.permissions })
+      : this.usersService.add({ name: this.userForm.name.trim(), email: this.userForm.email.trim(), permissions: this.userForm.permissions });
+
+    request$.subscribe({
+      next: () => {
+        this.savingUser.set(false);
+        this.toast.show(this.t(editingUuid ? 'settings.toastUserUpdated' : 'settings.toastUserAdded'));
+        this.showUserModal.set(false);
+      },
+      error: (err: unknown) => {
+        this.savingUser.set(false);
+        this.userFormError.set(extractValidationError(err, this.t('settings.saveError')));
+      },
+    });
+  }
+
+  deleteUser(u: TenantUser): void {
+    if (!confirm(this.t('settings.confirmDeleteUser', { name: u.name }))) return;
+    this.usersService.remove(u.uuid).subscribe({
+      next: () => this.toast.show(this.t('settings.toastUserDeleted'), 'info'),
+      error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('settings.saveError')), 'error'),
+    });
   }
 
   saveNotifications(): void {
-    this.toast.show('Paramètres de notifications enregistrés');
+    this.toast.show(this.t('settings.toastNotifSaved'));
   }
 
-  // Security — password change
+  // Security - password change
   passwordForm = { current: '', newPw: '', confirm: '' };
   showCurrent  = signal(false);
   showNew      = signal(false);
@@ -188,7 +274,7 @@ export class ParametresComponent implements OnInit {
     const { current, newPw, confirm } = this.passwordForm;
 
     if (!current || !newPw || !confirm) {
-      this.passwordError.set('Tous les champs sont obligatoires.');
+      this.passwordError.set(this.t('settings.allFieldsRequired'));
       return;
     }
 
@@ -202,11 +288,150 @@ export class ParametresComponent implements OnInit {
     }
 
     this.passwordForm = { current: '', newPw: '', confirm: '' };
-    this.toast.show('Mot de passe modifié avec succès');
+    this.toast.show(this.t('settings.toastPasswordChanged'));
+  }
+
+  // ── Support ───────────────────────────────────────────────
+  readonly supportCategories = SUPPORT_CATEGORIES;
+  supportForm = { category: '', message: '' };
+  supportError = signal('');
+  sendingSupport = signal(false);
+  newMessage = '';
+
+  /** The send button only lights up once both fields are usable. */
+  get supportReady(): boolean {
+    return !!this.supportForm.category && this.supportForm.message.trim().length > 0;
+  }
+
+  async sendSupportRequest(): Promise<void> {
+    this.supportError.set('');
+    const { category, message } = this.supportForm;
+
+    if (!this.supportReady) {
+      this.supportError.set(this.t('settings.allFieldsRequired'));
+      return;
+    }
+
+    // The category label doubles as the subject, so support sees what kind of
+    // request it is before opening it.
+    const chosen = SUPPORT_CATEGORIES.find(c => c.id === category);
+    const subject = this.t(chosen ? chosen.labelKey : 'settings.supportCatOther');
+
+    this.sendingSupport.set(true);
+    try {
+      await this.centreService.sendSupportRequest(subject, message.trim());
+      this.supportForm = { category: '', message: '' };
+      this.toast.show(this.t('settings.toastSupportSent'));
+      this.chatService.loadConversations().subscribe(); // refresh tickets
+    } catch (err: unknown) {
+      this.supportError.set(extractValidationError(err, this.t('settings.saveError')));
+    } finally {
+      this.sendingSupport.set(false);
+    }
+  }
+
+  // ── Support: tri et filtres de la liste des tickets ────────
+  ticketFilter = signal<'all' | 'open' | 'pending' | 'closed'>('all');
+  ticketSearch = signal('');
+
+  ticketCounts = computed(() => {
+    const list = this.chatService.conversations();
+    return {
+      all: list.length,
+      open: list.filter(t => t.status === 'open').length,
+      pending: list.filter(t => t.status === 'pending').length,
+      closed: list.filter(t => t.status === 'closed').length,
+    };
+  });
+
+  filteredTickets = computed(() => {
+    const status = this.ticketFilter();
+    const query = this.ticketSearch().trim().toLowerCase();
+    return this.chatService.conversations()
+      .filter(t => status === 'all' || t.status === status)
+      .filter(t => !query || (t.subject || '').toLowerCase().includes(query));
+  });
+
+  /** Recap tiles double as the status filter — see the template. */
+  statusTiles = computed(() => {
+    const counts = this.ticketCounts();
+    return [
+      { key: 'all' as const, labelKey: 'settings.filterAll', icon: 'fa-solid fa-layer-group', count: counts.all },
+      { key: 'open' as const, labelKey: 'settings.ticketOpen', icon: 'fa-solid fa-circle-dot', count: counts.open },
+      { key: 'pending' as const, labelKey: 'settings.ticketPending', icon: 'fa-solid fa-clock', count: counts.pending },
+      { key: 'closed' as const, labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', count: counts.closed },
+    ];
+  });
+
+  statusMeta(status: string) {
+    return TICKET_STATUSES[status]
+      ?? { labelKey: 'settings.ticketInProgress', icon: 'fa-solid fa-spinner', tone: 'progress' };
+  }
+
+  categoryIcon(id: string): string {
+    return SUPPORT_CATEGORIES.find(c => c.id === id)?.icon ?? 'fa-solid fa-tag';
+  }
+
+  /** Older tickets carry a free-text subject, so match on the translated
+   *  category label and fall back to "Autre" rather than showing nothing. */
+  categoryMeta(subject?: string) {
+    const haystack = (subject || '').toLowerCase();
+    return SUPPORT_CATEGORIES.find(c => haystack.includes(this.t(c.labelKey).toLowerCase()))
+      ?? SUPPORT_CATEGORIES[SUPPORT_CATEGORIES.length - 1];
+  }
+
+  /** "Aujourd'hui, 01:10" beats "09/08/2026 01:10" for scanning a list where
+   *  almost everything is recent. Falls back to a day/month for older items. */
+  ticketDate(iso: string): string {
+    const locale = this.i18n.lang();
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return '';
+
+    const time = date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((startOfDay(new Date()) - startOfDay(date)) / 86_400_000);
+
+    if (days === 0) return `${this.t('settings.today')}, ${time}`;
+    if (days === 1) return `${this.t('settings.yesterday')}, ${time}`;
+    return `${date.toLocaleDateString(locale, { day: 'numeric', month: 'short' })}, ${time}`;
+  }
+
+  selectConversation(conv: Conversation) {
+    this.chatService.setActiveConversation(conv);
+    this.shouldScrollToBottom = true;
+  }
+
+  /**
+   * True for messages this centre sent, as opposed to the support team's.
+   *
+   * Tested against the support side rather than our own: sender_type is the
+   * sender's FQCN, and only support replies come from a SuperAdmin. Matching
+   * our own class name is what broke this before — it looked for "TenantUser"
+   * while the backend stores "App\Models\User", so no message ever counted as
+   * ours and the whole thread rendered as incoming.
+   */
+  isMe(msg: any): boolean {
+    return !msg.sender_type?.includes('SuperAdmin');
+  }
+
+  sendMessage(event: Event) {
+    event.preventDefault();
+    const active = this.chatService.activeConversation();
+    if (!this.newMessage.trim() || !active) return;
+    if (active.status === 'closed' || active.status === 'pending') return;
+
+    this.chatService.sendMessage(active.uuid, this.newMessage).subscribe(() => {
+      this.newMessage = '';
+      this.shouldScrollToBottom = true;
+    });
   }
 
   // ── Matières ──────────────────────────────────────────────
+  // Subjects are managed by the Super Admin and assigned per center — this
+  // page only lets the owner/manager pick from what's already assigned.
   allTeachers = this.teachersService.teachers;
+  allSubjects = this.subjectsService.subjects;
+  allLevels = this.academicLevelsService.levels;
 
   colorPresets = [
     { color: '#1d4ed8', bgColor: '#dbeafe' },
@@ -233,16 +458,18 @@ export class ParametresComponent implements OnInit {
 
   matiereForm = {
     name: '', subject: '', level: '', teacherId: null as number | null,
-    maxCapacity: 15, monthlyPrice: 0,
+    maxCapacity: null as number | null, monthlyPrice: null as number | null,
     status: 'active' as 'active' | 'inactive',
     color: '#1d4ed8', bgColor: '#dbeafe',
   };
 
+  // Aucune valeur métier n'est présélectionnée (professeur, capacité, prix) :
+  // c'est au propriétaire/gérant de les choisir lui-même pour chaque classe.
   openAddMatiere(): void {
     this.editingMatiere.set(null);
     this.matiereForm = {
-      name: '', subject: '', level: '', teacherId: this.allTeachers()[0]?.id ?? null,
-      maxCapacity: 15, monthlyPrice: 300,
+      name: '', subject: '', level: '', teacherId: null,
+      maxCapacity: null, monthlyPrice: null,
       status: 'active', color: '#1d4ed8', bgColor: '#dbeafe',
     };
     this.showMatiereModal.set(true);
@@ -266,24 +493,27 @@ export class ParametresComponent implements OnInit {
 
   submitMatiere(): void {
     const f = this.matiereForm;
-    if (!f.name.trim() || !f.subject.trim() || !f.level.trim()) {
-      this.toast.show('Veuillez remplir tous les champs obligatoires');
+    if (!f.name.trim() || !f.subject.trim() || !f.level.trim() || !f.teacherId
+      || !f.maxCapacity || !f.monthlyPrice) {
+      this.toast.show(this.t('settings.toastRequiredFields'));
       return;
     }
+    const maxCapacity = +f.maxCapacity;
+    const monthlyPrice = +f.monthlyPrice;
     const ec = this.editingMatiere();
     if (ec) {
       this.classesService.update(ec.id, {
         name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, maxCapacity: +f.maxCapacity,
-        monthlyPrice: +f.monthlyPrice, status: f.status,
+        teacherId: f.teacherId, maxCapacity,
+        monthlyPrice, status: f.status,
         color: f.color, bgColor: f.bgColor,
       });
-      this.toast.show('Classe mise à jour');
+      this.toast.show(this.t('settings.toastClassUpdated'));
     } else {
       this.classesService.add({
         name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, roomId: 0, maxCapacity: +f.maxCapacity,
-        monthlyPrice: +f.monthlyPrice, status: f.status,
+        teacherId: f.teacherId, roomId: null, maxCapacity,
+        monthlyPrice, status: f.status,
         color: f.color, bgColor: f.bgColor, enrolledStudentIds: [],
       }).subscribe((res: any) => {
         const newId = res?.data?.id ?? res?.id ?? Date.now();
@@ -291,7 +521,7 @@ export class ParametresComponent implements OnInit {
           ...list,
           { id: Date.now(), classeId: newId, groupNumber: 1, studentIds: [], maxCapacity: DEFAULT_CAPACITY },
         ]);
-        this.toast.show('Classe ajoutée');
+        this.toast.show(this.t('settings.toastClassAdded'));
         this.showMatiereModal.set(false);
       });
       return;
@@ -300,22 +530,22 @@ export class ParametresComponent implements OnInit {
   }
 
   deleteMatiere(c: Classe): void {
-    if (confirm(`Supprimer la classe "${c.name}" ?`)) {
+    if (confirm(this.t('settings.confirmDeleteClass', { name: c.name }))) {
       this.classesService.delete(c.id);
-      this.toast.show('Classe supprimée', 'info');
+      this.toast.show(this.t('settings.toastClassDeleted'), 'info');
     }
   }
 
   getTeacherName(id: number | null): string {
-    if (id === null) return '—';
+    if (id === null) return '-';
     const t = this.allTeachers().find(t => t.id === id);
-    return t ? `${t.firstName} ${t.lastName}` : '—';
+    return t ? `${t.firstName} ${t.lastName}` : '-';
   }
 
   setTab(tabId: string): void { this.activeTab.set(tabId); }
 }
 
-function extractValidationError(err: unknown, fallback = 'Erreur lors de l\'enregistrement'): string {
+function extractValidationError(err: unknown, fallback: string): string {
   if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
     const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
     return messages.join('. ');

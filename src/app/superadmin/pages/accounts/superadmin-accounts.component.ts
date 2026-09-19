@@ -1,11 +1,10 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgClass } from '@angular/common';
 import { SaveSuperAdminAccountPayload, SuperAdminAccount, SuperadminApiService } from '../../superadmin-api.service';
 
 @Component({
   selector: 'app-superadmin-accounts',
-  imports: [FormsModule, NgClass],
+  imports: [FormsModule],
   templateUrl: './superadmin-accounts.component.html',
   styleUrl: './superadmin-accounts.component.css'
 })

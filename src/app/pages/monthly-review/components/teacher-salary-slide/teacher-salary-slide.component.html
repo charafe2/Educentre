@@ -1,0 +1,32 @@
+<div class="slide-inner">
+  <div class="slide-header">
+    <div>
+      <h2 class="slide-title">{{ 'monthlyReview.salaries.title' | t }}</h2>
+      <p class="slide-subtitle">{{ 'monthlyReview.salaries.subtitle' | t }}</p>
+    </div>
+    @if (!allPaid()) {
+      <div class="slide-stat">
+        <span class="slide-stat-value">{{ totalOwed().toLocaleString('fr-MA') }} {{ 'common.currency' | t }}</span>
+        <span class="slide-stat-label">{{ 'monthlyReview.salaries.pending' | t: { count: unpaidRows().length, paid: paidCount() } }}</span>
+      </div>
+    }
+  </div>
+
+  @if (allPaid()) {
+    <div class="success-state">
+      <div class="success-icon"><i class="fa-solid fa-champagne-glasses"></i></div>
+      <h3>{{ 'monthlyReview.salaries.allPaidTitle' | t }}</h3>
+      <p>{{ 'monthlyReview.salaries.allPaidBody' | t }}</p>
+    </div>
+  } @else {
+    <div class="teacher-grid">
+      @for (row of unpaidRows(); track row.teacherId) {
+        <app-teacher-card
+          [row]="row"
+          (markPaid)="markPaid(row)"
+          (viewDetails)="viewDetails(row)"
+        />
+      }
+    </div>
+  }
+</div>

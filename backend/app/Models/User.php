@@ -12,10 +12,12 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
+use App\Domains\Core\Traits\BelongsToTenant;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, BelongsToTenant;
 
     protected static function booted(): void
     {
@@ -36,6 +38,8 @@ class User extends Authenticatable
         'status',
         'avatar_url',
         'last_login_at',
+        'is_owner',
+        'permissions',
     ];
 
     protected $hidden = [
@@ -51,13 +55,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'is_owner' => 'boolean',
+            'permissions' => 'array',
         ];
     }
 
-    public function tenant(): BelongsTo
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+    
 
     public function centre(): HasOne
     {

@@ -1,0 +1,8 @@
+<div class="summary-card" [class]="'tone-' + kpi.tone">
+  <div class="summary-icon"><i [class]="kpi.icon"></i></div>
+  <span class="summary-label">{{ kpi.label }}</span>
+  <span class="summary-value">{{ kpi.value }}</span>
+  @if (kpi.hint) {
+    <span class="summary-hint">{{ kpi.hint }}</span>
+  }
+</div>

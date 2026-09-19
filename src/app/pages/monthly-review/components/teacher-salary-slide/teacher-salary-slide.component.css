@@ -1,0 +1,13 @@
+.teacher-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.1rem;
+}
+
+@media (max-width: 760px) {
+  .teacher-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .teacher-grid { grid-template-columns: 1fr; }
+}

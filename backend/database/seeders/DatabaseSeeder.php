@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Domains\Core\Models\Centre;
 use App\Domains\Teachers\Models\Teacher;
+use App\Models\SuperAdmin;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,6 +14,12 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        SuperAdmin::create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin@moujtahid.ma',
+            'password' => Hash::make('superadmin123456789'),
+        ]);
+
         $tenant = Tenant::create([
             'name' => 'Centre Moujtahid',
             'slug' => 'moujtahid',
@@ -35,6 +42,7 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('admin123456789'),
             'role' => 'admin',
             'status' => 'active',
+            'is_owner' => true,
         ]);
 
         $manager = User::factory()->create([
@@ -44,15 +52,8 @@ class DatabaseSeeder extends Seeder
             'password' => Hash::make('manager1234567'),
             'role' => 'manager',
             'status' => 'active',
-        ]);
-
-        User::factory()->create([
-            'tenant_id' => $tenant->id,
-            'name' => 'Super Administrateur',
-            'email' => 'superadmin@moujtahid.ma',
-            'password' => Hash::make('superadmin2024'),
-            'role' => 'superadmin',
-            'status' => 'active',
+            'is_owner' => false,
+            'permissions' => ['etudiants', 'groupes', 'professeurs', 'finances', 'calendrier'],
         ]);
 
         Teacher::create(['tenant_id' => $tenant->id, 'user_id' => $admin->id, 'specialty' => 'Mathematiques', 'payment_mode' => 'fixed', 'is_active' => true]);

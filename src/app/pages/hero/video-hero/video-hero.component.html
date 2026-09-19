@@ -15,9 +15,16 @@
   <div class="video-hero__overlay" aria-hidden="true"></div>
 
   <div class="video-hero__content">
-    <h1 class="video-hero__title" aria-live="polite">
+    <!--
+      Intentionally not an <h1>: this is a transient brand splash shown before
+      the real landing page (app-hero renders its own keyword-rich <h1
+      id="lp-headline"> right below). A second <h1> here — especially one that
+      only ever shows the bare brand name mid-animation — would give the page
+      two H1s and no keyword-rich one until the animation finishes.
+    -->
+    <p class="video-hero__title" aria-live="polite">
       {{ titleText }}<span class="video-hero__cursor" [class.video-hero__cursor--hidden]="!showCursor">|</span>
-    </h1>
+    </p>
 
     <button
       type="button"

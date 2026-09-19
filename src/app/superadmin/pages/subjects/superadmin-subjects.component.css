@@ -1,0 +1,31 @@
+/* Matières — a catalogue table. Only the colour swatch is specific here;
+   the rest is the console system. */
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.named {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(25, 27, 31, .12);
+}
+
+.loading-row td { padding: 15px 16px; }
+.loading-row .sa-skeleton { display: block; height: 13px; }
+.loading-row td::before { display: none; }
+
+.sa-modal.narrow { width: min(480px, 100%); }
