@@ -1,0 +1,7 @@
+# Files consumed inside the Linux containers must keep LF endings.
+# With core.autocrlf=true on Windows these are otherwise checked out as
+# CRLF, and a script whose shebang ends in \r fails at runtime with
+# "exec /usr/local/bin/docker-entrypoint: no such file or directory".
+*.sh            text eol=lf
+docker/**       text eol=lf
+backend/artisan text eol=lf

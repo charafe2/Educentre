@@ -88,3 +88,6 @@ Thumbs.db
 
 # ── Superpowers scratch workspaces ───────────────────────────
 .superpowers/
+
+# Local Claude Code agent state
+.claude/
