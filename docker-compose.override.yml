@@ -3,6 +3,11 @@ services:
   php-fpm:
     volumes:
       - ./backend:/var/www/html
+      # Dependencies and built assets come from the image, not the host:
+      # the host copies are incomplete and installing them over a Windows
+      # bind mount is prohibitively slow.
+      - /var/www/html/vendor
+      - /var/www/html/public/build
     environment:
       APP_ENV: local
       APP_DEBUG: true
@@ -11,11 +16,21 @@ services:
   queue-worker:
     volumes:
       - ./backend:/var/www/html
+      # Dependencies and built assets come from the image, not the host:
+      # the host copies are incomplete and installing them over a Windows
+      # bind mount is prohibitively slow.
+      - /var/www/html/vendor
+      - /var/www/html/public/build
       - ./docker/supervisor/supervisord.queue.conf:/etc/supervisor/supervisord.queue.conf:ro
 
   reverb:
     volumes:
       - ./backend:/var/www/html
+      # Dependencies and built assets come from the image, not the host:
+      # the host copies are incomplete and installing them over a Windows
+      # bind mount is prohibitively slow.
+      - /var/www/html/vendor
+      - /var/www/html/public/build
       - ./docker/supervisor/supervisord.reverb.conf:/etc/supervisor/supervisord.reverb.conf:ro
 
   nginx:
