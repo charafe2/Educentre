@@ -15,9 +15,9 @@ class MoroccanDemoSeeder extends Seeder
 
     private const RISK_STUDENT_COUNT = 24;
 
-    public function run(): void
+    public function run(string $tenantSlug = 'moujtahid'): void
     {
-        $tenant = Tenant::query()->where('slug', 'moujtahid')->firstOrFail();
+        $tenant = Tenant::query()->where('slug', $tenantSlug)->firstOrFail();
         $now = CarbonImmutable::now();
 
         DB::transaction(function () use ($tenant, $now) {
