@@ -179,6 +179,40 @@
   animation: sa-fade .24s var(--sa-ease) both;
 }
 
+/* ── Multi-centre accounts ── */
+.mt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 3px;
+  width: fit-content;
+  color: var(--sa-brass-deep);
+  background: var(--sa-brass-wash);
+  border-color: var(--sa-brass-line);
+}
+
+.sa-iconbtn.on {
+  color: var(--sa-paid);
+  background: var(--sa-paid-wash);
+  border-color: #cfe3d8;
+}
+
+.sibling-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.sibling-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--sa-line);
+  background: var(--sa-band);
+  font-size: 11.5px;
+  color: var(--sa-ink-2);
+}
 
 /* ══ Responsive ═════════════════════════════════════════════════════ */
 

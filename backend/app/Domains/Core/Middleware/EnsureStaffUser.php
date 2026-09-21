@@ -23,11 +23,27 @@ class EnsureStaffUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() instanceof User) {
+        $user = $request->user();
+
+        if (!$user instanceof User) {
             return response()->json([
                 'success' => false,
                 'data' => null,
                 'message' => 'Accès non autorisé.',
+                'errors' => null,
+            ], 403);
+        }
+
+        // A pre-auth token issued mid centre-selection (abilities restricted
+        // to `centre-select`, see AuthService::beginCentreSelection) must be
+        // usable for nothing except POST /auth/select-centre, which sits
+        // outside this middleware group on purpose. Every normal session
+        // token has abilities:['*'], so this is a no-op for them.
+        if (!$user->tokenCan('*')) {
+            return response()->json([
+                'success' => false,
+                'data' => null,
+                'message' => 'Veuillez sélectionner un centre pour continuer.',
                 'errors' => null,
             ], 403);
         }

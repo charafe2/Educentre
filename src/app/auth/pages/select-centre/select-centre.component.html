@@ -1,0 +1,52 @@
+<div class="auth-shell">
+  <div class="picker-card">
+
+    <div class="brand-mark">
+      <img src="/logo.png" alt="Moujtahid" class="brand-logo" />
+      <span class="brand-name">Moujtahid</span>
+    </div>
+
+    @if (centreSelection(); as selection) {
+      <div class="picker-header">
+        <h1 class="picker-title">Bienvenue, {{ selection.accountName }}</h1>
+        <p class="picker-subtitle">Choisissez le centre que vous souhaitez gérer</p>
+      </div>
+
+      @if (error()) {
+        <div class="alert-error">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          {{ error() }}
+        </div>
+      }
+
+      <div class="centre-grid">
+        @for (centre of selection.centres; track centre.centreUuid) {
+          <button
+            type="button"
+            class="centre-card"
+            [class.disabled]="!centre.isActive"
+            [disabled]="!!selecting() || !centre.isActive"
+            (click)="choose(centre)"
+          >
+            <span class="centre-avatar">{{ initials(centre.centreName) }}</span>
+            <span class="centre-name">{{ centre.centreName }}</span>
+            @if (centre.city) {
+              <span class="centre-meta">{{ centre.city }}</span>
+            }
+            @if (!centre.isActive) {
+              <span class="centre-badge">Suspendu</span>
+            }
+            @if (selecting() === centre.centreUuid) {
+              <span class="centre-loading"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+            }
+          </button>
+        }
+      </div>
+    }
+
+    <p class="form-switch">
+      <a routerLink="/login" class="form-link">Retour à la connexion</a>
+    </p>
+
+  </div>
+</div>

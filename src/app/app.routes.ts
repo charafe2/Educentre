@@ -16,6 +16,10 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'select-centre',
+    loadComponent: () => import('./auth/pages/select-centre/select-centre.component').then(m => m.SelectCentreComponent),
+  },
+  {
     path: 'forgot-password',
     loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },

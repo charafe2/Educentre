@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AcademicLevel, ClientAccount, Subject, SuperadminApiService } from '../../superadmin-api.service';
+import { AcademicLevel, AddSiblingCentrePayload, ClientAccount, Subject, SuperadminApiService } from '../../superadmin-api.service';
 
 type CentreStatus = ClientAccount['status'];
 type StatusFilter = 'all' | CentreStatus;
@@ -315,6 +315,69 @@ export class SuperadminClientsComponent implements OnInit {
       this.editingMaxUsersId.set(null);
     } catch {
       this.pageError.set("Impossible de modifier la limite d'utilisateurs.");
+    }
+  }
+
+  // ── Multi-centre accounts ────────────────────────────────
+  // This flag only gates "add centre" below — the login picker itself is
+  // driven by how many owner rows share an email, so toggling it off never
+  // breaks an already-grouped account (see backend AuthService::login).
+  togglingMultitenantId = signal<number | null>(null);
+
+  async toggleMultitenant(client: ClientAccount): Promise<void> {
+    this.togglingMultitenantId.set(client.id);
+    try {
+      const updated = client.isMultitenant
+        ? await this.api.disableMultitenant(client.id)
+        : await this.api.enableMultitenant(client.id);
+      this.clients.update(list => list.map(c => c.id === client.id ? updated : c));
+    } catch {
+      this.pageError.set('Impossible de modifier le statut multi-centres.');
+    } finally {
+      this.togglingMultitenantId.set(null);
+    }
+  }
+
+  showSiblingModalFor = signal<ClientAccount | null>(null);
+  siblingForm: AddSiblingCentrePayload = this.emptySiblingForm();
+  savingSibling = signal(false);
+  siblingError = signal('');
+
+  private emptySiblingForm(): AddSiblingCentrePayload {
+    return { centreName: '', centreType: 'Soutien scolaire', city: '', phone: '', plan: 'Pro' };
+  }
+
+  openAddSibling(client: ClientAccount): void {
+    this.showSiblingModalFor.set(client);
+    this.siblingForm = this.emptySiblingForm();
+    this.siblingError.set('');
+  }
+
+  closeAddSibling(): void {
+    this.showSiblingModalFor.set(null);
+  }
+
+  async submitSibling(): Promise<void> {
+    const client = this.showSiblingModalFor();
+    if (!client) return;
+    if (!this.siblingForm.centreName.trim()) {
+      this.siblingError.set('Le nom du centre est requis.');
+      return;
+    }
+
+    this.savingSibling.set(true);
+    this.siblingError.set('');
+    try {
+      const updated = await this.api.addSiblingCentre(client.id, this.siblingForm);
+      // The anchor centre's siblingCentres list changed too — refresh the whole list
+      // rather than patching in place, since the new centre is a distinct row.
+      await this.loadClients();
+      void updated;
+      this.showSiblingModalFor.set(null);
+    } catch {
+      this.siblingError.set("Impossible d'ajouter ce centre. Vérifiez les champs et réessayez.");
+    } finally {
+      this.savingSibling.set(false);
     }
   }
 

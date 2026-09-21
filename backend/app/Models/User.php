@@ -14,6 +14,8 @@ use Laravel\Sanctum\HasApiTokens;
 
 use App\Domains\Core\Traits\Auditable;
 use App\Domains\Core\Traits\BelongsToTenant;
+use App\Domains\Core\Scopes\TenantScope;
+use Illuminate\Support\Collection;
 
 class User extends Authenticatable
 {
@@ -78,6 +80,29 @@ class User extends Authenticatable
     public function centre(): HasOne
     {
         return $this->hasOne(Centre::class, 'tenant_id', 'tenant_id');
+    }
+
+    /**
+     * Other owner rows (different tenants, same account group) sharing this
+     * row's login email — empty for every normal single-centre account.
+     * Explicitly bypasses TenantScope: once ResolveTenantMiddleware has
+     * bound this row's own tenant_id into the container, the scope would
+     * otherwise hide every sibling from this exact query.
+     */
+    public function siblingOwnerAccounts(): Collection
+    {
+        $groupId = $this->tenant?->account_group_id;
+
+        if (! $groupId) {
+            return collect();
+        }
+
+        return static::withoutGlobalScope(TenantScope::class)
+            ->where('email', $this->email)
+            ->where('is_owner', true)
+            ->where('id', '!=', $this->id)
+            ->whereHas('tenant', fn ($q) => $q->where('account_group_id', $groupId))
+            ->get();
     }
 
     public function auditLabel(): string

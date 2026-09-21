@@ -6,8 +6,10 @@ use App\Domains\Auth\DTOs\LoginDTO;
 use App\Domains\Auth\Events\UserLoggedOut;
 use App\Domains\Auth\Requests\ChangePasswordRequest;
 use App\Domains\Auth\Requests\LoginRequest;
+use App\Domains\Auth\Requests\SelectCentreRequest;
 use App\Domains\Auth\Resources\UserResource;
 use App\Domains\Auth\Services\AuthService;
+use App\Domains\Core\Models\Centre;
 use App\Http\Controllers\Controller;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -65,6 +67,58 @@ class AuthController extends Controller
             $result = $this->authService->login(
                 LoginDTO::fromArray($request->validated()),
                 $request->throttleKey()
+            );
+
+            if ($result['status'] === 'centre_selection_required') {
+                return $this->success(
+                    data: [
+                        'requiresCentreSelection' => true,
+                        'preAuthToken' => $result['preAuthToken'],
+                        'accountName' => $result['accountName'],
+                        'centres' => $result['centres']->map(fn (Centre $c) => [
+                            'tenantUuid' => $c->tenant->uuid,
+                            'centreUuid' => $c->uuid,
+                            'centreName' => $c->name,
+                            'centreType' => $c->type,
+                            'city' => $c->city,
+                            'isActive' => $c->is_active,
+                        ]),
+                    ],
+                    message: 'Sélectionnez un centre pour continuer.',
+                );
+            }
+
+            return $this->success(
+                data: [
+                    'user' => UserResource::make($result['user']),
+                    'token' => $result['token'],
+                ],
+                message: 'Connexion réussie.',
+            );
+        } catch (\Illuminate\Auth\AuthenticationException $e) {
+            return $this->error(
+                message: $e->getMessage(),
+                code: 401,
+            );
+        }
+    }
+
+    /**
+     * Step 2 of a multitenant login. The `centre-select` ability check
+     * (rather than the `staff` middleware group) is what stops this
+     * short-lived token from being used as a general session — see
+     * EnsureStaffUser for the corresponding lock-down on every other route.
+     */
+    public function selectCentre(SelectCentreRequest $request): JsonResponse
+    {
+        if (! $request->user()?->tokenCan('centre-select')) {
+            return $this->error('Jeton invalide pour cette opération.', null, 403);
+        }
+
+        try {
+            $result = $this->authService->selectCentre(
+                $request->user(),
+                $request->validated('centreUuid'),
             );
 
             return $this->success(

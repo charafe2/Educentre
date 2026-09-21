@@ -92,6 +92,12 @@
                     <span class="sa-idcell-copy">
                       <strong>{{ client.centreName }}</strong>
                       <small>{{ client.centreType }} · {{ client.city }}</small>
+                      @if (client.siblingCentres.length > 0) {
+                        <small class="sa-badge plain mt-badge">
+                          <i class="fa-solid fa-layer-group"></i>
+                          Compte multi-centres avec {{ client.siblingCentres.length }} autre{{ client.siblingCentres.length > 1 ? 's' : '' }}
+                        </small>
+                      }
                     </span>
                   </div>
                 </td>
@@ -139,6 +145,20 @@
                     <button class="sa-iconbtn" type="button" title="Modifier le centre" (click)="openEdit(client)">
                       <i class="fa-regular fa-pen-to-square"></i>
                     </button>
+                    <button
+                      class="sa-iconbtn" type="button"
+                      [class.on]="client.isMultitenant"
+                      [title]="client.isMultitenant ? 'Désactiver le multi-centres' : 'Activer le multi-centres'"
+                      [disabled]="togglingMultitenantId() === client.id"
+                      (click)="toggleMultitenant(client)"
+                    >
+                      <i class="fa-solid fa-layer-group"></i>
+                    </button>
+                    @if (client.isMultitenant) {
+                      <button class="sa-iconbtn" type="button" title="Ajouter un centre à ce compte" (click)="openAddSibling(client)">
+                        <i class="fa-solid fa-square-plus"></i>
+                      </button>
+                    }
                     <button
                       class="sa-iconbtn" type="button"
                       [title]="client.status === 'suspended' ? 'Réactiver le centre' : 'Suspendre le centre'"
@@ -329,6 +349,84 @@
         <button class="sa-btn primary" type="button" (click)="submitSave()" [disabled]="saving()">
           <i class="fa-solid" [class.fa-user-plus]="!editingClientId()" [class.fa-floppy-disk]="editingClientId()"></i>
           {{ saving() ? 'Enregistrement…' : (editingClientId() ? 'Enregistrer' : 'Créer le compte') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+}
+
+<!-- Add a centre to an existing multi-centre account -->
+@if (showSiblingModalFor(); as anchor) {
+  <div class="sa-modal-overlay" (click)="closeAddSibling()">
+    <div class="sa-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+
+      <div class="sa-modal-head">
+        <div>
+          <h2>Ajouter un centre au compte de {{ anchor.ownerName }}</h2>
+          <p>Le nouveau centre utilisera automatiquement les identifiants existants ({{ anchor.email }}).</p>
+        </div>
+        <button class="sa-iconbtn" type="button" (click)="closeAddSibling()" aria-label="Fermer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sa-modal-body">
+
+        @if (anchor.siblingCentres.length > 0 || anchor.centreName) {
+          <div class="sibling-list">
+            <span class="sibling-chip"><i class="fa-solid fa-house"></i>&nbsp;{{ anchor.centreName }}</span>
+            @for (s of anchor.siblingCentres; track s.id) {
+              <span class="sibling-chip">{{ s.centreName }}</span>
+            }
+          </div>
+        }
+
+        @if (siblingError()) {
+          <div class="sa-alert">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            {{ siblingError() }}
+          </div>
+        }
+
+        <div class="sa-formgrid">
+          <label class="sa-field span2">
+            <span>Nom du centre <b class="req">*</b></span>
+            <input class="sa-input" type="text" [(ngModel)]="siblingForm.centreName" placeholder="Centre Al Moujtahid - Agadir" />
+          </label>
+          <label class="sa-field">
+            <span>Type</span>
+            <select class="sa-input" [(ngModel)]="siblingForm.centreType">
+              @for (t of centreTypes; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </label>
+          <label class="sa-field">
+            <span>Ville</span>
+            <input class="sa-input" type="text" [(ngModel)]="siblingForm.city" placeholder="Agadir" />
+          </label>
+          <label class="sa-field">
+            <span>Téléphone</span>
+            <input class="sa-input" type="tel" [(ngModel)]="siblingForm.phone" placeholder="+212 6 00 00 00 00" />
+          </label>
+          <label class="sa-field">
+            <span>Plan d'abonnement</span>
+            <select class="sa-input" [(ngModel)]="siblingForm.plan">
+              @for (p of plans; track p) {
+                <option [value]="p">{{ p }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+      </div>
+
+      <div class="sa-modal-foot">
+        <button class="sa-btn quiet" type="button" (click)="closeAddSibling()">Annuler</button>
+        <button class="sa-btn primary" type="button" (click)="submitSibling()" [disabled]="savingSibling()">
+          <i class="fa-solid fa-square-plus"></i>
+          {{ savingSibling() ? 'Ajout…' : 'Ajouter ce centre' }}
         </button>
       </div>
 

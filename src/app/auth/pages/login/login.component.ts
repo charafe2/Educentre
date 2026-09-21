@@ -28,9 +28,11 @@ export class LoginComponent {
     this.loading.set(true);
     this.error.set('');
     try {
-      const ok = await this.auth.login(this.email, this.password);
-      if (ok) {
+      const result = await this.auth.login(this.email, this.password);
+      if (result === 'authenticated') {
         this.router.navigate(['/dashboard']);
+      } else if (result === 'centre-selection') {
+        this.router.navigate(['/select-centre']);
       } else {
         this.error.set('Email ou mot de passe incorrect.');
       }

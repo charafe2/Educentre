@@ -4,7 +4,9 @@ namespace App\Domains\SuperAdmin\Controllers;
 
 use App\Domains\Core\Models\Centre;
 use App\Domains\Core\Models\Subscription;
+use App\Domains\Core\Scopes\TenantScope;
 use App\Domains\Students\Models\Student;
+use App\Domains\SuperAdmin\Requests\AddSiblingCentreRequest;
 use App\Domains\SuperAdmin\Requests\StoreCentreRequest;
 use App\Domains\SuperAdmin\Requests\UpdateCentreRequest;
 use App\Domains\SuperAdmin\Services\CentreService;
@@ -23,7 +25,7 @@ class CentreController extends Controller
 
     public function index(): JsonResponse
     {
-        $centres = Centre::query()->with('tenant')->orderBy('name')->get();
+        $centres = Centre::query()->with('tenant.accountGroup')->orderBy('name')->get();
 
         return $this->success($centres->map(fn (Centre $centre) => $this->present($centre)));
     }
@@ -68,6 +70,39 @@ class CentreController extends Controller
         $this->centres->delete($centre);
 
         return $this->success(message: 'Centre supprimé.');
+    }
+
+    public function enableMultitenant(int $id): JsonResponse
+    {
+        $centre = Centre::query()->with('tenant.accountGroup')->findOrFail($id);
+
+        return $this->success(
+            data: $this->present($this->centres->enableMultitenant($centre)),
+            message: 'Compte multi-centres activé.',
+        );
+    }
+
+    public function disableMultitenant(int $id): JsonResponse
+    {
+        $centre = Centre::query()->with('tenant.accountGroup')->findOrFail($id);
+
+        return $this->success(
+            data: $this->present($this->centres->disableMultitenant($centre)),
+            message: 'Compte multi-centres désactivé.',
+        );
+    }
+
+    public function addSiblingCentre(int $id, AddSiblingCentreRequest $request): JsonResponse
+    {
+        $centre = Centre::query()->with('tenant.accountGroup')->findOrFail($id);
+
+        $created = $this->centres->addSiblingCentre($centre, $request->validated());
+
+        return $this->success(
+            data: $this->present($created),
+            message: 'Centre ajouté au compte multi-centres.',
+            code: 201,
+        );
     }
 
     public function updateMaxUsers(int $centreId, Request $request): JsonResponse
@@ -149,6 +184,7 @@ class CentreController extends Controller
     {
         $owner = User::where('tenant_id', $centre->tenant_id)->orderBy('id')->first();
         $subscription = Subscription::where('tenant_id', $centre->tenant_id)->latest()->first();
+        $groupId = $centre->tenant?->account_group_id;
 
         return [
             'id' => $centre->id,
@@ -166,6 +202,16 @@ class CentreController extends Controller
             'studentsCount' => Student::where('tenant_id', $centre->tenant_id)->count(),
             'usersCount' => User::where('tenant_id', $centre->tenant_id)->count(),
             'maxUsers' => $centre->tenant?->max_users ?? 5,
+            'isMultitenant' => (bool) $centre->tenant?->accountGroup?->is_multitenant,
+            'accountGroupUuid' => $centre->tenant?->accountGroup?->uuid,
+            'siblingCentres' => $groupId
+                ? Centre::withoutGlobalScope(TenantScope::class)
+                    ->whereHas('tenant', fn ($q) => $q->where('account_group_id', $groupId))
+                    ->where('id', '!=', $centre->id)
+                    ->get()
+                    ->map(fn (Centre $c) => ['id' => $c->id, 'uuid' => $c->uuid, 'centreName' => $c->name, 'city' => $c->city])
+                    ->values()
+                : [],
         ];
     }
 }

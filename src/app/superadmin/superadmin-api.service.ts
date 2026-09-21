@@ -32,6 +32,13 @@ export interface SuperAdminOverview {
   };
 }
 
+export interface SiblingCentre {
+  id: number;
+  uuid: string;
+  centreName: string;
+  city: string;
+}
+
 export interface ClientAccount {
   id: number;
   uuid: string;
@@ -49,6 +56,12 @@ export interface ClientAccount {
   /** "Paramètres > Utilisateurs" seat usage/cap for this centre's tenant. */
   usersCount: number;
   maxUsers: number;
+  /** Whether this account can have more centres added to it — the login
+   *  "pick your centre" picker itself only cares whether multiple owner
+   *  rows exist, not this flag (see backend AuthService::login). */
+  isMultitenant: boolean;
+  accountGroupUuid: string | null;
+  siblingCentres: SiblingCentre[];
 }
 
 export interface SaveClientPayload {
@@ -59,6 +72,17 @@ export interface SaveClientPayload {
   email: string;
   phone: string;
   password?: string;
+  plan: ClientAccount['plan'];
+}
+
+/** Adds a centre to an already-multitenant account. No email/password field
+ *  on purpose — the new centre's owner always reuses the group owner's
+ *  existing credentials (see backend CentreService::addSiblingCentre). */
+export interface AddSiblingCentrePayload {
+  centreName: string;
+  centreType?: string;
+  city?: string;
+  phone?: string;
   plan: ClientAccount['plan'];
 }
 
@@ -199,6 +223,18 @@ export class SuperadminApiService {
 
   toggleCentreStatus(id: number): Promise<ClientAccount> {
     return this.data(this.http.post<ApiResponse<ClientAccount>>(`${this.baseUrl}/centres/${id}/toggle-status`, {}));
+  }
+
+  enableMultitenant(id: number): Promise<ClientAccount> {
+    return this.data(this.http.post<ApiResponse<ClientAccount>>(`${this.baseUrl}/centres/${id}/multitenant/enable`, {}));
+  }
+
+  disableMultitenant(id: number): Promise<ClientAccount> {
+    return this.data(this.http.post<ApiResponse<ClientAccount>>(`${this.baseUrl}/centres/${id}/multitenant/disable`, {}));
+  }
+
+  addSiblingCentre(id: number, payload: AddSiblingCentrePayload): Promise<ClientAccount> {
+    return this.data(this.http.post<ApiResponse<ClientAccount>>(`${this.baseUrl}/centres/${id}/sibling-centres`, payload));
   }
 
   deleteCentre(id: number): Promise<void> {

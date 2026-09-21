@@ -3,6 +3,7 @@
 namespace App\Domains\SuperAdmin\Requests;
 
 use App\Domains\Core\Models\Centre;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,11 +16,19 @@ class UpdateCentreRequest extends FormRequest
 
     public function rules(): array
     {
-        // The owner's own row must be excluded from the uniqueness check, or
-        // saving the form unchanged would report the email as taken.
-        $ownerId = Centre::withTrashed()
-            ->find($this->route('id'))
-            ?->tenant?->users()->orderBy('id')->value('id');
+        $centre = Centre::withTrashed()->with('tenant')->find($this->route('id'));
+        $tenant = $centre?->tenant;
+
+        // The owner's own row — and, for a multitenant account, every
+        // sibling owner row sharing its email (see CentreService::update's
+        // credential propagation) — must be excluded from the uniqueness
+        // check, or saving the form unchanged (or editing one centre in a
+        // group) would report the email as already taken.
+        $excludeIds = $tenant?->account_group_id
+            ? User::where('is_owner', true)
+                ->whereHas('tenant', fn ($q) => $q->where('account_group_id', $tenant->account_group_id))
+                ->pluck('id')
+            : collect([$tenant?->users()->orderBy('id')->value('id')]);
 
         return [
             'centreName' => ['required', 'string', 'max:120'],
@@ -28,7 +37,7 @@ class UpdateCentreRequest extends FormRequest
             'ownerName' => ['required', 'string', 'max:120'],
             'email' => [
                 'required', 'email', 'max:190',
-                Rule::unique('users', 'email')->ignore($ownerId),
+                Rule::unique('users', 'email')->whereNotIn('id', $excludeIds),
             ],
             'phone' => ['nullable', 'string', 'max:40'],
             // Omitted or null leaves the existing password untouched.

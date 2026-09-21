@@ -5,6 +5,8 @@ namespace App\Domains\SuperAdmin\Services;
 use App\Domains\Core\Models\Centre;
 use App\Domains\Core\Models\PackagePlan;
 use App\Domains\Core\Models\Subscription;
+use App\Domains\Core\Scopes\TenantScope;
+use App\Models\AccountGroup;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -66,21 +68,133 @@ class CentreService
 
             $owner = $centre->tenant?->users()->orderBy('id')->first();
             if ($owner) {
+                $emailChanged = $owner->email !== $data['email'];
+                $passwordChanged = ! empty($data['password']);
+
                 $owner->name = $data['ownerName'];
                 $owner->email = $data['email'];
                 // A blank password field means "leave it alone", not "clear it".
-                if (! empty($data['password'])) {
+                if ($passwordChanged) {
                     $owner->password = Hash::make($data['password']);
                 }
                 $owner->save();
+
+                // Grouped accounts share one login across all their owner
+                // rows — an edit here must reach the siblings too, or the
+                // ones left behind stop being able to log in at all.
+                if (($emailChanged || $passwordChanged) && $centre->tenant?->account_group_id) {
+                    $this->propagateOwnerCredentials($centre->tenant, $owner);
+                }
             }
 
             if ($centre->tenant) {
                 $this->syncSubscription($centre->tenant, $data['plan']);
             }
 
-            return $centre->fresh(['tenant']);
+            return $centre->fresh(['tenant.accountGroup']);
         });
+    }
+
+    /**
+     * Marks the account as multi-centre eligible. This gates only the
+     * "add centre" action below — the login picker itself is driven by how
+     * many owner rows share an email (see AuthService::login), so toggling
+     * this off later never breaks an already-grouped account.
+     */
+    public function enableMultitenant(Centre $centre): Centre
+    {
+        return DB::transaction(function () use ($centre) {
+            $tenant = $centre->tenant;
+
+            if ($tenant->account_group_id) {
+                $tenant->accountGroup->update(['is_multitenant' => true]);
+            } else {
+                $group = AccountGroup::create(['label' => $centre->name, 'is_multitenant' => true]);
+                $tenant->update(['account_group_id' => $group->id]);
+            }
+
+            return $centre->fresh(['tenant.accountGroup']);
+        });
+    }
+
+    public function disableMultitenant(Centre $centre): Centre
+    {
+        $group = $centre->tenant?->accountGroup;
+
+        abort_if(! $group, 422, "Ce compte n'est pas multi-centres.");
+
+        $group->update(['is_multitenant' => false]);
+
+        return $centre->fresh(['tenant.accountGroup']);
+    }
+
+    /**
+     * Adds a new centre to an already-multitenant account, reusing the
+     * group owner's exact name/email/password hash. There is deliberately
+     * no email/password field in AddSiblingCentreRequest at all — nothing
+     * client-supplied can create a credential collision here.
+     */
+    public function addSiblingCentre(Centre $anchorCentre, array $data): Centre
+    {
+        $tenant = $anchorCentre->tenant;
+        $group = $tenant?->accountGroup;
+
+        abort_if(! $group || ! $group->is_multitenant, 422, "Ce compte n'est pas activé pour le multi-centres.");
+
+        $owner = User::where('tenant_id', $tenant->id)->where('is_owner', true)->firstOrFail();
+
+        return DB::transaction(function () use ($data, $group, $owner) {
+            $newTenant = Tenant::create([
+                'account_group_id' => $group->id,
+                'name' => $data['centreName'],
+                'slug' => $this->uniqueSlug($data['centreName']),
+                'status' => 'active',
+            ]);
+
+            $centre = Centre::create([
+                'tenant_id' => $newTenant->id,
+                'name' => $data['centreName'],
+                'type' => $data['centreType'] ?? null,
+                'city' => $data['city'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'is_active' => true,
+            ]);
+
+            $newOwner = User::create([
+                'tenant_id' => $newTenant->id,
+                'name' => $owner->name,
+                'email' => $owner->email,
+                // Throwaway value, immediately overwritten below — see
+                // SettingsUsersController::store() for why this must be a
+                // raw update rather than an Eloquent-hashed assignment.
+                'password' => Str::random(40),
+                'role' => 'admin',
+                'status' => 'active',
+                'is_owner' => true,
+            ]);
+            DB::table('users')->where('id', $newOwner->id)->update(['password' => $owner->password]);
+
+            $this->syncSubscription($newTenant, $data['plan']);
+
+            return $centre->fresh(['tenant.accountGroup']);
+        });
+    }
+
+    /** See update()'s call site — keeps every owner row in a group authenticating identically. */
+    private function propagateOwnerCredentials(Tenant $tenant, User $owner): void
+    {
+        $siblingIds = User::withoutGlobalScope(TenantScope::class)
+            ->where('is_owner', true)
+            ->where('id', '!=', $owner->id)
+            ->whereHas('tenant', fn ($q) => $q->where('account_group_id', $tenant->account_group_id))
+            ->pluck('id');
+
+        if ($siblingIds->isNotEmpty()) {
+            DB::table('users')->whereIn('id', $siblingIds)->update([
+                'email' => $owner->email,
+                'password' => $owner->password, // already hashed — copied verbatim
+            ]);
+        }
     }
 
     public function toggleStatus(Centre $centre): Centre

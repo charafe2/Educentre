@@ -83,6 +83,9 @@ Route::prefix('superadmin')->group(function () {
             Route::put('/{id}', [CentreController::class, 'update']);
             Route::delete('/{id}', [CentreController::class, 'destroy']);
             Route::post('/{id}/toggle-status', [CentreController::class, 'toggleStatus']);
+            Route::post('/{id}/multitenant/enable', [CentreController::class, 'enableMultitenant']);
+            Route::post('/{id}/multitenant/disable', [CentreController::class, 'disableMultitenant']);
+            Route::post('/{id}/sibling-centres', [CentreController::class, 'addSiblingCentre']);
             Route::get('/{centreId}/subjects', [CentreController::class, 'subjects']);
             Route::put('/{centreId}/subjects', [CentreController::class, 'syncSubjects']);
             Route::get('/{centreId}/academic-levels', [CentreController::class, 'academicLevels']);
