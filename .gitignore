@@ -52,6 +52,9 @@ yarn-error.log*
 
 # ── Docker ───────────────────────────────────────────────────
 docker_old/
+# Local dev tuning (Windows bind-mount excludes, APP_DEBUG). Compose
+# auto-merges this file, so it must never reach a server checkout.
+docker-compose.override.yml
 
 # ── Build / compiled output ───────────────────────────────────
 dist/

@@ -1,3 +1,9 @@
+# Local dev overrides — Docker Compose auto-merges docker-compose.override.yml
+# when it's present, so this template is gitignored under that exact name and
+# must never be committed or copied onto a server. To use it locally:
+#
+#   cp docker-compose.override.yml.example docker-compose.override.yml
+#
 services:
 
   php-fpm:
