@@ -44,6 +44,7 @@ export const en: TranslationSchema = {
     overview: 'Overview',
     monthlyReview: 'Monthly Review',
     students: 'Students',
+    addClass: 'Add a class',
     groups: 'Groups',
     teachers: 'Teachers',
     finances: 'Finances',
@@ -361,6 +362,11 @@ export const en: TranslationSchema = {
     groupLabel: 'Group {number}',
     whatsappMessage: 'Hello {parent},\n\nThis is a reminder that {name}\'s payment is currently {status}.\n\nPlease settle the situation at your earliest convenience.\n\nBest regards,\nThe centre team.',
     dearParent: 'dear parent',
+  },
+  classes: {
+    title: 'Add a class',
+    subtitle: 'Create a new class and assign it a subject, level, teacher and price.',
+    existingTitle: 'Existing classes',
   },
   finances: {
     title: 'Finances',

@@ -43,6 +43,16 @@
           </a>
         </li>
       }
+      @if (canSee('etudiants')) {
+        <li>
+          <a routerLink="/ajouter-classe" routerLinkActive="active" class="nav-item" [title]="'nav.addClass' | t">
+            <div class="nav-item-left">
+              <i class="fa-solid fa-plus"></i>
+              <span class="nav-text">{{ 'nav.addClass' | t }}</span>
+            </div>
+          </a>
+        </li>
+      }
       @if (canSee('groupes')) {
         <li>
           <a routerLink="/groupes" routerLinkActive="active" class="nav-item" [title]="'nav.groups' | t">

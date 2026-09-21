@@ -87,6 +87,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent),
       },
       {
+        path: 'ajouter-classe', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
+        loadComponent: () => import('./pages/ajouter-classe/ajouter-classe.component').then(m => m.AjouterClasseComponent),
+      },
+      {
         path: 'groupes', canActivate: [permissionGuard], data: { permKey: 'groupes' },
         loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent),
       },

@@ -171,10 +171,6 @@
               <h3 class="section-title" style="margin:0;">{{ 'settings.matieresTitle' | t }}</h3>
               <p class="section-desc" style="margin:0.25rem 0 0;">{{ 'settings.matieresDesc' | t }}</p>
             </div>
-            <button class="btn-primary btn-sm" (click)="openAddMatiere()">
-              <i class="fa-solid fa-plus"></i>
-              {{ 'settings.addClass' | t }}
-            </button>
           </div>
 
           <div class="subject-library">
@@ -704,7 +700,7 @@
 <!-- Add / Edit Matière Modal -->
 @if (showMatiereModal()) {
   <app-modal
-    [title]="(editingMatiere() ? 'settings.modalEditClass' : 'settings.modalNewClass') | t"
+    [title]="'settings.modalEditClass' | t"
     size="md"
     (closed)="showMatiereModal.set(false)"
   >
@@ -791,7 +787,7 @@
       <button class="btn-secondary" (click)="showMatiereModal.set(false)">{{ 'common.cancel' | t }}</button>
       <button class="btn-primary" (click)="submitMatiere()">
         <i class="fa-solid fa-floppy-disk"></i>
-        {{ (editingMatiere() ? 'common.save' : 'common.add') | t }}
+        {{ 'common.save' | t }}
       </button>
     </div>
   </app-modal>

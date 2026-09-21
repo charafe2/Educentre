@@ -45,6 +45,7 @@ export const fr = {
     overview: "Vue d'ensemble",
     monthlyReview: 'Revue mensuelle',
     students: 'Étudiants',
+    addClass: 'Ajouter une classe',
     groups: 'Groupes',
     teachers: 'Professeurs',
     finances: 'Finances',
@@ -362,6 +363,11 @@ export const fr = {
     groupLabel: 'Groupe {number}',
     whatsappMessage: "Bonjour {parent},\n\nNous vous rappelons que le paiement de *{name}* est actuellement *{status}*.\n\nMerci de bien vouloir régulariser la situation.\n\nCordialement,\nL'équipe du centre.",
     dearParent: 'cher(e) parent',
+  },
+  classes: {
+    title: 'Ajouter une classe',
+    subtitle: 'Créez une nouvelle classe et assignez-lui une matière, un niveau, un professeur et un tarif.',
+    existingTitle: 'Classes existantes',
   },
   finances: {
     title: 'Finances',

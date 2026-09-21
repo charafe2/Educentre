@@ -44,6 +44,7 @@ export const ar: TranslationSchema = {
     overview: 'نظرة عامة',
     monthlyReview: 'المراجعة الشهرية',
     students: 'الطلاب',
+    addClass: 'إضافة قسم',
     groups: 'المجموعات',
     teachers: 'الأساتذة',
     finances: 'المالية',
@@ -361,6 +362,11 @@ export const ar: TranslationSchema = {
     groupLabel: 'المجموعة {number}',
     whatsappMessage: 'مرحباً {parent}،\n\nنذكّركم بأن أداء *{name}* حالياً *{status}*.\n\nيرجى تسوية الوضعية.\n\nمع تحياتنا،\nفريق المركز.',
     dearParent: 'ولي الأمر الكريم',
+  },
+  classes: {
+    title: 'إضافة قسم',
+    subtitle: 'أنشئ قسمًا جديدًا وحدّد له المادة والمستوى والأستاذ والسعر.',
+    existingTitle: 'الأقسام الحالية',
   },
   finances: {
     title: 'المالية',
