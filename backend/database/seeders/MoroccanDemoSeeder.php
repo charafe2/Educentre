@@ -142,21 +142,31 @@ class MoroccanDemoSeeder extends Seeder
             ->all();
     }
 
+    /**
+     * Real Moroccan school levels (filières), each hosting several subjects —
+     * not one invented level per subject/filière combination. A student's
+     * `school_level` and a class's `level` must both come from this same set
+     * so the academic-levels catalog stays one row per genuine school level.
+     */
+    private const LEVEL_SUBJECTS = [
+        '6ème Année Primaire' => ['Mathématiques', 'Français'],
+        '3ème Année Collège' => ['Mathématiques', 'Français', 'Arabe'],
+        'Tronc Commun Sciences' => ['Mathématiques', 'Physique-Chimie', 'Français', 'Anglais'],
+        '1ère Année Bac Sciences Expérimentales' => ['Mathématiques', 'Physique-Chimie', 'SVT', 'Français', 'Anglais'],
+        '2ème Année Bac Sciences Mathématiques' => ['Mathématiques', 'Physique-Chimie', 'SVT', 'Philosophie'],
+        '2ème Année Bac Sciences Économiques' => ['Économie', 'Comptabilité', 'Mathématiques', 'Philosophie'],
+        'Initiation Informatique' => ['Informatique'],
+        'Classes Préparatoires Post-Bac' => ['Préparation concours'],
+    ];
+
     private function createClasses(int $tenantId, array $teacherIds, array $roomIds, CarbonImmutable $now): array
     {
-        $subjects = [
-            ['Mathématiques', '3ème Collège'], ['Français', '3ème Collège'],
-            ['Mathématiques', 'Tronc Commun'], ['Physique-Chimie', 'Tronc Commun'],
-            ['Français', 'Tronc Commun'], ['Anglais', 'Tronc Commun'],
-            ['Mathématiques', '1ère Bac'], ['Physique-Chimie', '1ère Bac'],
-            ['SVT', '1ère Bac'], ['Français', '1ère Bac'], ['Anglais', '1ère Bac'],
-            ['Économie', '1ère Bac'], ['Mathématiques', '2ème Bac Sciences'],
-            ['Physique-Chimie', '2ème Bac Sciences'], ['SVT', '2ème Bac Sciences'],
-            ['Philosophie', '2ème Bac'], ['Anglais', '2ème Bac'],
-            ['Économie', '2ème Bac Gestion'], ['Comptabilité', '2ème Bac Gestion'],
-            ['Informatique', 'Initiation'], ['Arabe', 'Collège'], ['Français', 'Primaire'],
-            ['Mathématiques', 'Primaire'], ['Préparation concours', 'Post-Bac'],
-        ];
+        $subjects = [];
+        foreach (self::LEVEL_SUBJECTS as $level => $levelSubjects) {
+            foreach ($levelSubjects as $subject) {
+                $subjects[] = [$subject, $level];
+            }
+        }
 
         foreach ($subjects as $index => [$subject, $level]) {
             DB::table('classes')->insert([
@@ -222,7 +232,11 @@ class MoroccanDemoSeeder extends Seeder
             'Lycée Ibn Rochd', 'École Al Jabr', 'Lycée Al Khansaa',
             'Groupe scolaire La Résidence', 'Lycée Hassan II',
         ];
-        $levels = ['3ème Collège', 'Tronc Commun', '1ère Bac', '2ème Bac Sciences', '2ème Bac Gestion'];
+        $levels = [
+            '3ème Année Collège', 'Tronc Commun Sciences',
+            '1ère Année Bac Sciences Expérimentales',
+            '2ème Année Bac Sciences Mathématiques', '2ème Année Bac Sciences Économiques',
+        ];
         $students = [];
 
         for ($index = 0; $index < self::STUDENT_COUNT; $index++) {
