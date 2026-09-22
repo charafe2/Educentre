@@ -1,6 +1,7 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Teacher } from '../models/teacher.model';
+import { Classe } from '../models/classe.model';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
@@ -86,10 +87,21 @@ export class TeachersService {
     );
   }
 
-  getPayrollAmount(teacher: Teacher, studentCount: number): number {
+  /**
+   * `percentage` mode needs each class's own monthlyPrice (a student in two
+   * of the teacher's classes is owed a share of each class's price
+   * separately), so this takes the teacher's classes rather than a plain
+   * student count.
+   */
+  getPayrollAmount(teacher: Teacher, classes: Classe[]): number {
     if (teacher.paymentMode === 'fixed') {
       return teacher.fixedSalary ?? 0;
     }
+    if (teacher.paymentMode === 'percentage') {
+      const rate = (teacher.percentageRate ?? 0) / 100;
+      return classes.reduce((sum, c) => sum + c.monthlyPrice * c.enrolledStudentIds.length * rate, 0);
+    }
+    const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
     return (teacher.ratePerStudent ?? 0) * studentCount;
   }
 

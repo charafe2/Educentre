@@ -101,10 +101,13 @@
               </td>
               <td><span class="specialty-tag">{{ row.teacher.specialty }}</span></td>
               <td>
-                <span [ngClass]="['mode-badge', row.teacher.paymentMode === 'fixed' ? 'mode-fixed' : 'mode-per']">
+                <span [ngClass]="['mode-badge', row.teacher.paymentMode === 'fixed' ? 'mode-fixed' : (row.teacher.paymentMode === 'percentage' ? 'mode-percentage' : 'mode-per')]">
                   {{ getPaymentModeLabel(row.teacher.paymentMode) }}
                   @if (row.teacher.paymentMode === 'per_student') {
                     <span class="rate-detail">{{ 'teachers.perStudentRate' | t: { rate: row.teacher.ratePerStudent ?? 0 } }}</span>
+                  }
+                  @if (row.teacher.paymentMode === 'percentage') {
+                    <span class="rate-detail">{{ 'teachers.percentageRateDetail' | t: { rate: row.teacher.percentageRate ?? 0 } }}</span>
                   }
                 </span>
               </td>
@@ -229,6 +232,11 @@
             <i class="fa-solid fa-users"></i>
             <span>{{ 'teachers.perStudentOption' | t }}</span>
           </label>
+          <label class="mode-option" [class.selected]="formData.paymentMode === 'percentage'">
+            <input type="radio" [(ngModel)]="formData.paymentMode" value="percentage" />
+            <i class="fa-solid fa-percent"></i>
+            <span>{{ 'teachers.percentageOption' | t }}</span>
+          </label>
         </div>
       </div>
       @if (formData.paymentMode === 'fixed') {
@@ -241,6 +249,13 @@
         <div class="form-group">
           <label class="form-label">{{ 'teachers.perStudentLabel' | t }}</label>
           <input class="form-input" type="number" [(ngModel)]="formData.ratePerStudent" min="0" placeholder="0" />
+        </div>
+      }
+      @if (formData.paymentMode === 'percentage') {
+        <div class="form-group">
+          <label class="form-label">{{ 'teachers.percentageLabel' | t }}</label>
+          <input class="form-input" type="number" [(ngModel)]="formData.percentageRate" min="0" max="100" step="0.5" placeholder="0" />
+          <p class="field-hint">{{ 'teachers.percentageHint' | t }}</p>
         </div>
       }
       <div class="form-group">

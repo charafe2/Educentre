@@ -50,20 +50,22 @@ export class TeacherPayrollService {
 
   // Shared math so the Monthly Review salary slide and the AI insights
   // generator always agree on what a teacher is owed this month.
-  // - fixed mode  -> the flat monthly salary.
-  // - per_student -> rate × number of distinct active students across their classes.
+  // - fixed mode      -> the flat monthly salary.
+  // - per_student     -> rate × number of distinct active students across their classes.
+  // - percentage      -> rate × each class's monthlyPrice × that class's own enrollment
+  //                      count, summed per class (not deduped): a student in two of the
+  //                      teacher's classes pays, and so owes a share of, each class's price.
   buildSalaryRows(teachers: Teacher[], classes: Classe[], month: string): TeacherSalaryRow[] {
     return teachers
       .filter(t => t.status === 'active')
       .map(teacher => {
-        const studentCount = new Set(
-          classes
-            .filter(c => c.teacherId === teacher.id)
-            .flatMap(c => c.enrolledStudentIds)
-        ).size;
+        const teacherClasses = classes.filter(c => c.teacherId === teacher.id);
+        const studentCount = new Set(teacherClasses.flatMap(c => c.enrolledStudentIds)).size;
 
         const amountOwed = teacher.paymentMode === 'fixed'
           ? (teacher.fixedSalary ?? 0)
+          : teacher.paymentMode === 'percentage'
+          ? teacherClasses.reduce((sum, c) => sum + c.monthlyPrice * c.enrolledStudentIds.length * ((teacher.percentageRate ?? 0) / 100), 0)
           : (teacher.ratePerStudent ?? 0) * studentCount;
 
         return {

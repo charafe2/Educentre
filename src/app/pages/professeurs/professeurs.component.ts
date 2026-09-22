@@ -14,8 +14,8 @@ import { TranslationService } from '../../i18n/translation.service';
 
 interface TeacherForm {
   firstName: string; lastName: string; email: string; phone: string;
-  specialty: string; paymentMode: 'fixed' | 'per_student';
-  fixedSalary: number; ratePerStudent: number;
+  specialty: string; paymentMode: 'fixed' | 'per_student' | 'percentage';
+  fixedSalary: number; ratePerStudent: number; percentageRate: number;
   status: 'active' | 'inactive'; classIds: number[];
 }
 
@@ -61,7 +61,7 @@ export class ProfesseursComponent {
         groups: this.groupsService.getGroupsForClasse(c.id),
       }));
       const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
-      const salary = this.teachersService.getPayrollAmount(teacher, studentCount);
+      const salary = this.teachersService.getPayrollAmount(teacher, classes);
       return { teacher, classes, groups, studentCount, salary };
     });
   });
@@ -82,14 +82,14 @@ export class ProfesseursComponent {
   formData: TeacherForm = {
     firstName: '', lastName: '', email: '', phone: '',
     specialty: '', paymentMode: 'fixed',
-    fixedSalary: 0, ratePerStudent: 0,
+    fixedSalary: 0, ratePerStudent: 0, percentageRate: 0,
     status: 'active', classIds: [],
   };
 
   openAdd(): void {
     this.formData = {
       firstName: '', lastName: '', email: '', phone: '', specialty: '',
-      paymentMode: 'fixed', fixedSalary: 0, ratePerStudent: 0,
+      paymentMode: 'fixed', fixedSalary: 0, ratePerStudent: 0, percentageRate: 0,
       status: 'active', classIds: [],
     };
     this.editingTeacher.set(null);
@@ -101,6 +101,7 @@ export class ProfesseursComponent {
       firstName: t.firstName, lastName: t.lastName, email: t.email, phone: t.phone,
       specialty: t.specialty, paymentMode: t.paymentMode,
       fixedSalary: t.fixedSalary ?? 0, ratePerStudent: t.ratePerStudent ?? 0,
+      percentageRate: t.percentageRate ?? 0,
       status: t.status, classIds: [...t.classIds],
     };
     this.editingTeacher.set(t);
@@ -131,6 +132,7 @@ export class ProfesseursComponent {
       ...this.formData,
       fixedSalary: this.formData.paymentMode === 'fixed' ? this.formData.fixedSalary : undefined,
       ratePerStudent: this.formData.paymentMode === 'per_student' ? this.formData.ratePerStudent : undefined,
+      percentageRate: this.formData.paymentMode === 'percentage' ? this.formData.percentageRate : undefined,
     };
 
     if (editing) {
@@ -176,7 +178,9 @@ export class ProfesseursComponent {
   }
 
   getPaymentModeLabel(mode: string): string {
-    return mode === 'fixed' ? this.t('teachers.paymentFixe') : this.t('teachers.paymentPerStudent');
+    if (mode === 'fixed') return this.t('teachers.paymentFixe');
+    if (mode === 'percentage') return this.t('teachers.paymentPercentage');
+    return this.t('teachers.paymentPerStudent');
   }
 
   onSearch(event: Event): void {

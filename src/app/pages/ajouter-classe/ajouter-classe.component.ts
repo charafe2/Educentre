@@ -105,4 +105,26 @@ export class AjouterClasseComponent {
     const t = this.allTeachers().find(t => t.id === id);
     return t ? `${t.firstName} ${t.lastName}` : '-';
   }
+
+  // ── Ajouter un niveau ────────────────────────────────────────
+  newLevelName = signal('');
+  addingLevel = signal(false);
+
+  addLevel(): void {
+    const name = this.newLevelName().trim();
+    if (!name) return;
+
+    this.addingLevel.set(true);
+    this.academicLevelsService.add(name).subscribe({
+      next: () => {
+        this.toast.show(this.t('classes.toastLevelAdded'));
+        this.newLevelName.set('');
+        this.addingLevel.set(false);
+      },
+      error: () => {
+        this.toast.show(this.t('settings.saveError'), 'error');
+        this.addingLevel.set(false);
+      },
+    });
+  }
 }

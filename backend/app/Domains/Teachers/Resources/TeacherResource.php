@@ -21,6 +21,7 @@ class TeacherResource extends JsonResource
             'paymentMode' => $this->payment_mode,
             'fixedSalary' => (float) $this->fixed_monthly_salary,
             'ratePerStudent' => (float) $this->rate_per_student,
+            'percentageRate' => (float) $this->percentage_rate,
             'iban' => $this->iban,
             'classIds' => $this->classes->pluck('id'),
             'status' => $this->is_active ? 'active' : 'inactive',

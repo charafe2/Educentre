@@ -8,6 +8,37 @@
 
   <div class="panel">
     <div class="panel-header">
+      <h3 class="panel-title">{{ 'classes.addLevelTitle' | t }}</h3>
+    </div>
+
+    <div class="settings-section">
+      <div class="level-add-row">
+        <input
+          class="form-input"
+          type="text"
+          [ngModel]="newLevelName()"
+          (ngModelChange)="newLevelName.set($event)"
+          [placeholder]="'classes.levelNamePlaceholder' | t"
+          (keydown.enter)="addLevel()"
+        />
+        <button class="btn-primary" type="button" [disabled]="addingLevel() || !newLevelName().trim()" (click)="addLevel()">
+          <i class="fa-solid fa-plus"></i>
+          {{ 'common.add' | t }}
+        </button>
+      </div>
+
+      <div class="level-chips">
+        @for (level of allLevels(); track level.id) {
+          <span class="level-chip">{{ level.name }}</span>
+        } @empty {
+          <p class="field-hint">{{ 'classes.noLevelsYet' | t }}</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="panel-header">
       <h3 class="panel-title">{{ 'settings.modalNewClass' | t }}</h3>
     </div>
 

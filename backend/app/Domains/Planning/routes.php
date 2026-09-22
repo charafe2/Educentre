@@ -16,14 +16,18 @@ Route::middleware('staff')->prefix('classes')->group(function () {
     Route::delete('/{id}', [ClassController::class, 'destroy']);
 });
 
-// Subjects and academic levels are global catalogs managed only by the Super
-// Admin (see Domains/SuperAdmin). Tenants only ever read what's assigned.
+// Subjects are a global catalog managed only by the Super Admin (see
+// Domains/SuperAdmin) — tenants only ever read what's assigned to them.
+// Academic levels share that same global catalog, but tenants may also add
+// their own (see AcademicLevelController::store) — a name a tenant creates
+// that another centre already added is reused, not duplicated.
 Route::middleware('staff')->prefix('subjects')->group(function () {
     Route::get('/', [SubjectController::class, 'index']);
 });
 
 Route::middleware('staff')->prefix('academic-levels')->group(function () {
     Route::get('/', [AcademicLevelController::class, 'index']);
+    Route::post('/', [AcademicLevelController::class, 'store']);
 });
 
 Route::middleware('staff')->prefix('groups')->group(function () {
