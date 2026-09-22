@@ -15,7 +15,6 @@ class StoreGroupRequest extends FormRequest
     {
         return [
             'classeId' => ['required', 'integer', 'exists:classes,id'],
-            'groupNumber' => ['nullable', 'integer', 'min:1'],
             'maxCapacity' => ['nullable', 'integer', 'min:1'],
             'studentIds' => ['nullable', 'array'],
             'studentIds.*' => ['integer', 'exists:students,id'],

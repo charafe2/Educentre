@@ -4,7 +4,7 @@ import { ClassesService } from '../../services/classes.service';
 import { SubjectsService } from '../../services/subjects.service';
 import { TeachersService } from '../../services/teachers.service';
 import { AcademicLevelsService } from '../../services/academic-levels.service';
-import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
+import { GroupsService } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { Classe } from '../../models/classe.model';
 import { TranslatePipe } from '../../i18n/translate.pipe';
@@ -88,12 +88,9 @@ export class AjouterClasseComponent {
       teacherId: f.teacherId, roomId: null, maxCapacity,
       monthlyPrice, status: f.status,
       color: f.color, bgColor: f.bgColor, enrolledStudentIds: [],
-    }).subscribe((res: any) => {
-      const newId = res?.data?.id ?? res?.id ?? Date.now();
-      this.groupsService.groups.update(list => [
-        ...list,
-        { id: Date.now(), classeId: newId, groupNumber: 1, studentIds: [], maxCapacity: DEFAULT_CAPACITY },
-      ]);
+    }).subscribe(() => {
+      // The backend creates the class's G1; fetch it rather than faking one.
+      this.groupsService.loadGroups();
       this.toast.show(this.t('settings.toastClassAdded'));
       this.saving.set(false);
       this.resetForm();

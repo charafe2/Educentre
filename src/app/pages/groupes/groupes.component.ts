@@ -334,8 +334,7 @@ export class GroupesComponent {
     const subject = this.currentSubjectView();
     if (!subject) return;
 
-    const nextGroupNumber = subject.groups.length + 1;
-    this.groupsService.createEmptyGroup(subject.classe.id, nextGroupNumber).subscribe({
+    this.groupsService.createEmptyGroup(subject.classe.id).subscribe({
       next: () => {
         this.groupsService.loadGroups();
         this.toast.show(this.t('groups.toastGroupCreated'));
@@ -560,10 +559,7 @@ export class GroupesComponent {
     const pending = this.pendingFullDrop();
     if (!pending) return;
 
-    const groups = this.groupsService.getGroupsForClasse(pending.classeId);
-    const nextGroupNumber = groups.length + 1;
-
-    this.groupsService.createGroup(pending.classeId, nextGroupNumber, pending.studentId).subscribe({
+    this.groupsService.createGroup(pending.classeId, pending.studentId).subscribe({
       next: (res) => {
         this.groupsService.loadGroups();
         this.toast.show(this.t('groups.toastGroupCreatedMoved'));
