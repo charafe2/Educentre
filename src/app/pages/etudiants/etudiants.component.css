@@ -233,6 +233,12 @@
   background: var(--warning-bg);
 }
 
+.filter-select-payment:has(option[value="partial"]:checked) {
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+  background: #dbeafe;
+}
+
 .filter-select-payment:has(option[value="overdue"]:checked) {
   border-color: var(--danger);
   color: var(--danger);
@@ -359,6 +365,7 @@ td {
 .status-inactive { background: #f1f5f9; color: var(--text-muted); }
 .status-paid     { background: var(--success-bg); color: var(--success); }
 .status-pending  { background: var(--warning-bg); color: var(--warning); }
+.status-partial  { background: #dbeafe; color: #1d4ed8; }
 .status-overdue  { background: var(--danger-bg); color: var(--danger); }
 
 .status-dot {
@@ -372,6 +379,7 @@ td {
 .dot-inactive{ background: var(--text-light); }
 .dot-paid    { background: var(--success); animation: pulse-dot 2s infinite; }
 .dot-pending { background: var(--warning); }
+.dot-partial { background: #1d4ed8; }
 .dot-overdue { background: var(--danger); animation: pulse-dot-danger 2s infinite; }
 
 @keyframes pulse-dot {
@@ -557,6 +565,110 @@ td {
 .class-checkbox-price {
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+
+/* ── Enrollment Payment Section (modal) ── */
+.payment-section {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-color);
+}
+
+.payment-total-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.85rem;
+}
+
+.payment-total-input {
+  position: relative;
+  width: 160px;
+}
+
+.payment-total-input .form-input {
+  padding-right: 2.5rem;
+  font-weight: 600;
+}
+
+.payment-currency {
+  position: absolute;
+  right: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.payment-raw-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+
+.payment-mode-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.65rem;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface);
+  transition: all 0.15s;
+}
+
+.mode-option input[type="radio"] {
+  display: none;
+}
+
+.mode-option:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.mode-option.selected {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 600;
+}
+
+.payment-partial-row {
+  margin-top: 0.85rem;
+}
+
+.payment-remaining-value {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 0 0.875rem;
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.875rem;
+}
+
+.payment-error {
+  margin: 0.75rem 0 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 /* ── Detail Side Panel ── */

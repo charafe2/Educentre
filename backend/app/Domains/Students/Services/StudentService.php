@@ -2,6 +2,7 @@
 
 namespace App\Domains\Students\Services;
 
+use App\Domains\Finance\Services\PaymentService;
 use App\Domains\Notifications\Services\NotificationService;
 use App\Domains\Students\Models\Enrollment;
 use App\Domains\Students\Models\Student;
@@ -13,7 +14,10 @@ use Illuminate\Support\Facades\Hash;
 
 class StudentService
 {
-    public function __construct(private readonly NotificationService $notificationService) {}
+    public function __construct(
+        private readonly NotificationService $notificationService,
+        private readonly PaymentService $paymentService,
+    ) {}
 
     public function all(int $tenantId): Collection
     {
@@ -89,6 +93,20 @@ class StudentService
                         'class_id' => $classId,
                     ]);
                 }
+
+                // Only "Nouvelle inscription" (this create path) prompts for a
+                // total/discount/paid-status at all — editing a student's
+                // classes later still doesn't touch Payment, unchanged.
+                if (! empty($data['paymentStatus'])) {
+                    $this->paymentService->createForEnrollment(
+                        tenantId: $tenantId,
+                        studentId: $student->id,
+                        classIds: $data['enrolledClassIds'],
+                        customTotal: isset($data['totalAmount']) ? (float) $data['totalAmount'] : null,
+                        paymentStatus: $data['paymentStatus'],
+                        amountPaid: isset($data['amountPaid']) ? (float) $data['amountPaid'] : null,
+                    );
+                }
             }
 
             return $student->load(['enrollments', 'parents']);
@@ -160,7 +178,7 @@ class StudentService
             })
             ->when($filters['payment_status'] ?? null, function ($query, string $status) {
                 if ($status === 'paid') {
-                    $query->whereDoesntHave('payments', fn ($query) => $query->whereIn('status', ['pending', 'overdue']));
+                    $query->whereDoesntHave('payments', fn ($query) => $query->whereIn('status', ['pending', 'overdue', 'partial']));
 
                     return;
                 }

@@ -36,6 +36,7 @@ class Payment extends Model
         'uuid',
         'period_month',
         'amount',
+        'amount_paid',
         'status',
         'method',
         'paid_at',
@@ -48,6 +49,7 @@ class Payment extends Model
         return [
             'period_month' => 'date',
             'amount' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
             'paid_at' => 'date',
             'invoice_generated' => 'boolean',
         ];

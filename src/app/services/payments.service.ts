@@ -6,7 +6,7 @@ import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api
 import { Payment, PaymentMethod } from '../models/payment.model';
 import { StudentsService } from './students.service';
 
-export type PaymentPayload = Omit<Payment, 'id' | 'paidAt'> & { paidAt?: string };
+export type PaymentPayload = Omit<Payment, 'id' | 'paidAt' | 'amountPaid'> & { paidAt?: string; amountPaid?: number };
 
 export interface PaymentPageFilters {
   page?: number;
@@ -18,9 +18,11 @@ export interface PaymentPageFilters {
 export interface PaymentSummary {
   totalPaid: number;
   totalPending: number;
+  totalPartial: number;
   totalOverdue: number;
   paidCount: number;
   pendingCount: number;
+  partialCount: number;
   overdueCount: number;
   totalCount: number;
 }
@@ -37,9 +39,11 @@ export class PaymentsService {
   summary = signal<PaymentSummary>({
     totalPaid: 0,
     totalPending: 0,
+    totalPartial: 0,
     totalOverdue: 0,
     paidCount: 0,
     pendingCount: 0,
+    partialCount: 0,
     overdueCount: 0,
     totalCount: 0,
   });

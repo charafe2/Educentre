@@ -2,8 +2,9 @@ import { Component, signal, computed, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, of, Subject } from 'rxjs';
+import { forkJoin, Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StudentsService } from '../../services/students.service';
 import { ClassesService } from '../../services/classes.service';
@@ -99,6 +100,36 @@ export class EtudiantsComponent {
     parentWhatsapp: '',
   };
 
+  // ── Enrollment payment (new students only — "Nouvelle inscription") ──
+  // Editing a student's classes later never touches Payment, unchanged.
+  paymentForm = {
+    totalAmount: null as number | null,
+    paymentStatus: 'pending' as 'paid' | 'pending' | 'partial',
+    amountPaid: null as number | null,
+  };
+  private totalManuallyEdited = false;
+  paymentError = signal('');
+
+  /** Sum of monthlyPrice across the classes currently checked in the form. */
+  rawClassesTotal = computed(() => {
+    const classes = this.classesService.classes();
+    return this.selectedClassIds.reduce((sum, id) => {
+      const classe = classes.find(c => c.id === id);
+      return sum + (classe?.monthlyPrice ?? 0);
+    }, 0);
+  });
+
+  onTotalAmountChange(value: number | null): void {
+    this.totalManuallyEdited = true;
+    this.paymentForm.totalAmount = value;
+  }
+
+  remainingToPay(): number {
+    const total = this.paymentForm.totalAmount ?? 0;
+    const paid = this.paymentForm.amountPaid ?? 0;
+    return Math.max(0, total - paid);
+  }
+
   get availableClasses() {
     return this.classesService.classes();
   }
@@ -120,6 +151,9 @@ export class EtudiantsComponent {
     } else {
       this.selectedClassIds = [...this.selectedClassIds, classId];
     }
+    if (!this.totalManuallyEdited) {
+      this.paymentForm.totalAmount = this.rawClassesTotal();
+    }
   }
 
   openAdd(): void {
@@ -129,6 +163,9 @@ export class EtudiantsComponent {
       parentName: '', parentPhone: '', parentWhatsapp: '',
     };
     this.selectedClassIds = [];
+    this.paymentForm = { totalAmount: null, paymentStatus: 'pending', amountPaid: null };
+    this.totalManuallyEdited = false;
+    this.paymentError.set('');
     this.editingStudent.set(null);
     this.showModal.set(true);
   }
@@ -161,32 +198,60 @@ export class EtudiantsComponent {
     const editing = this.editingStudent();
     if (editing) {
       this.studentsService.update(editing.id, { ...this.formData, enrolledClassIds: this.selectedClassIds }).subscribe(() => {
+        this.toast.show(this.t('students.toastUpdated'));
+        this.showModal.set(false);
+
         const added = this.selectedClassIds.filter(id => !editing.enrolledClassIds.includes(id));
-        const groupUpdates = forkJoin(
-          added.length ? added.map(id => this.groupsService.addStudent(id, editing.id)) : [of(null)]
-        );
-        groupUpdates.subscribe(() => {
-          this.classesService.loadClasses();
-          this.groupsService.loadGroups();
-          this.toast.show(this.t('students.toastUpdated'));
-          this.showModal.set(false);
+        if (added.length === 0) return;
+        forkJoin(added.map(id => this.groupsService.addStudent(id, editing.id))).subscribe({
+          next: () => {
+            this.classesService.loadClasses();
+            this.groupsService.loadGroups();
+          },
+          error: () => {
+            this.classesService.loadClasses();
+            this.groupsService.loadGroups();
+            this.toast.show(this.t('students.toastGroupAssignError'), 'error');
+          },
         });
       });
     } else {
+      this.paymentError.set('');
+      if (this.selectedClassIds.length > 0) {
+        const total = this.paymentForm.totalAmount ?? this.rawClassesTotal();
+        if (this.paymentForm.paymentStatus === 'partial') {
+          const paid = this.paymentForm.amountPaid ?? 0;
+          if (paid <= 0 || paid >= total) {
+            this.paymentError.set(this.t('students.partialAmountInvalid'));
+            return;
+          }
+        }
+      }
+
       this.studentsService.add({
         ...this.formData,
         enrolledClassIds: this.selectedClassIds,
-        paymentStatus: 'pending',
-      }).subscribe(res => {
-        const newId = res.data.id;
-        const groupUpdates = forkJoin(
-          this.selectedClassIds.length ? this.selectedClassIds.map(id => this.groupsService.addStudent(id, newId)) : [of(null)]
-        );
-        groupUpdates.subscribe(() => {
-          this.classesService.loadClasses();
+        ...(this.selectedClassIds.length > 0 ? {
+          totalAmount: this.paymentForm.totalAmount ?? this.rawClassesTotal(),
+          paymentStatus: this.paymentForm.paymentStatus,
+          amountPaid: this.paymentForm.paymentStatus === 'partial' ? this.paymentForm.amountPaid : undefined,
+        } : {}),
+      }).subscribe({
+        next: res => {
+          const newId = res.data.id;
           this.toast.show(this.t('students.toastAdded'));
           this.showModal.set(false);
-        });
+
+          if (this.selectedClassIds.length === 0) return;
+          forkJoin(this.selectedClassIds.map(id => this.groupsService.addStudent(id, newId))).subscribe({
+            next: () => this.classesService.loadClasses(),
+            error: () => {
+              this.classesService.loadClasses();
+              this.toast.show(this.t('students.toastGroupAssignError'), 'error');
+            },
+          });
+        },
+        error: (err: unknown) => this.paymentError.set(extractValidationError(err, this.t('students.toastAddError'))),
       });
     }
   }
@@ -230,6 +295,7 @@ export class EtudiantsComponent {
     const map: Record<string, string> = {
       paid: this.t('students.paidLabel'),
       pending: this.t('students.pendingLabel'),
+      partial: this.t('students.partialLabel'),
       overdue: this.t('students.overdueLabel'),
     };
     return map[status] || status;
@@ -313,4 +379,15 @@ export class EtudiantsComponent {
     });
     window.open(`https://wa.me/${intl}?text=${encodeURIComponent(msg)}`, '_blank');
   }
+}
+
+function extractValidationError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

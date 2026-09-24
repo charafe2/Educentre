@@ -14,6 +14,8 @@ class StudentResource extends JsonResource
 
         if ($this->payments->contains('status', 'overdue')) {
             $paymentStatus = 'overdue';
+        } elseif ($this->payments->contains('status', 'partial')) {
+            $paymentStatus = 'partial';
         } elseif ($this->payments->contains('status', 'pending')) {
             $paymentStatus = 'pending';
         }

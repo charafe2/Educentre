@@ -192,6 +192,8 @@ tr:last-child td {
 .status-paid    .status-dot { background-color: var(--success); }
 .status-pending { color: var(--warning); background-color: var(--warning-bg); border-color: rgba(217,119,6,0.2); }
 .status-pending .status-dot { background-color: var(--warning); }
+.status-partial { color: #1d4ed8; background-color: #dbeafe; border-color: rgba(29,78,216,0.2); }
+.status-partial .status-dot { background-color: #1d4ed8; }
 .status-unpaid  { color: var(--danger);  background-color: var(--danger-bg);  border-color: rgba(225,29,72,0.2); }
 .status-unpaid  .status-dot { background-color: var(--danger); }
 

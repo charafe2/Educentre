@@ -272,6 +272,13 @@ tr:hover td { background: var(--bg-color); }
 
 .amount-cell { font-variant-numeric: tabular-nums; }
 
+.remaining-hint {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  margin-top: 0.15rem;
+}
+
 .method-tag {
   font-size: 0.75rem;
   color: var(--text-muted);
@@ -296,6 +303,7 @@ tr:hover td { background: var(--bg-color); }
 }
 .status-paid    { background: var(--success-bg); color: var(--success); }
 .status-pending { background: var(--warning-bg); color: var(--warning); }
+.status-partial { background: #dbeafe; color: #1d4ed8; }
 .status-overdue { background: var(--danger-bg);  color: var(--danger);  }
 
 /* Action buttons */
