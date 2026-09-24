@@ -3,6 +3,7 @@ import { Classe } from '../models/classe.model';
 import { Document } from '../models/document.model';
 import { Payment } from '../models/payment.model';
 import { Student } from '../models/student.model';
+import { TeacherPayslipData } from '../models/teacher-payslip.model';
 import { AuthStore } from '../auth/auth.store';
 
 export interface ReceiptCustomizationSettings {
@@ -116,13 +117,38 @@ export class ReceiptCustomizationService {
 
   async downloadReceipt(data: ReceiptPreviewData, settings = this.settings()): Promise<void> {
     const receiptImage = await this.renderReceiptImage(data, settings);
-    const pdf = this.buildPdf(receiptImage);
+    const pdf = this.buildPdf(receiptImage, 1600, 1131, 841.89, 595.28);
+    this.triggerPdfDownload(pdf, `${data.reference || data.receiptNumber}.pdf`);
+  }
+
+  /**
+   * Same concept as downloadReceipt() above (canvas render → JPEG → a
+   * hand-rolled single-page PDF, no external library) — the page height is
+   * computed from the teacher's class count instead of being fixed, since a
+   * payslip's class table is variable-length while a receipt's is not.
+   */
+  async downloadTeacherPayslip(data: TeacherPayslipData, settings = this.settings()): Promise<void> {
+    const width = 1200;
+    const rowHeight = 44;
+    const baseHeight = 950; // header + teacher info + table head + payment section + footer
+    const height = baseHeight + Math.max(data.classRows.length, 1) * rowHeight;
+
+    const image = await this.renderPayslipImage(data, settings, width, height);
+    const pageWidth = 595.28; // A4 portrait width, in points
+    const pageHeight = pageWidth * (height / width);
+    const pdf = this.buildPdf(image, width, height, pageWidth, pageHeight);
+
+    const safeName = data.teacherName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    this.triggerPdfDownload(pdf, `bulletin-paie-${safeName || 'professeur'}-${data.period.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+  }
+
+  private triggerPdfDownload(pdf: Uint8Array, filename: string): void {
     const pdfBuffer = pdf.buffer.slice(pdf.byteOffset, pdf.byteOffset + pdf.byteLength) as ArrayBuffer;
     const blob = new Blob([pdfBuffer], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${data.reference || data.receiptNumber}.pdf`;
+    link.download = filename;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -309,6 +335,175 @@ ${this.receiptMarkup(data, settings, logo)}
     return canvas.toDataURL('image/jpeg', 0.94);
   }
 
+  /**
+   * Same drawing toolkit as renderReceiptImage() above, laid out top-to-
+   * bottom with a running `y` cursor instead of hardcoded coordinates —
+   * needed here because the class table's row count (and so the whole
+   * image's height) varies per teacher, unlike the receipt's fixed layout.
+   */
+  private async renderPayslipImage(
+    data: TeacherPayslipData,
+    settings: ReceiptCustomizationSettings,
+    width: number,
+    height: number,
+  ): Promise<string> {
+    const accent = settings.accentColor;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas rendering is not available.');
+
+    const ink = '#081333';
+    const muted = '#53637c';
+    const border = '#dbe4ee';
+    const softerAccent = this.mixColor(accent, '#ffffff', 0.94);
+    const logoImage = settings.logoDataUrl ? await this.safeLoadImage(settings.logoDataUrl) : null;
+
+    const margin = 40;
+    const cardX = margin;
+    const cardY = margin;
+    const cardW = width - margin * 2;
+    const contentX = cardX + 36;
+    const contentRight = cardX + cardW - 36;
+    const contentW = contentRight - contentX;
+
+    ctx.fillStyle = '#f4f7fb';
+    ctx.fillRect(0, 0, width, height);
+    this.drawRoundRect(ctx, cardX, cardY, cardW, height - margin * 2, 20, '#ffffff', '#dfe7ef');
+
+    let y = cardY + 46;
+
+    // Header: logo/centre name (left), "BULLETIN DE PAIE" + period + date (right)
+    if (logoImage) {
+      this.drawRoundRect(ctx, contentX, y, 56, 56, 13, '#ffffff');
+      ctx.save();
+      this.clipRoundRect(ctx, contentX, y, 56, 56, 13);
+      ctx.drawImage(logoImage, contentX, y, 56, 56);
+      ctx.restore();
+    } else {
+      this.drawRoundRect(ctx, contentX, y, 56, 56, 13, accent);
+      this.drawText(ctx, settings.centerName.slice(0, 2).toUpperCase(), contentX + 28, y + 35, {
+        align: 'center', color: '#ffffff', font: '800 20px Arial',
+      });
+    }
+    this.drawText(ctx, settings.centerName, contentX + 70, y + 22, { color: ink, font: '800 26px Arial' });
+    this.drawText(ctx, 'Gestion intelligente de centre de soutien', contentX + 70, y + 46, { color: muted, font: '15px Arial' });
+
+    this.drawText(ctx, 'BULLETIN DE PAIE', contentRight, y + 16, { align: 'right', color: ink, font: '800 22px Arial' });
+    this.drawText(ctx, data.period, contentRight, y + 42, { align: 'right', color: accent, font: '700 17px Arial' });
+    this.drawText(ctx, data.generatedAt, contentRight, y + 64, { align: 'right', color: muted, font: '14px Arial' });
+
+    y += 96;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 36;
+
+    // Teacher info (left) + class/student count badges (right)
+    this.drawCircle(ctx, contentX + 28, y + 24, 28, softerAccent);
+    this.drawText(ctx, settings.centerName.slice(0, 1).toUpperCase(), contentX + 28, y + 33, { align: 'center', color: accent, font: '800 20px Arial' });
+    this.drawText(ctx, 'PROFESSEUR', contentX + 70, y + 4, { color: accent, font: '800 13px Arial' });
+    this.drawText(ctx, data.teacherName, contentX + 70, y + 28, { color: ink, font: '800 20px Arial' });
+    this.drawText(ctx, data.specialty || 'Spécialité non renseignée', contentX + 70, y + 50, { color: muted, font: '14px Arial' });
+    this.drawText(ctx, data.email || 'Email non renseigné', contentX + 70, y + 70, { color: muted, font: '14px Arial' });
+
+    const statW = 96;
+    const stats: [number, string][] = [
+      [data.totalClasses, data.totalClasses > 1 ? 'CLASSES' : 'CLASSE'],
+      [data.totalStudents, data.totalStudents > 1 ? 'ÉTUDIANTS' : 'ÉTUDIANT'],
+    ];
+    stats.forEach(([value, label], index) => {
+      const boxX = contentRight - statW * (stats.length - index) - 14 * (stats.length - 1 - index);
+      this.drawRoundRect(ctx, boxX, y - 6, statW, 78, 12, softerAccent);
+      this.drawText(ctx, String(value), boxX + statW / 2, y + 34, { align: 'center', color: accent, font: '800 26px Arial' });
+      this.drawText(ctx, label, boxX + statW / 2, y + 58, { align: 'center', color: muted, font: '11px Arial' });
+    });
+
+    y += 96;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 36;
+
+    // Classes table
+    this.drawText(ctx, 'CLASSES ENSEIGNÉES', contentX, y, { color: ink, font: '800 16px Arial' });
+    y += 26;
+
+    const withAmount = data.paymentMode !== 'fixed';
+    const cols = withAmount
+      ? [
+          { label: 'Classe', w: 0.24 }, { label: 'Matière', w: 0.18 }, { label: 'Niveau', w: 0.18 },
+          { label: 'Étudiants', w: 0.14 }, { label: 'Prix/mois', w: 0.13 }, { label: 'Montant', w: 0.13 },
+        ]
+      : [
+          { label: 'Classe', w: 0.28 }, { label: 'Matière', w: 0.22 }, { label: 'Niveau', w: 0.22 },
+          { label: 'Étudiants', w: 0.14 }, { label: 'Prix/mois', w: 0.14 },
+        ];
+
+    this.drawRoundRect(ctx, contentX, y, contentW, 40, 8, softerAccent);
+    let colX = contentX + 14;
+    cols.forEach(col => {
+      this.drawText(ctx, col.label.toUpperCase(), colX, y + 25, { color: accent, font: '800 12px Arial' });
+      colX += contentW * col.w;
+    });
+    y += 40;
+
+    const rowH = 44;
+    if (data.classRows.length === 0) {
+      this.drawText(ctx, 'Aucune classe assignée pour le moment.', contentX + contentW / 2, y + 27, {
+        align: 'center', color: muted, font: '14px Arial',
+      });
+      y += rowH;
+    }
+    data.classRows.forEach((row, index) => {
+      if (index % 2 === 1) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(contentX, y, contentW, rowH);
+      }
+      let cx = contentX + 14;
+      this.drawText(ctx, row.className, cx, y + 27, { color: ink, font: '700 14px Arial' });
+      cx += contentW * cols[0].w;
+      this.drawText(ctx, row.subject, cx, y + 27, { color: muted, font: '14px Arial' });
+      cx += contentW * cols[1].w;
+      this.drawText(ctx, row.level, cx, y + 27, { color: muted, font: '14px Arial' });
+      cx += contentW * cols[2].w;
+      this.drawText(ctx, String(row.studentCount), cx, y + 27, { color: ink, font: '14px Arial' });
+      cx += contentW * cols[3].w;
+      this.drawText(ctx, this.formatAmount(row.monthlyPrice), cx, y + 27, { color: ink, font: '14px Arial' });
+      cx += contentW * cols[4].w;
+      if (withAmount) {
+        this.drawText(ctx, this.formatAmount(row.contribution), cx, y + 27, { color: accent, font: '800 14px Arial' });
+      }
+      y += rowH;
+    });
+
+    y += 30;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 36;
+
+    // Payment breakdown + total
+    this.drawText(ctx, `DÉTAIL DE LA RÉMUNÉRATION — ${data.paymentModeLabel.toUpperCase()}`, contentX, y, { color: ink, font: '800 16px Arial' });
+    y += 28;
+    this.wrapText(ctx, data.paymentModeDetail, contentX, y, contentW, 22, { color: muted, font: '14px Arial' });
+    y += 60;
+
+    this.drawRoundRect(ctx, contentX, y, contentW, 60, 12, softerAccent);
+    this.drawText(ctx, 'TOTAL À PAYER', contentX + 20, y + 37, { color: accent, font: '800 15px Arial' });
+    this.drawText(ctx, this.formatAmount(data.totalAmount), contentRight - 20, y + 40, { align: 'right', color: accent, font: '800 26px Arial' });
+    y += 96;
+
+    // Footer: note (left) + signature (right)
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 32;
+    const noteW = contentW * 0.58;
+    this.drawRoundRect(ctx, contentX, y, noteW, 68, 10, softerAccent, this.mixColor(accent, '#ffffff', 0.76));
+    this.wrapText(ctx, settings.footerNote, contentX + 18, y + 26, noteW - 36, 18, { color: '#33415d', font: '14px Arial' });
+    this.drawText(ctx, 'Ce bulletin est un récapitulatif de rémunération.', contentX + 18, y + 52, { color: '#33415d', font: '12px Arial' });
+
+    const sigCenterX = contentX + noteW + (contentRight - contentX - noteW) / 2;
+    this.drawText(ctx, 'SIGNATURE ET CACHET DU CENTRE', sigCenterX, y + 18, { align: 'center', color: accent, font: '800 12px Arial' });
+    this.drawText(ctx, 'Signature', sigCenterX, y + 58, { align: 'center', color: ink, font: '32px "Brush Script MT", cursive' });
+
+    return canvas.toDataURL('image/jpeg', 0.94);
+  }
+
   private loadImage(src: string): Promise<HTMLImageElement> {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -449,11 +644,7 @@ ${this.receiptMarkup(data, settings, logo)}
     };
   }
 
-  private buildPdf(jpegDataUrl: string): Uint8Array {
-    const pageWidth = 841.89;
-    const pageHeight = 595.28;
-    const imageWidth = 1600;
-    const imageHeight = 1131;
+  private buildPdf(jpegDataUrl: string, imageWidth: number, imageHeight: number, pageWidth: number, pageHeight: number): Uint8Array {
     const imageBinary = atob(jpegDataUrl.split(',')[1] ?? '');
     const objects: string[] = [];
 

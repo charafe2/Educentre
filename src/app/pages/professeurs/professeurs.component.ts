@@ -1,16 +1,33 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
 import { GroupsService } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
+import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
 import { ModalComponent } from '../../components/modal/modal.component';
+import { TeacherPayslipPreviewComponent } from '../../components/teacher-payslip-preview/teacher-payslip-preview.component';
 import { Teacher } from '../../models/teacher.model';
 import { Classe } from '../../models/classe.model';
 import { Group } from '../../models/group.model';
+import { TeacherPayslipData } from '../../models/teacher-payslip.model';
 import { TranslatePipe } from '../../i18n/translate.pipe';
 import { TranslationService } from '../../i18n/translation.service';
+import { currentMonthKey } from '../../utils/current-month.util';
+
+/** Last 12 months (this one first), 'YYYY-MM' value + French "Mois Année" label. */
+function payslipMonthOptions(): { value: string; label: string }[] {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
+  return Array.from({ length: 12 }, (_, i) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    const label = formatter.format(date).replace(/^\w/, c => c.toUpperCase());
+    return { value, label };
+  });
+}
 
 interface TeacherForm {
   firstName: string; lastName: string; email: string; phone: string;
@@ -29,7 +46,7 @@ interface TeacherRow {
 
 @Component({
   selector: 'app-professeurs',
-  imports: [NgClass, FormsModule, ModalComponent, TranslatePipe],
+  imports: [NgClass, FormsModule, ModalComponent, TeacherPayslipPreviewComponent, TranslatePipe],
   templateUrl: './professeurs.component.html',
   styleUrl: './professeurs.component.css',
 })
@@ -39,6 +56,7 @@ export class ProfesseursComponent {
   private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private i18n = inject(TranslationService);
+  private receiptCustomization = inject(ReceiptCustomizationService);
   private t = (key: string, params?: Record<string, string | number>) => this.i18n.translate(key, params);
 
   searchTerm = signal('');
@@ -142,7 +160,7 @@ export class ProfesseursComponent {
           this.classesService.loadClasses();
           this.showModal.set(false);
         },
-        error: () => this.toast.show(this.t('teachers.toastError'), 'error'),
+        error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('teachers.toastError')), 'error'),
       });
     } else {
       this.teachersService.add(payload).subscribe({
@@ -151,7 +169,7 @@ export class ProfesseursComponent {
           this.classesService.loadClasses();
           this.showModal.set(false);
         },
-        error: () => this.toast.show(this.t('teachers.toastError'), 'error'),
+        error: (err: unknown) => this.toast.show(extractValidationError(err, this.t('teachers.toastError')), 'error'),
       });
     }
   }
@@ -181,6 +199,87 @@ export class ProfesseursComponent {
     if (mode === 'fixed') return this.t('teachers.paymentFixe');
     if (mode === 'percentage') return this.t('teachers.paymentPercentage');
     return this.t('teachers.paymentPerStudent');
+  }
+
+  // ── Bulletin de paie (monthly payslip) ──────────────────────
+  // Same concept as the student receipts in Documents: a live preview in a
+  // modal, downloaded as a PDF on demand (see ReceiptCustomizationService),
+  // no print dialog. No historical enrollment/pricing snapshot exists
+  // anywhere in this app — every payslip, whichever month it's labeled for,
+  // is always built from today's live classes/enrollment/rates. Downloading
+  // "last month"'s payslip after a teacher's classes changed will not match
+  // what was true back then.
+  showPayslipFor = signal<Teacher | null>(null);
+  payslipMonth = signal(currentMonthKey());
+  payslipMonthOptions = payslipMonthOptions();
+  receiptSettings = this.receiptCustomization.settings;
+  downloadingPayslip = signal(false);
+
+  openPayslip(teacher: Teacher): void {
+    this.payslipMonth.set(currentMonthKey());
+    this.showPayslipFor.set(teacher);
+  }
+
+  closePayslip(): void {
+    this.showPayslipFor.set(null);
+  }
+
+  async downloadPayslip(): Promise<void> {
+    const data = this.payslipData();
+    if (!data) return;
+
+    this.downloadingPayslip.set(true);
+    try {
+      await this.receiptCustomization.downloadTeacherPayslip(data, this.receiptSettings());
+    } catch {
+      this.toast.show(this.t('teachers.toastError'), 'error');
+    } finally {
+      this.downloadingPayslip.set(false);
+    }
+  }
+
+  payslipData = computed<TeacherPayslipData | null>(() => {
+    const teacher = this.showPayslipFor();
+    if (!teacher) return null;
+
+    const classes = this.classes().filter(c => teacher.classIds.includes(c.id));
+    const classRows = this.teachersService.getPayslipClassRows(teacher, classes);
+    const totalStudents = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+    const totalAmount = this.teachersService.getPayrollAmount(teacher, classes);
+
+    return {
+      teacherName: `${teacher.firstName} ${teacher.lastName}`,
+      specialty: teacher.specialty,
+      email: teacher.email,
+      phone: teacher.phone,
+      period: this.formatMonthLabel(this.payslipMonth()),
+      generatedAt: new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()),
+      paymentMode: teacher.paymentMode,
+      paymentModeLabel: this.getPaymentModeLabel(teacher.paymentMode),
+      paymentModeDetail: this.getPaymentModeDetail(teacher),
+      classRows,
+      totalStudents,
+      totalClasses: classes.length,
+      totalAmount,
+    };
+  });
+
+  private getPaymentModeDetail(teacher: Teacher): string {
+    if (teacher.paymentMode === 'fixed') {
+      return `Salaire fixe mensuel de ${this.formatSalary(teacher.fixedSalary ?? 0)}, indépendant du nombre d'étudiants.`;
+    }
+    if (teacher.paymentMode === 'percentage') {
+      return `${teacher.percentageRate ?? 0}% du prix mensuel de chaque étudiant qui lui est assigné, quelle que soit la classe.`;
+    }
+    return `${this.formatSalary(teacher.ratePerStudent ?? 0)} par étudiant assigné, quelle que soit la classe.`;
+  }
+
+  private formatMonthLabel(monthKey: string): string {
+    const [year, month] = monthKey.split('-').map(Number);
+    const date = new Date(year, (month || 1) - 1, 1);
+    return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' })
+      .format(date)
+      .replace(/^\w/, c => c.toUpperCase());
   }
 
   onSearch(event: Event): void {
@@ -215,4 +314,15 @@ export class ProfesseursComponent {
       status: this.statusFilter(),
     });
   }
+}
+
+function extractValidationError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

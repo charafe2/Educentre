@@ -902,3 +902,22 @@ td {
     justify-content: space-between;
   }
 }
+
+/* Bulletin de paie modal */
+.payslip-modal-body {
+  max-width: 100%;
+  overflow: auto;
+  padding: 1.25rem;
+  background: #f8fafc;
+}
+
+.payslip-month-picker {
+  max-width: 280px;
+  margin-bottom: 1.25rem;
+}
+
+.payslip-modal-body app-teacher-payslip-preview {
+  display: block;
+  width: 900px;
+  max-width: none;
+}

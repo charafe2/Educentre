@@ -140,6 +140,9 @@
               </td>
               <td>
                 <div class="action-btns">
+                  <button class="action-btn" [attr.aria-label]="'teachers.payslip' | t" [title]="'teachers.payslip' | t" (click)="openPayslip(row.teacher)">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                  </button>
                   <button class="action-btn" [attr.aria-label]="'common.edit' | t" [title]="'common.edit' | t" (click)="openEdit(row.teacher)">
                     <i class="fa-regular fa-pen-to-square"></i>
                   </button>
@@ -285,6 +288,33 @@
       <button class="btn-primary" (click)="submit()">
         <i class="fa-solid fa-floppy-disk"></i>
         {{ (editingTeacher() ? 'common.save' : 'common.add') | t }}
+      </button>
+    </div>
+  </app-modal>
+}
+
+<!-- Bulletin de paie (monthly payslip) -->
+@if (showPayslipFor(); as teacher) {
+  <app-modal [title]="'teachers.payslipFor' | t: { name: teacher.firstName + ' ' + teacher.lastName }" size="lg" (closed)="closePayslip()">
+    <div class="payslip-modal-body">
+      <div class="form-group payslip-month-picker">
+        <label class="form-label">{{ 'teachers.selectMonth' | t }}</label>
+        <select class="form-select" [ngModel]="payslipMonth()" (ngModelChange)="payslipMonth.set($event)">
+          @for (option of payslipMonthOptions; track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      @if (payslipData(); as data) {
+        <app-teacher-payslip-preview [settings]="receiptSettings()" [data]="data"></app-teacher-payslip-preview>
+      }
+    </div>
+    <div class="form-footer">
+      <button class="btn-secondary" (click)="closePayslip()">{{ 'common.cancel' | t }}</button>
+      <button class="btn-primary" [disabled]="downloadingPayslip()" (click)="downloadPayslip()">
+        <i class="fa-solid fa-download"></i>
+        {{ 'teachers.downloadPayslip' | t }}
       </button>
     </div>
   </app-modal>

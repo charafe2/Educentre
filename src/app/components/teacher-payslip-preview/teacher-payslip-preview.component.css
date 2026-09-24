@@ -1,0 +1,210 @@
+/* Same visual language as receipt-preview.component.css (student receipts),
+   duplicated rather than shared because Angular component styles are
+   scoped — kept in sync by eye, not by import. */
+
+.payslip-preview {
+  --receipt-accent: #078c78;
+  width: 100%;
+  min-width: 760px;
+  padding: 2.1rem 2.35rem;
+  border: 1px solid #dfe7ef;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--receipt-accent) 5%, transparent), transparent 34%),
+    #fff;
+  color: #081333;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.payslip-preview * { box-sizing: border-box; }
+.payslip-preview p, .payslip-preview h2, .payslip-preview h3, .payslip-preview h4 { margin: 0; }
+
+.payslip-preview__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-bottom: 1.55rem;
+  border-bottom: 1px solid #dbe4ee;
+}
+
+.receipt-brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.receipt-brand__logo {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--receipt-accent);
+  color: #fff;
+  font-weight: 850;
+}
+
+.receipt-brand__logo img { width: 100%; height: 100%; object-fit: cover; }
+
+.receipt-brand h3 { color: #081333; font-size: 1.75rem; line-height: 1.05; }
+.receipt-brand p { color: #53637c; }
+
+.receipt-title { text-align: right; }
+.receipt-title h2 { color: #081333; font-size: 1.55rem; letter-spacing: 0.035em; }
+.receipt-title strong { display: block; margin-top: 0.4rem; color: var(--receipt-accent); font-size: 1.05rem; }
+.receipt-title span { display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 0.55rem; color: #53637c; }
+
+.payslip-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2.1rem;
+  padding: 1.85rem 0;
+  border-bottom: 1px solid #dbe4ee;
+}
+
+.receipt-info__block { display: flex; align-items: flex-start; gap: 1.1rem; }
+
+.receipt-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--receipt-accent) 12%, white);
+  color: var(--receipt-accent);
+  font-size: 1.4rem;
+}
+
+.receipt-info__block b { color: var(--receipt-accent); font-size: 0.76rem; font-weight: 800; letter-spacing: 0.035em; }
+.receipt-info__block h4 { margin: 0.45rem 0 0.5rem; color: #081333; font-size: 1.05rem; }
+.receipt-info__block p { display: flex; align-items: center; gap: 0.55rem; margin-top: 0.4rem; line-height: 1.35; color: #53637c; }
+
+.payslip-stats { display: flex; gap: 1.5rem; flex-shrink: 0; }
+
+.payslip-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--receipt-accent) 7%, white);
+  min-width: 90px;
+}
+
+.payslip-stat strong { font-size: 1.6rem; color: var(--receipt-accent); }
+.payslip-stat span { font-size: 0.75rem; color: #53637c; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+
+.payslip-section { padding: 1.65rem 0; border-bottom: 1px solid #dbe4ee; }
+.payslip-section:last-of-type { border-bottom: none; }
+
+.payslip-section-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #081333;
+  margin-bottom: 1rem;
+}
+
+.payslip-table {
+  overflow: hidden;
+  border: 1px solid #dbe4ee;
+  border-radius: 13px;
+}
+
+.payslip-table__head, .payslip-table__row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr 0.7fr 0.9fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.payslip-table--with-amount .payslip-table__head,
+.payslip-table--with-amount .payslip-table__row {
+  grid-template-columns: 1.2fr 0.9fr 0.9fr 0.6fr 0.8fr 0.9fr;
+}
+
+.payslip-table__head {
+  padding: 0.75rem 1.2rem;
+  background: color-mix(in srgb, var(--receipt-accent) 7%, white);
+  color: var(--receipt-accent);
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.payslip-table__row {
+  padding: 0.85rem 1.2rem;
+  border-top: 1px solid #e6edf4;
+  font-size: 0.875rem;
+  color: #33415d;
+}
+
+.payslip-amount { font-weight: 800; color: var(--receipt-accent); }
+
+.payslip-empty {
+  padding: 1.5rem;
+  text-align: center;
+  color: #53637c;
+  font-size: 0.875rem;
+}
+
+.payslip-mode-detail {
+  color: #33415d;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 1.25rem;
+}
+
+.payslip-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.35rem;
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--receipt-accent) 9%, white);
+}
+
+.payslip-total span { color: var(--receipt-accent); font-weight: 850; font-size: 0.85rem; letter-spacing: 0.03em; }
+.payslip-total strong { color: var(--receipt-accent); font-size: 1.55rem; font-weight: 850; }
+
+.receipt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding-top: 1.65rem;
+}
+
+.receipt-note {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 330px;
+  padding: 1rem 1.2rem;
+  border: 1px solid color-mix(in srgb, var(--receipt-accent) 18%, white);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--receipt-accent) 5%, white);
+}
+
+.receipt-note i { color: var(--receipt-accent); font-size: 1.4rem; }
+.receipt-note strong, .receipt-note small { display: block; color: #33415d; line-height: 1.45; }
+
+.receipt-signature { min-width: 260px; text-align: center; }
+.receipt-signature b { color: var(--receipt-accent); font-size: 0.76rem; font-weight: 800; letter-spacing: 0.035em; }
+.receipt-signature span {
+  display: block;
+  margin-top: 1rem;
+  color: #081333;
+  font-family: "Brush Script MT", "Segoe Script", cursive;
+  font-size: 2rem;
+}
+
+@media (max-width: 900px) {
+  .payslip-preview { min-width: 720px; }
+}
