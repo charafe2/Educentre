@@ -1,14 +1,17 @@
 import {
   Component, OnInit, OnDestroy, AfterViewInit,
-  ViewEncapsulation, PLATFORM_ID, Inject, inject,
+  ViewEncapsulation, PLATFORM_ID, Inject, inject, signal,
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { VideoHeroComponent } from './video-hero/video-hero.component';
 import { SeoService } from '../../core/seo/seo.service';
 import { PUBLIC_PAGES } from '../../core/seo/public-pages';
 import { buildHomeSchema } from '../../core/seo/schema';
+import { environment } from '../../../environments/environment';
 
 type IntroState = 'active' | 'dismissed';
 
@@ -47,6 +50,12 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
   private _introDismissed = false;
 
   private readonly seo = inject(SeoService);
+  private readonly http = inject(HttpClient);
+
+  // ── Demo request form (public landing page) ──────────────────
+  demoFormSubmitting = signal(false);
+  demoFormSent = signal(false);
+  demoFormError = signal('');
 
   constructor(@Inject(PLATFORM_ID) private platformId: object) {}
 
@@ -525,5 +534,38 @@ export class HeroComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     });
+  }
+
+  // ─── 9. Demo request form ───────────────────────────────────────
+  // Plain FormData read (not ngModel) since the two dropdowns are the
+  // hand-rolled `[data-demo-select]` widgets wired up in _initDemoSelects()
+  // above, which already write their selection into a hidden <input> by
+  // `name` — FormData picks those up the same way as the plain text fields.
+  async submitDemoRequest(form: HTMLFormElement): Promise<void> {
+    const values = new FormData(form);
+    const payload = {
+      centreName: String(values.get('centre-name') ?? '').trim(),
+      fullName: String(values.get('full-name') ?? '').trim(),
+      centreSize: String(values.get('centre-size') ?? '').trim(),
+      city: String(values.get('city') ?? '').trim(),
+      phone: String(values.get('phone') ?? '').trim(),
+    };
+
+    if (!payload.centreName || !payload.fullName || !payload.phone) {
+      this.demoFormError.set('Merci de renseigner au moins le nom du centre, votre nom et votre téléphone.');
+      return;
+    }
+
+    this.demoFormSubmitting.set(true);
+    this.demoFormError.set('');
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/v1/demo-requests`, payload));
+      this.demoFormSent.set(true);
+      form.reset();
+    } catch {
+      this.demoFormError.set('Une erreur est survenue. Merci de réessayer ou de nous contacter directement.');
+    } finally {
+      this.demoFormSubmitting.set(false);
+    }
   }
 }

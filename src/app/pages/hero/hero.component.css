@@ -2192,3 +2192,14 @@
   color: #516078;
   font-size: 14.5px; line-height: 1.6;
 }
+
+.lp .demo-form__error {
+  margin: var(--space-4) 0 0;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(225, 29, 72, 0.08);
+  color: #e11d48;
+  font-size: 13.5px;
+  line-height: 1.5;
+  text-align: center;
+}
