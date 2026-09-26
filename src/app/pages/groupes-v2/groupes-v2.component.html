@@ -1,0 +1,523 @@
+<div class="m-page page">
+  <app-bar section="Groupes" />
+
+  <main class="main">
+
+    <header class="head">
+      <div>
+        <h1>Groupes</h1>
+        <p class="head-sub">
+          {{ groups().length }} groupes, {{ totalStudents() }} élèves inscrits, {{ openSeats() }} places libres
+        </p>
+      </div>
+      <div class="head-actions">
+        <div class="views" role="radiogroup" aria-label="Affichage">
+          <button type="button" role="radio" class="view" [class.is-on]="view() === 'liste'" [attr.aria-checked]="view() === 'liste'" data-tip="Liste (L)" (click)="view.set('liste')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <span class="btn-text">Liste</span>
+          </button>
+          <button type="button" role="radio" class="view" [class.is-on]="view() === 'semaine'" [attr.aria-checked]="view() === 'semaine'" data-tip="Semaine (S)" (click)="view.set('semaine')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            <span class="btn-text">Semaine</span>
+          </button>
+        </div>
+        <button class="m-btn head-export m-tip-end" type="button" data-tip="Exporter la liste affichée" aria-label="Exporter en CSV" (click)="exportCsv()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+          <span class="btn-text">Exporter</span>
+        </button>
+        <button class="m-btn m-btn--primary head-new" type="button" aria-keyshortcuts="n" (click)="openCreate()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="btn-text">Nouveau groupe</span>
+          <kbd class="btn-key" aria-hidden="true">N</kbd>
+        </button>
+      </div>
+    </header>
+
+    <span #sentinel class="sentinel" aria-hidden="true"></span>
+
+    <!-- Sticky toolbar: search + levels -->
+    <div #toolbar class="toolbar" [class.is-stuck]="stuck()">
+      <label class="search">
+        <span class="m-visually-hidden">Rechercher un groupe ou un élève</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input
+          #search
+          type="search"
+          placeholder="Rechercher un groupe ou un élève"
+          autocomplete="off"
+          [ngModel]="query()"
+          (ngModelChange)="query.set($event)"
+        >
+        @if (query()) {
+          <button class="search-clear" type="button" aria-label="Effacer la recherche" animate.enter="m-enter-fade" (click)="query.set(''); search.focus()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        } @else {
+          <kbd class="search-key" aria-hidden="true">/</kbd>
+        }
+      </label>
+
+      <div class="levels" role="tablist" aria-label="Filtrer par niveau">
+        <button #tab role="tab" type="button" class="level" [class.is-on]="level() === null" [attr.aria-selected]="level() === null" (click)="level.set(null)">
+          Tous <span class="level-n">{{ levelCount(null) }}</span>
+        </button>
+        @for (l of levels; track l) {
+          <button #tab role="tab" type="button" class="level" [class.is-on]="level() === l" [attr.aria-selected]="level() === l" (click)="level.set(l)">
+            {{ l }} <span class="level-n">{{ levelCount(l) }}</span>
+          </button>
+        }
+        <span #indicator class="level-bar" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <!-- Secondary filters + sort -->
+    <div class="filter-row">
+      <label class="filter">
+        <span class="m-visually-hidden">Matière</span>
+        <select class="m-select" [class.is-set]="subject()" [ngModel]="subject()" (ngModelChange)="subject.set($event)">
+          <option value="">Toutes matières</option>
+          @for (s of subjects; track s) { <option [value]="s">{{ s }}</option> }
+        </select>
+      </label>
+      <label class="filter">
+        <span class="m-visually-hidden">Enseignant</span>
+        <select class="m-select" [class.is-set]="teacher()" [ngModel]="teacher()" (ngModelChange)="teacher.set($event)">
+          <option value="">Tous enseignants</option>
+          @for (t of teachers; track t) { <option [value]="t">{{ t }}</option> }
+        </select>
+      </label>
+      <label class="toggle">
+        <input type="checkbox" [ngModel]="openOnly()" (ngModelChange)="openOnly.set($event)">
+        <span class="toggle-box" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        </span>
+        Places libres
+      </label>
+
+      <label class="filter filter-sort" [class.is-hidden]="view() === 'semaine'">
+        <span class="m-visually-hidden">Trier</span>
+        <select class="m-select" [ngModel]="sort()" (ngModelChange)="sort.set($event)">
+          @for (o of sortOptions; track o.key) { <option [value]="o.key">{{ o.label }}</option> }
+        </select>
+      </label>
+    </div>
+
+    @if (hasFilters()) {
+      <p class="filter-meta" animate.enter="m-enter-fade">
+        <span>{{ shownCount() }} {{ shownCount() > 1 ? 'groupes affichés' : 'groupe affiché' }} sur {{ groups().length }}</span>
+        <button class="link" type="button" (click)="clearFilters()">Effacer les filtres</button>
+      </p>
+    }
+
+    @if (conflictCount()) {
+      <p class="clash-banner" animate.enter="m-enter-fade">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+        <span>{{ conflictCount() }} groupes ont un conflit d’horaire (salle ou enseignant déjà pris).</span>
+        @if (view() === 'liste') {
+          <button class="link" type="button" (click)="view.set('semaine')">Voir sur la semaine</button>
+        }
+      </p>
+    }
+
+    @if (view() === 'semaine' && results().length) {
+      <!-- Week -->
+      <div class="week-days" role="tablist" aria-label="Jour affiché">
+        @for (d of week(); track d.day) {
+          <button role="tab" type="button" class="week-day-tab" [class.is-on]="focusDay() === d.day" [class.is-today]="d.day === today" [attr.aria-selected]="focusDay() === d.day" (click)="focusDay.set(d.day)">
+            {{ dayShort[d.day] }}
+            <span>{{ d.count }}</span>
+          </button>
+        }
+      </div>
+
+      <div class="week" animate.enter="m-enter-fade">
+        <div class="week-head">
+          <span class="week-corner"></span>
+          @for (d of week(); track d.day) {
+            <span class="week-col-head" [class.is-today]="d.day === today" [class.is-focus]="focusDay() === d.day">
+              {{ dayLong[d.day] }}
+              @if (d.day === today) { <small>aujourd’hui</small> }
+            </span>
+          }
+        </div>
+
+        <div class="week-body" [style.height.px]="gridHeight()">
+          <div class="week-hours" aria-hidden="true">
+            @for (h of hours(); track h) {
+              <span class="week-hour">{{ h }}:00</span>
+            }
+          </div>
+
+          @for (d of week(); track d.day) {
+            <div class="week-col" [class.is-today]="d.day === today" [class.is-focus]="focusDay() === d.day" [attr.aria-label]="dayLong[d.day]">
+              @for (b of d.blocks; track b.group.id) {
+                <button
+                  type="button"
+                  class="slot"
+                  animate.enter="slot-enter"
+                  [class.is-clash]="conflictsOf(b.group.id).length"
+                  [class.is-full]="isFull(b.group)"
+                  [class.is-short]="b.height < 80"
+                  [style.top.px]="b.top"
+                  [style.height.px]="b.height"
+                  [style.--lane]="b.lane"
+                  [style.--lanes]="b.lanes"
+                  [attr.aria-label]="b.group.subject + ', ' + b.group.level + ', groupe ' + b.group.number + ', ' + formatSlot(b.group.schedule) + ', ' + b.group.room + '. Modifier.'"
+                  (click)="openEdit(b.group)"
+                >
+                  <span class="slot-time">{{ b.group.schedule.start }}</span>
+                  <span class="slot-subject">{{ b.group.subject }}</span>
+                  <span class="slot-meta">{{ b.group.level }}, G{{ b.group.number }}</span>
+                  <span class="slot-meta">{{ b.group.room }}, {{ b.group.teacher }}</span>
+                  @if (conflictsOf(b.group.id).length) {
+                    <svg class="slot-clash" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+                  }
+                </button>
+              }
+
+              @if (d.day === today && nowTop() !== null) {
+                <span class="now" [style.top.px]="nowTop()" aria-hidden="true"><span>{{ nowLabel() }}</span></span>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (unscheduled().length) {
+        <div class="unscheduled">
+          <p>À planifier</p>
+          @for (g of unscheduled(); track g.id) {
+            <button type="button" class="m-btn" (click)="openEdit(g)">{{ g.subject }}, {{ g.level }}, groupe {{ g.number }}</button>
+          }
+        </div>
+      }
+    }
+
+    <!-- List -->
+    @if (view() === 'liste' && sections().length) {
+      <div class="list" role="list">
+        <div class="cols" aria-hidden="true">
+          <span>Groupe</span>
+          <span>Enseignant</span>
+          <span>Horaire</span>
+          <span>Élèves</span>
+          <span class="col-price">Tarif</span>
+          <span></span>
+        </div>
+
+        @for (section of sections(); track section.level) {
+          <section class="section" [attr.aria-label]="section.level">
+            <h2 class="section-title">
+              {{ section.level }}
+              <span>{{ section.rows.length }} {{ section.rows.length > 1 ? 'groupes' : 'groupe' }}</span>
+            </h2>
+
+            @for (r of section.rows; track r.group.id) {
+              <article
+                class="row"
+                role="listitem"
+                animate.enter="row-enter"
+                [id]="'row-' + r.group.id"
+                [class.is-open]="isExpanded(r.group.id)"
+                [class.is-removing]="removing() === r.group.id"
+                [class.is-flashed]="flashed() === r.group.id"
+              >
+                <div class="row-main">
+                  <div class="cell cell-group">
+                    <span class="g-subject">{{ r.group.subject }}</span>
+                    <span class="g-meta">Groupe {{ r.group.number }}<span class="g-level">, {{ r.group.level }}</span><span class="g-teacher">, {{ r.group.teacher }}</span></span>
+                  </div>
+
+                  <div class="cell cell-teacher">
+                    <svg class="cell-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
+                    {{ r.group.teacher }}
+                  </div>
+
+                  <div class="cell cell-time">
+                    <svg class="cell-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/></svg>
+                    <span class="time-text"><span [class.is-missing]="!r.group.schedule.days.length">{{ formatSlot(r.group.schedule) }}</span><span class="g-room">{{ r.group.room }}</span></span>
+                    @if (conflictsOf(r.group.id).length) {
+                      <span class="clash-dot m-tip-end" [attr.data-tip]="'Conflit d’horaire'" tabindex="0" [attr.aria-label]="conflictsOf(r.group.id).join(' ')">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+                      </span>
+                    }
+                  </div>
+
+                  <div class="cell cell-fill">
+                    <span class="fill-text">
+                      <span><strong>{{ r.group.students.length }}</strong>/{{ r.group.capacity }}</span>
+                      @if (isFull(r.group)) { <span class="full">Complet</span> }
+                    </span>
+                    <span class="meter" [class.is-full]="isFull(r.group)" aria-hidden="true">
+                      <span class="meter-fill" [style.transform]="'scaleX(' + fill(r.group) / 100 + ')'"></span>
+                    </span>
+                  </div>
+
+                  <div class="cell cell-price">{{ r.group.price }} <small>MAD/mois</small></div>
+
+                  <div class="cell cell-actions">
+                    <button class="m-icon-btn expand" type="button"
+                      [attr.data-tip]="isExpanded(r.group.id) ? 'Masquer les élèves' : 'Voir les élèves'"
+                      [attr.aria-expanded]="isExpanded(r.group.id)"
+                      [attr.aria-controls]="'students-' + r.group.id"
+                      [attr.aria-label]="'Élèves de ' + r.group.subject + ', groupe ' + r.group.number"
+                      (click)="toggle(r.group.id)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+                    </button>
+                    <button class="m-icon-btn" type="button" data-tip="Modifier" [attr.aria-label]="'Modifier ' + r.group.subject + ', groupe ' + r.group.number" (click)="openEdit(r.group)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+                    </button>
+                    <button class="m-icon-btn" type="button" data-tip="Dupliquer" [attr.aria-label]="'Dupliquer ' + r.group.subject + ', groupe ' + r.group.number" (click)="openDuplicate(r.group)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12"/><path d="M16 8V4H4v12h4"/></svg>
+                    </button>
+                    <button class="m-icon-btn m-icon-btn--danger" type="button" data-tip="Supprimer" [attr.aria-label]="'Supprimer ' + r.group.subject + ', groupe ' + r.group.number" (click)="askDelete(r.group)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10.5 11v5.5M13.5 11v5.5"/></svg>
+                    </button>
+                  </div>
+                </div>
+
+                @if (r.hits.length && !isExpanded(r.group.id)) {
+                  <button class="hit" type="button" animate.enter="m-enter-fade" (click)="toggle(r.group.id)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
+                    {{ r.hits.length > 1 ? 'Élèves trouvés' : 'Élève trouvé' }} : {{ r.hits.join(', ') }}
+                  </button>
+                }
+
+                <div class="drawer-row" [id]="'students-' + r.group.id">
+                  <div class="drawer-inner">
+                    @if (isExpanded(r.group.id)) {
+                      <div class="roster">
+                        @for (c of conflictsOf(r.group.id); track c) {
+                          <p class="roster-clash">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+                            <span>{{ c }}</span>
+                            <button class="link" type="button" (click)="openEdit(r.group)">Changer l’horaire</button>
+                          </p>
+                        }
+                        <div class="students">
+                          @for (s of r.group.students; track s) {
+                            <span class="chip-wrap">
+                              <button class="student" type="button"
+                                [class.is-hit]="r.hits.includes(s)"
+                                [class.is-active]="isMenuOpen(r.group.id, s)"
+                                [attr.aria-expanded]="isMenuOpen(r.group.id, s)"
+                                aria-haspopup="menu"
+                                (click)="toggleMenu(r.group.id, s)">
+                                {{ s }}
+                              </button>
+                              @if (isMenuOpen(r.group.id, s)) {
+                                <span class="menu" role="menu" animate.enter="menu-enter" animate.leave="m-leave-fade">
+                                  @for (to of siblings(r.group); track to.id) {
+                                    <button role="menuitem" type="button" [disabled]="isFull(to)" (click)="move(s, r.group, to)">
+                                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 7l5 5-5 5"/></svg>
+                                      Déplacer vers le groupe {{ to.number }}
+                                      @if (isFull(to)) { <small>complet</small> }
+                                    </button>
+                                  }
+                                  <button role="menuitem" type="button" class="menu-danger" (click)="removeStudent(s, r.group)">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                                    Retirer du groupe
+                                  </button>
+                                </span>
+                              }
+                            </span>
+                          } @empty {
+                            <span class="students-empty">Aucun élève dans ce groupe pour l’instant.</span>
+                          }
+
+                          @if (isFull(r.group)) {
+                            <button class="student-add" type="button" (click)="openDuplicate(r.group)">
+                              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                              Groupe complet : ouvrir le groupe {{ r.group.number + 1 }}
+                            </button>
+                          } @else if (pickerFor() !== r.group.id) {
+                            <button class="student-add" type="button" (click)="openPicker(r.group)">
+                              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                              Ajouter un élève
+                            </button>
+                          }
+                        </div>
+
+                        @if (pickerFor() === r.group.id && !isFull(r.group)) {
+                          <div class="picker" animate.enter="menu-enter">
+                            <label class="picker-field">
+                              <span class="m-visually-hidden">Chercher un élève à ajouter</span>
+                              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+                              <input type="search" placeholder="Nom de l’élève" autocomplete="off"
+                                [ngModel]="pickerQuery()" (ngModelChange)="pickerQuery.set($event)"
+                                (keydown.enter)="candidates(r.group)[0] && addStudent(candidates(r.group)[0], r.group)">
+                              <button class="m-icon-btn" type="button" aria-label="Fermer" (click)="closePicker()">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                              </button>
+                            </label>
+                            <div class="picker-list">
+                              @for (c of candidates(r.group); track c; let first = $first) {
+                                <button type="button" [class.is-first]="first && pickerQuery()" (click)="addStudent(c, r.group)">
+                                  {{ c }}
+                                  <span>Ajouter</span>
+                                </button>
+                              } @empty {
+                                <p class="picker-empty">Aucun élève ne porte ce nom.</p>
+                              }
+                            </div>
+                            <p class="picker-hint">{{ r.group.capacity - r.group.students.length }} places restantes. Entrée ajoute le premier résultat.</p>
+                          </div>
+                        }
+
+                        <p class="roster-foot">
+                          Revenu mensuel
+                          <strong>{{ money(r.group.students.length * r.group.price) }} MAD</strong>
+                          <span>{{ r.group.students.length }} × {{ r.group.price }} MAD</span>
+                        </p>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </section>
+        }
+      </div>
+    } @else if (!results().length) {
+      <div class="empty" animate.enter="m-enter-rise">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="21" cy="21" r="12"/><path d="M30 30l10 10"/><path d="M16 21h10"/></svg>
+        @if (hasFilters()) {
+          <p class="empty-title">Aucun groupe ne correspond</p>
+          <p class="empty-text">Essayez un autre nom ou retirez un filtre.</p>
+          <button class="m-btn" type="button" (click)="clearFilters()">Effacer les filtres</button>
+        } @else {
+          <p class="empty-title">Aucun groupe pour l’instant</p>
+          <p class="empty-text">Créez un premier groupe pour y inscrire des élèves.</p>
+          <button class="m-btn m-btn--primary" type="button" (click)="openCreate()">Nouveau groupe</button>
+        }
+      </div>
+    }
+  </main>
+
+  <!-- Create / edit panel -->
+  @if (editing(); as target) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="closeDrawer()"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" animate.enter="panel-enter" animate.leave="panel-leave">
+      <header class="panel-head">
+        <h2 id="panel-title">
+          @if (target === 'new') { Nouveau groupe } @else { Modifier le groupe }
+        </h2>
+        <button class="m-icon-btn" type="button" aria-label="Fermer" (click)="closeDrawer()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <form class="panel-body" (ngSubmit)="save()" id="group-form">
+        <label class="m-field span-2">
+          <span>Matière</span>
+          <select #firstField class="m-select" name="subject" [(ngModel)]="draft.subject">
+            @for (s of subjects; track s) { <option [value]="s">{{ s }}</option> }
+          </select>
+        </label>
+        <label class="m-field">
+          <span>Niveau</span>
+          <select class="m-select" name="level" [(ngModel)]="draft.level">
+            @for (l of levels; track l) { <option [value]="l">{{ l }}</option> }
+          </select>
+        </label>
+        <label class="m-field">
+          <span>Numéro de groupe</span>
+          <input class="m-input" type="number" min="1" name="number" [(ngModel)]="draft.number" required>
+        </label>
+        <label class="m-field">
+          <span>Enseignant</span>
+          <select class="m-select" name="teacher" [(ngModel)]="draft.teacher">
+            @for (t of teachers; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </label>
+        <label class="m-field">
+          <span>Salle</span>
+          <select class="m-select" name="room" [(ngModel)]="draft.room">
+            @for (r of rooms; track r) { <option [value]="r">{{ r }}</option> }
+          </select>
+        </label>
+        <fieldset class="m-field span-2 slot-field">
+          <legend>Jours</legend>
+          <div class="day-picks">
+            @for (d of dayShort; track d; let i = $index) {
+              <button type="button" class="day-pick" [class.is-on]="draft.schedule.days.includes(i)" [attr.aria-pressed]="draft.schedule.days.includes(i)" [attr.aria-label]="dayLong[i]" (click)="toggleDay(i)">{{ d }}</button>
+            }
+          </div>
+        </fieldset>
+        <label class="m-field">
+          <span>Début</span>
+          <input class="m-input" type="time" name="start" step="900" [(ngModel)]="draft.schedule.start" required>
+        </label>
+        <label class="m-field">
+          <span>Durée</span>
+          <select class="m-select" name="duration" [(ngModel)]="draft.schedule.duration">
+            @for (m of durations; track m) { <option [ngValue]="m">{{ formatDuration(m) }}</option> }
+          </select>
+        </label>
+        <p class="slot-summary span-2">
+          {{ draft.schedule.days.length ? formatSlot(draft.schedule) : 'Sans jour choisi, le groupe reste à planifier.' }}
+        </p>
+        <label class="m-field">
+          <span>Capacité</span>
+          <input class="m-input" type="number" min="1" name="capacity" [(ngModel)]="draft.capacity" required>
+        </label>
+        <label class="m-field">
+          <span>Tarif mensuel (MAD)</span>
+          <input class="m-input" type="number" min="0" step="10" name="price" [(ngModel)]="draft.price" required>
+        </label>
+        @if (draftErrors().length || draftConflicts().length) {
+          <div class="checks span-2" aria-live="polite">
+            @for (e of draftErrors(); track e) {
+              <p class="check is-error">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
+                {{ e }}
+              </p>
+            }
+            @for (c of draftConflicts(); track c) {
+              <p class="check is-warn">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+                {{ c }}
+              </p>
+            }
+          </div>
+        }
+      </form>
+
+      <footer class="panel-foot">
+        <button class="m-btn" type="button" (click)="closeDrawer()">Annuler</button>
+        <button class="m-btn m-btn--primary" type="submit" form="group-form" [disabled]="draftErrors().length > 0">
+          {{ target === 'new' ? 'Créer le groupe' : 'Enregistrer' }}
+        </button>
+      </footer>
+    </aside>
+  }
+
+  <!-- Delete confirmation -->
+  @if (confirming(); as g) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirming.set(null)"></div>
+    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
+      <h2 id="del-title">Supprimer {{ g.subject }}, groupe {{ g.number }} ?</h2>
+      <p id="del-text">
+        @if (g.students.length) {
+          Les {{ g.students.length }} élèves de ce groupe n’y seront plus inscrits. Leurs fiches et leurs paiements sont conservés.
+        } @else {
+          Ce groupe est vide. Aucun élève n’est concerné.
+        }
+      </p>
+      <div class="dialog-actions">
+        <button class="m-btn" type="button" (click)="confirming.set(null)">Annuler</button>
+        <button class="m-btn m-btn--danger" type="button" (click)="confirmDelete()">Supprimer le groupe</button>
+      </div>
+    </div>
+  }
+
+  <!-- Snackbar: keyed per message so each one animates in -->
+  @for (s of snack() ? [snack()!] : []; track s.id) {
+    <div class="snack" role="status" animate.enter="snack-enter" animate.leave="snack-leave">
+      <span>{{ s.text }}</span>
+      @if (s.undo) {
+        <button type="button" (click)="undo()">Annuler</button>
+      }
+    </div>
+  }
+</div>

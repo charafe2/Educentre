@@ -11,6 +11,21 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
+  // Rebranded home (static preview). Sits outside AdminLayout because the new
+  // UI has no sidebar; add authGuard once these pages read real tenant data.
+  {
+    path: 'accueil',
+    loadComponent: () => import('./pages/accueil/accueil.component').then(m => m.AccueilComponent),
+  },
+  {
+    path: 'accueil/groupes',
+    loadComponent: () => import('./pages/groupes-v2/groupes-v2.component').then(m => m.GroupesV2Component),
+  },
+  {
+    path: 'accueil/caisse',
+    loadComponent: () => import('./pages/caisse/caisse.component').then(m => m.CaisseComponent),
+  },
+
   {
     path: 'login',
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),

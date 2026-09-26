@@ -1,0 +1,396 @@
+<div class="m-page page">
+  <app-bar section="Caisse" />
+
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1>Caisse</h1>
+        <p class="head-sub">
+          Aujourd’hui : {{ money(store.stats().todayAmount) }} MAD encaissés, {{ store.stats().todayCount }} {{ store.stats().todayCount > 1 ? 'reçus' : 'reçu' }}
+        </p>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Sections de la caisse">
+      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'encaisser'" [attr.aria-selected]="tab() === 'encaisser'" (click)="tab.set('encaisser')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg>
+        Encaisser
+      </button>
+      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'impayes'" [attr.aria-selected]="tab() === 'impayes'" (click)="tab.set('impayes')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
+        Impayés
+        @if (unpaidCount()) { <span class="tab-n">{{ unpaidCount() }}</span> }
+      </button>
+      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'depenses'" [attr.aria-selected]="tab() === 'depenses'" (click)="tab.set('depenses')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"/><path d="M4 7l2-3h12l2 3"/><path d="M9 12h6"/></svg>
+        Dépenses
+      </button>
+      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'statistiques'" [attr.aria-selected]="tab() === 'statistiques'" (click)="tab.set('statistiques')">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/></svg>
+        Statistiques
+      </button>
+    </nav>
+
+    @switch (tab()) {
+      @case ('encaisser') {
+        <!-- Student finder -->
+        <div class="finder" [class.is-open]="searchOpen() && (options().length || query().trim())">
+          <label class="search">
+            <span class="m-visually-hidden">Rechercher un élève</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+            <input
+              #search
+              type="search"
+              role="combobox"
+              aria-controls="finder-list"
+              [attr.aria-expanded]="searchOpen()"
+              [attr.aria-activedescendant]="searchOpen() && options().length ? 'opt-' + cursor() : null"
+              placeholder="Rechercher un élève : nom, code ou parent"
+              autocomplete="off"
+              [ngModel]="query()"
+              (ngModelChange)="onQuery($event)"
+              (focus)="searchOpen.set(true)"
+              (keydown)="onSearchKey($event)"
+            >
+            <kbd class="search-key" aria-hidden="true">/</kbd>
+          </label>
+
+          @if (searchOpen() && (options().length || query().trim())) {
+            <div class="finder-list" id="finder-list" role="listbox" animate.enter="finder-enter" animate.leave="m-leave-fade">
+              @if (!query().trim()) { <p class="finder-caption">Récents</p> }
+              @for (s of options(); track s.id; let i = $index) {
+                <button
+                  type="button"
+                  role="option"
+                  class="finder-item"
+                  [id]="'opt-' + i"
+                  [class.is-cursor]="i === cursor()"
+                  [attr.aria-selected]="i === cursor()"
+                  (mouseenter)="cursor.set(i)"
+                  (click)="selectStudent(s)"
+                >
+                  <span class="avatar" aria-hidden="true">{{ s.name.charAt(0) }}{{ s.name.split(' ')[1]?.charAt(0) }}</span>
+                  <span class="finder-main">
+                    <span class="finder-name">{{ s.name }}</span>
+                    <span class="finder-meta">{{ s.code }}, {{ s.level }}, parent : {{ s.parent }}</span>
+                  </span>
+                  @if (store.overdueMonths(s).length; as n) {
+                    <span class="finder-owed">{{ n }} {{ n > 1 ? 'mois dus' : 'mois dû' }}</span>
+                  } @else {
+                    <span class="finder-ok">À jour</span>
+                  }
+                </button>
+              } @empty {
+                <p class="finder-empty">Aucun élève ne correspond à « {{ query() }} ».</p>
+              }
+            </div>
+          }
+        </div>
+
+        @if (student(); as s) {
+          <div class="desk" animate.enter="m-enter-fade">
+            <!-- Left: student + months + history -->
+            <section class="card-col">
+              <article class="student">
+                <span class="avatar avatar--lg" aria-hidden="true">{{ s.name.charAt(0) }}{{ s.name.split(' ')[1]?.charAt(0) }}</span>
+                <div class="student-main">
+                  <h2>{{ s.name }}</h2>
+                  <p class="student-meta">{{ s.code }}, {{ s.level }}</p>
+                  <p class="student-meta">Parent : {{ s.parent }}, {{ s.phone }}</p>
+                  <div class="subjects">
+                    @for (e of s.enrollments; track e.id) {
+                      @if (e.from >= store.currentSchoolStart) {
+                        <span class="subject-tag">{{ e.subject }} <small>G{{ e.group }}, {{ e.price }} MAD</small></span>
+                      }
+                    }
+                  </div>
+                </div>
+                <div class="student-side">
+                  @if (owedTotal()) {
+                    <p class="owed">
+                      <span>Reste dû</span>
+                      <strong>{{ money(owedTotal()) }} <small>MAD</small></strong>
+                      <span>{{ owed().length }} mois en retard</span>
+                    </p>
+                  } @else {
+                    <p class="owed is-clear">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                      À jour
+                    </p>
+                  }
+                  <button class="link" type="button" (click)="clearStudent()">Changer d’élève</button>
+                </div>
+              </article>
+
+              <section class="months" aria-label="Paiements par mois">
+                <header class="months-head">
+                  <h3>Paiements par mois</h3>
+                  <ul class="legend" aria-label="Légende">
+                    <li><span class="sw s-paid"></span>Payé</li>
+                    <li><span class="sw s-partial"></span>Partiel</li>
+                    <li><span class="sw s-unpaid"></span>Impayé</li>
+                    <li><span class="sw s-upcoming"></span>À venir</li>
+                  </ul>
+                </header>
+
+                @for (year of store.schoolYears(); track year.label) {
+                  <div class="year">
+                    <p class="year-label">{{ year.label }}</p>
+                    <div class="month-grid">
+                      @for (m of year.months; track m) {
+                        <button
+                          type="button"
+                          class="month"
+                          [class]="'month s-' + statusOf(m)"
+                          [class.is-selected]="month() === m"
+                          [class.is-current]="isCurrent(m)"
+                          [disabled]="statusOf(m) === 'none'"
+                          [attr.aria-pressed]="month() === m"
+                          [attr.aria-label]="monthTitle(m) + ', ' + statusLabel[statusOf(m)] + ', ' + cellAmount(m) + ' MAD'"
+                          (click)="selectMonth(m)"
+                        >
+                          <span class="month-name">{{ monthShort(m) }}</span>
+                          <span class="month-amount">{{ cellAmount(m) }}</span>
+                          <span class="month-status">
+                            @switch (statusOf(m)) {
+                              @case ('paid') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> }
+                              @case ('partial') { <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><path d="M12 5v14"/></svg> }
+                              @case ('unpaid') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v7.5M12 17v.5"/></svg> }
+                            }
+                            {{ statusLabel[statusOf(m)] }}
+                          </span>
+                          @if (isCurrent(m)) { <span class="month-now">Ce mois</span> }
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </section>
+
+              <section class="history" aria-labelledby="history-title">
+                <h3 id="history-title">Derniers reçus</h3>
+                @for (r of receipts(); track r.number) {
+                  <div class="receipt-row">
+                    <span class="rr-date">{{ formatDate(r.paidAt) }}</span>
+                    <span class="rr-main">
+                      <span class="rr-month">{{ monthTitle(r.month) }}</span>
+                      <span class="rr-lines">{{ subjectsOf(r) }}</span>
+                    </span>
+                    <span class="rr-method">{{ r.method }}</span>
+                    <span class="rr-total">{{ money(r.total) }} <small>MAD</small></span>
+                    <span class="rr-actions">
+                      <button class="m-icon-btn" type="button" data-tip="Imprimer" [attr.aria-label]="'Imprimer le reçu ' + r.number" (click)="printReceipt(r)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7"/><path d="M7 14h10v6H7z"/></svg>
+                      </button>
+                      <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Annuler ce reçu" [attr.aria-label]="'Annuler le reçu ' + r.number" (click)="cancelling.set(r)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                      </button>
+                    </span>
+                  </div>
+                } @empty {
+                  <p class="history-empty">Aucun paiement enregistré pour cet élève.</p>
+                }
+              </section>
+            </section>
+
+            <!-- Right: pay the selected month -->
+            @if (month(); as m) {
+              <aside class="pay" aria-labelledby="pay-title">
+                <header class="pay-head">
+                  <div>
+                    <h3 id="pay-title">{{ monthTitle(m) }}</h3>
+                    <p>{{ lines().length }} {{ lines().length > 1 ? 'matières' : 'matière' }}, {{ money(monthDue()) }} MAD au total</p>
+                  </div>
+                  <span class="badge" [class]="'badge s-' + statusOf(m)">{{ statusLabel[statusOf(m)] }}</span>
+                </header>
+
+                @if (receipt(); as r) {
+                  <!-- Just paid -->
+                  <div class="done" animate.enter="m-enter-rise">
+                    <span class="done-mark" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    </span>
+                    <p class="done-title">Paiement enregistré</p>
+                    <p class="done-sub">Reçu {{ r.number }}, {{ r.method }}</p>
+                    <ul class="done-lines">
+                      @for (l of r.lines; track l.subject) {
+                        <li><span>{{ l.subject }}</span><span>{{ money(l.amount) }} MAD</span></li>
+                      }
+                      <li class="done-total"><span>Total</span><span>{{ money(r.total) }} MAD</span></li>
+                    </ul>
+                    <div class="done-actions">
+                      <button class="m-btn" type="button" (click)="printReceipt(r)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5"/><rect x="4" y="9" width="16" height="7"/><path d="M7 14h10v6H7z"/></svg>
+                        Imprimer le reçu
+                      </button>
+                      @if (monthRest() > 0) {
+                        <button class="m-btn m-btn--primary" type="button" (click)="selectMonth(m)">Encaisser le reste ({{ money(monthRest()) }} MAD)</button>
+                      } @else if (nextOwed(); as next) {
+                        <button class="m-btn m-btn--primary" type="button" (click)="selectMonth(next)">Encaisser {{ monthTitle(next) }}</button>
+                      } @else {
+                        <button class="m-btn m-btn--primary" type="button" (click)="clearStudent()">Élève suivant</button>
+                      }
+                    </div>
+                  </div>
+                } @else if (!lines().length) {
+                  <p class="pay-note">Pas de cours ce mois-ci pour {{ student()?.name }}.</p>
+                } @else if (monthRest() === 0) {
+                  <div class="settled">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    <p><strong>Mois réglé.</strong> Rien à encaisser pour {{ monthTitle(m) }}.</p>
+                  </div>
+                  <ul class="pay-lines is-readonly">
+                    @for (l of lines(); track l.enrollment.id) {
+                      <li class="line">
+                        <span class="line-main">
+                          <span class="line-subject">{{ l.enrollment.subject }}</span>
+                          <span class="line-meta">Groupe {{ l.enrollment.group }}, {{ l.enrollment.teacher }}</span>
+                        </span>
+                        <span class="line-paid">{{ money(l.paid) }} MAD</span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <form class="pay-form" (ngSubmit)="pay()">
+                    <ul class="pay-lines">
+                      @for (l of lines(); track l.enrollment.id) {
+                        <li class="line" [class.is-on]="isChecked(l.enrollment.id)" [class.is-settled]="l.rest === 0">
+                          <button type="button" class="check" role="checkbox"
+                            [attr.aria-checked]="isChecked(l.enrollment.id)"
+                            [disabled]="l.rest === 0"
+                            [attr.aria-label]="'Payer ' + l.enrollment.subject"
+                            (click)="toggleLine(l)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                          </button>
+                          <span class="line-main" (click)="toggleLine(l)">
+                            <span class="line-subject">{{ l.enrollment.subject }}</span>
+                            <span class="line-meta">
+                              Groupe {{ l.enrollment.group }}, {{ l.enrollment.teacher }}, {{ l.enrollment.price }} MAD
+                              @if (l.paid > 0 && l.rest > 0) { <span class="line-already">déjà payé {{ money(l.paid) }}</span> }
+                            </span>
+                          </span>
+                          @if (l.rest === 0) {
+                            <span class="line-paid">Réglé</span>
+                          } @else if (isChecked(l.enrollment.id)) {
+                            <label class="amount">
+                              <span class="m-visually-hidden">Montant pour {{ l.enrollment.subject }}</span>
+                              <input type="number" min="0" [max]="l.rest" step="10" inputmode="numeric"
+                                [name]="'amount-' + l.enrollment.id"
+                                [ngModel]="amounts()[l.enrollment.id]"
+                                (ngModelChange)="setAmount(l, $event)">
+                              <span>MAD</span>
+                            </label>
+                          } @else {
+                            <span class="line-rest">{{ money(l.rest) }} MAD</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+
+                    <fieldset class="methods">
+                      <legend>Mode de paiement</legend>
+                      <div class="method-row">
+                        @for (mt of methods; track mt) {
+                          <button type="button" class="method" [class.is-on]="method() === mt" [attr.aria-pressed]="method() === mt" (click)="method.set(mt)">
+                            @switch (mt) {
+                              @case ('Espèces') { <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg> }
+                              @case ('Virement') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13M13 5l4 4-4 4"/><path d="M20 15H7M11 19l-4-4 4-4"/></svg> }
+                              @case ('Chèque') { <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M6.5 14.5h6M15 14.5h2.5"/></svg> }
+                            }
+                            {{ mt }}
+                          </button>
+                        }
+                      </div>
+                    </fieldset>
+
+                    <div class="pay-total">
+                      <span>Total à encaisser</span>
+                      <strong>{{ money(total()) }} <small>MAD</small></strong>
+                    </div>
+                    @if (isPartial()) {
+                      <p class="pay-partial" animate.enter="m-enter-fade">Paiement partiel : il restera {{ money(monthRest() - total()) }} MAD pour {{ monthTitle(m) }}.</p>
+                    }
+
+                    <button class="m-btn m-btn--primary pay-btn" type="submit" [disabled]="total() <= 0">
+                      Encaisser {{ money(total()) }} MAD
+                    </button>
+                  </form>
+                }
+              </aside>
+            }
+          </div>
+        } @else {
+          <!-- Nobody selected yet -->
+          <section class="idle" animate.enter="m-enter-fade">
+            <p class="idle-title">Recherchez un élève pour encaisser un paiement.</p>
+            <p class="idle-text">Ses mois apparaissent en couleur : cliquez sur un mois pour voir les matières à payer.</p>
+            @if (recentStudents().length) {
+              <p class="idle-caption">Élèves avec des mois dus</p>
+              <div class="idle-list">
+                @for (s of recentStudents(); track s.id) {
+                  <button type="button" class="idle-item" (click)="selectStudent(s)">
+                    <span class="avatar" aria-hidden="true">{{ s.name.charAt(0) }}{{ s.name.split(' ')[1]?.charAt(0) }}</span>
+                    <span class="finder-main">
+                      <span class="finder-name">{{ s.name }}</span>
+                      <span class="finder-meta">{{ s.level }}</span>
+                    </span>
+                    <span class="finder-owed">{{ money(owedOf(s)) }} MAD</span>
+                  </button>
+                }
+              </div>
+            }
+          </section>
+        }
+      }
+      @case ('impayes') {
+        <app-unpaid-tab (collect)="collect($event)" (notify)="notify($event)" />
+      }
+      @case ('depenses') {
+        <app-expenses-tab (notify)="notify($event.text, $event.undo)" />
+      }
+      @case ('statistiques') {
+        <app-stats-tab />
+      }
+    }
+  </main>
+
+  <!-- Cancel a receipt -->
+  @if (cancelling(); as r) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="cancelling.set(null)"></div>
+    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
+      <h2 id="cancel-title">Annuler le reçu {{ r.number }} ?</h2>
+      <p id="cancel-text">
+        {{ money(r.total) }} MAD ({{ subjectsOf(r) }}) pour {{ monthTitle(r.month) }} redeviendront dus. À faire uniquement en cas d’erreur de saisie.
+      </p>
+      <div class="dialog-actions">
+        <button class="m-btn" type="button" (click)="cancelling.set(null)">Garder le reçu</button>
+        <button class="m-btn m-btn--danger" type="button" (click)="confirmCancel()">Annuler le reçu</button>
+      </div>
+    </div>
+  }
+
+  <!-- Printable receipt: invisible on screen, alone on paper -->
+  @if (printing(); as r) {
+    <section class="m-print print-receipt" aria-hidden="true">
+      <h1>Centre Ibn Khaldoun</h1>
+      <p>Reçu {{ r.number }}, le {{ formatDate(r.paidAt) }}</p>
+      <p>Élève : {{ r.student.name }} ({{ r.student.code }}), {{ r.student.level }}</p>
+      <p>Mois : {{ monthTitle(r.month) }}, paiement {{ r.method.toLowerCase() }}</p>
+      <table>
+        @for (l of r.lines; track l.subject) {
+          <tr><td>{{ l.subject }}, groupe {{ l.group }}</td><td>{{ money(l.amount) }} MAD</td></tr>
+        }
+        <tr class="print-total"><td>Total</td><td>{{ money(r.total) }} MAD</td></tr>
+      </table>
+    </section>
+  }
+
+  @for (s of snack() ? [snack()!] : []; track s.id) {
+    <div class="snack" role="status" animate.enter="snack-enter" animate.leave="snack-leave">
+      <span>{{ s.text }}</span>
+      @if (s.undo) {
+        <button type="button" (click)="undoSnack()">Annuler</button>
+      }
+    </div>
+  }
+</div>

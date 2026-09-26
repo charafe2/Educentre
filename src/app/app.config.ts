@@ -1,7 +1,7 @@
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { provideRouter } from '@angular/router';
+import { provideRouter, withViewTransitions } from '@angular/router';
 import { provideHttpClient, withInterceptors, withFetch } from '@angular/common/http';
 
 import { routes } from './app.routes';
@@ -17,7 +17,9 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     // Hydrates the prerendered public pages instead of re-rendering from scratch.
     provideClientHydration(withEventReplay()),
-    provideRouter(routes),
+    // Cross-fades between pages where the browser supports it; a no-op
+    // elsewhere. Timing lives in moujtahid-theme.css.
+    provideRouter(routes, withViewTransitions({ skipInitialTransition: true })),
     // withFetch is required for HttpClient to work under SSR/prerender.
     provideHttpClient(withFetch(), withInterceptors([authInterceptor, errorInterceptor])),
     provideAngularQuery(new QueryClient({

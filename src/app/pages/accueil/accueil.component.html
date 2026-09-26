@@ -1,0 +1,67 @@
+<div class="home m-page">
+
+  <app-bar />
+
+  <main class="main">
+    <h1 class="hello">Bonjour, Youssef</h1>
+
+    <nav class="modules" aria-label="Modules">
+      @for (m of modules; track m.key; let i = $index) {
+        <a class="tile" [routerLink]="m.route" [style.--i]="i" [attr.aria-keyshortcuts]="m.key">
+          <span class="tile-icon" aria-hidden="true">
+            @switch (m.icon) {
+              @case ('groupes') {
+                <svg viewBox="0 0 48 48">
+                  <g class="a-back"><circle cx="33" cy="15" r="5"/><path d="M41 38v-2a10 10 0 0 0-8.5-9.9"/></g>
+                  <g class="a-front"><circle cx="18" cy="17" r="6.5"/><path d="M6 40v-2a12 12 0 0 1 24 0v2"/></g>
+                </svg>
+              }
+              @case ('caisse') {
+                <svg viewBox="0 0 48 48">
+                  <rect class="a-note" x="9" y="10" width="30" height="17"/>
+                  <rect class="a-drawer" x="6" y="17" width="36" height="21"/>
+                  <circle class="a-coin" cx="24" cy="27.5" r="4.5"/>
+                  <path d="M11.5 23v9M36.5 23v9"/>
+                </svg>
+              }
+              @case ('enseignants') {
+                <svg viewBox="0 0 48 48">
+                  <rect x="6" y="7" width="36" height="24"/>
+                  <path class="a-line-1" d="M12 15h18"/>
+                  <path class="a-line-2" d="M12 22h11"/>
+                  <path d="M17 41l4-10M31 41l-4-10"/>
+                </svg>
+              }
+              @case ('parametres') {
+                <svg viewBox="0 0 48 48">
+                  <path d="M6 14h36M6 34h36"/>
+                  <rect class="a-knob-1" x="25" y="9.5" width="9" height="9"/>
+                  <rect class="a-knob-2" x="13" y="29.5" width="9" height="9"/>
+                </svg>
+              }
+            }
+          </span>
+          <span class="tile-label">{{ m.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <section class="stats" aria-label="Paiements et séances">
+      @for (st of stats; track st.label; let i = $index) {
+        <div class="stat" [style.--i]="i">
+          <p class="stat-label">{{ st.label }}</p>
+          <p class="stat-value">
+            <span [countUp]="st.n" [countUpDelay]="420 + i * 70">{{ st.value }}</span>
+            @if (st.unit) { <span class="stat-unit">{{ st.unit }}</span> }
+          </p>
+          @if (st.meter !== undefined) {
+            <span class="meter" role="meter" aria-valuemin="0" aria-valuemax="100" [attr.aria-valuenow]="st.meter" [attr.aria-label]="st.label">
+              <span class="meter-fill" [style.width.%]="st.meter"></span>
+            </span>
+          }
+          <p class="stat-note" [class.is-late]="st.tone === 'late'" [class.is-live]="st.tone === 'live'">{{ st.note }}</p>
+        </div>
+      }
+    </section>
+  </main>
+</div>

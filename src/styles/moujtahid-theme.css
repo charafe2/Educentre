@@ -1,0 +1,395 @@
+/* ══════════════════════════════════════════════════════════════════
+   Moujtahid — rebranded tenant app ("sans sidebar").
+   ------------------------------------------------------------------
+   Global on purpose, like superadmin-theme.css: the tokens on :root and
+   the `.m-*` primitives must reach every page past Angular's view
+   encapsulation. Component styles still win where they need to — the
+   emulated attribute selector out-specifies these class-only rules.
+
+   Palette: light greens on white. Green is the only accent; red is
+   reserved for money that is late and for destructive actions.
+   Corners are square everywhere.
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --m-canvas: #f1f7f3;
+  --m-paper: #ffffff;
+  --m-band: #f7fbf8;
+  --m-ink: #16281f;
+  --m-ink-soft: #5b6f64;
+  --m-ink-faint: #8a9b91;
+  --m-line: #d6e7dc;
+  --m-line-soft: #e6f0e9;
+  --m-green: #1f8a5b;
+  --m-green-deep: #176c47;
+  --m-green-wash: #d9ecdf;
+  --m-green-tint: #eef7f1;
+  --m-late: #c23a2b;
+  --m-late-deep: #a02e22;
+  --m-late-wash: #fbecea;
+  --m-amber: #a86b0c;
+  --m-amber-wash: #fbf1dc;
+
+  --m-line-strong: #bcd4c4;
+
+  /* Payment status: paid / partial / unpaid. Each ships with a label and
+     an icon wherever it appears, never colour alone. */
+  --m-paid: #1f8a5b;
+  --m-paid-wash: #d6eedf;
+  --m-partial: #b98106;
+  --m-partial-ink: #7d5a00;
+  --m-partial-wash: #fdf1c8;
+  --m-unpaid: #c23a2b;
+  --m-unpaid-wash: #fbe3df;
+
+  --m-font: 'Schibsted Grotesk', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+
+  /* Motion: one curve, three speeds. Everything moves on these. */
+  --m-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --m-fast: 120ms;
+  --m-med: 220ms;
+  --m-slow: 380ms;
+}
+
+/* Resets below are wrapped in :where() so they carry element-level
+   specificity and never beat a .m-* primitive or a component rule.
+   styles.css puts Manrope on `*`, so the family must be restated on every
+   descendant rather than inherited. */
+.m-page,
+.m-page * {
+  font-family: var(--m-font);
+}
+
+.m-page {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  /* clip, not hidden: stray tooltips can't widen the page, and
+     position: sticky keeps working inside. */
+  overflow-x: clip;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--m-canvas);
+  color: var(--m-ink);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+:where(.m-page) a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:where(.m-page) button,
+:where(.m-page) input,
+:where(.m-page) select {
+  font: inherit;
+  color: inherit;
+  border-radius: 0;
+}
+
+:where(.m-page) button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.m-page :focus-visible {
+  outline: 2px solid var(--m-green);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+:where(.m-page) svg {
+  display: block;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────────── */
+
+.m-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  padding-inline: 16px;
+  border: 1px solid var(--m-line);
+  background: var(--m-paper);
+  color: var(--m-ink);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background-color var(--m-fast) linear,
+    border-color var(--m-fast) linear,
+    color var(--m-fast) linear,
+    transform var(--m-fast) var(--m-ease);
+}
+
+.m-btn:active,
+.m-icon-btn:active {
+  transform: translateY(1px);
+}
+
+.m-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.m-btn:hover {
+  border-color: var(--m-green);
+  color: var(--m-green-deep);
+}
+
+.m-btn--primary {
+  border-color: var(--m-green);
+  background: var(--m-green);
+  color: #fff;
+}
+
+.m-btn--primary:hover {
+  border-color: var(--m-green-deep);
+  background: var(--m-green-deep);
+  color: #fff;
+}
+
+.m-btn--danger {
+  border-color: var(--m-late);
+  background: var(--m-late);
+  color: #fff;
+}
+
+.m-btn--danger:hover {
+  border-color: var(--m-late-deep);
+  background: var(--m-late-deep);
+  color: #fff;
+}
+
+.m-btn:disabled,
+.m-btn:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.m-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  color: var(--m-ink-soft);
+  transition:
+    background-color var(--m-fast) linear,
+    color var(--m-fast) linear,
+    transform var(--m-fast) var(--m-ease);
+}
+
+.m-icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.m-icon-btn:hover {
+  background: var(--m-green-tint);
+  color: var(--m-green-deep);
+}
+
+.m-icon-btn--danger:hover {
+  background: var(--m-late-wash);
+  color: var(--m-late);
+}
+
+/* ── Form fields ──────────────────────────────────────────────────── */
+
+.m-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.m-field > span {
+  color: var(--m-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.m-input,
+.m-select {
+  width: 100%;
+  height: 42px;
+  padding-inline: 12px;
+  border: 1px solid var(--m-line);
+  background: var(--m-paper);
+  color: var(--m-ink);
+  font-size: 14.5px;
+  transition: border-color var(--m-fast) linear, box-shadow var(--m-fast) linear;
+}
+
+.m-input:hover,
+.m-select:hover {
+  border-color: var(--m-ink-faint);
+}
+
+.m-input:focus,
+.m-select:focus {
+  outline: 0;
+  border-color: var(--m-green);
+  box-shadow: inset 0 0 0 1px var(--m-green);
+}
+
+.m-select {
+  appearance: none;
+  padding-inline-end: 34px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6f64' stroke-width='2' stroke-linecap='square'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+[dir='rtl'] .m-select {
+  background-position: left 10px center;
+}
+
+.m-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── Tooltips: [data-tip] on icon-only buttons ─────────────────────
+   Appear after a short hover delay so they never flicker on the way
+   past; keyboard focus shows them at once. */
+
+[data-tip] {
+  position: relative;
+}
+
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  inset-block-end: calc(100% + 6px);
+  left: 50%;
+  z-index: 10;
+  padding: 5px 8px;
+  background: var(--m-ink);
+  color: #fff;
+  font-family: var(--m-font);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 3px);
+  transition: opacity var(--m-fast) linear, transform var(--m-med) var(--m-ease);
+}
+
+[data-tip]:hover::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  transition-delay: 450ms;
+}
+
+[data-tip]:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (hover: none) {
+  [data-tip]::after {
+    display: none;
+  }
+}
+
+/* ── Enter / leave (Angular animate.enter / animate.leave) ─────────── */
+
+.m-enter-fade {
+  animation: m-fade-in var(--m-med) var(--m-ease) both;
+}
+
+.m-enter-rise {
+  animation: m-rise-in var(--m-slow) var(--m-ease) both;
+}
+
+.m-leave-fade {
+  animation: m-fade-out var(--m-fast) linear both;
+}
+
+@keyframes m-fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes m-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes m-rise-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* ── Page transitions (router withViewTransitions) ─────────────────── */
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--m-med);
+  animation-timing-function: var(--m-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+
+  .m-enter-fade,
+  .m-enter-rise,
+  .m-leave-fade {
+    animation-duration: 1ms;
+  }
+}
+
+/* Tooltips on controls at the far edge open inward. */
+[data-tip].m-tip-end::after {
+  left: auto;
+  right: 0;
+  transform: translateY(3px);
+}
+
+[data-tip].m-tip-end:hover::after,
+[data-tip].m-tip-end:focus-visible::after {
+  transform: translateY(0);
+}
+
+/* ── Printing: only the .m-print block reaches the paper ──────────── */
+
+.m-print {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .m-print,
+  .m-print * {
+    visibility: visible;
+  }
+
+  .m-print {
+    display: block;
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+  }
+}

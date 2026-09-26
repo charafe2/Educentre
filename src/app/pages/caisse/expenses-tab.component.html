@@ -1,0 +1,209 @@
+<!-- Month switcher -->
+<div class="month-bar">
+  <button class="m-icon-btn" type="button" data-tip="Mois précédent" aria-label="Mois précédent" [disabled]="!canPrev()" (click)="step(-1)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <h2 class="month-title" aria-live="polite">{{ title(month()) }}</h2>
+  <button class="m-icon-btn" type="button" data-tip="Mois suivant" aria-label="Mois suivant" [disabled]="!canNext()" (click)="step(1)">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+  @if (!isCurrent()) {
+    <button class="link" type="button" (click)="month.set(caisse.current)">Revenir au mois en cours</button>
+  }
+</div>
+
+<!-- Month summary: money in, money out, what is left -->
+<section class="summary" aria-label="Résumé du mois">
+  <div class="sum">
+    <span class="sum-label">Encaissé</span>
+    <strong class="sum-value">{{ money(sum().collected) }} <small>MAD</small></strong>
+    <span class="sum-note">Paiements des élèves pour ce mois</span>
+  </div>
+  <div class="sum">
+    <span class="sum-label">Salaires versés</span>
+    <strong class="sum-value">{{ money(sum().salariesPaid) }} <small>MAD</small></strong>
+    <span class="sum-note" [class.is-due]="sum().salariesDue">
+      {{ sum().salariesDue ? money(sum().salariesDue) + ' MAD restent à verser' : 'Tous les salaires sont versés' }}
+    </span>
+  </div>
+  <div class="sum">
+    <span class="sum-label">Autres dépenses</span>
+    <strong class="sum-value">{{ money(sum().other) }} <small>MAD</small></strong>
+    <span class="sum-note">{{ expenses().length }} {{ expenses().length > 1 ? 'dépenses' : 'dépense' }}</span>
+  </div>
+  <div class="sum sum--result" [class.is-negative]="sum().result < 0">
+    <span class="sum-label">Résultat du mois</span>
+    <strong class="sum-value">{{ sum().result < 0 ? '−' : '' }}{{ money(Math.abs(sum().result)) }} <small>MAD</small></strong>
+    <span class="sum-note">
+      @if (sum().salariesDue) {
+        {{ sum().projected < 0 ? '−' : '' }}{{ money(Math.abs(sum().projected)) }} MAD après les salaires restants
+      } @else {
+        Encaissé moins dépensé
+      }
+    </span>
+  </div>
+</section>
+
+<div class="cols">
+  <!-- Salaries -->
+  <section class="panel" aria-labelledby="salaries-title">
+    <header class="panel-head">
+      <div>
+        <h3 id="salaries-title">Salaires des enseignants</h3>
+        <p>Fixe ou au nombre d’élèves inscrits ce mois-ci</p>
+      </div>
+      @if (unpaidRows().length > 1) {
+        <button class="m-btn m-btn--primary" type="button" (click)="payAll()">
+          Payer les {{ unpaidRows().length }} salaires
+        </button>
+      }
+    </header>
+
+    <ul class="salaries">
+      @for (r of rows(); track r.teacher.id) {
+        <li class="salary" [class.is-paid]="r.record" [class.is-paying]="paying()?.teacherId === r.teacher.id">
+          <div class="salary-main">
+            <span class="avatar" aria-hidden="true">{{ initials(r.teacher.name) }}</span>
+            <span class="who">
+              <span class="name">{{ r.teacher.name }}</span>
+              <span class="meta">{{ r.teacher.subjects.join(', ') }}, {{ modeText(r) }}</span>
+            </span>
+            <span class="owed">{{ money(r.record?.amount ?? r.owed) }} <small>MAD</small></span>
+
+            @if (r.record) {
+              <span class="paid-tag">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                Payé le {{ formatDate(r.record.paidAt) }}
+              </span>
+              <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Annuler ce paiement" [attr.aria-label]="'Annuler le paiement de ' + r.teacher.name" (click)="cancelPay(r)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+              </button>
+            } @else if (paying()?.teacherId !== r.teacher.id) {
+              <button class="m-btn pay-btn" type="button" (click)="startPay(r)">Payer</button>
+            }
+          </div>
+
+          @if (paying(); as p) {
+            @if (p.teacherId === r.teacher.id) {
+              <div class="confirm" animate.enter="confirm-enter">
+                <div class="method-row" role="radiogroup" aria-label="Mode de paiement">
+                  @for (mt of methods; track mt) {
+                    <button type="button" role="radio" class="method" [class.is-on]="p.method === mt" [attr.aria-checked]="p.method === mt" (click)="paying.set({ teacherId: p.teacherId, method: mt })">{{ mt }}</button>
+                  }
+                </div>
+                <button class="m-btn" type="button" (click)="paying.set(null)">Annuler</button>
+                <button class="m-btn m-btn--primary" type="button" (click)="confirmPay(r)">Verser {{ money(r.owed) }} MAD</button>
+              </div>
+            }
+          }
+        </li>
+      } @empty {
+        <li class="empty-line">Pas de cours ce mois-ci : aucun salaire à verser.</li>
+      }
+    </ul>
+  </section>
+
+  <!-- Breakdown -->
+  <section class="panel" aria-labelledby="split-title">
+    <header class="panel-head">
+      <div>
+        <h3 id="split-title">Répartition des dépenses</h3>
+        <p>{{ money(sum().spent) }} MAD dépensés en {{ title(month()).toLowerCase() }}</p>
+      </div>
+    </header>
+    <ul class="hbars">
+      @for (c of sum().byCategory; track c.category) {
+        <li>
+          <span class="hbar-label">{{ c.category }}</span>
+          <span class="hbar-track"><span class="hbar-fill" [class.is-salary]="c.category === 'Salaires'" [style.transform]="'scaleX(' + c.amount / categoryMax() + ')'"></span></span>
+          <span class="hbar-value">{{ money(c.amount) }} <small>MAD</small></span>
+        </li>
+      } @empty {
+        <li class="empty-line">Aucune dépense ce mois-ci.</li>
+      }
+    </ul>
+  </section>
+</div>
+
+<!-- Running costs -->
+<section class="panel" aria-labelledby="expenses-title">
+  <header class="panel-head">
+    <div>
+      <h3 id="expenses-title">Autres dépenses</h3>
+      <p>Loyer, factures, fournitures et le reste</p>
+    </div>
+    <div class="head-acts">
+      @if (carry().length) {
+        <button class="m-btn" type="button" (click)="carryOverAll()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg>
+          Reporter les dépenses fixes ({{ carry().length }})
+        </button>
+      }
+      @if (!adding()) {
+        <button class="m-btn m-btn--primary" type="button" (click)="openAdd()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter une dépense
+        </button>
+      }
+    </div>
+  </header>
+
+  @if (adding()) {
+    <form class="add" animate.enter="confirm-enter" (ngSubmit)="addExpense()">
+      <label class="m-field f-cat">
+        <span>Catégorie</span>
+        <select class="m-select" name="category" [ngModel]="draft.category" (ngModelChange)="onCategory($event)">
+          @for (c of categories; track c) { <option [value]="c">{{ c }}</option> }
+        </select>
+      </label>
+      <label class="m-field f-label">
+        <span>Libellé</span>
+        <input class="m-input" name="label" placeholder="Ex. Facture Lydec" autocomplete="off" [(ngModel)]="draft.label" required>
+      </label>
+      <label class="m-field f-amount">
+        <span>Montant (MAD)</span>
+        <input class="m-input" name="amount" type="number" min="1" step="1" inputmode="numeric" [(ngModel)]="draft.amount" required>
+      </label>
+      <label class="m-field f-date">
+        <span>Date</span>
+        <input class="m-input" name="date" type="date" [min]="month() + '-01'" [max]="month() + '-31'" [(ngModel)]="draft.date">
+      </label>
+      <label class="m-field f-method">
+        <span>Mode</span>
+        <select class="m-select" name="method" [(ngModel)]="draft.method">
+          @for (mt of methods; track mt) { <option [value]="mt">{{ mt }}</option> }
+        </select>
+      </label>
+      <label class="recurring">
+        <input type="checkbox" name="recurring" [(ngModel)]="draft.recurring">
+        <span class="box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        Chaque mois
+      </label>
+      <div class="add-acts">
+        <button class="m-btn" type="button" (click)="adding.set(false)">Fermer</button>
+        <button class="m-btn m-btn--primary" type="submit" [disabled]="!draft.label.trim() || !(+(draft.amount ?? 0) > 0)">Ajouter</button>
+      </div>
+    </form>
+  }
+
+  <ul class="expenses">
+    @for (e of expenses(); track e.id) {
+      <li class="expense" animate.enter="m-enter-fade">
+        <span class="e-date">{{ formatDate(e.date) }}</span>
+        <span class="e-main">
+          <span class="e-label">{{ e.label }}</span>
+          <span class="e-meta">
+            {{ e.category }}, {{ e.method.toLowerCase() }}
+            @if (e.recurring) { <span class="e-recurring">chaque mois</span> }
+          </span>
+        </span>
+        <span class="e-amount">{{ money(e.amount) }} <small>MAD</small></span>
+        <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Supprimer" [attr.aria-label]="'Supprimer ' + e.label" (click)="removeExpense(e)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+        </button>
+      </li>
+    } @empty {
+      <li class="empty-line">Aucune dépense saisie pour {{ title(month()).toLowerCase() }}.</li>
+    }
+  </ul>
+</section>

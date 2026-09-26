@@ -1,0 +1,429 @@
+:host {
+  display: block;
+  margin-block-start: 20px;
+}
+
+/* ── KPI row ──────────────────────────────────────────────────────── */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--m-line);
+  border: 1px solid var(--m-line);
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  background: var(--m-paper);
+}
+
+.kpi-label {
+  color: var(--m-ink-soft);
+  font-size: 13px;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.kpi-value > span {
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-value small {
+  margin-inline-start: 4px;
+  color: var(--m-ink-soft);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.kpi-value.is-late {
+  color: var(--m-unpaid);
+}
+
+.kpi-note {
+  color: var(--m-ink-soft);
+  font-size: 12.5px;
+}
+
+/* Direction words carry the meaning; colour only confirms it. */
+.kpi-note.is-up {
+  color: var(--m-green-deep);
+  font-weight: 600;
+}
+
+.kpi-note.is-down {
+  color: var(--m-unpaid);
+  font-weight: 600;
+}
+
+.meter {
+  display: block;
+  height: 4px;
+  background: var(--m-green-wash);
+  overflow: hidden;
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--m-green);
+  transform-origin: left center;
+  animation: grow var(--m-slow) var(--m-ease) both;
+}
+
+@keyframes grow {
+  from { transform: scaleX(0); }
+}
+
+/* ── Panels ───────────────────────────────────────────────────────── */
+
+.panel {
+  margin-block-start: 20px;
+  background: var(--m-paper);
+  border: 1px solid var(--m-line);
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 0;
+}
+
+.panel-head h3 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.panel-head p {
+  margin-block-start: 2px;
+  color: var(--m-ink-soft);
+  font-size: 13px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  color: var(--m-ink-soft);
+  font-size: 12.5px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.key {
+  display: inline-block;
+  flex: none;
+}
+
+.key-bar {
+  width: 12px;
+  height: 12px;
+  background: var(--m-green);
+}
+
+.key-tick {
+  width: 14px;
+  height: 2px;
+  background: var(--m-ink);
+}
+
+/* ── Column chart: HTML bars on a CSS grid, crisp at any width ───── */
+
+.chart {
+  position: relative;
+  height: 280px;
+  margin: 20px 20px 18px 56px;
+}
+
+.grid {
+  position: absolute;
+  inset: 0 0 26px;
+  pointer-events: none;
+}
+
+.gridline {
+  position: absolute;
+  inset-inline: 0;
+  border-block-start: 1px solid var(--m-line-soft);
+}
+
+.gridline span {
+  position: absolute;
+  inset-inline-end: calc(100% + 10px);
+  inset-block-start: -8px;
+  color: var(--m-ink-faint);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.bars {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  cursor: default;
+}
+
+.plot {
+  position: relative;
+  flex: 1;
+  border-block-end: 1px solid var(--m-line-strong);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Wider than the mark: the whole column is the hover target. */
+.col::before {
+  content: '';
+  position: absolute;
+  inset: 0 1px 26px;
+  background: var(--m-green-tint);
+  opacity: 0;
+  transition: opacity var(--m-fast) linear;
+}
+
+.col.is-hover::before {
+  opacity: 1;
+}
+
+.bar {
+  position: relative;
+  width: 46%;
+  max-width: 34px;
+  background: var(--m-green);
+  transform-origin: bottom;
+  animation: rise var(--m-slow) var(--m-ease) both;
+  transition: background-color var(--m-fast) linear;
+}
+
+.col.is-hover .bar {
+  background: var(--m-green-deep);
+}
+
+@keyframes rise {
+  from { transform: scaleY(0); }
+}
+
+.tick {
+  position: absolute;
+  left: 50%;
+  width: 60%;
+  max-width: 44px;
+  height: 2px;
+  background: var(--m-ink);
+  transform: translateX(-50%);
+}
+
+.none {
+  position: relative;
+  margin-block-end: 6px;
+  color: var(--m-ink-faint);
+  font-size: 12px;
+}
+
+.col-label {
+  position: relative;
+  height: 26px;
+  padding-block-start: 6px;
+  color: var(--m-ink-soft);
+  font-size: 12px;
+  text-align: center;
+}
+
+.col.is-current .col-label {
+  color: var(--m-ink);
+  font-weight: 700;
+}
+
+.tip {
+  position: absolute;
+  inset-block-end: calc(100% - 20px);
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 190px;
+  padding: 10px 12px;
+  background: var(--m-ink);
+  color: #fff;
+  font-size: 12.5px;
+  text-align: start;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: m-fade-in var(--m-fast) linear both;
+}
+
+.tip.is-end {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.tip.is-start {
+  left: 0;
+  transform: none;
+}
+
+.tip strong {
+  margin-block-end: 2px;
+  font-size: 13px;
+}
+
+.tip span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.tip .key-bar {
+  background: #6fd3a2;
+}
+
+.tip .key-tick {
+  background: #fff;
+}
+
+.tip-rate {
+  margin-block-start: 2px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Horizontal bars ──────────────────────────────────────────────── */
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.hbars {
+  padding: 14px 20px 20px;
+  list-style: none;
+}
+
+.hbars li {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr) 110px;
+  align-items: center;
+  gap: 12px;
+  min-height: 36px;
+  font-size: 13.5px;
+}
+
+.hbar-label {
+  font-weight: 600;
+}
+
+.hbar-track {
+  display: block;
+  height: 10px;
+  background: var(--m-green-tint);
+}
+
+.hbar-fill {
+  display: block;
+  height: 100%;
+  background: var(--m-green);
+  transform-origin: left center;
+  animation: grow var(--m-slow) var(--m-ease) both;
+}
+
+[dir='rtl'] .hbar-fill,
+[dir='rtl'] .meter-fill {
+  transform-origin: right center;
+}
+
+.hbar-value {
+  font-weight: 700;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.hbar-value small {
+  color: var(--m-ink-faint);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+@media (max-width: 900px) {
+  .kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .split {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .kpi {
+    padding: 14px;
+  }
+
+  .kpi-value {
+    font-size: 22px;
+  }
+
+  .panel {
+    margin-inline: -16px;
+    border-inline: 0;
+  }
+
+  .chart {
+    height: 220px;
+    margin: 16px 12px 14px 42px;
+  }
+
+  .col-label {
+    font-size: 10.5px;
+  }
+
+  .tip {
+    min-width: 160px;
+  }
+
+  .hbars {
+    padding-inline: 16px;
+  }
+
+  .hbars li {
+    grid-template-columns: 100px minmax(0, 1fr) 84px;
+    gap: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .meter-fill,
+  .hbar-fill {
+    animation: none;
+  }
+}

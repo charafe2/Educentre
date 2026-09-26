@@ -1,0 +1,416 @@
+/* ══════════════════════════════════════════════════════════════════
+   Accueil — the tenant app's front door, replacing the sidebar.
+   Light greens on white, square corners, four doors and nothing else.
+   Motion is ambient and slow: a drifting grid behind, and each icon
+   quietly doing its job on a loop. None of it competes with a click.
+   ══════════════════════════════════════════════════════════════════ */
+
+:host {
+  --h-canvas: var(--m-canvas);
+  --h-paper: var(--m-paper);
+  --h-ink: var(--m-ink);
+  --h-ink-soft: var(--m-ink-soft);
+  --h-line: var(--m-line);
+  --h-green: var(--m-green);
+  --h-green-deep: var(--m-green-deep);
+  --h-green-wash: var(--m-green-wash);
+  --h-late: var(--m-late);
+  --h-grid: rgba(31, 138, 91, 0.07);
+  --h-ease: var(--m-ease);
+
+  display: block;
+}
+
+.home {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tile-icon svg {
+  stroke-width: 2;
+}
+
+/* Drifting grid: one slow, endless move so the page feels alive at rest. */
+.home::before {
+  content: '';
+  position: absolute;
+  inset: -64px;
+  background-image:
+    linear-gradient(var(--h-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--h-grid) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, #000 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 72%);
+  animation: grid-drift 24s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes grid-drift {
+  to { transform: translate(64px, 64px); }
+}
+
+/* ── Centre stage ─────────────────────────────────────────────────── */
+
+.main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  padding: 24px 32px 96px;
+}
+
+.hello {
+  font-size: clamp(26px, 3.4vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.modules {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 200px));
+  gap: 1px;
+  background: var(--h-line);
+  border: 1px solid var(--h-line);
+}
+
+.tile {
+  --tile-bg: var(--h-paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  aspect-ratio: 1;
+  padding: 20px;
+  background: var(--tile-bg);
+  color: var(--h-green);
+  transition: background-color 200ms var(--h-ease), color 200ms var(--h-ease);
+  animation: tile-in 600ms var(--h-ease) both;
+  animation-delay: calc(var(--i) * 70ms + 60ms);
+}
+
+.tile-icon svg {
+  width: 56px;
+  height: 56px;
+  overflow: visible;
+}
+
+.tile-label {
+  color: var(--h-ink);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  transition: color 200ms var(--h-ease);
+}
+
+.tile:hover,
+.tile:focus-visible {
+  --tile-bg: var(--h-green);
+  color: #fff;
+}
+
+.tile:hover .tile-label,
+.tile:focus-visible .tile-label {
+  color: #fff;
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--h-ink);
+  outline-offset: 0;
+  z-index: 1;
+}
+
+.tile:active {
+  --tile-bg: var(--h-green-deep);
+}
+
+@keyframes tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* ── Stats: read-only, so no white fill — they must never look like the
+   buttons above. Thin rules divide them; two carry a progress meter. ── */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 200px));
+  gap: 1px;
+  margin-block-start: -4px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px 20px 4px;
+  border-inline-start: 1px solid var(--h-line);
+  animation: tile-in 600ms var(--h-ease) both;
+  animation-delay: calc(var(--i) * 70ms + 360ms);
+}
+
+.stat:first-child {
+  border-inline-start-color: transparent;
+}
+
+.stat-label {
+  color: var(--h-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  color: var(--h-ink);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+/* Tabular while counting so the unit does not shimmy as digits change. */
+.stat-value > span:first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-unit {
+  color: var(--h-ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.meter {
+  display: block;
+  height: 4px;
+  margin-block: 4px 2px;
+  background: var(--h-green-wash);
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  background: var(--h-green);
+  transform-origin: left center;
+  animation: meter-in 900ms var(--h-ease) both;
+  animation-delay: 600ms;
+}
+
+[dir='rtl'] .meter-fill {
+  transform-origin: right center;
+}
+
+@keyframes meter-in {
+  from { transform: scaleX(0); }
+}
+
+.stat-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--h-ink-soft);
+  font-size: 12.5px;
+}
+
+/* Status wears a mark + words; the words themselves stay in ink. */
+.stat-note.is-late::before,
+.stat-note.is-live::before {
+  content: '';
+  flex: none;
+  width: 7px;
+  height: 7px;
+}
+
+.stat-note.is-late::before {
+  background: var(--h-late);
+}
+
+.stat-note.is-live::before {
+  background: var(--h-green);
+  animation: live 1.8s ease-in-out infinite;
+}
+
+@keyframes live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+/* ── Icon loops: each icon acts out its module, slowly and forever ── */
+
+.tile-icon g,
+.tile-icon rect,
+.tile-icon circle,
+.tile-icon path {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Groupes — the second person leans in and back. */
+.a-back {
+  animation: lean 3.2s ease-in-out infinite;
+}
+
+@keyframes lean {
+  0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+  50% { transform: translate(-2px, -1.5px); opacity: 1; }
+}
+
+/* Caisse — a note slides into the drawer, the coin pulses. Filled shapes
+   take the tile colour so they mask what is behind them, hovered or not. */
+.a-note,
+.a-drawer,
+.a-knob-1,
+.a-knob-2 {
+  fill: var(--tile-bg);
+  transition: fill 200ms var(--h-ease);
+}
+
+.a-note {
+  animation: note 3.6s ease-in-out infinite;
+}
+
+@keyframes note {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+.a-coin {
+  animation: coin 3.6s ease-in-out infinite;
+}
+
+@keyframes coin {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.72); }
+}
+
+/* Enseignants — lines are written on the board, then wiped. */
+.a-line-1,
+.a-line-2 {
+  stroke-dasharray: 20;
+  animation: write 4s ease-in-out infinite;
+}
+
+.a-line-2 {
+  animation-delay: 0.5s;
+}
+
+@keyframes write {
+  0% { stroke-dashoffset: 20; }
+  35%, 75% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -20; }
+}
+
+/* Paramètres — the two sliders trade places. */
+.a-knob-1 {
+  animation: knob-1 4.4s ease-in-out infinite;
+}
+
+.a-knob-2 {
+  animation: knob-2 4.4s ease-in-out infinite;
+}
+
+@keyframes knob-1 {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-12px); }
+}
+
+@keyframes knob-2 {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(12px); }
+}
+
+/* ── Tablet & phone ───────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .modules,
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 200px));
+  }
+
+  .stat:nth-child(3) {
+    border-inline-start-color: transparent;
+  }
+}
+
+@media (max-width: 560px) {
+  .bar {
+    height: 60px;
+    padding-inline: 16px;
+  }
+
+  .main {
+    gap: 24px;
+    padding: 16px 16px 64px;
+  }
+
+  .modules,
+  .stats {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats {
+    row-gap: 8px;
+  }
+
+  .stat {
+    padding: 12px 14px 4px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .tile {
+    gap: 14px;
+  }
+
+  .tile-icon svg {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tile-label {
+    font-size: 16px;
+  }
+}
+
+/* Touch screens: no sticky hover colour after a tap. */
+@media (hover: none) {
+  .tile:hover {
+    --tile-bg: var(--h-paper);
+    color: var(--h-green);
+  }
+
+  .tile:hover .tile-label {
+    color: var(--h-ink);
+  }
+
+  .tile:active {
+    --tile-bg: var(--h-green);
+    color: #fff;
+  }
+}
+
+/* Reduced motion stops everything that travels across the screen. The icon
+   loops stay: they move a few pixels in place, which is the part of the
+   brief ("animations constantes") that the page should never lose. */
+@media (prefers-reduced-motion: reduce) {
+  .home::before,
+  .tile,
+  .stat,
+  .meter-fill {
+    animation: none;
+  }
+}

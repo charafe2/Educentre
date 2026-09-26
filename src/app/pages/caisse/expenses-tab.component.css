@@ -1,0 +1,665 @@
+:host {
+  display: block;
+  margin-block-start: 20px;
+}
+
+/* ── Month switcher ───────────────────────────────────────────────── */
+
+.month-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.month-title {
+  min-width: 190px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-align: center;
+}
+
+.month-bar .m-icon-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--m-line);
+  background: var(--m-paper);
+}
+
+.month-bar .m-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.month-bar .link {
+  margin-inline-start: 12px;
+}
+
+.link {
+  color: var(--m-green-deep);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--m-fast) linear;
+}
+
+.link:hover {
+  text-decoration-color: currentColor;
+}
+
+/* ── Summary ──────────────────────────────────────────────────────── */
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-block-start: 16px;
+  background: var(--m-line);
+  border: 1px solid var(--m-line);
+}
+
+.sum {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  background: var(--m-paper);
+}
+
+.sum-label {
+  color: var(--m-ink-soft);
+  font-size: 13px;
+}
+
+.sum-value {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.1;
+}
+
+.sum-value small {
+  color: var(--m-ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.sum-note {
+  color: var(--m-ink-soft);
+  font-size: 12.5px;
+}
+
+.sum-note.is-due {
+  color: var(--m-partial-ink);
+  font-weight: 600;
+}
+
+/* The result is the answer to "did we make money this month?". */
+.sum--result {
+  background: var(--m-green-tint);
+  box-shadow: inset 0 3px 0 var(--m-green);
+}
+
+.sum--result .sum-value {
+  color: var(--m-green-deep);
+}
+
+.sum--result.is-negative {
+  background: var(--m-unpaid-wash);
+  box-shadow: inset 0 3px 0 var(--m-unpaid);
+}
+
+.sum--result.is-negative .sum-value {
+  color: var(--m-unpaid);
+}
+
+/* ── Panels ───────────────────────────────────────────────────────── */
+
+.cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.panel {
+  margin-block-start: 20px;
+  background: var(--m-paper);
+  border: 1px solid var(--m-line);
+}
+
+.panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px 14px;
+  border-block-end: 1px solid var(--m-line);
+}
+
+.panel-head h3 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.panel-head p {
+  margin-block-start: 2px;
+  color: var(--m-ink-soft);
+  font-size: 13px;
+}
+
+.panel-head .m-btn {
+  height: 38px;
+  font-size: 13.5px;
+}
+
+.head-acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.empty-line {
+  padding: 20px;
+  color: var(--m-ink-soft);
+  font-size: 14px;
+  list-style: none;
+}
+
+/* ── Salaries ─────────────────────────────────────────────────────── */
+
+.salaries,
+.expenses,
+.hbars {
+  list-style: none;
+}
+
+.salary {
+  border-block-end: 1px solid var(--m-line-soft);
+  transition: background-color var(--m-fast) linear;
+}
+
+.salary:last-child {
+  border-block-end: 0;
+}
+
+.salary.is-paying {
+  background: var(--m-green-tint);
+}
+
+.salary-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px 14px 10px 20px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  background: var(--m-band);
+  border: 1px solid var(--m-line-soft);
+  color: var(--m-ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.meta {
+  color: var(--m-ink-soft);
+  font-size: 12.5px;
+}
+
+.owed {
+  flex: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.owed small {
+  color: var(--m-ink-faint);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.salary.is-paid .owed {
+  color: var(--m-ink-soft);
+}
+
+.paid-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+  padding: 4px 8px;
+  background: var(--m-paid-wash);
+  color: var(--m-green-deep);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.paid-tag svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+}
+
+.pay-btn {
+  flex: none;
+  height: 36px;
+  padding-inline: 16px;
+  border-color: var(--m-partial);
+  color: var(--m-partial-ink);
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px 14px 68px;
+}
+
+.confirm-enter {
+  animation: confirm-in var(--m-med) var(--m-ease) both;
+}
+
+@keyframes confirm-in {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+
+.confirm .m-btn {
+  height: 38px;
+  font-size: 13.5px;
+}
+
+.method-row {
+  display: flex;
+  margin-inline-end: auto;
+  border: 1px solid var(--m-line);
+  background: var(--m-paper);
+}
+
+.method {
+  height: 36px;
+  padding-inline: 12px;
+  color: var(--m-ink-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: background-color var(--m-fast) linear, color var(--m-fast) linear;
+}
+
+.method + .method {
+  border-inline-start: 1px solid var(--m-line);
+}
+
+.method:hover {
+  color: var(--m-ink);
+}
+
+.method.is-on {
+  background: var(--m-ink);
+  color: #fff;
+}
+
+/* ── Breakdown ────────────────────────────────────────────────────── */
+
+.hbars {
+  padding: 14px 20px 18px;
+}
+
+.hbars li:not(.empty-line) {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 96px;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  font-size: 13px;
+}
+
+.hbar-label {
+  font-weight: 600;
+}
+
+.hbar-track {
+  height: 10px;
+  background: var(--m-green-tint);
+}
+
+.hbar-fill {
+  display: block;
+  height: 100%;
+  background: var(--m-green);
+  transform-origin: left center;
+  transition: transform var(--m-slow) var(--m-ease);
+}
+
+/* Salaries: the same hue, one step darker. They are the biggest line. */
+.hbar-fill.is-salary {
+  background: var(--m-green-deep);
+}
+
+[dir='rtl'] .hbar-fill {
+  transform-origin: right center;
+}
+
+.hbar-value {
+  font-weight: 700;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.hbar-value small {
+  color: var(--m-ink-faint);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ── Quick add ────────────────────────────────────────────────────── */
+
+.add {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) 130px 150px 130px;
+  align-items: end;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--m-band);
+  border-block-end: 1px solid var(--m-line);
+}
+
+.add .m-input,
+.add .m-select {
+  height: 40px;
+}
+
+.recurring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.recurring input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.box {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--m-ink-faint);
+  background: var(--m-paper);
+  color: #fff;
+  transition: background-color var(--m-fast) linear, border-color var(--m-fast) linear;
+}
+
+.box svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2.4;
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  transition: stroke-dashoffset var(--m-med) var(--m-ease);
+}
+
+.recurring:has(input:checked) .box {
+  background: var(--m-green);
+  border-color: var(--m-green);
+}
+
+.recurring:has(input:checked) .box svg {
+  stroke-dashoffset: 0;
+}
+
+.recurring:has(input:focus-visible) {
+  outline: 2px solid var(--m-green);
+  outline-offset: 2px;
+}
+
+.add-acts {
+  display: flex;
+  grid-column: 3 / -1;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.add-acts .m-btn {
+  height: 40px;
+}
+
+/* ── Expense list ─────────────────────────────────────────────────── */
+
+.expense {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 120px 40px;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 6px 12px 6px 20px;
+  border-block-end: 1px solid var(--m-line-soft);
+  transition: background-color var(--m-fast) linear;
+}
+
+.expense:last-child {
+  border-block-end: 0;
+}
+
+.expense:hover {
+  background: var(--m-green-tint);
+}
+
+.e-date {
+  color: var(--m-ink-soft);
+  font-size: 13px;
+}
+
+.e-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.e-label {
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.e-meta {
+  color: var(--m-ink-soft);
+  font-size: 12.5px;
+}
+
+.e-recurring {
+  margin-inline-start: 6px;
+  padding: 1px 6px;
+  background: var(--m-green-tint);
+  color: var(--m-green-deep);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.e-amount {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.e-amount small {
+  color: var(--m-ink-faint);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+/* ── Narrower screens ─────────────────────────────────────────────── */
+
+@media (max-width: 1100px) {
+  .add {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .f-label {
+    grid-column: span 2;
+  }
+
+  .add-acts {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (max-width: 960px) {
+  .cols {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .summary {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .month-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 19px;
+  }
+
+  .month-bar {
+    flex-wrap: wrap;
+  }
+
+  .month-bar .link {
+    width: 100%;
+    margin: 4px 0 0;
+    text-align: center;
+  }
+
+  .sum {
+    padding: 12px 14px;
+  }
+
+  .sum-value {
+    font-size: 20px;
+  }
+
+  .panel {
+    margin-inline: -16px;
+    border-inline: 0;
+  }
+
+  .panel-head {
+    padding-inline: 16px;
+  }
+
+  .head-acts,
+  .head-acts .m-btn,
+  .panel-head > .m-btn {
+    width: 100%;
+  }
+
+  .salary-main {
+    flex-wrap: wrap;
+    padding-inline: 16px 10px;
+  }
+
+  .who {
+    flex-basis: calc(100% - 150px);
+  }
+
+  .paid-tag {
+    margin-inline-start: 48px;
+  }
+
+  .pay-btn {
+    margin-inline-start: 48px;
+  }
+
+  .confirm {
+    padding-inline: 16px;
+  }
+
+  .method-row {
+    width: 100%;
+  }
+
+  .method {
+    flex: 1;
+  }
+
+  .confirm .m-btn {
+    flex: 1;
+    height: 44px;
+  }
+
+  .hbars {
+    padding-inline: 16px;
+  }
+
+  .hbars li:not(.empty-line) {
+    grid-template-columns: 96px minmax(0, 1fr) 84px;
+  }
+
+  .add {
+    grid-template-columns: 1fr 1fr;
+    padding-inline: 16px;
+  }
+
+  .f-cat,
+  .f-label {
+    grid-column: 1 / -1;
+  }
+
+  .add-acts {
+    grid-column: 1 / -1;
+  }
+
+  .add-acts .m-btn {
+    flex: 1;
+    height: 44px;
+  }
+
+  .expense {
+    grid-template-columns: 44px minmax(0, 1fr) auto 36px;
+    padding-inline: 16px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hbar-fill,
+  .box svg {
+    transition: none;
+  }
+
+  .confirm-enter {
+    animation-duration: 1ms;
+  }
+}
