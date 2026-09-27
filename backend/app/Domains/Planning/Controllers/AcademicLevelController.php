@@ -20,4 +20,17 @@ class AcademicLevelController extends Controller
 
         return $this->success(AcademicLevelResource::collection($levels));
     }
+
+    public function store(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+        ], [
+            'name.required' => 'Le nom du niveau est requis.',
+        ]);
+
+        $level = $this->academicLevelService->addForTenant($request->user()->tenant_id, $validated['name']);
+
+        return $this->success(AcademicLevelResource::make($level), 'Niveau ajouté.', 201);
+    }
 }

@@ -1,11 +1,13 @@
 <?php
 
 use App\Domains\SuperAdmin\Controllers\AcademicLevelController;
+use App\Domains\SuperAdmin\Controllers\AuditLogController;
 use App\Domains\SuperAdmin\Controllers\CentreController;
 use App\Domains\SuperAdmin\Controllers\CentreInvoiceController;
 use App\Domains\SuperAdmin\Controllers\PackagePlanController;
 use App\Domains\SuperAdmin\Controllers\SubjectController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAccountController;
+use App\Domains\SuperAdmin\Controllers\SuperAdminOverviewController;
 use App\Domains\SuperAdmin\Controllers\SupportTicketController;
 use App\Domains\SuperAdmin\Controllers\SuperAdminAuthController;
 use Illuminate\Support\Facades\Route;
@@ -26,8 +28,14 @@ Route::prefix('superadmin')->group(function () {
             Route::get('me', [SuperAdminAuthController::class, 'me']);
         });
 
+        // Console landing page (payments overview)
+        Route::get('overview', SuperAdminOverviewController::class);
+
         // Assignable operators (tickets page)
         Route::get('superadmins', [SuperAdminAuthController::class, 'index']);
+
+        // Audit log (per-school user activity monitoring)
+        Route::get('audit-logs', [AuditLogController::class, 'index']);
 
         // Superadmin account management
         Route::prefix('accounts')->group(function () {
@@ -71,6 +79,13 @@ Route::prefix('superadmin')->group(function () {
         // Centres
         Route::prefix('centres')->group(function () {
             Route::get('/', [CentreController::class, 'index']);
+            Route::post('/', [CentreController::class, 'store']);
+            Route::put('/{id}', [CentreController::class, 'update']);
+            Route::delete('/{id}', [CentreController::class, 'destroy']);
+            Route::post('/{id}/toggle-status', [CentreController::class, 'toggleStatus']);
+            Route::post('/{id}/multitenant/enable', [CentreController::class, 'enableMultitenant']);
+            Route::post('/{id}/multitenant/disable', [CentreController::class, 'disableMultitenant']);
+            Route::post('/{id}/sibling-centres', [CentreController::class, 'addSiblingCentre']);
             Route::get('/{centreId}/subjects', [CentreController::class, 'subjects']);
             Route::put('/{centreId}/subjects', [CentreController::class, 'syncSubjects']);
             Route::get('/{centreId}/academic-levels', [CentreController::class, 'academicLevels']);

@@ -63,7 +63,7 @@ export class StudentPaymentSlideComponent {
           classeId: classe.id,
           teacherId: classe.teacherId,
           teacherName: teacher ? `${teacher.firstName} ${teacher.lastName}` : '-',
-          amount: payment.amount,
+          amount: payment.status === 'partial' ? payment.amount - payment.amountPaid : payment.amount,
           dueDate: `${this.month}-${String(DUE_DAY).padStart(2, '0')}`,
           phone: student.parentWhatsapp || student.parentPhone,
         };

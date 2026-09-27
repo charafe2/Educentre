@@ -3,21 +3,27 @@
   padding: 1.25rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
+  border-left: 3px solid var(--border-dark);
   display: flex;
   flex-direction: column;
   gap: 0.875rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.2s ease;
   position: relative;
   overflow: hidden;
 }
+
+/* The left edge names the category — same job the icon tint already did,
+   now load-bearing instead of decorative. */
+.stat-card.icon-blue   { border-left-color: var(--accent); }
+.stat-card.icon-green  { border-left-color: var(--success); }
+.stat-card.icon-orange { border-left-color: var(--warning); }
+.stat-card.icon-red    { border-left-color: var(--danger); }
 
 .stat-card.clickable {
   cursor: pointer;
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-float);
   border-color: var(--border-dark);
 }
 
@@ -70,11 +76,15 @@
 }
 
 .stat-value {
-  font-size: 2rem;
-  font-weight: 800;
+  /* IBM Plex Mono instead of the display sans: fixed-width digits read as a
+     ledger figure, not a marketing headline — the numbers are the point on
+     this card, so they get the same treatment an instrument panel would. */
+  font-family: var(--font-mono);
+  font-size: 1.85rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text-main);
-  letter-spacing: -0.065em;
+  letter-spacing: -0.01em;
   line-height: 1;
 }
 
@@ -114,7 +124,6 @@
 
 .stat-card.urgent:hover {
   border-color: rgba(225, 29, 72, 0.35);
-  box-shadow: 0 20px 40px -10px rgba(225, 29, 72, 0.1);
 }
 
 .urgent-badge {
@@ -126,12 +135,5 @@
   background-color: var(--danger-bg);
   border: 1px solid rgba(225, 29, 72, 0.25);
   padding: 0.2rem 0.5rem;
-  border-radius: 5px;
+  border-radius: 3px;
 }
-
-@keyframes badge-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
-}
-
-.stat-card.clickable:active { transform: translateY(0); }

@@ -23,9 +23,10 @@ class UpdateTeacherRequest extends FormRequest
             'lastName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', Rule::unique('users', 'email')->ignore($userId, 'id')],
             'specialty' => ['nullable', 'string', 'max:255'],
-            'paymentMode' => ['nullable', 'string', 'in:fixed,per_student'],
+            'paymentMode' => ['nullable', 'string', 'in:fixed,per_student,percentage'],
             'fixedSalary' => ['nullable', 'numeric', 'min:0'],
             'ratePerStudent' => ['nullable', 'numeric', 'min:0'],
+            'percentageRate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'iban' => ['nullable', 'string', 'max:34'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
             'classIds' => ['nullable', 'array'],
@@ -37,7 +38,7 @@ class UpdateTeacherRequest extends FormRequest
     {
         return [
             'email.unique' => 'Cet email est déjà utilisé.',
-            'paymentMode.in' => 'Le mode de paiement doit être fixed ou per_student.',
+            'paymentMode.in' => 'Le mode de paiement doit être fixed, per_student ou percentage.',
         ];
     }
 }

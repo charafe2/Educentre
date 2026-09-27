@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Domains\Auth\Listeners\AuditAuthEventSubscriber;
 use App\Domains\Notifications\Contracts\PushProvider;
 use App\Domains\Notifications\Providers\ExpoPushProvider;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +23,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Event::subscribe(AuditAuthEventSubscriber::class);
     }
 }

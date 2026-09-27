@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { patchState, signalStore, withComputed, withMethods, withState, withHooks } from '@ngrx/signals';
 import { rxMethod } from '@ngrx/signals/rxjs-interop';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { computed } from '@angular/core';
 import { catchError, exhaustMap, filter, map, of, pipe, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -19,6 +19,24 @@ export interface AuthUser {
   // Sidebar-tab keys this user may access. Null for owners (unrestricted).
   permissions: string[] | null;
   tenant_id: number;
+}
+
+/** One centre offered on the "pick your centre" screen for a multitenant account. */
+export interface CentreOption {
+  tenantUuid: string;
+  centreUuid: string;
+  centreName: string;
+  centreType: string | null;
+  city: string | null;
+  isActive: boolean;
+}
+
+/** State held between the two login steps of a multitenant account — never
+ *  persisted (a hard refresh mid-picker just sends the user back to /login). */
+export interface CentreSelectionState {
+  preAuthToken: string;
+  accountName: string;
+  centres: CentreOption[];
 }
 
 /** Route/permission keys a non-owner user can be granted, mirroring the
@@ -41,12 +59,14 @@ interface AuthState {
   user: AuthUser | null;
   loading: boolean;
   initialized: boolean;
+  centreSelection: CentreSelectionState | null;
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
   initialized: false,
+  centreSelection: null,
 };
 
 export const AuthStore = signalStore(
@@ -60,21 +80,73 @@ export const AuthStore = signalStore(
     
     const setAuthenticated = (user: AuthUser, token: string) => {
       localStorage.setItem('auth_token', token);
-      patchState(store, { user, loading: false, initialized: true });
+      patchState(store, { user, loading: false, initialized: true, centreSelection: null });
     };
 
     const clearSession = () => {
       localStorage.removeItem('auth_token');
-      patchState(store, { user: null, loading: false, initialized: true });
+      patchState(store, { user: null, loading: false, initialized: true, centreSelection: null });
     };
 
     return {
-      async login(email: string, password: string): Promise<boolean> {
+      /**
+       * A multitenant account's owner rows share one email — the backend
+       * can't tell which centre to enter until a second call, so this
+       * returns which of the two steps happened instead of a plain boolean.
+       */
+      async login(email: string, password: string): Promise<'authenticated' | 'centre-selection' | 'error'> {
+        try {
+          patchState(store, { loading: true });
+          const result = await http.post<{
+            success: boolean;
+            data: {
+              user?: AuthUser; token?: string;
+              requiresCentreSelection?: boolean; preAuthToken?: string; accountName?: string; centres?: CentreOption[];
+            };
+          }>(
+            `${environment.apiUrl}/v1/auth/login`,
+            { email, password }
+          ).toPromise();
+
+          if (result?.success && result.data?.requiresCentreSelection) {
+            // No real session exists yet — clear any stale token so the
+            // authInterceptor doesn't attach it to the select-centre call.
+            localStorage.removeItem('auth_token');
+            patchState(store, {
+              loading: false,
+              initialized: true,
+              centreSelection: {
+                preAuthToken: result.data.preAuthToken!,
+                accountName: result.data.accountName!,
+                centres: result.data.centres!,
+              },
+            });
+            return 'centre-selection';
+          }
+
+          if (result?.success && result.data?.user && result.data?.token) {
+            setAuthenticated(result.data.user, result.data.token);
+            return 'authenticated';
+          }
+          patchState(store, { loading: false });
+          return 'error';
+        } catch {
+          patchState(store, { loading: false });
+          return 'error';
+        }
+      },
+
+      /** Step 2 of a multitenant login — see `centreSelection` state. */
+      async selectCentre(centreUuid: string): Promise<boolean> {
+        const selection = store.centreSelection();
+        if (!selection) return false;
+
         try {
           patchState(store, { loading: true });
           const result = await http.post<{ success: boolean; data: { user: AuthUser; token: string } }>(
-            `${environment.apiUrl}/v1/auth/login`,
-            { email, password }
+            `${environment.apiUrl}/v1/auth/select-centre`,
+            { centreUuid },
+            { headers: new HttpHeaders({ Authorization: `Bearer ${selection.preAuthToken}` }) }
           ).toPromise();
 
           if (result?.success && result.data) {

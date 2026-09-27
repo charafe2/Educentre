@@ -39,6 +39,10 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'select-centre',
+    loadComponent: () => import('./auth/pages/select-centre/select-centre.component').then(m => m.SelectCentreComponent),
+  },
+  {
     path: 'forgot-password',
     loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
   },
@@ -110,6 +114,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent),
       },
       {
+        path: 'ajouter-classe', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
+        loadComponent: () => import('./pages/ajouter-classe/ajouter-classe.component').then(m => m.AjouterClasseComponent),
+      },
+      {
         path: 'groupes', canActivate: [permissionGuard], data: { permKey: 'groupes' },
         loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent),
       },
@@ -166,6 +174,7 @@ export const routes: Routes = [
           { path: 'accounts',  loadComponent: () => import('./superadmin/pages/accounts/superadmin-accounts.component').then(m => m.SuperadminAccountsComponent) },
           { path: 'invoices',  loadComponent: () => import('./superadmin/pages/invoices/superadmin-invoices.component').then(m => m.SuperadminInvoicesComponent) },
           { path: 'tickets',   loadComponent: () => import('./superadmin/pages/tickets/tickets.component').then(m => m.TicketsComponent) },
+          { path: 'audit-log', loadComponent: () => import('./superadmin/pages/audit-log/superadmin-audit-log.component').then(m => m.SuperadminAuditLogComponent) },
         ],
       },
     ],

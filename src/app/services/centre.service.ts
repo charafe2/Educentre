@@ -12,6 +12,19 @@ export interface CentreInfo {
   whatsapp: string;
 }
 
+export interface SubscriptionInfo {
+  plan: string;
+  monthlyPrice: number;
+  status: 'active' | 'suspended' | 'expired' | 'cancelled';
+  startDate: string | null;
+  endDate: string | null;
+  usersLimit: number | null;
+  studentsLimit: number | null;
+  storageGb: number | null;
+  supportLevel: string | null;
+  features: string[];
+}
+
 @Injectable({ providedIn: 'root' })
 export class CentreService {
   private http = inject(HttpClient);
@@ -28,6 +41,11 @@ export class CentreService {
 
   loading = this._loading.asReadonly();
 
+  subscription = signal<SubscriptionInfo | null>(null);
+  subscriptionLoading = signal(false);
+  /** Distinguishes "not fetched yet" from "fetched, tenant has none" for the template. */
+  subscriptionError = signal(false);
+
   async load(): Promise<void> {
     this._loading.set(true);
     try {
@@ -43,6 +61,24 @@ export class CentreService {
       // Keep defaults on error
     } finally {
       this._loading.set(false);
+    }
+  }
+
+  async loadSubscription(): Promise<void> {
+    this.subscriptionLoading.set(true);
+    this.subscriptionError.set(false);
+    try {
+      const result = await firstValueFrom(
+        this.http.get<{ success: boolean; data: SubscriptionInfo }>(
+          `${environment.apiUrl}/v1/settings/subscription`
+        )
+      );
+      this.subscription.set(result.success ? result.data : null);
+    } catch {
+      this.subscription.set(null);
+      this.subscriptionError.set(true);
+    } finally {
+      this.subscriptionLoading.set(false);
     }
   }
 

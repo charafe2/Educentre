@@ -1,4 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { StatCardComponent, StatCardData } from '../../components/stat-card/stat-card.component';
 import { RecentInscriptionsComponent } from '../../components/recent-inscriptions/recent-inscriptions.component';
 import { SchedulePanelComponent } from '../../components/schedule-panel/schedule-panel.component';
@@ -10,7 +11,7 @@ import { TranslationService } from '../../i18n/translation.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [StatCardComponent, RecentInscriptionsComponent, SchedulePanelComponent, TranslatePipe],
+  imports: [RouterLink, StatCardComponent, RecentInscriptionsComponent, SchedulePanelComponent, TranslatePipe],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })

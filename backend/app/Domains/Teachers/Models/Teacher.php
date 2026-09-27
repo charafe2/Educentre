@@ -2,20 +2,22 @@
 
 namespace App\Domains\Teachers\Models;
 
-use App\Models\Tenant;
-use App\Models\User;
+use App\Domains\Core\Traits\Auditable;
+use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Planning\Models\CourseClass;
+use App\Models\User;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class Teacher extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes, Auditable;
+
+    protected static string $auditModule = 'Professeurs';
 
     protected $fillable = [
         'tenant_id',
@@ -25,6 +27,7 @@ class Teacher extends Model
         'payment_mode',
         'fixed_monthly_salary',
         'rate_per_student',
+        'percentage_rate',
         'min_students_threshold',
         'iban',
         'is_active',
@@ -34,9 +37,8 @@ class Teacher extends Model
         'is_active' => 'boolean',
         'fixed_monthly_salary' => 'decimal:2',
         'rate_per_student' => 'decimal:2',
+        'percentage_rate' => 'decimal:2',
     ];
-
-    
 
     public function user(): BelongsTo
     {
@@ -46,5 +48,12 @@ class Teacher extends Model
     public function classes(): HasMany
     {
         return $this->hasMany(CourseClass::class, 'teacher_id');
+    }
+
+    public function auditLabel(): string
+    {
+        $name = $this->user?->name ?? 'professeur supprimé';
+
+        return "{$name}" . ($this->specialty ? " ({$this->specialty})" : '');
     }
 }

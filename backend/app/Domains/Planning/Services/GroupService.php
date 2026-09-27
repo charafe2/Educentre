@@ -2,9 +2,11 @@
 
 namespace App\Domains\Planning\Services;
 
+use App\Domains\Planning\Models\CourseClass;
 use App\Domains\Planning\Models\Group;
 use App\Domains\Students\Models\Enrollment;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class GroupService
 {
@@ -13,23 +15,39 @@ class GroupService
         return Group::with('enrollments')->where('tenant_id', $tenantId)->get();
     }
 
+    /**
+     * The group number is always assigned here as the class's highest number
+     * + 1. A number computed by the client from its own (possibly stale) list
+     * is ignored: that is how repeated clicks used to pile up duplicate "G2"s.
+     */
     public function create(array $data): Group
     {
-        $group = Group::create([
-            'tenant_id' => $data['tenant_id'],
-            'class_id' => $data['classeId'],
-            'group_number' => $data['groupNumber'] ?? 1,
-            'max_capacity' => $data['maxCapacity'] ?? 2,
-        ]);
+        return DB::transaction(function () use ($data) {
+            // Serialises concurrent creations for the same class so two
+            // requests can't both read the same max and share a number.
+            CourseClass::query()->whereKey($data['classeId'])->lockForUpdate()->first();
 
-        if (!empty($data['studentIds'])) {
-            Enrollment::where('tenant_id', $data['tenant_id'])
-                ->where('class_id', $data['classeId'])
-                ->whereIn('student_id', $data['studentIds'])
-                ->update(['group_id' => $group->id]);
-        }
+            $group = Group::create([
+                'tenant_id' => $data['tenant_id'],
+                'class_id' => $data['classeId'],
+                'group_number' => $this->nextGroupNumber($data['classeId']),
+                'max_capacity' => $data['maxCapacity'] ?? 2,
+            ]);
 
-        return $group->load('enrollments');
+            if (!empty($data['studentIds'])) {
+                Enrollment::where('tenant_id', $data['tenant_id'])
+                    ->where('class_id', $data['classeId'])
+                    ->whereIn('student_id', $data['studentIds'])
+                    ->update(['group_id' => $group->id]);
+            }
+
+            return $group->load('enrollments');
+        });
+    }
+
+    private function nextGroupNumber(int $classId): int
+    {
+        return (int) Group::withTrashed()->where('class_id', $classId)->max('group_number') + 1;
     }
 
     public function updateCapacity(int $id, int $tenantId, int $maxCapacity): Group

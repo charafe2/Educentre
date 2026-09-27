@@ -9,6 +9,24 @@
   position: sticky;
   top: 0;
   z-index: 10;
+
+  /* Same local overrides as the dashboard page (sharper radii, deeper
+     palette) — the topbar is shared chrome, so this reaches every
+     authenticated page, not just /dashboard. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
+
+  --accent: #0b6a60;
+  --accent-light: #c7e6e0;
+  --accent-glow: rgba(11, 106, 96, 0.22);
+
+  --text-muted: #47536b;
+  --text-light: #7c8aa0;
+
+  --border-color: #dbe3e2;
+  --border-dark: #c3cfce;
 }
 
 .search-container {
@@ -27,7 +45,7 @@
 
 .search-input {
   width: 100%;
-  padding: 0.7rem 3rem 0.7rem 2.8rem;
+  padding: 0.7rem 1.1rem 0.7rem 2.8rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
   background-color: var(--bg-color);
@@ -40,27 +58,10 @@
 .search-input:focus {
   background-color: var(--surface);
   border-color: var(--border-dark);
-  box-shadow: var(--shadow-sm);
 }
 
 .search-input::placeholder {
   color: var(--text-light);
-}
-
-.search-shortcut {
-  position: absolute;
-  right: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--surface);
-  border: 1px solid var(--border-dark);
-  border-radius: var(--radius-md);
-  padding: 0.3rem 0.6rem;
-  font-size: 0.7rem;
-  color: var(--text-muted);
-  pointer-events: none;
-  gap: 0.25rem;
 }
 
 .topbar-actions {
@@ -90,7 +91,6 @@
   color: var(--text-main);
   border-color: var(--border-dark);
   background-color: var(--bg-color);
-  transform: translateY(-1px);
 }
 
 .badge {
@@ -192,7 +192,7 @@
 .notification-avatar {
   width: 30px;
   height: 30px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -216,7 +216,7 @@
   width: 20px;
   height: 20px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-light);
   font-size: 0.68rem;
@@ -322,7 +322,6 @@
   justify-content: center;
   font-weight: 500;
   font-size: 0.8rem;
-  box-shadow: var(--shadow-sm);
 }
 
 .profile-menu {
@@ -332,7 +331,7 @@
   width: 250px;
   padding: 0.6rem;
   border: 1px solid var(--border-color);
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   background-color: var(--surface);
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
   z-index: 30;
@@ -348,7 +347,7 @@
   gap: 0.75rem;
   padding: 0.65rem 0.75rem;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-main);
   text-decoration: none;
@@ -370,7 +369,7 @@
 
 .profile-menu__pill {
   padding: 0.22rem 0.45rem;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background-color: rgba(147, 51, 234, 0.12);
   color: #7c3aed;
   font-size: 0.64rem;
@@ -402,7 +401,7 @@
 @media (max-width: 760px) {
   .topbar { min-height: 60px; padding: 0 1rem; }
   .search-container { width: min(100%, 300px); }
-  .search-shortcut, .profile-wrapper { display: none; }
+  .profile-wrapper { display: none; }
   .notifications-panel {
     right: -3.35rem;
   }

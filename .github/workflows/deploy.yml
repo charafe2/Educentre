@@ -68,12 +68,10 @@ jobs:
             set -e
             cd /var/www/app/Educentre
 
-            # NOTE: docker compose auto-merges docker-compose.override.yml here,
-            # so production currently runs with the dev overrides (APP_ENV=local,
-            # APP_DEBUG=true, ./backend bind-mounted, mailpit). Pinning
-            # COMPOSE_FILE=docker-compose.yml is the correct fix but removes
-            # mailpit, which production mail still depends on — resolve the mail
-            # routing first, then pin.
+            # docker-compose.override.yml is gitignored dev-only config (Windows
+            # bind mounts, APP_DEBUG). Pinning COMPOSE_FILE here means a stray
+            # override file on the host is never auto-merged into this deploy.
+            export COMPOSE_FILE=docker-compose.yml
 
             # Fetch and checkout the develop branch
             git fetch origin

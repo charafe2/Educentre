@@ -2,18 +2,17 @@
 
 namespace App\Domains\Planning\Models;
 
-use App\Models\Tenant;
+use App\Domains\Core\Traits\BelongsToTenant;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class ClassSession extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -32,8 +31,6 @@ class ClassSession extends Model
         'end_hour' => 'integer',
         'is_cancelled' => 'boolean',
     ];
-
-    
 
     public function class(): BelongsTo
     {

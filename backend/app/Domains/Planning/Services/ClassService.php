@@ -3,7 +3,9 @@
 namespace App\Domains\Planning\Services;
 
 use App\Domains\Planning\Models\CourseClass;
+use App\Domains\Planning\Models\Group;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ClassService
 {
@@ -19,19 +21,30 @@ class ClassService
 
     public function create(array $data): CourseClass
     {
-        $class = CourseClass::create([
-            'tenant_id' => $data['tenant_id'],
-            'teacher_id' => $data['teacherId'] ?? null,
-            'room_id' => $data['roomId'] ?? null,
-            'name' => $data['name'],
-            'subject' => $data['subject'] ?? null,
-            'level' => $data['level'] ?? null,
-            'max_capacity' => $data['maxCapacity'] ?? null,
-            'monthly_price' => $data['monthlyPrice'] ?? 0,
-            'is_active' => ($data['status'] ?? 'active') !== 'inactive',
-        ]);
+        return DB::transaction(function () use ($data) {
+            $class = CourseClass::create([
+                'tenant_id' => $data['tenant_id'],
+                'teacher_id' => $data['teacherId'] ?? null,
+                'room_id' => $data['roomId'] ?? null,
+                'name' => $data['name'],
+                'subject' => $data['subject'] ?? null,
+                'level' => $data['level'] ?? null,
+                'max_capacity' => $data['maxCapacity'] ?? null,
+                'monthly_price' => $data['monthlyPrice'] ?? 0,
+                'is_active' => ($data['status'] ?? 'active') !== 'inactive',
+            ]);
 
-        return $class->load(['enrollments', 'teacher.user', 'room']);
+            // Every class starts with a real G1 — the frontend used to fake
+            // one client-side, which vanished on the next reload.
+            Group::create([
+                'tenant_id' => $class->tenant_id,
+                'class_id' => $class->id,
+                'group_number' => 1,
+                'max_capacity' => 2,
+            ]);
+
+            return $class->load(['enrollments', 'teacher.user', 'room']);
+        });
     }
 
     public function update(int $tenantId, int $id, array $data): CourseClass

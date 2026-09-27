@@ -18,9 +18,10 @@ class StoreTeacherRequest extends FormRequest
             'lastName' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'specialty' => ['nullable', 'string', 'max:255'],
-            'paymentMode' => ['nullable', 'string', 'in:fixed,per_student'],
+            'paymentMode' => ['nullable', 'string', 'in:fixed,per_student,percentage'],
             'fixedSalary' => ['nullable', 'numeric', 'min:0'],
             'ratePerStudent' => ['nullable', 'numeric', 'min:0'],
+            'percentageRate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'iban' => ['nullable', 'string', 'max:34'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
             'classIds' => ['nullable', 'array'],
@@ -35,7 +36,7 @@ class StoreTeacherRequest extends FormRequest
             'lastName.required' => 'Le nom est obligatoire.',
             'email.required' => 'L\'email est obligatoire.',
             'email.unique' => 'Cet email est déjà utilisé.',
-            'paymentMode.in' => 'Le mode de paiement doit être fixed ou per_student.',
+            'paymentMode.in' => 'Le mode de paiement doit être fixed, per_student ou percentage.',
         ];
     }
 }

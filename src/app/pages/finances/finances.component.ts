@@ -188,8 +188,13 @@ export class FinancesComponent {
     return ({
       paid: this.t('finances.paidLabel'),
       pending: this.t('finances.pendingLabel'),
+      partial: this.t('finances.partialLabel'),
       overdue: this.t('finances.overdueLabel'),
     } as Record<string, string>)[status] ?? status;
+  }
+
+  remainingAmount(payment: Payment): number {
+    return Math.max(0, payment.amount - payment.amountPaid);
   }
 
   getPeriodLabel(period: string): string {
@@ -237,7 +242,7 @@ export class FinancesComponent {
     classeId: number;
     periodMonth: string;
     amount: number;
-    status: 'paid' | 'pending' | 'overdue';
+    status: 'paid' | 'pending' | 'partial' | 'overdue';
     method: PaymentMethod | '';
     note: string;
   } {

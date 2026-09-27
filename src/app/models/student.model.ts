@@ -7,7 +7,7 @@ export interface Student {
   school: string;
   level: string;
   enrolledClassIds: number[];
-  paymentStatus: 'paid' | 'pending' | 'overdue';
+  paymentStatus: 'paid' | 'pending' | 'partial' | 'overdue';
   status: 'active' | 'inactive';
   avatarColor: string;
   parentName?: string;

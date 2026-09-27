@@ -2,13 +2,12 @@ import { Component, signal, inject, OnInit, computed, ViewChild, ElementRef, Aft
 import { NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { CentreService } from '../../services/centre.service';
+import { CentreService, SubscriptionInfo } from '../../services/centre.service';
 import { StudentsService } from '../../services/students.service';
 import { TeachersService } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
 import { SubjectsService } from '../../services/subjects.service';
 import { AcademicLevelsService } from '../../services/academic-levels.service';
-import { GroupsService, DEFAULT_CAPACITY } from '../../services/groups.service';
 import { ToastService } from '../../services/toast.service';
 import { SettingsUsersService, TenantUser } from '../../services/settings-users.service';
 import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
@@ -54,6 +53,14 @@ const TICKET_STATUSES: Record<string, { labelKey: string; icon: string; tone: st
   closed: { labelKey: 'settings.ticketClosed', icon: 'fa-solid fa-circle-check', tone: 'closed' },
 };
 
+/** Subscription.status → label key and badge tone. */
+const SUBSCRIPTION_STATUSES: Record<string, { labelKey: string; tone: string }> = {
+  active: { labelKey: 'settings.active', tone: 'active' },
+  suspended: { labelKey: 'settings.subscriptionStatusSuspended', tone: 'warning' },
+  expired: { labelKey: 'settings.subscriptionStatusExpired', tone: 'danger' },
+  cancelled: { labelKey: 'settings.subscriptionStatusCancelled', tone: 'danger' },
+};
+
 @Component({
   selector: 'app-parametres',
   standalone: true,
@@ -68,7 +75,6 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
   private classesService = inject(ClassesService);
   private subjectsService = inject(SubjectsService);
   private academicLevelsService = inject(AcademicLevelsService);
-  private groupsService = inject(GroupsService);
   private toast = inject(ToastService);
   private auth = inject(AuthStore);
   usersService = inject(SettingsUsersService);
@@ -110,16 +116,31 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
   userFormError = signal('');
   savingUser = signal(false);
 
-  // `label` holds a translation key, resolved in the template via `| t`.
-  subscriptionFeatures = [
-    { label: 'settings.featureUnlimitedStudents', included: true },
-    { label: 'settings.featureUnlimitedTeachers', included: true },
-    { label: 'settings.featureAutoWhatsapp', included: true },
-    { label: 'settings.featureReportsAnalytics', included: true },
-    { label: 'settings.featureCloudBackup', included: true },
-    { label: 'settings.featurePrioritySupport', included: false },
-    { label: 'settings.featureCustomApi', included: false },
-  ];
+  // ── Subscription ──────────────────────────────────────────
+  subscription = this.centreService.subscription;
+  subscriptionLoading = this.centreService.subscriptionLoading;
+  subscriptionError = this.centreService.subscriptionError;
+  requestingUpgrade = signal(false);
+
+  subscriptionStatusMeta(status: SubscriptionInfo['status']) {
+    return SUBSCRIPTION_STATUSES[status] ?? { labelKey: 'settings.active', tone: 'active' };
+  }
+
+  async requestUpgrade(): Promise<void> {
+    this.requestingUpgrade.set(true);
+    try {
+      await this.centreService.sendSupportRequest(
+        this.t('settings.upgradeRequestSubject'),
+        this.t('settings.upgradeRequestMessage'),
+      );
+      this.toast.show(this.t('settings.toastUpgradeRequestSent'));
+      this.chatService.loadConversations().subscribe(); // so it shows up under Support too
+    } catch (err: unknown) {
+      this.toast.show(extractValidationError(err, this.t('settings.saveError')), 'error');
+    } finally {
+      this.requestingUpgrade.set(false);
+    }
+  }
 
   notifSettings = {
     paymentReminder: true,
@@ -135,6 +156,7 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
       this.usersService.load();
     }
     this.chatService.loadConversations().subscribe();
+    this.centreService.loadSubscription();
   }
 
   ngAfterViewChecked() {
@@ -463,18 +485,6 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
     color: '#1d4ed8', bgColor: '#dbeafe',
   };
 
-  // Aucune valeur métier n'est présélectionnée (professeur, capacité, prix) :
-  // c'est au propriétaire/gérant de les choisir lui-même pour chaque classe.
-  openAddMatiere(): void {
-    this.editingMatiere.set(null);
-    this.matiereForm = {
-      name: '', subject: '', level: '', teacherId: null,
-      maxCapacity: null, monthlyPrice: null,
-      status: 'active', color: '#1d4ed8', bgColor: '#dbeafe',
-    };
-    this.showMatiereModal.set(true);
-  }
-
   openEditMatiere(c: Classe): void {
     this.editingMatiere.set(c);
     this.matiereForm = {
@@ -492,6 +502,8 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
   }
 
   submitMatiere(): void {
+    const ec = this.editingMatiere();
+    if (!ec) return;
     const f = this.matiereForm;
     if (!f.name.trim() || !f.subject.trim() || !f.level.trim() || !f.teacherId
       || !f.maxCapacity || !f.monthlyPrice) {
@@ -500,32 +512,13 @@ export class ParametresComponent implements OnInit, AfterViewChecked {
     }
     const maxCapacity = +f.maxCapacity;
     const monthlyPrice = +f.monthlyPrice;
-    const ec = this.editingMatiere();
-    if (ec) {
-      this.classesService.update(ec.id, {
-        name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, maxCapacity,
-        monthlyPrice, status: f.status,
-        color: f.color, bgColor: f.bgColor,
-      });
-      this.toast.show(this.t('settings.toastClassUpdated'));
-    } else {
-      this.classesService.add({
-        name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
-        teacherId: f.teacherId, roomId: null, maxCapacity,
-        monthlyPrice, status: f.status,
-        color: f.color, bgColor: f.bgColor, enrolledStudentIds: [],
-      }).subscribe((res: any) => {
-        const newId = res?.data?.id ?? res?.id ?? Date.now();
-        this.groupsService.groups.update(list => [
-          ...list,
-          { id: Date.now(), classeId: newId, groupNumber: 1, studentIds: [], maxCapacity: DEFAULT_CAPACITY },
-        ]);
-        this.toast.show(this.t('settings.toastClassAdded'));
-        this.showMatiereModal.set(false);
-      });
-      return;
-    }
+    this.classesService.update(ec.id, {
+      name: f.name.trim(), subject: f.subject.trim(), level: f.level.trim(),
+      teacherId: f.teacherId, maxCapacity,
+      monthlyPrice, status: f.status,
+      color: f.color, bgColor: f.bgColor,
+    });
+    this.toast.show(this.t('settings.toastClassUpdated'));
     this.showMatiereModal.set(false);
   }
 

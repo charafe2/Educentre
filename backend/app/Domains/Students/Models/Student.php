@@ -2,20 +2,18 @@
 
 namespace App\Domains\Students\Models;
 
+use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Finance\Models\Payment;
 use App\Domains\Planning\Models\SessionAttendance;
-use App\Models\Tenant;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class Student extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected $fillable = [
         'tenant_id',
@@ -36,8 +34,6 @@ class Student extends Model
         'is_active' => 'boolean',
         'birth_date' => 'date',
     ];
-
-    
 
     public function parents(): HasMany
     {

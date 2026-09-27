@@ -1,4 +1,5 @@
 <div class="stat-card"
+     [ngClass]="data.iconColorClass"
      [class.urgent]="data.urgent"
      [class.clickable]="!!data.route"
      (click)="navigate()">

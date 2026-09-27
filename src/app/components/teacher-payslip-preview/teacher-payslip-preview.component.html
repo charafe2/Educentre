@@ -1,0 +1,103 @@
+<article class="payslip-preview" [style.--receipt-accent]="settings.accentColor">
+  <header class="payslip-preview__header">
+    <div class="receipt-brand">
+      <span class="receipt-brand__logo">
+        @if (settings.logoDataUrl) {
+          <img [src]="settings.logoDataUrl" alt="">
+        } @else {
+          <span>{{ initials }}</span>
+        }
+      </span>
+      <div>
+        <h3>{{ settings.centerName }}</h3>
+        <p>Gestion intelligente de centre de soutien</p>
+      </div>
+    </div>
+
+    <div class="receipt-title">
+      <h2>BULLETIN DE PAIE</h2>
+      <strong>{{ data.period }}</strong>
+      <span><i class="fa-regular fa-calendar"></i>{{ data.generatedAt }}</span>
+    </div>
+  </header>
+
+  <section class="payslip-info">
+    <div class="receipt-info__block">
+      <span class="receipt-icon"><i class="fa-solid fa-chalkboard-user"></i></span>
+      <div>
+        <b>Professeur</b>
+        <h4>{{ data.teacherName }}</h4>
+        <p><i class="fa-solid fa-graduation-cap"></i>{{ data.specialty || 'Spécialité non renseignée' }}</p>
+        <p><i class="fa-regular fa-envelope"></i>{{ data.email || 'Email non renseigné' }}</p>
+        @if (data.phone) {
+          <p><i class="fa-solid fa-phone"></i>{{ data.phone }}</p>
+        }
+      </div>
+    </div>
+
+    <div class="payslip-stats">
+      <div class="payslip-stat">
+        <strong>{{ data.totalClasses }}</strong>
+        <span>{{ data.totalClasses > 1 ? 'Classes' : 'Classe' }}</span>
+      </div>
+      <div class="payslip-stat">
+        <strong>{{ data.totalStudents }}</strong>
+        <span>{{ data.totalStudents > 1 ? 'Étudiants' : 'Étudiant' }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="payslip-section">
+    <h4 class="payslip-section-title">Classes enseignées</h4>
+    <div class="payslip-table" [class.payslip-table--with-amount]="data.paymentMode !== 'fixed'">
+      <div class="payslip-table__head">
+        <span>Classe</span>
+        <span>Matière</span>
+        <span>Niveau</span>
+        <span>Étudiants</span>
+        <span>Prix / mois</span>
+        @if (data.paymentMode !== 'fixed') {
+          <span>Montant dû</span>
+        }
+      </div>
+      @for (row of data.classRows; track row.className) {
+        <div class="payslip-table__row">
+          <span><strong>{{ row.className }}</strong></span>
+          <span>{{ row.subject }}</span>
+          <span>{{ row.level }}</span>
+          <span>{{ row.studentCount }}</span>
+          <span>{{ amount(row.monthlyPrice) }}</span>
+          @if (data.paymentMode !== 'fixed') {
+            <span class="payslip-amount">{{ amount(row.contribution) }}</span>
+          }
+        </div>
+      } @empty {
+        <p class="payslip-empty">Aucune classe assignée pour le moment.</p>
+      }
+    </div>
+  </section>
+
+  <section class="payslip-section">
+    <h4 class="payslip-section-title">Détail de la rémunération — {{ data.paymentModeLabel }}</h4>
+    <p class="payslip-mode-detail">{{ data.paymentModeDetail }}</p>
+
+    <div class="payslip-total">
+      <span>TOTAL À PAYER</span>
+      <strong>{{ amount(data.totalAmount) }}</strong>
+    </div>
+  </section>
+
+  <footer class="receipt-footer">
+    <div class="receipt-note">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>
+        <strong>{{ settings.footerNote }}</strong>
+        <small>Ce bulletin est un récapitulatif de rémunération, pas une fiche de paie officielle.</small>
+      </span>
+    </div>
+    <div class="receipt-signature">
+      <b>SIGNATURE ET CACHET DU CENTRE</b>
+      <span>Signature</span>
+    </div>
+  </footer>
+</article>

@@ -1,0 +1,184 @@
+/* Netflix-style centre picker — same light theme / backdrop as the login
+   page (see login.component.css), just a wider card to fit a grid instead
+   of a form. */
+
+.auth-shell {
+  --surface: #fdfefe;
+  --line: #dbe3e2;
+  --text-hi: #0f172a;
+  --text-mid: #47536b;
+  --text-dim: #7c8aa0;
+  --accent: #0b6a60;
+  --accent-wash: #c7e6e0;
+  --danger: #e11d48;
+  --danger-wash: #ffe4e6;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-image:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.22) 0%, rgba(15, 23, 42, 0.4) 100%),
+    url('/background.jpg');
+  background-size: cover;
+  background-position: center 35%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+.picker-card {
+  width: 100%;
+  max-width: 640px;
+  background: rgba(253, 254, 254, 0.93);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--accent);
+  border-radius: 8px;
+  padding: 2.25rem 2rem;
+  box-shadow: 0 24px 55px -18px rgba(15, 23, 42, 0.28);
+  animation: card-in 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .picker-card { animation: none; }
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 2rem;
+}
+
+.brand-logo { height: 34px; width: auto; flex-shrink: 0; }
+
+.brand-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  letter-spacing: -0.02em;
+}
+
+.picker-header { margin-bottom: 1.75rem; text-align: center; }
+
+.picker-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  letter-spacing: -0.03em;
+  margin-bottom: 0.3rem;
+}
+
+.picker-subtitle { color: var(--text-mid); font-size: 0.85rem; }
+
+.alert-error {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--danger-wash);
+  color: var(--danger);
+  border: 1px solid rgba(225, 29, 72, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 1.15rem;
+}
+
+.centre-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.centre-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.5rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  font: inherit;
+  text-align: center;
+}
+
+.centre-card:hover:not(:disabled) {
+  border-color: var(--accent);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px -10px rgba(11, 106, 96, 0.35);
+}
+
+.centre-card:disabled { cursor: not-allowed; opacity: 0.55; }
+.centre-card.disabled { opacity: 0.55; }
+
+.centre-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.centre-name { font-weight: 600; color: var(--text-hi); font-size: 0.9rem; line-height: 1.25; }
+.centre-meta { color: var(--text-dim); font-size: 0.76rem; }
+
+.centre-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--danger);
+  background: var(--danger-wash);
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.centre-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(253, 254, 254, 0.85);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-size: 1.2rem;
+}
+
+.form-switch {
+  text-align: center;
+  margin-top: 1.4rem;
+  font-size: 0.82rem;
+}
+
+.form-link {
+  color: var(--text-mid);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.form-link:hover { color: var(--accent); }
+
+@media (max-width: 480px) {
+  .picker-card { padding: 1.75rem 1.5rem; }
+  .centre-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+}

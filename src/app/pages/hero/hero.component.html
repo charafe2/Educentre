@@ -863,7 +863,7 @@
           </div>
         </div>
 
-        <form class="demo-form reveal" aria-label="Formulaire de demande de démo gratuite">
+        <form class="demo-form reveal" aria-label="Formulaire de demande de démo gratuite" #demoForm>
           <header class="demo-form__header">
             <span class="demo-form__icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none">
@@ -881,7 +881,7 @@
             <span>Nom de votre centre de tutorat</span>
             <span class="demo-field__control">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 21V7l6-4 6 4v14M9 21v-8h6v8M8 9h.01M12 9h.01M16 9h.01"/></svg>
-              <input type="text" placeholder="Ex : Centre Excel Mathématiques">
+              <input type="text" name="centre-name" placeholder="Ex : Centre Excel Mathématiques">
             </span>
           </label>
 
@@ -889,7 +889,7 @@
             <span>Votre nom complet</span>
             <span class="demo-field__control">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
-              <input type="text" placeholder="Ex : Ahmed Benali">
+              <input type="text" name="full-name" placeholder="Ex : Ahmed Benali">
             </span>
           </label>
 
@@ -932,20 +932,34 @@
               <span>Numéro de téléphone</span>
               <span class="demo-field__control">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.6 4h3l1.5 4-2.1 1.2a11 11 0 0 0 5.8 5.8l1.2-2.1 4 1.5v3a2 2 0 0 1-2.2 2A15.8 15.8 0 0 1 4.6 6.2 2 2 0 0 1 6.6 4Z"/></svg>
-                <input type="tel" placeholder="Ex : 06 12 34 56 78">
+                <input type="tel" name="phone" placeholder="Ex : 06 12 34 56 78">
               </span>
             </label>
           </div>
 
-          <button class="demo-form__submit" type="button">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
-            Demander une démo gratuite
-          </button>
+          @if (demoFormSent()) {
+            <div class="demo-form__success">
+              <span class="demo-form__success-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.8 1.8 3.7-4"/></svg>
+              </span>
+              <h3>Demande envoyée !</h3>
+              <p>Merci, notre équipe vous recontacte très vite pour organiser votre démo gratuite.</p>
+            </div>
+          } @else {
+            @if (demoFormError()) {
+              <p class="demo-form__error">{{ demoFormError() }}</p>
+            }
 
-          <p class="demo-form__note">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.8 1.8 3.7-4"/></svg>
-            Aucune carte bancaire requise. Sans engagement.
-          </p>
+            <button class="demo-form__submit" type="button" [disabled]="demoFormSubmitting()" (click)="submitDemoRequest(demoForm)">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/></svg>
+              {{ demoFormSubmitting() ? 'Envoi en cours…' : 'Demander une démo gratuite' }}
+            </button>
+
+            <p class="demo-form__note">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 2.8 8.4 7 10 4.2-1.6 7-5.6 7-10V6l-7-3Z"/><path d="m9.5 12 1.8 1.8 3.7-4"/></svg>
+              Aucune carte bancaire requise. Sans engagement.
+            </p>
+          }
         </form>
       </div>
     </section>

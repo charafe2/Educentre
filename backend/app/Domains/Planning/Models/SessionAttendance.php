@@ -2,18 +2,17 @@
 
 namespace App\Domains\Planning\Models;
 
+use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Students\Models\Student;
-use App\Models\Tenant;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class SessionAttendance extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected static function booted(): void
     {
@@ -35,8 +34,6 @@ class SessionAttendance extends Model
     protected $casts = [
         'attended_on' => 'date',
     ];
-
-    
 
     public function session(): BelongsTo
     {

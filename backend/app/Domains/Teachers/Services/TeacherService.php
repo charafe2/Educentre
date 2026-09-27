@@ -35,20 +35,41 @@ class TeacherService
         return [
             'total' => $teachers->count(),
             'active' => $teachers->where('is_active', true)->count(),
-            'payroll' => (float) $teachers->sum(function (Teacher $teacher) {
-                if ($teacher->payment_mode === 'fixed') {
-                    return (float) $teacher->fixed_monthly_salary;
-                }
-
-                $studentCount = $teacher->classes
-                    ->flatMap->enrollments
-                    ->pluck('student_id')
-                    ->unique()
-                    ->count();
-
-                return (float) $teacher->rate_per_student * $studentCount;
-            }),
+            'payroll' => (float) $teachers->sum(fn (Teacher $teacher) => $this->payrollAmount($teacher)),
         ];
+    }
+
+    /**
+     * `fixed`: flat monthly amount, independent of enrollment.
+     * `per_student`: a flat rate × how many distinct students the teacher
+     * has across all of their classes (a student in two of the teacher's
+     * classes still counts once).
+     * `percentage`: a share of what each assigned student actually pays —
+     * computed per class (rate × class.monthly_price × that class's
+     * enrollment count) and summed, since a student in two classes pays
+     * (and so is owed a share of) each class's price separately.
+     */
+    private function payrollAmount(Teacher $teacher): float
+    {
+        if ($teacher->payment_mode === 'fixed') {
+            return (float) $teacher->fixed_monthly_salary;
+        }
+
+        if ($teacher->payment_mode === 'percentage') {
+            $rate = (float) $teacher->percentage_rate / 100;
+
+            return (float) $teacher->classes->sum(
+                fn (CourseClass $class) => $class->monthly_price * $class->enrollments->count() * $rate
+            );
+        }
+
+        $studentCount = $teacher->classes
+            ->flatMap->enrollments
+            ->pluck('student_id')
+            ->unique()
+            ->count();
+
+        return (float) $teacher->rate_per_student * $studentCount;
     }
 
     public function find(int $id, int $tenantId): Teacher
@@ -77,6 +98,7 @@ class TeacherService
                 'payment_mode' => $data['paymentMode'] ?? 'fixed',
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? null,
                 'rate_per_student' => $data['ratePerStudent'] ?? null,
+                'percentage_rate' => $data['percentageRate'] ?? null,
                 'min_students_threshold' => 0,
                 'iban' => $data['iban'] ?? null,
                 'is_active' => ($data['status'] ?? 'active') === 'active',
@@ -107,6 +129,7 @@ class TeacherService
                 'payment_mode' => $data['paymentMode'] ?? $teacher->payment_mode,
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? $teacher->fixed_monthly_salary,
                 'rate_per_student' => $data['ratePerStudent'] ?? $teacher->rate_per_student,
+                'percentage_rate' => $data['percentageRate'] ?? $teacher->percentage_rate,
                 'iban' => $data['iban'] ?? $teacher->iban,
                 'is_active' => isset($data['status']) ? ($data['status'] === 'active') : $teacher->is_active,
             ]);

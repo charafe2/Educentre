@@ -1,0 +1,131 @@
+<div class="sa-page audit-log">
+
+  <header class="sa-head">
+    <div>
+      <span class="sa-eyebrow">Supervision</span>
+      <h1>Journal d'audit</h1>
+      <p class="sa-lede">Connexions, déconnexions et modifications enregistrées par chaque école — utilisateurs, paiements, groupes, professeurs.</p>
+    </div>
+  </header>
+
+  @if (pageError()) {
+    <div class="sa-alert">
+      <i class="fa-solid fa-circle-exclamation"></i>
+      {{ pageError() }}
+    </div>
+  }
+
+  <div class="sa-toolbar audit-toolbar">
+    <div class="sa-search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input
+        type="search"
+        placeholder="Rechercher une description, un utilisateur…"
+        aria-label="Rechercher dans le journal"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        (keyup.enter)="applyFilters()"
+      />
+    </div>
+
+    <select class="sa-input" aria-label="Filtrer par école" [ngModel]="centreId()" (ngModelChange)="centreId.set($event)">
+      <option [ngValue]="null">Toutes les écoles</option>
+      @for (centre of centres(); track centre.id) {
+        <option [ngValue]="centre.id">{{ centre.centreName }}</option>
+      }
+    </select>
+
+    <select class="sa-input" aria-label="Filtrer par module" [ngModel]="module()" (ngModelChange)="module.set($event)">
+      <option value="">Tous les modules</option>
+      @for (m of modules; track m) {
+        <option [value]="m">{{ m }}</option>
+      }
+    </select>
+
+    <select class="sa-input" aria-label="Filtrer par action" [ngModel]="action()" (ngModelChange)="action.set($event)">
+      <option value="">Toutes les actions</option>
+      @for (a of actions; track a.key) {
+        <option [value]="a.key">{{ a.label }}</option>
+      }
+    </select>
+
+    <input class="sa-input" type="date" aria-label="Depuis le" [ngModel]="from()" (ngModelChange)="from.set($event)" />
+    <input class="sa-input" type="date" aria-label="Jusqu'au" [ngModel]="to()" (ngModelChange)="to.set($event)" />
+
+    <button class="sa-btn primary sm" type="button" (click)="applyFilters()">
+      <i class="fa-solid fa-filter"></i>
+      Filtrer
+    </button>
+    <button class="sa-btn quiet sm" type="button" (click)="resetFilters()">
+      Réinitialiser
+    </button>
+  </div>
+
+  <div class="sa-table-card">
+    <div class="sa-table-scroll">
+      <table class="sa-table">
+        <thead>
+          <tr>
+            <th>École</th>
+            <th>Horodatage</th>
+            <th>Module</th>
+            <th>Action</th>
+            <th>Description</th>
+            <th>Utilisateur</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <tr class="loading-row">
+                <td colspan="6"><span class="sa-skeleton"></span></td>
+              </tr>
+            }
+          } @else {
+            @for (log of logs(); track log.id) {
+              <tr>
+                <td class="sa-strong">{{ log.centreName }}</td>
+                <td class="sa-meta">{{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ log.module }}</td>
+                <td>
+                  <span [class]="'sa-badge ' + actionTone(log.action)">{{ actionLabel(log.action) }}</span>
+                </td>
+                <td>{{ log.description }}</td>
+                <td class="sa-meta">{{ log.actorName }}</td>
+              </tr>
+            }
+            @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="sa-empty">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <strong>Aucune activité ne correspond</strong>
+                    <span>Changez les filtres ou élargissez la période.</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pagination().last_page > 1) {
+      <div class="audit-pagination">
+        <span class="sa-meta">
+          {{ pagination().from ?? 0 }}–{{ pagination().to ?? 0 }} sur {{ pagination().total }}
+        </span>
+        <div class="audit-pagination-actions">
+          <button class="sa-btn ghost sm" type="button" [disabled]="pagination().current_page <= 1" (click)="goToPage(pagination().current_page - 1)">
+            <i class="fa-solid fa-chevron-left"></i>
+          </button>
+          <span class="sa-meta">Page {{ pagination().current_page }} / {{ pagination().last_page }}</span>
+          <button class="sa-btn ghost sm" type="button" [disabled]="pagination().current_page >= pagination().last_page" (click)="goToPage(pagination().current_page + 1)">
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+
+</div>

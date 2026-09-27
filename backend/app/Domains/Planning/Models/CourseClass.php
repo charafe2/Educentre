@@ -2,21 +2,20 @@
 
 namespace App\Domains\Planning\Models;
 
+use App\Domains\Core\Traits\BelongsToTenant;
 use App\Domains\Finance\Models\Payment;
 use App\Domains\Students\Models\Enrollment;
 use App\Domains\Teachers\Models\Teacher;
-use App\Models\Tenant;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-use App\Domains\Core\Traits\BelongsToTenant;
-
 class CourseClass extends Model
 {
-    use BelongsToTenant, HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, HasUuid, SoftDeletes;
 
     protected $table = 'classes';
 
@@ -37,8 +36,6 @@ class CourseClass extends Model
         'is_active' => 'boolean',
         'monthly_price' => 'decimal:2',
     ];
-
-    
 
     public function teacher(): BelongsTo
     {

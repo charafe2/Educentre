@@ -1,6 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Teacher } from '../models/teacher.model';
+import { Classe } from '../models/classe.model';
+import { PayslipClassRow } from '../models/teacher-payslip.model';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
@@ -86,11 +88,46 @@ export class TeachersService {
     );
   }
 
-  getPayrollAmount(teacher: Teacher, studentCount: number): number {
+  /**
+   * `percentage` mode needs each class's own monthlyPrice (a student in two
+   * of the teacher's classes is owed a share of each class's price
+   * separately), so this takes the teacher's classes rather than a plain
+   * student count.
+   */
+  getPayrollAmount(teacher: Teacher, classes: Classe[]): number {
     if (teacher.paymentMode === 'fixed') {
       return teacher.fixedSalary ?? 0;
     }
+    if (teacher.paymentMode === 'percentage') {
+      const rate = (teacher.percentageRate ?? 0) / 100;
+      return classes.reduce((sum, c) => sum + c.monthlyPrice * c.enrolledStudentIds.length * rate, 0);
+    }
+    const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
     return (teacher.ratePerStudent ?? 0) * studentCount;
+  }
+
+  /**
+   * Per-class breakdown behind `getPayrollAmount()`'s total — same math,
+   * one row per class, used to itemize a payslip. `contribution` is 0 for
+   * `fixed` mode since that pay isn't tied to any one class.
+   */
+  getPayslipClassRows(teacher: Teacher, classes: Classe[]): PayslipClassRow[] {
+    return classes.map(c => {
+      let contribution = 0;
+      if (teacher.paymentMode === 'percentage') {
+        contribution = c.monthlyPrice * c.enrolledStudentIds.length * ((teacher.percentageRate ?? 0) / 100);
+      } else if (teacher.paymentMode === 'per_student') {
+        contribution = (teacher.ratePerStudent ?? 0) * c.enrolledStudentIds.length;
+      }
+      return {
+        className: c.name,
+        subject: c.subject,
+        level: c.level,
+        studentCount: c.enrolledStudentIds.length,
+        monthlyPrice: c.monthlyPrice,
+        contribution,
+      };
+    });
   }
 
   private applyPage(res: PaginatedApiResponse<Teacher, TeacherSummary>): void {

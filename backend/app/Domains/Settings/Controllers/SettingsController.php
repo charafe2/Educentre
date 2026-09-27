@@ -2,9 +2,11 @@
 
 namespace App\Domains\Settings\Controllers;
 
+use App\Domains\Core\Models\Subscription;
 use App\Domains\Settings\Requests\SendSupportRequestRequest;
 use App\Domains\Settings\Requests\UpdateSettingsRequest;
 use App\Domains\Settings\Resources\SettingsResource;
+use App\Domains\Settings\Resources\SubscriptionResource;
 use App\Domains\Settings\Services\SettingsService;
 use App\Http\Controllers\Controller;
 use App\Mail\SupportRequestMail;
@@ -91,6 +93,28 @@ class SettingsController extends Controller
         return $this->success(
             data: SettingsResource::make($tenant->fresh()),
             message: 'Informations du centre mises à jour.',
+        );
+    }
+
+    #[OA\Get(
+        path: '/settings/subscription',
+        summary: "Récupérer l'abonnement du centre",
+        security: [['sanctum' => []]],
+        tags: ['Settings'],
+        responses: [
+            new OA\Response(response: 200, description: 'Abonnement du centre'),
+            new OA\Response(response: 401, description: 'Non authentifié'),
+            new OA\Response(response: 404, description: 'Aucun abonnement pour ce centre'),
+        ]
+    )]
+    public function subscription(Request $request): JsonResponse
+    {
+        $subscription = Subscription::where('tenant_id', $request->user()->tenant_id)
+            ->latest('id')
+            ->firstOrFail();
+
+        return $this->success(
+            data: SubscriptionResource::make($subscription),
         );
     }
 

@@ -23,6 +23,7 @@
             <option value="">{{ 'finances.allStatuses' | t }}</option>
             <option value="paid">{{ 'finances.paidLabel' | t }}</option>
             <option value="pending">{{ 'finances.pendingLabel' | t }}</option>
+            <option value="partial">{{ 'finances.partialLabel' | t }}</option>
             <option value="overdue">{{ 'finances.overdueLabel' | t }}</option>
           </select>
         </div>
@@ -117,7 +118,12 @@
                   </div>
                 </td>
                 <td>{{ getPeriodLabel(payment.periodMonth) }}</td>
-                <td><strong class="amount-cell">{{ payment.amount.toLocaleString('fr-MA') }} dh</strong></td>
+                <td>
+                  <strong class="amount-cell">{{ payment.amount.toLocaleString('fr-MA') }} dh</strong>
+                  @if (payment.status === 'partial') {
+                    <div class="remaining-hint">{{ 'finances.remainingAmount' | t: { amount: remainingAmount(payment).toLocaleString('fr-MA') } }}</div>
+                  }
+                </td>
                 <td>
                   @if (payment.method) {
                     <span class="method-tag">{{ payment.method }}</span>
@@ -129,6 +135,7 @@
                   <span [class]="'status-badge status-' + payment.status">
                     @if (payment.status === 'paid') { <i class="fa-solid fa-check"></i> }
                     @if (payment.status === 'pending') { <i class="fa-solid fa-clock"></i> }
+                    @if (payment.status === 'partial') { <i class="fa-solid fa-circle-half-stroke"></i> }
                     @if (payment.status === 'overdue') { <i class="fa-solid fa-circle-exclamation"></i> }
                     {{ getStatusLabel(payment.status) }}
                   </span>
@@ -307,6 +314,7 @@
           <select class="form-select" [(ngModel)]="formData.status">
             <option value="pending">{{ 'finances.pendingLabel' | t }}</option>
             <option value="paid">{{ 'finances.paidLabel' | t }}</option>
+            <option value="partial">{{ 'finances.partialLabel' | t }}</option>
             <option value="overdue">{{ 'finances.overdueLabel' | t }}</option>
           </select>
         </div>

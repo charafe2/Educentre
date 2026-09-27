@@ -9,6 +9,7 @@ use App\Domains\Planning\Models\Subject;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -31,6 +32,7 @@ class Tenant extends Model
 
     protected $fillable = [
         'uuid',
+        'account_group_id',
         'name',
         'slug',
         'domain',
@@ -54,6 +56,11 @@ class Tenant extends Model
     public function centre(): HasOne
     {
         return $this->hasOne(Centre::class);
+    }
+
+    public function accountGroup(): BelongsTo
+    {
+        return $this->belongsTo(AccountGroup::class);
     }
 
     public function payments(): HasMany

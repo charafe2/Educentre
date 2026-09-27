@@ -33,7 +33,7 @@ export class RecentInscriptionsComponent {
   }
 
   paymentLabel(status: string): string {
-    const map: Record<string, string> = { paid: 'Payé', pending: 'En attente', overdue: 'Impayé' };
+    const map: Record<string, string> = { paid: 'Payé', pending: 'En attente', partial: 'Partiel', overdue: 'Impayé' };
     return map[status] ?? status;
   }
 

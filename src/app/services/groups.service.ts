@@ -45,8 +45,7 @@ export class GroupsService {
     if (target) {
       return this.moveStudent(studentId, null, target.id).pipe(tap(() => this.loadGroups()));
     } else {
-      const nextGroupNumber = groups.length + 1;
-      return this.createGroup(classeId, nextGroupNumber, studentId).pipe(tap(() => this.loadGroups()));
+      return this.createGroup(classeId, studentId).pipe(tap(() => this.loadGroups()));
     }
   }
 
@@ -54,15 +53,17 @@ export class GroupsService {
     return this.http.post<ApiResponse<null>>(`${environment.apiUrl}/v1/groups/move-student`, { studentId, fromGroupId, toGroupId });
   }
 
-  createGroup(classeId: number, groupNumber: number, studentId: number): Observable<ApiResponse<{id: number}>> {
+  // The backend assigns the group number (highest + 1): a number derived from
+  // this client's possibly stale list is what produced duplicate groups.
+  createGroup(classeId: number, studentId: number): Observable<ApiResponse<{id: number}>> {
     return this.http.post<ApiResponse<{id: number}>>(`${environment.apiUrl}/v1/groups`, {
-      classeId, groupNumber, maxCapacity: DEFAULT_CAPACITY, studentIds: [studentId],
+      classeId, maxCapacity: DEFAULT_CAPACITY, studentIds: [studentId],
     });
   }
 
-  createEmptyGroup(classeId: number, groupNumber: number): Observable<ApiResponse<{id: number}>> {
+  createEmptyGroup(classeId: number): Observable<ApiResponse<{id: number}>> {
     return this.http.post<ApiResponse<{id: number}>>(`${environment.apiUrl}/v1/groups`, {
-      classeId, groupNumber, maxCapacity: DEFAULT_CAPACITY, studentIds: [],
+      classeId, maxCapacity: DEFAULT_CAPACITY, studentIds: [],
     });
   }
 
