@@ -1,0 +1,188 @@
+<div class="m-page page">
+  <app-bar section="Ajouter un élève" />
+
+  <main class="main">
+    @if (!receipt()) {
+      <header class="head">
+        <div>
+          <h1>Ajouter un élève</h1>
+          <p class="head-sub">Informations, classes et paiement d’inscription.</p>
+        </div>
+      </header>
+
+      <form class="stack" (ngSubmit)="submit()" id="add-student-form">
+        <section class="block">
+          <header class="block-head"><h2>Informations de l’élève</h2></header>
+          <div class="grid">
+            <label class="m-field">
+              <span>Prénom <b class="req">*</b></span>
+              <input class="m-input" type="text" name="firstName" required [(ngModel)]="form.firstName" autocomplete="off">
+            </label>
+            <label class="m-field">
+              <span>Nom <b class="req">*</b></span>
+              <input class="m-input" type="text" name="lastName" required [(ngModel)]="form.lastName" autocomplete="off">
+            </label>
+            <label class="m-field">
+              <span>Téléphone <b class="req">*</b></span>
+              <input class="m-input" type="tel" name="phone" required [(ngModel)]="form.phone" autocomplete="off" placeholder="06 12 34 56 78">
+            </label>
+            <label class="m-field">
+              <span>Email</span>
+              <input class="m-input" type="email" name="email" [(ngModel)]="form.email" autocomplete="off">
+            </label>
+          </div>
+        </section>
+
+        <section class="block">
+          <header class="block-head"><h2>Niveau</h2></header>
+          <label class="m-field">
+            <span>Niveau scolaire</span>
+            <select class="m-select" name="level" [ngModel]="form.level" (ngModelChange)="onLevelChange($event)">
+              <option value="">Sélectionner…</option>
+              @for (l of levels(); track l) { <option [value]="l">{{ l }}</option> }
+            </select>
+          </label>
+        </section>
+
+        @if (form.level) {
+          <section class="block" animate.enter="m-enter-fade">
+            <header class="block-head">
+              <h2>Classes inscrites</h2>
+              <p class="block-hint">Sélectionnez les matières suivies par l’élève pour ce niveau.</p>
+            </header>
+            @if (classesForLevel().length) {
+              <div class="subjects">
+                @for (c of classesForLevel(); track c.id) {
+                  <button type="button" class="subject" [class.is-on]="selectedClassIds().includes(c.id)"
+                    [attr.aria-pressed]="selectedClassIds().includes(c.id)" (click)="toggleClass(c.id)">
+                    <span class="subject-check" [style.background]="selectedClassIds().includes(c.id) ? c.color : 'transparent'" [style.border-color]="c.color" aria-hidden="true">
+                      @if (selectedClassIds().includes(c.id)) { <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> }
+                    </span>
+                    <span class="subject-main">
+                      <span class="subject-name">{{ c.subject }}</span>
+                      <span class="subject-meta">{{ c.name }}</span>
+                    </span>
+                    <span class="subject-price">{{ classPrice(c) }} <small>Dhs/mois</small></span>
+                  </button>
+                }
+              </div>
+            } @else {
+              <p class="empty-hint">Aucune classe n’existe encore pour ce niveau. Créez-la d’abord depuis Groupes.</p>
+            }
+          </section>
+        }
+
+        @if (selectedClasses().length) {
+          <section class="block" animate.enter="m-enter-fade">
+            <header class="block-head"><h2>Paiement</h2></header>
+
+            <div class="pay-summary">
+              <span>Total à payer</span>
+              <strong>{{ total() }} <small>Dhs/mois</small></strong>
+            </div>
+
+            <fieldset class="status-picks">
+              <legend class="m-visually-hidden">Statut du paiement</legend>
+              <button type="button" class="status-pick" [class.is-on]="paymentChoice() === 'paid'" (click)="setPaymentChoice('paid')">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                Payé
+              </button>
+              <button type="button" class="status-pick" [class.is-on]="paymentChoice() === 'pending'" (click)="setPaymentChoice('pending')">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                Non payé
+              </button>
+              <button type="button" class="status-pick" [class.is-on]="paymentChoice() === 'partial'" (click)="setPaymentChoice('partial')">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>
+                Partiellement payé
+              </button>
+            </fieldset>
+
+            @if (paymentChoice() === 'partial') {
+              <div class="grid" animate.enter="m-enter-fade">
+                <label class="m-field">
+                  <span>Montant déjà payé</span>
+                  <input class="m-input" type="number" min="0" [max]="total() - 1" step="10" name="amountPaid"
+                    [ngModel]="amountPaid()" (ngModelChange)="amountPaid.set($event === '' ? null : +$event)">
+                </label>
+                <label class="m-field">
+                  <span>Reste à payer</span>
+                  <input class="m-input" type="text" [value]="remaining() + ' Dhs/mois'" disabled>
+                </label>
+              </div>
+            }
+          </section>
+        }
+
+        <section class="block">
+          <header class="block-head"><h2>Parent</h2></header>
+          <div class="grid">
+            <label class="m-field">
+              <span>Nom du parent</span>
+              <input class="m-input" type="text" name="parentName" [(ngModel)]="form.parentName" autocomplete="off">
+            </label>
+            <label class="m-field">
+              <span>Téléphone du parent</span>
+              <input class="m-input" type="tel" name="parentPhone" [(ngModel)]="form.parentPhone" autocomplete="off">
+            </label>
+            <label class="m-field">
+              <span>WhatsApp</span>
+              <input class="m-input" type="tel" name="parentWhatsapp" [(ngModel)]="form.parentWhatsapp" autocomplete="off">
+            </label>
+          </div>
+        </section>
+
+        @if (error()) {
+          <p class="form-error" role="alert">{{ error() }}</p>
+        }
+
+        <div class="actions">
+          <button class="m-btn" type="button" routerLink="/v2">Annuler</button>
+          <button class="m-btn m-btn--primary" type="submit" [disabled]="!canSubmit()">
+            {{ saving() ? 'Ajout…' : 'Ajouter l’élève' }}
+          </button>
+        </div>
+      </form>
+    } @else {
+      <div class="done-card" animate.enter="m-enter-fade">
+        <div class="done-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <h1>Élève ajouté</h1>
+        <p class="head-sub">{{ receipt()!.studentName }} a été inscrit avec succès.</p>
+
+        <div class="receipt-preview">
+          @for (l of receipt()!.lines; track l.subject) {
+            <div class="receipt-line">
+              <span>{{ l.subject }}</span>
+              <span>{{ l.price }} Dhs/mois</span>
+            </div>
+          }
+          <div class="receipt-line receipt-total">
+            <span>Total</span>
+            <span>{{ receipt()!.total }} Dhs/mois</span>
+          </div>
+          <div class="receipt-line">
+            <span>{{ receipt()!.status === 'paid' ? 'Payé' : 'Montant versé' }}</span>
+            <span>{{ receipt()!.amountPaid }} Dhs</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="m-btn m-btn--primary" type="button" (click)="print()">Imprimer le reçu</button>
+          <button class="m-btn" type="button" (click)="done()">Terminé</button>
+        </div>
+      </div>
+
+      <section class="m-print print-receipt" aria-hidden="true">
+        <h1>{{ centre().name }}</h1>
+        <p>Reçu d’inscription, le {{ formatDate(receipt()!.date) }}</p>
+        <p>Élève : {{ receipt()!.studentName }}{{ receipt()!.level ? ', ' + receipt()!.level : '' }}</p>
+        <table>
+          @for (l of receipt()!.lines; track l.subject) {
+            <tr><td>{{ l.subject }}</td><td>{{ l.price }} Dhs/mois</td></tr>
+          }
+          <tr class="print-total"><td>Total</td><td>{{ receipt()!.total }} Dhs/mois</td></tr>
+          <tr><td>{{ receipt()!.status === 'paid' ? 'Payé' : 'Montant versé' }}</td><td>{{ receipt()!.amountPaid }} Dhs</td></tr>
+        </table>
+      </section>
+    }
+  </main>
+</div>

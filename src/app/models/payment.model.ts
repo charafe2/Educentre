@@ -14,4 +14,6 @@ export interface Payment {
   paidAt?: string;
   note?: string;
   invoiceGenerated: boolean;
+  /** Groups the payment rows collected in one register action ("Encaisser"); null until paid through the batch endpoint. */
+  receiptNumber?: string | null;
 }

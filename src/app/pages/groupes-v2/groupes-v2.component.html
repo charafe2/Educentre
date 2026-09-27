@@ -83,7 +83,7 @@
         <span class="m-visually-hidden">Enseignant</span>
         <select class="m-select" [class.is-set]="teacher()" [ngModel]="teacher()" (ngModelChange)="teacher.set($event)">
           <option value="">Tous enseignants</option>
-          @for (t of teachers; track t) { <option [value]="t">{{ t }}</option> }
+          @for (t of teachers(); track t.id) { <option [value]="t.firstName + ' ' + t.lastName">{{ t.firstName }} {{ t.lastName }}</option> }
         </select>
       </label>
       <label class="toggle">
@@ -351,9 +351,9 @@
                               </button>
                             </label>
                             <div class="picker-list">
-                              @for (c of candidates(r.group); track c; let first = $first) {
+                              @for (c of candidates(r.group); track c.id; let first = $first) {
                                 <button type="button" [class.is-first]="first && pickerQuery()" (click)="addStudent(c, r.group)">
-                                  {{ c }}
+                                  {{ c.name }}
                                   <span>Ajouter</span>
                                 </button>
                               } @empty {
@@ -388,7 +388,7 @@
         } @else if (!levels().length || !subjects().length) {
           <p class="empty-title">Commencez par vos niveaux et vos matières</p>
           <p class="empty-text">Un groupe, c’est une matière pour un niveau. Ajoutez-les dans Paramètres, puis revenez ici.</p>
-          <a class="m-btn m-btn--primary" routerLink="/accueil/parametres" data-tour="parametres-link">Aller aux paramètres</a>
+          <a class="m-btn m-btn--primary" routerLink="/v2/parametres" data-tour="parametres-link">Aller aux paramètres</a>
         } @else {
           <p class="empty-title">Aucun groupe pour l’instant</p>
           <p class="empty-text">Créez un premier groupe pour y inscrire des élèves.</p>
@@ -416,30 +416,35 @@
       <form class="panel-body" (ngSubmit)="save()" id="group-form">
         <label class="m-field span-2">
           <span>Matière</span>
-          <select #firstField class="m-select" name="subject" [(ngModel)]="draft.subject">
+          <select #firstField class="m-select" name="subject" [(ngModel)]="draft.subject" [disabled]="target !== 'new'">
             @for (s of subjects(); track s) { <option [value]="s">{{ s }}</option> }
           </select>
+          @if (target !== 'new') { <small class="hint">La matière et le niveau d’un groupe ne changent plus après sa création.</small> }
         </label>
         <label class="m-field">
           <span>Niveau</span>
-          <select class="m-select" name="level" [(ngModel)]="draft.level">
+          <select class="m-select" name="level" [(ngModel)]="draft.level" [disabled]="target !== 'new'">
             @for (l of levels(); track l) { <option [value]="l">{{ l }}</option> }
           </select>
         </label>
-        <label class="m-field">
-          <span>Numéro de groupe</span>
-          <input class="m-input" type="number" min="1" name="number" [(ngModel)]="draft.number" required>
-        </label>
+        @if (target !== 'new') {
+          <label class="m-field">
+            <span>Numéro de groupe</span>
+            <input class="m-input" type="text" [value]="'Groupe ' + target.number" disabled>
+          </label>
+        }
         <label class="m-field">
           <span>Enseignant</span>
-          <select class="m-select" name="teacher" [(ngModel)]="draft.teacher">
-            @for (t of teachers; track t) { <option [value]="t">{{ t }}</option> }
+          <select class="m-select" name="teacher" [ngModel]="draft.teacherId" (ngModelChange)="draft.teacherId = $event">
+            <option [ngValue]="null">Sans enseignant</option>
+            @for (t of teachers(); track t.id) { <option [ngValue]="t.id">{{ t.firstName }} {{ t.lastName }}</option> }
           </select>
         </label>
         <label class="m-field">
           <span>Salle</span>
-          <select class="m-select" name="room" [(ngModel)]="draft.room">
-            @for (r of rooms; track r) { <option [value]="r">{{ r }}</option> }
+          <select class="m-select" name="room" [ngModel]="draft.roomId" (ngModelChange)="draft.roomId = $event">
+            <option [ngValue]="null">Sans salle</option>
+            @for (r of rooms(); track r.id) { <option [ngValue]="r.id">{{ r.name }}</option> }
           </select>
         </label>
         <fieldset class="m-field span-2 slot-field">
@@ -491,7 +496,7 @@
 
       <footer class="panel-foot">
         <button class="m-btn" type="button" (click)="closeDrawer()">Annuler</button>
-        <button class="m-btn m-btn--primary" type="submit" form="group-form" [disabled]="draftErrors().length > 0">
+        <button class="m-btn m-btn--primary" type="submit" form="group-form" [disabled]="draftErrors().length > 0 || saving()">
           {{ target === 'new' ? 'Créer le groupe' : 'Enregistrer' }}
         </button>
       </footer>

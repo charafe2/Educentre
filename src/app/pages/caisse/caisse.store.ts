@@ -1,24 +1,31 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { StudentsService } from '../../services/students.service';
+import { ClassesService } from '../../services/classes.service';
+import { GroupsService } from '../../services/groups.service';
+import { TeachersService } from '../../services/teachers.service';
+import { PaymentsService, BatchPaymentLine } from '../../services/payments.service';
+import { Payment as RealPayment, PaymentMethod } from '../../models/payment.model';
 
 /**
- * Caisse — local store for the rebranded cash desk.
- * Static for now: students, enrollments and payments are generated
- * deterministically around today's date, shaped after the real Payment model
- * (one payment = one student × one class × one month). Wiring means loading
- * these from StudentsService / PaymentsService and sending `pay()` and
- * `cancelReceipt()` through PaymentsService.add / delete.
+ * Caisse — real store for the cash desk: students/enrollments/payments are
+ * loaded from StudentsService / ClassesService / GroupsService /
+ * TeachersService / PaymentsService (all already real, HTTP-backed) and
+ * joined here into the view-model shapes the tabs were built against.
+ * `pay()`/`cancelReceipt()` go through PaymentsService.payBatch/cancelReceipt.
  */
 
-export type Method = 'Espèces' | 'Virement' | 'Chèque';
+export type Method = PaymentMethod;
 export type MonthStatus = 'paid' | 'partial' | 'unpaid' | 'upcoming' | 'none';
 
 export interface Enrollment {
+  /** The class id — a student has at most one active enrollment per class, so this doubles as a stable line key. */
   id: number;
   subject: string;
   group: number;
   teacher: string;
   price: number;
-  /** First and last billed months, 'YYYY-MM'. */
+  /** First and (open-ended, far-future) last billed months, 'YYYY-MM'. */
   from: string;
   to: string;
 }
@@ -61,36 +68,12 @@ export interface Receipt {
 }
 
 export const METHODS: Method[] = ['Espèces', 'Virement', 'Chèque'];
-export const LEVELS = ['3e année collège', 'Tronc commun', '1re Bac', '2e Bac'];
+/** No-billing-yet placeholder: real distinct levels are read off loaded students instead (see unpaid-tab.component.ts). */
+export const LEVELS: string[] = [];
 const MONTHS_LONG = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 const MONTHS_SHORT = ['Janv.', 'Févr.', 'Mars', 'Avr.', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
-
-const SUBJECTS: Record<string, Array<{ subject: string; teacher: string; price: number }>> = {
-  '3e année collège': [
-    { subject: 'Mathématiques', teacher: 'M. Idrissi', price: 250 },
-    { subject: 'Français', teacher: 'Mme Alaoui', price: 200 },
-    { subject: 'Anglais', teacher: 'M. Tazi', price: 200 },
-  ],
-  'Tronc commun': [
-    { subject: 'Mathématiques', teacher: 'M. Ouali', price: 300 },
-    { subject: 'Français', teacher: 'Mme Alaoui', price: 250 },
-    { subject: 'Anglais', teacher: 'M. Tazi', price: 250 },
-  ],
-  '1re Bac': [
-    { subject: 'Mathématiques', teacher: 'M. Ouali', price: 350 },
-    { subject: 'Physique-Chimie', teacher: 'Mme Benjelloun', price: 300 },
-    { subject: 'Français', teacher: 'Mme Alaoui', price: 250 },
-  ],
-  '2e Bac': [
-    { subject: 'Mathématiques', teacher: 'M. Idrissi', price: 400 },
-    { subject: 'Physique-Chimie', teacher: 'Mme Benjelloun', price: 350 },
-    { subject: 'SVT', teacher: 'Mme Chraibi', price: 300 },
-  ],
-};
-
-const FIRST = ['Rania', 'Adam', 'Imane', 'Youssef', 'Salma', 'Mehdi', 'Hiba', 'Omar', 'Aya', 'Anas', 'Nour', 'Ilyas', 'Kenza', 'Hamza', 'Lina', 'Amine', 'Douae', 'Zakaria', 'Malak', 'Reda'];
-const LAST = ['El Fassi', 'Berrada', 'Ouazzani', 'Bennani', 'Tahiri', 'Lahlou', 'Kettani', 'Sqalli', 'Benkirane', 'Amrani', 'Chami', 'Naciri', 'Filali', 'Rami', 'Zouiten'];
-const PARENT_FIRST = ['Karim', 'Nadia', 'Rachid', 'Samira', 'Hassan', 'Latifa', 'Mustapha', 'Fatima', 'Abdelilah', 'Khadija'];
+/** Enrollments are treated as open-ended (billable indefinitely) until this far-future cap. */
+const OPEN_ENDED_TO = '2099-12';
 
 // ── Month arithmetic on 'YYYY-MM' ────────────────────────────────────
 export function ym(date: Date): string {
@@ -131,32 +114,72 @@ function schoolStart(month: string): string {
   return `${m >= 9 ? y : y - 1}-09`;
 }
 
-/** Small deterministic PRNG so the demo looks the same on every load. */
-function rng(seed: number): () => number {
-  let a = seed;
-  return () => {
-    a |= 0; a = (a + 0x6d2b79f5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 @Injectable()
 export class CaisseStore {
+  private studentsService = inject(StudentsService);
+  private classesService = inject(ClassesService);
+  private groupsService = inject(GroupsService);
+  private teachersService = inject(TeachersService);
+  private paymentsService = inject(PaymentsService);
+
   readonly today = new Date();
   readonly current = ym(this.today);
   readonly currentSchoolStart = schoolStart(this.current);
   readonly previousSchoolStart = addMonths(this.currentSchoolStart, -12);
 
-  readonly students = signal<Student[]>([]);
-  readonly payments = signal<Payment[]>([]);
-  private receiptSeq = 412;
-  private paymentSeq = 1;
+  /** Real students joined with their billable enrollments (class/group-effective teacher, room, price). */
+  readonly students = computed<Student[]>(() => {
+    const classes = this.classesService.classes();
+    const teachers = this.teachersService.teachers();
 
-  constructor() {
-    this.seed();
-  }
+    return this.studentsService.students().map(s => {
+      const enrollments: Enrollment[] = s.enrollments
+        .filter(e => e.status === 'active')
+        .flatMap(e => {
+          const classe = classes.find(c => c.id === e.classId);
+          if (!classe) return [];
+          const group = this.groupsService.getGroupForStudent(e.classId, s.id);
+          const teacherId = group?.teacherId ?? classe.teacherId;
+          const teacherObj = teacherId !== null ? teachers.find(t => t.id === teacherId) : undefined;
+          return [{
+            id: e.classId,
+            subject: classe.subject,
+            group: group?.groupNumber ?? 0,
+            teacher: teacherObj ? `${teacherObj.firstName} ${teacherObj.lastName}` : (classe.teacherName ?? 'Sans enseignant'),
+            price: group?.monthlyPrice ?? classe.monthlyPrice,
+            from: e.enrolledAt.slice(0, 7),
+            to: OPEN_ENDED_TO,
+          }];
+        });
+
+      return {
+        id: s.id,
+        code: s.code,
+        name: `${s.firstName} ${s.lastName}`,
+        level: s.level,
+        parent: s.parentName ?? '—',
+        phone: s.parentPhone ?? '—',
+        enrollments,
+      };
+    });
+  });
+
+  /** Real payments reshaped into this store's line-level view-model (one class = one enrollment line). */
+  readonly payments = computed<Payment[]>(() => {
+    let seq = 1;
+    return this.paymentsService.payments()
+      .filter(p => p.amountPaid > 0)
+      .map((p: RealPayment): Payment => ({
+        id: seq++,
+        studentId: p.studentId,
+        enrollmentId: p.classeId,
+        month: p.periodMonth,
+        amount: p.amountPaid,
+        method: p.method ?? 'Espèces',
+        paidAt: p.paidAt ?? p.periodMonth + '-01',
+        receipt: p.receiptNumber ?? `p-${p.id}`,
+      }));
+  });
 
   // ── Queries ─────────────────────────────────────────────────────────
   student(id: number | null): Student | undefined {
@@ -221,7 +244,6 @@ export class CaisseStore {
 
   // ── Everyone who owes money ────────────────────────────────────────
   readonly unpaid = computed(() => {
-    this.payments();
     return this.students()
       .map(s => {
         const months = this.overdueMonths(s);
@@ -288,102 +310,31 @@ export class CaisseStore {
   });
 
   // ── Writes ─────────────────────────────────────────────────────────
-  pay(student: Student, month: string, lines: Array<{ enrollment: Enrollment; amount: number }>, method: Method): Receipt {
-    const number = `R-${this.today.getFullYear()}-${String(++this.receiptSeq).padStart(4, '0')}`;
-    const paidAt = new Date().toISOString();
-    const created: Payment[] = lines
+  async pay(student: Student, month: string, lines: Array<{ enrollment: Enrollment; amount: number }>, method: Method): Promise<Receipt> {
+    const payload: BatchPaymentLine[] = lines
       .filter(l => l.amount > 0)
-      .map(l => ({ id: this.paymentSeq++, studentId: student.id, enrollmentId: l.enrollment.id, month, amount: l.amount, method, paidAt, receipt: number }));
-    this.payments.update(list => [...list, ...created]);
-    return this.toReceipt(number, student, created);
+      .map(l => ({ classeId: l.enrollment.id, periodMonth: month, amount: l.amount }));
+
+    const res = await firstValueFrom(this.paymentsService.payBatch(student.id, payload, method));
+    const paidAt = new Date().toISOString();
+    const created: Payment[] = payload.map((l, i) => ({
+      id: i, studentId: student.id, enrollmentId: l.classeId, month, amount: l.amount, method, paidAt, receipt: res.data.receiptNumber,
+    }));
+    return this.toReceipt(res.data.receiptNumber, student, created);
   }
 
-  cancelReceipt(number: string): void {
-    this.payments.update(list => list.filter(p => p.receipt !== number));
+  async cancelReceipt(number: string): Promise<void> {
+    await firstValueFrom(this.paymentsService.cancelReceipt(number));
   }
 
   private toReceipt(number: string, student: Student, ps: Payment[]): Receipt {
     const lines = ps.map(p => {
-      const e = student.enrollments.find(x => x.id === p.enrollmentId)!;
+      const e = student.enrollments.find(x => x.id === p.enrollmentId);
       return { subject: e?.subject ?? '—', group: e?.group ?? 0, amount: p.amount };
     });
     return {
       number, student, month: ps[0]?.month ?? this.current, method: ps[0]?.method ?? 'Espèces', paidAt: ps[0]?.paidAt ?? new Date().toISOString(),
       lines, total: lines.reduce((n, l) => n + l.amount, 0),
     };
-  }
-
-  // ── Demo data ──────────────────────────────────────────────────────
-  private seed(): void {
-    const rand = rng(20260926);
-    const students: Student[] = [];
-    const payments: Payment[] = [];
-    let enrollmentId = 1;
-    const used = new Set<string>();
-    const lastYearEnd = addMonths(this.currentSchoolStart, -3);   // June
-    const thisYearEnd = addMonths(this.currentSchoolStart, 9);    // June
-
-    for (let i = 0; students.length < 42; i++) {
-      const name = `${FIRST[Math.floor(rand() * FIRST.length)]} ${LAST[Math.floor(rand() * LAST.length)]}`;
-      if (used.has(name)) continue;
-      used.add(name);
-      const level = LEVELS[students.length % LEVELS.length];
-      const offer = SUBJECTS[level];
-      const count = 1 + Math.floor(rand() * offer.length);
-      const picks = [...offer].sort(() => rand() - 0.5).slice(0, count);
-      const lateStart = rand() < 0.2 ? Math.floor(rand() * 3) : 0;
-      const newThisYear = rand() < 0.2;
-      const enrollments: Enrollment[] = [];
-      for (const p of picks) {
-        const group = 1 + Math.floor(rand() * 2);
-        if (!newThisYear) {
-          enrollments.push({ id: enrollmentId++, ...p, group, from: addMonths(this.previousSchoolStart, lateStart), to: lastYearEnd });
-        }
-        enrollments.push({ id: enrollmentId++, ...p, group, from: this.currentSchoolStart, to: thisYearEnd });
-      }
-      const phone = `06 ${String(10 + Math.floor(rand() * 89))} ${String(10 + Math.floor(rand() * 89))} ${String(10 + Math.floor(rand() * 89))} ${String(10 + Math.floor(rand() * 89))}`;
-      students.push({
-        id: students.length + 1,
-        code: `EL-${String(1040 + students.length)}`,
-        name,
-        level,
-        parent: `${PARENT_FIRST[Math.floor(rand() * PARENT_FIRST.length)]} ${name.split(' ').slice(1).join(' ')}`,
-        phone,
-        enrollments,
-      });
-    }
-
-    // Payment behaviour: a few chronic late payers, most punctual.
-    for (const s of students) {
-      const reliability = s.id % 7 === 0 ? 0.7 : s.id % 5 === 0 ? 0.85 : 0.985;
-      for (let m = this.previousSchoolStart; monthIndex(m) <= monthIndex(this.current) + 1; m = addMonths(m, 1)) {
-        const age = monthIndex(this.current) - monthIndex(m);
-        const lines = s.enrollments.filter(e => monthIndex(e.from) <= monthIndex(m) && monthIndex(m) <= monthIndex(e.to));
-        if (!lines.length) continue;
-        const r = rand();
-        const payChance = age < 0 ? 0.12 : age === 0 ? reliability - 0.12 : age <= 2 ? reliability - 0.04 : reliability;
-        if (r > payChance + 0.04) continue;                 // unpaid
-        const partial = r > payChance;                      // paid only in part
-        const method: Method = rand() < 0.7 ? 'Espèces' : rand() < 0.66 ? 'Virement' : 'Chèque';
-        const [y, mo] = m.split('-').map(Number);
-        let day = 1 + Math.floor(rand() * 12);
-        const date = age < 0
-          ? new Date(this.today.getFullYear(), this.today.getMonth(), Math.max(1, this.today.getDate() - Math.floor(rand() * 5)), 10, 30)
-          : new Date(y, mo - 1, day, 9 + Math.floor(rand() * 9), Math.floor(rand() * 60));
-        if (date > this.today) {
-          day = Math.max(1, this.today.getDate() - Math.floor(rand() * 4));
-          date.setDate(day);
-          if (date > this.today) date.setTime(this.today.getTime() - 3600_000);
-        }
-        const receipt = `R-${y}-${String(this.receiptSeq++).padStart(4, '0')}`;
-        const chosen = partial ? lines.slice(0, Math.max(1, lines.length - 1)) : lines;
-        for (const e of chosen) {
-          const amount = partial && chosen.length === 1 ? Math.round(e.price / 2 / 10) * 10 : e.price;
-          payments.push({ id: this.paymentSeq++, studentId: s.id, enrollmentId: e.id, month: m, amount, method, paidAt: date.toISOString(), receipt });
-        }
-      }
-    }
-    this.students.set(students);
-    this.payments.set(payments);
   }
 }

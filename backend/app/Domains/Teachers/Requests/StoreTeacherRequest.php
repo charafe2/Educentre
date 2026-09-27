@@ -18,6 +18,7 @@ class StoreTeacherRequest extends FormRequest
             'lastName' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email'],
             'specialty' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'paymentMode' => ['nullable', 'string', 'in:fixed,per_student,percentage'],
             'fixedSalary' => ['nullable', 'numeric', 'min:0'],
             'ratePerStudent' => ['nullable', 'numeric', 'min:0'],

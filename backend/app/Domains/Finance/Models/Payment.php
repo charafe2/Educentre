@@ -42,6 +42,7 @@ class Payment extends Model
         'paid_at',
         'note',
         'invoice_generated',
+        'receipt_number',
     ];
 
     protected function casts(): array

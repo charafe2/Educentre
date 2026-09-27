@@ -41,7 +41,7 @@ export class TeacherSalarySlideComponent {
   allPaid = computed(() => this.allRows().length > 0 && this.unpaidRows().length === 0);
 
   markPaid(row: TeacherSalaryRow): void {
-    this.payrollService.markAsPaid(row.teacherId, this.month);
+    this.payrollService.markAsPaid(row.teacherId, this.month, row.amountOwed);
     this.toast.show(this.i18n.translate('monthlyReview.salaries.paidToast', {
       name: `${row.firstName} ${row.lastName}`,
     }));

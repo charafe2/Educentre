@@ -15,6 +15,10 @@ class GroupResource extends JsonResource
             'groupNumber' => $this->group_number,
             'maxCapacity' => $this->max_capacity,
             'studentIds' => $this->enrollments->pluck('student_id'),
+            // Per-group overrides — null means "inherits from its class".
+            'teacherId' => $this->teacher_id,
+            'roomId' => $this->room_id,
+            'monthlyPrice' => $this->monthly_price !== null ? (float) $this->monthly_price : null,
         ];
     }
 }

@@ -4,18 +4,23 @@ import { Location } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
 import { CentreStore, sameName } from '../../shared/centre.store';
-import {
-  ACCENTS, ANNUAL_MONTHS, CENTRE_TYPES, CentreInfo, CentreSettingsStore, Cycle, InvoiceSettings,
-  InvoiceTemplate, PLANS, Plan, planOf, priceFor,
-} from '../../shared/centre-settings.store';
+import { ACCENTS, CentreSettingsStore, InvoiceSettings, InvoiceTemplate } from '../../shared/centre-settings.store';
+import { CentreInfo, CentreService } from '../../services/centre.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
+import { SubjectsService } from '../../services/subjects.service';
+import { StudentsService } from '../../services/students.service';
+import { TeachersService } from '../../services/teachers.service';
+import { AcademicLevel } from '../../models/academic-level.model';
+import { Subject } from '../../models/subject.model';
 import { InvoicePreviewComponent, SAMPLE_INVOICE } from '../../shared/invoice-preview.component';
 import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding-checklist.component';
 import { OnboardingService } from '../../shared/onboarding/onboarding.service';
 
 /**
  * Paramètres — the centre (identity, contact, legal ids), its receipts
- * (customised with a live preview), its Moujtahid subscription, and what it
- * teaches (levels and subjects, where the onboarding starts).
+ * (customised with a live preview), its Moujtahid subscription (read-only —
+ * plan changes/cancellation aren't self-service), and what it teaches
+ * (levels and subjects, where the onboarding starts).
  * The tab lives in the URL (?onglet=) so a link can open the right one.
  */
 
@@ -23,6 +28,8 @@ type Tab = 'centre' | 'facture' | 'abonnement' | 'enseignement';
 type Kind = 'level' | 'subject';
 
 const TABS: Tab[] = ['centre', 'facture', 'abonnement', 'enseignement'];
+
+const CENTRE_TYPES = ['Soutien scolaire', 'Centre de langues', 'Informatique', 'École privée', 'Artistique', 'Autre'];
 
 const LEVEL_SUGGESTIONS = [
   'Primaire', '1re année collège', '2e année collège', '3e année collège',
@@ -44,7 +51,12 @@ const MAX_LOGO_BYTES = 1024 * 1024;
 })
 export class ParametresV2Component {
   readonly centre = inject(CentreStore);
+  readonly centreService = inject(CentreService);
   readonly settings = inject(CentreSettingsStore);
+  private academicLevelsService = inject(AcademicLevelsService);
+  private subjectsService = inject(SubjectsService);
+  private studentsService = inject(StudentsService);
+  private teachersService = inject(TeachersService);
   private onboarding = inject(OnboardingService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -52,9 +64,6 @@ export class ParametresV2Component {
 
   readonly centreTypes = CENTRE_TYPES;
   readonly accents = ACCENTS;
-  readonly plans = PLANS;
-  readonly annualMonths = ANNUAL_MONTHS;
-  readonly priceFor = priceFor;
 
   // ── Tabs (in the URL) ─────────────────────────────────────────────
   readonly tabs: { key: Tab; label: string }[] = [
@@ -71,6 +80,14 @@ export class ParametresV2Component {
   );
 
   constructor() {
+    // The draft starts empty (default CentreInfo) until this resolves —
+    // sync it to the real data once, right after the first real load.
+    this.centreService.load().then(() => {
+      this.centreDraft = { ...this.centreService.centreInfo() };
+      this.touchCentre();
+    });
+    this.centreService.loadSubscription();
+
     effect(() => {
       const onglet = this.tab();
       this.location.replaceState(this.router.createUrlTree([], { relativeTo: this.route, queryParams: { onglet } }).toString());
@@ -79,13 +96,13 @@ export class ParametresV2Component {
   }
 
   // ── Centre ────────────────────────────────────────────────────────
-  centreDraft: CentreInfo = { ...this.settings.centre() };
+  centreDraft: CentreInfo = { ...this.centreService.centreInfo() };
   /** Bumped on every edit: drafts are plain objects for ngModel. */
   readonly centreTick = signal(0);
 
   readonly centreDirty = computed(() => {
     this.centreTick();
-    return JSON.stringify(this.centreDraft) !== JSON.stringify(this.settings.centre());
+    return JSON.stringify(this.centreDraft) !== JSON.stringify(this.centreService.centreInfo());
   });
 
   readonly centreErrors = computed(() => {
@@ -101,6 +118,7 @@ export class ParametresV2Component {
 
   readonly centreErrorCount = computed(() => Object.keys(this.centreErrors()).length);
   readonly centreSubmitted = signal(false);
+  readonly centreSaving = signal(false);
 
   touchCentre(): void {
     this.centreTick.update(n => n + 1);
@@ -109,16 +127,22 @@ export class ParametresV2Component {
   saveCentre(): void {
     this.centreSubmitted.set(true);
     if (this.centreErrorCount()) return;
-    const c = this.centreDraft;
-    this.settings.saveCentre({ ...c, name: c.name.trim(), ice: c.ice.replace(/\s/g, '') });
-    this.centreDraft = { ...this.settings.centre() };
-    this.centreSubmitted.set(false);
-    this.touchCentre();
-    this.notify('Informations du centre enregistrées');
+    const c = { ...this.centreDraft, name: this.centreDraft.name.trim(), ice: this.centreDraft.ice.replace(/\s/g, '') };
+    this.centreSaving.set(true);
+    this.centreService.update(c).then(() => {
+      this.centreSaving.set(false);
+      this.centreDraft = { ...this.centreService.centreInfo() };
+      this.centreSubmitted.set(false);
+      this.touchCentre();
+      this.notify('Informations du centre enregistrées');
+    }).catch(() => {
+      this.centreSaving.set(false);
+      this.notify('Impossible d’enregistrer : réessayez');
+    });
   }
 
   discardCentre(): void {
-    this.centreDraft = { ...this.settings.centre() };
+    this.centreDraft = { ...this.centreService.centreInfo() };
     this.centreSubmitted.set(false);
     this.touchCentre();
   }
@@ -149,7 +173,7 @@ export class ParametresV2Component {
     this.touchCentre();
   }
 
-  // ── Facture ───────────────────────────────────────────────────────
+  // ── Facture (unchanged — still localStorage-backed, see CentreSettingsStore) ──
   invoiceDraft: InvoiceSettings = { ...this.settings.invoice() };
   readonly invoiceTick = signal(0);
 
@@ -241,77 +265,24 @@ export class ParametresV2Component {
     window.print();
   }
 
-  // ── Abonnement ────────────────────────────────────────────────────
-  readonly currentPlan = computed(() => planOf(this.settings.plan()));
-  /** Cycle shown in the plan picker; applied only on confirmation. */
-  readonly pickCycle = signal<Cycle>(this.settings.cycle());
+  // ── Abonnement (read-only: no self-service plan change/cancel/invoices) ──
+  readonly subscription = this.centreService.subscription;
+  readonly subscriptionLoading = this.centreService.subscriptionLoading;
+  readonly subscriptionError = this.centreService.subscriptionError;
 
   readonly meters = computed(() => {
-    const p = this.currentPlan();
-    const u = this.settings.usage;
-    return [
-      { label: 'Élèves', used: u.students, max: p.limits.students },
-      { label: 'Enseignants', used: u.teachers, max: p.limits.teachers },
-      { label: 'Utilisateurs', used: u.users, max: p.limits.users },
-    ].map(m => ({ ...m, pct: m.max ? Math.min(100, Math.round((m.used / m.max) * 100)) : 0 }));
+    const s = this.subscription();
+    const students = this.studentsService.summary().total;
+    const teachers = this.teachersService.summary().total;
+    const rows = [
+      { label: 'Élèves', used: students, max: s?.studentsLimit ?? null },
+      { label: 'Enseignants', used: teachers, max: null as number | null },
+    ];
+    return rows.map(m => ({ ...m, pct: m.max ? Math.min(100, Math.round((m.used / m.max) * 100)) : 0 }));
   });
 
-  /** Plan change awaiting confirmation. */
-  readonly changing = signal<Plan | null>(null);
-  readonly confirmingCancel = signal(false);
-
-  planRank(p: Plan): number {
-    return PLANS.indexOf(p);
-  }
-
-  isCurrent(p: Plan): boolean {
-    return p.key === this.settings.plan() && this.pickCycle() === this.settings.cycle();
-  }
-
-  /** A smaller plan must still fit today's usage. */
-  blockers(p: Plan): string[] {
-    const u = this.settings.usage;
-    const out: string[] = [];
-    if (p.limits.students !== null && u.students > p.limits.students) out.push(`${u.students} élèves pour ${p.limits.students} autorisés`);
-    if (p.limits.teachers !== null && u.teachers > p.limits.teachers) out.push(`${u.teachers} enseignants pour ${p.limits.teachers} autorisés`);
-    if (u.users > p.limits.users) out.push(`${u.users} utilisateurs pour ${p.limits.users} autorisés`);
-    return out;
-  }
-
-  askChange(p: Plan): void {
-    this.changing.set(p);
-  }
-
-  confirmChange(): void {
-    const p = this.changing();
-    if (!p || this.blockers(p).length) return;
-    const before = { plan: this.settings.plan(), cycle: this.settings.cycle() };
-    this.settings.changePlan(p.key, this.pickCycle());
-    this.changing.set(null);
-    this.notify(`Formule ${p.name} ${this.pickCycle() === 'annuel' ? 'annuelle' : 'mensuelle'} activée`, () => {
-      this.settings.changePlan(before.plan, before.cycle);
-      this.pickCycle.set(before.cycle);
-    });
-  }
-
-  isUpgrade(p: Plan): boolean {
-    return this.planRank(p) > this.planRank(this.currentPlan());
-  }
-
-  confirmCancel(): void {
-    this.settings.setCancelled(true);
-    this.confirmingCancel.set(false);
-    this.notify(`Abonnement résilié : Moujtahid reste actif jusqu’au ${this.longDate(this.settings.renewsOn())}`);
-  }
-
-  reactivate(): void {
-    this.settings.setCancelled(false);
-    this.notify('Abonnement réactivé');
-  }
-
-  downloadInvoice(number: string): void {
-    // Static preview: the real PDF comes from the billing API.
-    this.notify(`Facture ${number} téléchargée`);
+  statusLabel(status: string): string {
+    return ({ active: 'Actif', suspended: 'Suspendu', expired: 'Expiré', cancelled: 'Résilié' } as Record<string, string>)[status] ?? status;
   }
 
   // ── Niveaux et matières ───────────────────────────────────────────
@@ -332,22 +303,36 @@ export class ParametresV2Component {
     const input = kind === 'level' ? this.newLevel : this.newSubject;
     const name = (value ?? input()).trim();
     if (!name) return;
-    const added = kind === 'level' ? this.centre.addLevel(name) : this.centre.addSubject(name);
-    if (!added) {
+    if ((kind === 'level' ? this.centre.levels() : this.centre.subjects()).some(x => sameName(x, name))) {
       this.notify(`« ${name} » est déjà dans la liste`);
       return;
     }
-    if (value === undefined) input.set('');
-    this.fresh.set(`${kind}:${name.replace(/\s+/g, ' ')}`);
-    setTimeout(() => this.fresh.set(null), 1400);
+    const request = kind === 'level' ? this.academicLevelsService.add(name) : this.subjectsService.add(name);
+    request.subscribe({
+      next: () => {
+        if (value === undefined) input.set('');
+        this.fresh.set(`${kind}:${name.replace(/\s+/g, ' ')}`);
+        setTimeout(() => this.fresh.set(null), 1400);
+      },
+      error: () => this.notify(`Impossible d’ajouter « ${name} »`),
+    });
   }
 
-  remove(kind: Kind, name: string): void {
-    if (this.centre.usage(kind, name)) return;
-    const index = kind === 'level' ? this.centre.removeLevel(name) : this.centre.removeSubject(name);
-    this.notify(`« ${name} » retiré`, () =>
-      kind === 'level' ? this.centre.restoreLevel(name, index) : this.centre.restoreSubject(name, index),
-    );
+  remove(kind: Kind, item: AcademicLevel | Subject): void {
+    if (this.centre.usage(kind, item.name)) return;
+    const request = kind === 'level' ? this.academicLevelsService.remove(item.id) : this.subjectsService.remove(item.id);
+    request.subscribe({
+      next: () => this.notify(`« ${item.name} » retiré`, () => this.add(kind, item.name)),
+      error: () => this.notify(`Impossible de retirer « ${item.name} »`),
+    });
+  }
+
+  levelItems(): AcademicLevel[] {
+    return this.academicLevelsService.levels();
+  }
+
+  subjectItems(): Subject[] {
+    return this.subjectsService.subjects();
   }
 
   usage(kind: Kind, name: string): number {
@@ -361,15 +346,12 @@ export class ParametresV2Component {
 
   // ── Helpers ───────────────────────────────────────────────────────
   money(n: number): string {
-    return Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
+    return Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
   }
 
-  longDate(iso: string): string {
+  longDate(iso: string | null): string {
+    if (!iso) return '—';
     return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  }
-
-  shortDate(iso: string): string {
-    return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   // ── Snackbar ──────────────────────────────────────────────────────
@@ -390,11 +372,7 @@ export class ParametresV2Component {
   // ── Keyboard ──────────────────────────────────────────────────────
   @HostListener('document:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
-    if (event.key === 'Escape') {
-      this.changing.set(null);
-      this.confirmingCancel.set(false);
-      return;
-    }
+    if (event.key === 'Escape') return;
     // Ctrl/Cmd + S saves the tab being edited.
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       if (this.tab() === 'centre' && this.centreDirty()) {

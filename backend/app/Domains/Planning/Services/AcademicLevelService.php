@@ -52,4 +52,10 @@ class AcademicLevelService
 
         return $level;
     }
+
+    /** Detaches a level from this tenant only — the global catalog row (and every other tenant's assignment) is untouched. */
+    public function removeForTenant(int $tenantId, int $levelId): void
+    {
+        Tenant::findOrFail($tenantId)->academicLevels()->detach($levelId);
+    }
 }

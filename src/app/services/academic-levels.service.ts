@@ -28,4 +28,11 @@ export class AcademicLevelsService {
       tap(() => this.load())
     );
   }
+
+  /** Detaches the level from this tenant only — the shared catalog entry itself is untouched. */
+  remove(id: number): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${environment.apiUrl}/v1/academic-levels/${id}`).pipe(
+      tap(() => this.load())
+    );
+  }
 }

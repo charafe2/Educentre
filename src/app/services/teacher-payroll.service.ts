@@ -1,25 +1,50 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { ApiResponse } from '../models/api-response.model';
 import { TeacherPayrollRecord, TeacherSalaryRow } from '../models/monthly-review.model';
 import { Teacher } from '../models/teacher.model';
 import { Classe } from '../models/classe.model';
-import { AuthStore } from '../auth/auth.store';
 
-// TODO(backend): there is no payroll persistence yet (no `teacher_payments` table/API).
-// This service is a client-only stand-in so the Monthly Review "Mark as Paid" action
-// works end-to-end today. Replace with real HTTP calls once the backend exposes:
-//   GET    /api/v1/teacher-payments?month=YYYY-MM
-//   POST   /api/v1/teacher-payments/:teacherId/mark-paid   { month, method }
-//   DELETE /api/v1/teacher-payments/:teacherId?month=YYYY-MM
-// The public method signatures below are written to make that swap a drop-in change.
-const STORAGE_KEY_PREFIX = 'moujtahid.teacherPayroll.v1';
+interface TeacherPaymentApiRow {
+  teacherId: number;
+  month: string;
+  amount: number;
+  method: string | null;
+  paidAt: string | null;
+}
 
+/**
+ * Real, backend-persisted (`teacher_payments` table) — every teacher's
+ * paid/unpaid status per month is loaded once and kept as a signal so
+ * `buildSalaryRows()` (used inside `computed()`s across Monthly Review and
+ * the Caisse "Dépenses" tab) stays synchronous and reactive. Writes are
+ * applied optimistically (the caller here doesn't subscribe) then
+ * reconciled with a reload; a failed write rolls back to the server's
+ * actual state.
+ */
 @Injectable({ providedIn: 'root' })
 export class TeacherPayrollService {
-  // Namespaced per logged-in user — teacherId is only unique within a tenant,
-  // so a shared/un-namespaced key would show one tenant's paid/unpaid status
-  // on another tenant's teachers of the same id.
-  private auth = inject(AuthStore);
-  private records = signal<TeacherPayrollRecord[]>(this.loadFromStorage());
+  private http = inject(HttpClient);
+  private records = signal<TeacherPayrollRecord[]>([]);
+
+  constructor() {
+    this.load();
+  }
+
+  private load(): void {
+    this.http.get<ApiResponse<TeacherPaymentApiRow[]>>(`${environment.apiUrl}/v1/teacher-payments`).subscribe(res => {
+      if (res.success) {
+        this.records.set(res.data.map(r => ({
+          teacherId: r.teacherId,
+          month: r.month,
+          paid: true,
+          paidAt: r.paidAt ?? undefined,
+          method: r.method ?? undefined,
+        })));
+      }
+    });
+  }
 
   isPaid(teacherId: number, month: string): boolean {
     return this.records().some(r => r.teacherId === teacherId && r.month === month && r.paid);
@@ -29,27 +54,31 @@ export class TeacherPayrollService {
     return this.records().find(r => r.teacherId === teacherId && r.month === month)?.paidAt;
   }
 
-  markAsPaid(teacherId: number, month: string, method = 'Virement'): void {
+  methodOf(teacherId: number, month: string): string | undefined {
+    return this.records().find(r => r.teacherId === teacherId && r.month === month)?.method;
+  }
+
+  markAsPaid(teacherId: number, month: string, amount: number, method = 'Virement'): void {
     const now = new Date().toISOString();
-    this.records.update(list => {
-      const existing = list.find(r => r.teacherId === teacherId && r.month === month);
-      if (existing) {
-        return list.map(r => r === existing ? { ...r, paid: true, paidAt: now, method } : r);
-      }
-      return [...list, { teacherId, month, paid: true, paidAt: now, method }];
-    });
-    this.persist();
+    this.records.update(list => [
+      ...list.filter(r => !(r.teacherId === teacherId && r.month === month)),
+      { teacherId, month, paid: true, paidAt: now, method },
+    ]);
+    this.http.post<ApiResponse<TeacherPaymentApiRow>>(
+      `${environment.apiUrl}/v1/teacher-payments/${teacherId}/mark-paid`,
+      { month, amount, method },
+    ).subscribe({ error: () => this.load() });
   }
 
   markAsUnpaid(teacherId: number, month: string): void {
-    this.records.update(list => list.map(r =>
-      r.teacherId === teacherId && r.month === month ? { ...r, paid: false, paidAt: undefined } : r
-    ));
-    this.persist();
+    this.records.update(list => list.filter(r => !(r.teacherId === teacherId && r.month === month)));
+    this.http.delete<ApiResponse<null>>(`${environment.apiUrl}/v1/teacher-payments/${teacherId}`, {
+      params: { month },
+    }).subscribe({ error: () => this.load() });
   }
 
-  // Shared math so the Monthly Review salary slide and the AI insights
-  // generator always agree on what a teacher is owed this month.
+  // Shared math so the Monthly Review salary slide and the Caisse "Dépenses"
+  // tab always agree on what a teacher is owed:
   // - fixed mode      -> the flat monthly salary.
   // - per_student     -> rate × number of distinct active students across their classes.
   // - percentage      -> rate × each class's monthlyPrice × that class's own enrollment
@@ -77,30 +106,9 @@ export class TeacherPayrollService {
           amountOwed,
           paid: this.isPaid(teacher.id, month),
           paidAt: this.paidAt(teacher.id, month),
+          method: this.methodOf(teacher.id, month),
         };
       })
       .filter(row => row.amountOwed > 0);
-  }
-
-  private storageKey(): string {
-    const uuid = this.auth.user()?.uuid;
-    return uuid ? `${STORAGE_KEY_PREFIX}.${uuid}` : STORAGE_KEY_PREFIX;
-  }
-
-  private persist(): void {
-    try {
-      localStorage.setItem(this.storageKey(), JSON.stringify(this.records()));
-    } catch {
-      // Storage unavailable (private browsing, quota) — state stays in-memory for this session.
-    }
-  }
-
-  private loadFromStorage(): TeacherPayrollRecord[] {
-    try {
-      const raw = localStorage.getItem(this.storageKey());
-      return raw ? JSON.parse(raw) : [];
-    } catch {
-      return [];
-    }
   }
 }

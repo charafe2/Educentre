@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, afterNextRender, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Injector, afterNextRender, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,7 +11,7 @@ import { UnpaidTabComponent } from './unpaid-tab.component';
 import { StatsTabComponent } from './stats-tab.component';
 import { ExpensesTabComponent } from './expenses-tab.component';
 import { ExpensesStore } from './expenses.store';
-import { CentreSettingsStore } from '../../shared/centre-settings.store';
+import { CentreService } from '../../services/centre.service';
 
 type Tab = 'encaisser' | 'impayes' | 'depenses' | 'statistiques';
 
@@ -33,11 +33,12 @@ const STATUS_LABEL: Record<MonthStatus, string> = {
 export class CaisseComponent {
   readonly store = inject(CaisseStore);
   /** Name printed on receipts, set in Paramètres. */
-  readonly centreSettings = inject(CentreSettingsStore);
+  readonly centreSettings = inject(CentreService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private injector = inject(Injector);
 
   readonly methods = METHODS;
   readonly money = money;
@@ -204,17 +205,26 @@ export class CaisseComponent {
   readonly monthDue = computed(() => this.lines().reduce((n, l) => n + l.enrollment.price, 0));
   readonly isPartial = computed(() => this.total() > 0 && this.total() < this.monthRest());
 
-  pay(): void {
+  readonly paying = signal(false);
+
+  async pay(): Promise<void> {
     const s = this.student();
     const m = this.month();
-    if (!s || !m || this.total() <= 0) return;
+    if (!s || !m || this.total() <= 0 || this.paying()) return;
     const chosen = this.lines()
       .filter(l => this.isChecked(l.enrollment.id))
       .map(l => ({ enrollment: l.enrollment, amount: this.amounts()[l.enrollment.id] }));
-    const r = this.store.pay(s, m, chosen, this.method());
-    this.receipt.set(r);
-    this.amounts.set({});
-    this.notify(`${money(r.total)} MAD encaissés, reçu ${r.number}`);
+    this.paying.set(true);
+    try {
+      const r = await this.store.pay(s, m, chosen, this.method());
+      this.receipt.set(r);
+      this.amounts.set({});
+      this.notify(`${money(r.total)} MAD encaissés, reçu ${r.number}`);
+    } catch {
+      this.notify('Échec de l’encaissement : vérifiez la connexion et réessayez.');
+    } finally {
+      this.paying.set(false);
+    }
   }
 
   /** After a payment: jump to the next month still owed, if any. */
@@ -229,14 +239,18 @@ export class CaisseComponent {
   // ── Receipt cancellation ──────────────────────────────────────────
   readonly cancelling = signal<Receipt | null>(null);
 
-  confirmCancel(): void {
+  async confirmCancel(): Promise<void> {
     const r = this.cancelling();
     if (!r) return;
-    this.store.cancelReceipt(r.number);
     this.cancelling.set(null);
-    if (this.receipt()?.number === r.number) this.receipt.set(null);
-    if (this.month()) this.selectMonth(this.month()!);
-    this.notify(`Reçu ${r.number} annulé`);
+    try {
+      await this.store.cancelReceipt(r.number);
+      if (this.receipt()?.number === r.number) this.receipt.set(null);
+      if (this.month()) this.selectMonth(this.month()!);
+      this.notify(`Reçu ${r.number} annulé`);
+    } catch {
+      this.notify('Échec de l’annulation : vérifiez la connexion et réessayez.');
+    }
   }
 
   subjectsOf(r: Receipt): string {
@@ -275,14 +289,28 @@ export class CaisseComponent {
   }
 
   constructor() {
-    // Open on a student from the URL (?eleve=EL-1043), e.g. after a reload.
+    this.centreSettings.load();
+    // Students load asynchronously (real HTTP data) — restoring a student
+    // from the URL (?eleve=EL-1043), e.g. after a reload, can't happen
+    // synchronously in the constructor like it could against instant mock
+    // data; wait for the first non-empty load instead, once.
     const code = this.params.get('eleve');
-    const fromUrl = code ? this.store.students().find(s => s.code === code) : undefined;
-    // Seed "récents" with a few students who owe money: the likely next visitors.
-    this.recents.set(this.store.unpaid().slice(0, 3).map(u => u.student.id));
-    if (fromUrl) this.selectStudent(fromUrl, this.params.get('mois') ?? undefined);
-    // Home shortcuts: "Encaisser" lands in the finder, "Dépense" on its form.
-    if (!fromUrl && this.params.get('chercher') === '1') afterNextRender(() => this.focusSearch());
+    const chercher = this.params.get('chercher') === '1';
+    let restored = false;
+    effect(() => {
+      const students = this.store.students();
+      if (restored || !students.length) return;
+      restored = true;
+      const fromUrl = code ? students.find(s => s.code === code) : undefined;
+      // Seed "récents" with a few students who owe money: the likely next visitors.
+      this.recents.set(this.store.unpaid().slice(0, 3).map(u => u.student.id));
+      if (fromUrl) {
+        this.selectStudent(fromUrl, this.params.get('mois') ?? undefined);
+      } else if (chercher) {
+        // Home shortcuts: "Encaisser" lands in the finder, "Dépense" on its form.
+        afterNextRender(() => this.focusSearch(), { injector: this.injector });
+      }
+    });
 
     effect(() => {
       const queryParams: Record<string, string> = {};

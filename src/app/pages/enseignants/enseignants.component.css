@@ -761,6 +761,102 @@
   width: 15px;
 }
 
+/* ── Classes and groups picker ────────────────────────────────────── */
+
+.class-pick-field {
+  border: 0;
+  min-width: 0;
+}
+
+.class-pick-field legend {
+  margin-block-end: 6px;
+  color: var(--m-ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.class-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.class-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--m-line);
+  background: var(--m-band);
+  text-align: start;
+  transition: border-color var(--m-fast) linear, background-color var(--m-fast) linear;
+}
+
+.class-pick:hover {
+  border-color: var(--m-green);
+}
+
+.class-pick.is-on {
+  background: var(--m-green-tint);
+  border-color: var(--m-green);
+}
+
+.class-pick-check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--m-line-strong);
+  border-radius: 6px;
+  color: #fff;
+  transition: background-color var(--m-fast) linear, border-color var(--m-fast) linear;
+}
+
+.class-pick.is-on .class-pick-check {
+  background: var(--m-green);
+  border-color: var(--m-green);
+}
+
+.class-pick-check svg {
+  width: 13px;
+  height: 13px;
+  stroke: currentColor;
+  stroke-width: 3;
+  fill: none;
+  opacity: 0;
+  transition: opacity var(--m-fast) linear;
+}
+
+.class-pick.is-on .class-pick-check svg {
+  opacity: 1;
+}
+
+.class-pick-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.class-pick-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--m-ink);
+}
+
+.class-pick-meta {
+  color: var(--m-ink-faint);
+  font-size: 12.5px;
+}
+
+.empty-hint {
+  color: var(--m-ink-faint);
+  font-size: 13.5px;
+}
+
 /* Pay mode: two large choices, the chosen one inked in green. */
 
 .pay-modes {

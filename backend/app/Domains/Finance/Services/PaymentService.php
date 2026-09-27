@@ -5,9 +5,11 @@ namespace App\Domains\Finance\Services;
 use App\Domains\Finance\Models\Payment;
 use App\Domains\Notifications\Services\NotificationService;
 use App\Domains\Planning\Models\CourseClass;
+use App\Domains\Planning\Models\Group;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class PaymentService
 {
@@ -100,6 +102,14 @@ class PaymentService
      * total — the last class absorbs the rounding remainder so the rows
      * always sum to exactly $customTotal. Every row gets the same status:
      * this is one enrollment-time decision, not a per-class one.
+     *
+     * The "raw" share a class weighs in with is its effective price, not
+     * its own `monthly_price` column: a class's groups can each override
+     * that price (set from Groupes), and a brand-new enrollment hasn't
+     * been placed in one yet, so the cheapest of its existing groups is
+     * used as the best available estimate (falling back to the class's
+     * own price when it has none yet — matching what a next, override-
+     * free group would inherit).
      */
     public function createForEnrollment(
         int $tenantId,
@@ -115,7 +125,8 @@ class PaymentService
         }
 
         $classes = CourseClass::query()->where('tenant_id', $tenantId)->whereIn('id', $ids)->get()->keyBy('id');
-        $rawTotal = (float) $classes->sum('monthly_price');
+        $effectivePrices = $classes->mapWithKeys(fn (CourseClass $class) => [$class->id => $this->effectivePrice($class)]);
+        $rawTotal = (float) $effectivePrices->sum();
         if ($rawTotal <= 0) {
             return;
         }
@@ -139,8 +150,8 @@ class PaymentService
             }
 
             $isLast = $index === $count - 1;
-            $share = $isLast ? $remainingAmount : round($total * ((float) $class->monthly_price / $rawTotal), 2);
-            $sharePaid = $isLast ? $remainingPaid : round($paid * ((float) $class->monthly_price / $rawTotal), 2);
+            $share = $isLast ? $remainingAmount : round($total * ($effectivePrices[$classId] / $rawTotal), 2);
+            $sharePaid = $isLast ? $remainingPaid : round($paid * ($effectivePrices[$classId] / $rawTotal), 2);
             $remainingAmount -= $share;
             $remainingPaid -= $sharePaid;
 
@@ -156,6 +167,120 @@ class PaymentService
                 'paid_at' => $sharePaid > 0 ? now()->toDateString() : null,
             ]);
         }
+    }
+
+    private function effectivePrice(CourseClass $class): float
+    {
+        $cheapestGroupPrice = Group::where('tenant_id', $class->tenant_id)
+            ->where('class_id', $class->id)
+            ->get()
+            ->map(fn (Group $group) => (float) ($group->monthly_price ?? $class->monthly_price))
+            ->min();
+
+        return $cheapestGroupPrice ?? (float) $class->monthly_price;
+    }
+
+    /**
+     * The cash register's "Encaisser" action: one or several class×month
+     * lines paid in a single transaction, all stamped with one receipt
+     * number. A line whose (student, class, month) already has a Payment
+     * row (e.g. a prior partial payment, or the pending row `createForEnrollment`
+     * left behind) tops that row up rather than violating the one-row-per
+     * -class-per-month constraint; a line with no existing row creates one.
+     *
+     * Known limitation: if a row is topped up by a second receipt,
+     * cancelling the *first* receipt (see `cancelReceipt`) resets the row
+     * to fully unpaid, which also erases the second receipt's contribution.
+     * Acceptable for a first cut — a family paying the same class twice in
+     * one month before either receipt is cancelled is a rare edge case.
+     */
+    public function payBatch(int $tenantId, int $studentId, array $lines, string $method, ?string $paidAt = null): array
+    {
+        $receiptNumber = $this->nextReceiptNumber($tenantId);
+        $paidAtDate = $paidAt ?? now()->toDateString();
+
+        $payments = DB::transaction(function () use ($tenantId, $studentId, $lines, $method, $paidAtDate, $receiptNumber) {
+            $result = [];
+
+            foreach ($lines as $line) {
+                $periodMonth = Carbon::createFromFormat('Y-m', $line['periodMonth'])->startOfMonth();
+                $classId = (int) $line['classeId'];
+                $lineAmount = (float) $line['amount'];
+
+                $payment = Payment::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('student_id', $studentId)
+                    ->where('class_id', $classId)
+                    ->whereDate('period_month', $periodMonth)
+                    ->first();
+
+                if ($payment) {
+                    $newAmountPaid = (float) $payment->amount_paid + $lineAmount;
+                    $payment->update([
+                        'amount_paid' => $newAmountPaid,
+                        'status' => $newAmountPaid >= (float) $payment->amount ? 'paid' : 'partial',
+                        'method' => $method,
+                        'paid_at' => $paidAtDate,
+                        'receipt_number' => $receiptNumber,
+                    ]);
+                } else {
+                    $class = CourseClass::query()->where('tenant_id', $tenantId)->findOrFail($classId);
+                    $due = (float) $class->monthly_price;
+                    $payment = Payment::create([
+                        'tenant_id' => $tenantId,
+                        'student_id' => $studentId,
+                        'class_id' => $classId,
+                        'period_month' => $periodMonth,
+                        'amount' => max($due, $lineAmount),
+                        'amount_paid' => $lineAmount,
+                        'status' => $lineAmount >= $due ? 'paid' : 'partial',
+                        'method' => $method,
+                        'paid_at' => $paidAtDate,
+                        'receipt_number' => $receiptNumber,
+                    ]);
+                }
+
+                $result[] = $payment->refresh();
+            }
+
+            return $result;
+        });
+
+        return ['receiptNumber' => $receiptNumber, 'payments' => $payments];
+    }
+
+    /**
+     * Undoes a receipt by resetting every row it touched back to fully
+     * unpaid — not a hard delete, since a row also represents the
+     * underlying obligation (what a class/month is expected to bring in),
+     * which other views (Impayés, stats) still need to see even unpaid.
+     */
+    public function cancelReceipt(int $tenantId, string $receiptNumber): void
+    {
+        Payment::query()
+            ->where('tenant_id', $tenantId)
+            ->where('receipt_number', $receiptNumber)
+            ->get()
+            ->each(fn (Payment $payment) => $payment->update([
+                'amount_paid' => 0,
+                'status' => 'pending',
+                'method' => null,
+                'paid_at' => null,
+                'receipt_number' => null,
+            ]));
+    }
+
+    private function nextReceiptNumber(int $tenantId): string
+    {
+        $year = now()->year;
+        $seq = Payment::query()
+            ->where('tenant_id', $tenantId)
+            ->whereYear('created_at', $year)
+            ->whereNotNull('receipt_number')
+            ->distinct()
+            ->count('receipt_number');
+
+        return sprintf('R-%d-%04d', $year, $seq + 1);
     }
 
     private function findForTenant(int $tenantId, int $id): Payment

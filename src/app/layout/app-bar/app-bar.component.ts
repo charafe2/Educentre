@@ -1,6 +1,6 @@
 import { Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { CentreSettingsStore, planOf } from '../../shared/centre-settings.store';
+import { CentreService } from '../../services/centre.service';
 
 /**
  * Top bar of the rebranded app. There is no sidebar: the brand always leads
@@ -24,14 +24,14 @@ interface NavLink {
       <div class="inner">
         <nav class="trail" aria-label="Fil d’Ariane">
           @if (section()) {
-            <a class="back" routerLink="/accueil" aria-label="Retour à l’accueil" aria-keyshortcuts="Alt+ArrowLeft">
+            <a class="back" routerLink="/v2" aria-label="Retour à l’accueil" aria-keyshortcuts="Alt+ArrowLeft">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
               <span class="back-text">Retour</span>
             </a>
             <span class="back-sep" aria-hidden="true"></span>
           }
-          <a class="brand" routerLink="/accueil" aria-label="Moujtahid, accueil">
-            <span class="brand-mark" aria-hidden="true">m</span>
+          <a class="brand" routerLink="/v2" aria-label="Moujtahid, accueil">
+            <img class="brand-mark" src="/logo.png" alt="" aria-hidden="true">
             <span class="brand-text">
               <span class="brand-name">Moujtahid</span>
               <span class="brand-centre">{{ centre().name }}</span>
@@ -75,26 +75,30 @@ interface NavLink {
                     <span>Propriétaire</span>
                   </span>
                 </div>
-                <a class="menu-centre" role="menuitem" routerLink="/accueil/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                <a class="menu-centre" role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
                   <span class="menu-centre-name">{{ centre().name }}</span>
                   <span class="menu-plan">{{ plan() }}</span>
                 </a>
                 <div class="menu-list">
-                  <a role="menuitem" routerLink="/accueil/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg>
                     Informations du centre
                   </a>
-                  <a role="menuitem" routerLink="/accueil/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg>
                     Modèle de reçu
                   </a>
-                  <a role="menuitem" routerLink="/accueil/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M3 10h18M7 14.5h3"/></svg>
                     Abonnement
                   </a>
                   <a role="menuitem" routerLink="/parametres" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
                     Utilisateurs et sécurité
+                  </a>
+                  <a role="menuitem" routerLink="/dashboard" (click)="menuOpen.set(false)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="6"/><rect x="14.5" y="4.5" width="6" height="6"/><rect x="3.5" y="14.5" width="6" height="6"/><rect x="14.5" y="14.5" width="6" height="6"/></svg>
+                    Ancienne interface
                   </a>
                 </div>
                 <div class="menu-list menu-list--end">
@@ -196,19 +200,10 @@ interface NavLink {
     }
 
     .brand-mark {
-      display: grid;
-      place-items: center;
       flex: none;
-      width: 32px;
-      height: 32px;
-      padding-block-end: 3px;
-      border-radius: 9px;
-      background: linear-gradient(160deg, #14a866, var(--m-green) 60%);
-      color: #fff;
-      font-size: 20px;
-      font-weight: 800;
-      line-height: 1;
-      box-shadow: 0 2px 6px -2px rgba(10, 112, 69, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
       transition: transform var(--m-med) var(--m-ease);
     }
 
@@ -560,16 +555,21 @@ export class AppBarComponent {
   readonly section = input<string>();
   private router = inject(Router);
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
-  private settings = inject(CentreSettingsStore);
+  private centreService = inject(CentreService);
 
-  readonly centre = this.settings.centre;
-  readonly plan = computed(() => planOf(this.settings.plan()).name);
+  readonly centre = this.centreService.centreInfo;
+  readonly plan = computed(() => this.centreService.subscription()?.plan ?? '');
+
+  constructor() {
+    this.centreService.load();
+    this.centreService.loadSubscription();
+  }
 
   readonly links: NavLink[] = [
-    { label: 'Groupes', route: '/accueil/groupes', icon: 'groupes' },
-    { label: 'Caisse', route: '/accueil/caisse', icon: 'caisse' },
-    { label: 'Enseignants', route: '/accueil/enseignants', icon: 'enseignants' },
-    { label: 'Paramètres', route: '/accueil/parametres', icon: 'parametres' },
+    { label: 'Groupes', route: '/v2/groupes', icon: 'groupes' },
+    { label: 'Caisse', route: '/v2/caisse', icon: 'caisse' },
+    { label: 'Enseignants', route: '/v2/enseignants', icon: 'enseignants' },
+    { label: 'Paramètres', route: '/v2/parametres', icon: 'parametres' },
   ];
 
   readonly menuOpen = signal(false);
@@ -589,7 +589,7 @@ export class AppBarComponent {
     }
     if (this.section() && event.altKey && event.key === 'ArrowLeft') {
       event.preventDefault();
-      this.router.navigateByUrl('/accueil');
+      this.router.navigateByUrl('/v2');
     }
   }
 

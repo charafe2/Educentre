@@ -21,6 +21,7 @@ class PaymentResource extends JsonResource
             'paidAt' => $this->paid_at?->format('Y-m-d'),
             'note' => $this->note,
             'invoiceGenerated' => $this->invoice_generated,
+            'receiptNumber' => $this->receipt_number,
         ];
     }
 }

@@ -1,16 +1,21 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { CaisseStore, Method, addMonths, monthIndex } from './caisse.store';
+import { TeachersService } from '../../services/teachers.service';
+import { ClassesService } from '../../services/classes.service';
+import { TeacherPayrollService } from '../../services/teacher-payroll.service';
+import { ExpensesService } from '../../services/expenses.service';
+import { Expense as RealExpense, ExpenseCategory } from '../../models/expense.model';
 
 /**
  * Dépenses — teacher salaries and the centre's running costs.
- * Salary maths mirror TeacherPayrollService.buildSalaryRows: a teacher is
- * paid either a fixed monthly amount or a rate × the distinct students
- * enrolled in their classes that month. Static for now: payroll records and
- * expenses live here; wiring means the /teacher-payments endpoints listed in
- * teacher-payroll.service.ts plus an expenses API.
+ * Salary maths and paid/unpaid persistence are shared with Monthly Review
+ * via TeacherPayrollService.buildSalaryRows/markAsPaid/markAsUnpaid (real,
+ * `teacher_payments`-backed). Running costs go through ExpensesService
+ * (real, `expenses`-backed).
  */
 
-export type PayMode = 'fixed' | 'per_student';
+export type PayMode = 'fixed' | 'per_student' | 'percentage';
 
 export interface Teacher {
   id: number;
@@ -19,6 +24,7 @@ export interface Teacher {
   mode: PayMode;
   fixedSalary?: number;
   ratePerStudent?: number;
+  percentageRate?: number;
 }
 
 export interface SalaryRecord {
@@ -53,23 +59,13 @@ export interface Expense {
   recurring: boolean;
 }
 
-const TEACHERS: Teacher[] = [
-  { id: 1, name: 'M. Idrissi', subjects: ['Mathématiques'], mode: 'per_student', ratePerStudent: 60 },
-  { id: 2, name: 'M. Ouali', subjects: ['Mathématiques'], mode: 'fixed', fixedSalary: 3000 },
-  { id: 3, name: 'Mme Benjelloun', subjects: ['Physique-Chimie'], mode: 'per_student', ratePerStudent: 55 },
-  { id: 4, name: 'Mme Chraibi', subjects: ['SVT'], mode: 'fixed', fixedSalary: 1500 },
-  { id: 5, name: 'Mme Alaoui', subjects: ['Français'], mode: 'per_student', ratePerStudent: 45 },
-  { id: 6, name: 'M. Tazi', subjects: ['Anglais'], mode: 'fixed', fixedSalary: 1200 },
-];
-
 @Injectable()
 export class ExpensesStore {
   private caisse = inject(CaisseStore);
-
-  readonly teachers = TEACHERS;
-  readonly salaries = signal<SalaryRecord[]>([]);
-  readonly expenses = signal<Expense[]>([]);
-  private expenseSeq = 1;
+  private teachersService = inject(TeachersService);
+  private classesService = inject(ClassesService);
+  private payrollService = inject(TeacherPayrollService);
+  private expensesService = inject(ExpensesService);
 
   /** Months the tab can show: from the previous school year to now. */
   readonly months = Array.from(
@@ -77,64 +73,80 @@ export class ExpensesStore {
     (_, i) => addMonths(this.caisse.previousSchoolStart, i),
   );
 
-  constructor() {
-    this.seed();
-  }
-
   // ── Salaries ────────────────────────────────────────────────────────
-  /** Distinct students taught by `t` in `month`, from the cash desk's enrollments. */
-  studentsOf(t: Teacher, month: string): number {
-    const i = monthIndex(month);
-    return this.caisse.students().filter(s =>
-      s.enrollments.some(e => e.teacher === t.name && monthIndex(e.from) <= i && i <= monthIndex(e.to)),
-    ).length;
+  /** Distinct students taught by this teacher, from their currently-assigned classes. */
+  private studentCountOf(teacherId: number): number {
+    const classes = this.classesService.classes().filter(c => c.teacherId === teacherId);
+    return new Set(classes.flatMap(c => c.enrolledStudentIds)).size;
   }
 
   salaryRows(month: string): SalaryRow[] {
-    const records = this.salaries().filter(r => r.month === month);
-    return this.teachers
-      .map(teacher => {
-        const students = this.studentsOf(teacher, month);
-        const owed = !students ? 0 : teacher.mode === 'fixed' ? teacher.fixedSalary ?? 0 : (teacher.ratePerStudent ?? 0) * students;
-        return { teacher, students, owed, record: records.find(r => r.teacherId === teacher.id) };
-      })
-      .filter(r => r.owed > 0 || r.record);
+    return this.payrollService
+      .buildSalaryRows(this.teachersService.teachers(), this.classesService.classes(), month)
+      .map(r => {
+        const teacherModel = this.teachersService.getById(r.teacherId);
+        const teacher: Teacher = {
+          id: r.teacherId,
+          name: `${r.firstName} ${r.lastName}`,
+          subjects: [r.specialty],
+          mode: teacherModel?.paymentMode ?? 'fixed',
+          fixedSalary: teacherModel?.fixedSalary,
+          ratePerStudent: teacherModel?.ratePerStudent,
+          percentageRate: teacherModel?.percentageRate,
+        };
+        const record: SalaryRecord | undefined = r.paid
+          ? { teacherId: r.teacherId, month, amount: r.amountOwed, method: (r.method as Method) ?? 'Virement', paidAt: r.paidAt ?? '' }
+          : undefined;
+        return { teacher, students: this.studentCountOf(r.teacherId), owed: r.amountOwed, record };
+      });
   }
 
   paySalary(row: SalaryRow, month: string, method: Method): void {
-    const record: SalaryRecord = { teacherId: row.teacher.id, month, amount: row.owed, method, paidAt: new Date().toISOString() };
-    this.salaries.update(list => [...list.filter(r => !(r.teacherId === row.teacher.id && r.month === month)), record]);
+    this.payrollService.markAsPaid(row.teacher.id, month, row.owed, method);
   }
 
+  /** Captures the current record (for undo) before clearing it. */
   unpaySalary(teacherId: number, month: string): SalaryRecord | undefined {
-    const record = this.salaries().find(r => r.teacherId === teacherId && r.month === month);
-    this.salaries.update(list => list.filter(r => r !== record));
+    const record = this.salaryRows(month).find(r => r.teacher.id === teacherId)?.record;
+    this.payrollService.markAsUnpaid(teacherId, month);
     return record;
   }
 
   restoreSalary(record: SalaryRecord): void {
-    this.salaries.update(list => [...list, record]);
+    this.payrollService.markAsPaid(record.teacherId, record.month, record.amount, record.method);
   }
 
   // ── Expenses ────────────────────────────────────────────────────────
+  private toViewModel(e: RealExpense): Expense {
+    return {
+      id: e.id, month: e.month, date: e.date, category: e.category as Category,
+      label: e.label, amount: e.amount, method: (e.method as Method) ?? 'Espèces', recurring: e.recurring,
+    };
+  }
+
   expensesOf(month: string): Expense[] {
-    return this.expenses().filter(e => e.month === month).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+    return this.expensesService.expenses()
+      .filter(e => e.month === month)
+      .map(e => this.toViewModel(e))
+      .sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
   }
 
-  addExpense(e: Omit<Expense, 'id'>): Expense {
-    const created = { ...e, id: this.expenseSeq++ };
-    this.expenses.update(list => [...list, created]);
-    return created;
+  async addExpense(e: Omit<Expense, 'id'>): Promise<Expense> {
+    const res = await firstValueFrom(this.expensesService.add({
+      category: e.category as ExpenseCategory, label: e.label, amount: e.amount, method: e.method, date: e.date, recurring: e.recurring,
+    }));
+    return this.toViewModel(res.data);
   }
 
-  removeExpense(id: number): Expense | undefined {
-    const found = this.expenses().find(e => e.id === id);
-    this.expenses.update(list => list.filter(e => e.id !== id));
-    return found;
+  async removeExpense(id: number): Promise<Expense | undefined> {
+    const found = this.expensesService.expenses().find(e => e.id === id);
+    if (!found) return undefined;
+    await firstValueFrom(this.expensesService.remove(id));
+    return this.toViewModel(found);
   }
 
-  restoreExpense(e: Expense): void {
-    this.expenses.update(list => [...list, e]);
+  async restoreExpense(e: Expense): Promise<void> {
+    await this.addExpense(e);
   }
 
   /** Recurring costs of the month before that are not yet entered for `month`. */
@@ -165,43 +177,5 @@ export class ExpensesStore {
       projected: collected - salariesPaid - salariesDue - other,
       byCategory: [...byCategory.entries()].map(([category, amount]) => ({ category, amount })).sort((a, b) => b.amount - a.amount),
     };
-  }
-
-  // ── Demo data ───────────────────────────────────────────────────────
-  private seed(): void {
-    const today = this.caisse.today;
-    const current = this.caisse.current;
-    const salaries: SalaryRecord[] = [];
-    const expenses: Expense[] = [];
-
-    for (const month of this.months) {
-      const [y, m] = month.split('-').map(Number);
-      const isCurrent = month === current;
-      const at = (day: number, hour = 11) => new Date(y, m - 1, Math.min(day, 28), hour, 0);
-      const push = (day: number, category: Category, label: string, amount: number, method: Method, recurring: boolean) => {
-        const date = at(day);
-        if (date > today) return;
-        expenses.push({ id: this.expenseSeq++, month, date: date.toISOString(), category, label, amount, method, recurring });
-      };
-
-      // Salaries of month M go out on the last days of M; the current one is still to pay.
-      if (!isCurrent) {
-        for (const row of this.salaryRows(month)) {
-          if (!row.owed) continue;
-          salaries.push({ teacherId: row.teacher.id, month, amount: row.owed, method: row.teacher.mode === 'fixed' ? 'Virement' : 'Espèces', paidAt: at(28, 17).toISOString() });
-        }
-      }
-
-      const summer = m === 7 || m === 8;
-      push(5, 'Loyer', 'Loyer du local', 3500, 'Virement', true);
-      push(10, 'Internet et téléphone', 'Abonnement fibre', 299, 'Virement', true);
-      push(16, 'Électricité et eau', 'Facture Lydec', summer ? 240 : 420 + ((m * 37) % 140), 'Espèces', true);
-      if (!summer) push(27, 'Ménage', 'Femme de ménage', 800, 'Espèces', true);
-      if (m === 9) push(3, 'Publicité', 'Flyers de la rentrée', 650, 'Espèces', false);
-      if (m === 9 || m === 1) push(8, 'Fournitures', 'Feutres, papier, cartouches', 340, 'Espèces', false);
-      if (m === 2) push(19, 'Maintenance', 'Réparation climatiseur salle 2', 900, 'Espèces', false);
-    }
-    this.salaries.set(salaries);
-    this.expenses.set(expenses);
   }
 }

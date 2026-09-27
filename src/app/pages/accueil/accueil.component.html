@@ -41,6 +41,13 @@
                   <rect class="a-knob-2" x="13" y="29.5" width="9" height="9"/>
                 </svg>
               }
+              @case ('ajouter-eleve') {
+                <svg viewBox="0 0 48 48">
+                  <circle cx="18" cy="17" r="7.5"/>
+                  <path d="M6 40v-2a12 12 0 0 1 20.5-8.4"/>
+                  <path class="a-plus" d="M36 24v14M29 31h14"/>
+                </svg>
+              }
             }
           </span>
           <span class="tile-label">{{ m.label }}</span>
@@ -51,7 +58,7 @@
     <section class="quick" aria-labelledby="quick-title">
       <h2 id="quick-title" class="quick-title">Actions rapides</h2>
       <div class="quick-list">
-        @for (a of actions; track a.key; let i = $index) {
+        @for (a of actions(); track a.key; let i = $index) {
           <a class="quick-item" [class.is-late]="a.tone === 'late'" [routerLink]="a.route" [queryParams]="a.query" [style.--i]="i" [attr.aria-keyshortcuts]="a.key">
             <span class="quick-icon" aria-hidden="true">
               @switch (a.icon) {
@@ -73,7 +80,7 @@
     </section>
 
     <section class="stats" aria-label="Paiements et séances">
-      @for (st of stats; track st.label; let i = $index) {
+      @for (st of stats(); track st.label; let i = $index) {
         <div class="stat" [style.--i]="i">
           <p class="stat-label">{{ st.label }}</p>
           <p class="stat-value">

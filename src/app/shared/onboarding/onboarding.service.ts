@@ -2,22 +2,32 @@ import { Injectable, NgZone, computed, effect, inject, signal, untracked } from 
 import { Router } from '@angular/router';
 import { Driver, DriveStep, driver } from 'driver.js';
 import { CentreStore } from '../centre.store';
+import { TeachersService } from '../../services/teachers.service';
+import { StudentsService } from '../../services/students.service';
+import { PaymentsService } from '../../services/payments.service';
 
 /**
- * Continuous onboarding for a centre that has no group yet.
+ * Continuous onboarding for a centre still getting up and running.
  *
  * The steps are never ticked by hand: each one is done when the data says so
- * (a level exists, a subject exists, a group exists). So the guide survives
+ * (a level exists, a subject exists, a group exists…). So the guide survives
  * reloads and page changes, picks up exactly where the centre stands, and
  * moves on the moment the user actually does the thing — not when they
  * click "Suivant".
+ *
+ * The first three steps (levels, subjects, group) get a full driver.js
+ * spotlight tour, walking the owner to the exact button on the exact page.
+ * The later three (teacher, student, payment) are real, data-driven steps
+ * too — but with no dedicated spotlight built for them yet, so they only
+ * show up in the checklist tab with a link to where they happen; see
+ * `targetFor()`, which explicitly skips the tour for them.
  *
  * Pages register themselves with `enter(page)`; the service then highlights
  * whatever that page can do for the current step, with driver.js.
  */
 
 export type OnboardingPage = 'accueil' | 'parametres' | 'groupes';
-export type StepKey = 'levels' | 'subjects' | 'group';
+export type StepKey = 'levels' | 'subjects' | 'group' | 'teacher' | 'student' | 'payment';
 
 export interface OnboardingStep {
   key: StepKey;
@@ -32,29 +42,44 @@ const HIDDEN_KEY = 'm-onboarding-hidden';
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
   private centre = inject(CentreStore);
+  private teachersService = inject(TeachersService);
+  private studentsService = inject(StudentsService);
+  private paymentsService = inject(PaymentsService);
   private router = inject(Router);
   private zone = inject(NgZone);
 
   readonly steps = computed<OnboardingStep[]>(() => [
     {
       key: 'levels', label: 'Ajouter vos niveaux', hint: 'Collège, lycée, Bac…',
-      route: '/accueil/parametres', done: this.centre.levels().length > 0,
+      route: '/v2/parametres', done: this.centre.levels().length > 0,
     },
     {
       key: 'subjects', label: 'Ajouter vos matières', hint: 'Mathématiques, Français…',
-      route: '/accueil/parametres', done: this.centre.subjects().length > 0,
+      route: '/v2/parametres', done: this.centre.subjects().length > 0,
     },
     {
       key: 'group', label: 'Créer votre premier groupe', hint: 'Niveau, matière, horaire',
-      route: '/accueil/groupes', done: this.centre.groups().length > 0,
+      route: '/v2/groupes', done: this.centre.groups().length > 0,
+    },
+    {
+      key: 'teacher', label: 'Ajouter un enseignant', hint: 'Fiche et rémunération',
+      route: '/v2/enseignants', done: this.teachersService.teachers().length > 0,
+    },
+    {
+      key: 'student', label: 'Ajouter un élève', hint: 'Niveau et classes',
+      route: '/v2/etudiants/nouveau', done: this.studentsService.students().length > 0,
+    },
+    {
+      key: 'payment', label: 'Encaisser un premier paiement', hint: 'Depuis la Caisse',
+      route: '/v2/caisse', done: this.paymentsService.payments().some(p => p.amountPaid > 0),
     },
   ]);
 
   readonly current = computed(() => this.steps().find(s => !s.done) ?? null);
   readonly doneCount = computed(() => this.steps().filter(s => s.done).length);
 
-  /** A centre without any group is still being set up. */
-  readonly active = computed(() => this.centre.groups().length === 0);
+  /** Still getting up and running until every step is done. */
+  readonly active = computed(() => this.steps().some(s => !s.done));
 
   /** "Plus tard": the tour stops popping up, the checklist stays as a pill. */
   readonly hidden = signal(readHidden());
@@ -201,10 +226,15 @@ export class OnboardingService {
 
   private progress(step: StepKey): string {
     const index = this.steps().findIndex(s => s.key === step) + 1;
-    return `Étape ${index} sur 3`;
+    return `Étape ${index} sur ${this.steps().length}`;
   }
 
   private targetFor(page: OnboardingPage, step: StepKey): DriveStep | null {
+    // Only the first three steps have a spotlight built for them — teacher/
+    // student/payment live in the checklist tab only (a link to the right
+    // page), not a guided walkthrough.
+    if (step === 'teacher' || step === 'student' || step === 'payment') return null;
+
     const first = this.doneCount() === 0;
     const progress = this.progress(step);
     const pop = (title: string, description: string, side: 'top' | 'bottom' | 'left' | 'right' = 'bottom', align: 'start' | 'center' | 'end' = 'start') => ({
@@ -290,8 +320,8 @@ export class OnboardingService {
       });
       setTimeout(() => d.highlight({
         popover: {
-          title: 'Votre centre est prêt',
-          description: 'Premier groupe créé. Vous pouvez maintenant y inscrire des élèves et encaisser leurs mensualités depuis la Caisse.',
+          title: 'Votre centre est opérationnel',
+          description: 'Niveaux, matières, groupe, enseignant, élève et premier paiement : tout y est. Vous êtes prêt à faire tourner le centre au quotidien.',
           showButtons: ['next'],
           nextBtnText: 'C’est parti',
           doneBtnText: 'C’est parti',

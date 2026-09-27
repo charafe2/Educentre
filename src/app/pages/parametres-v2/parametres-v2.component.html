@@ -5,7 +5,7 @@
     <header class="head">
       <div>
         <h1>Paramètres</h1>
-        <p class="head-sub">{{ settings.centre().name }}, formule {{ currentPlan().name }}</p>
+        <p class="head-sub">{{ centreService.centreInfo().name }}{{ subscription() ? ', formule ' + subscription()!.plan : '' }}</p>
       </div>
       <a class="m-btn head-more" routerLink="/parametres">
         Utilisateurs et sécurité
@@ -286,135 +286,63 @@
         </section>
       }
 
-      <!-- ═════════════════ Abonnement ═════════════════ -->
+      <!-- ═════════════════ Abonnement (lecture seule) ═════════════════ -->
       @case ('abonnement') {
         <div class="stack" animate.enter="m-enter-fade">
-          <section class="block plan-now" [class.is-cancelled]="settings.cancelled()">
-            <div class="plan-now-main">
-              <p class="eyebrow">Votre formule</p>
-              <h2>{{ currentPlan().name }}</h2>
-              <p class="plan-price">
-                <strong>{{ money(priceFor(currentPlan(), settings.cycle())) }}</strong> MAD
-                <span>/ {{ settings.cycle() === 'annuel' ? 'an' : 'mois' }}</span>
-              </p>
-              @if (settings.cancelled()) {
-                <p class="status is-off">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 8.5l7 7"/></svg>
-                  Résilié, actif jusqu’au {{ longDate(settings.renewsOn()) }}
+          @if (subscriptionLoading()) {
+            <p class="hint">Chargement de l’abonnement…</p>
+          } @else if (subscriptionError() || !subscription()) {
+            <p class="hint">Aucun abonnement trouvé pour ce centre.</p>
+          } @else {
+            <section class="block plan-now" [class.is-cancelled]="subscription()!.status !== 'active'">
+              <div class="plan-now-main">
+                <p class="eyebrow">Votre formule</p>
+                <h2>{{ subscription()!.plan }}</h2>
+                <p class="plan-price">
+                  <strong>{{ money(subscription()!.monthlyPrice) }}</strong> MAD <span>/ mois</span>
                 </p>
-              } @else {
-                <p class="status">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  Actif, renouvellement le {{ longDate(settings.renewsOn()) }}
-                </p>
-              }
-            </div>
-            <div class="meters">
-              @for (m of meters(); track m.label) {
-                <div class="meter-row">
-                  <div class="meter-text">
-                    <span>{{ m.label }}</span>
-                    <span><strong>{{ m.used }}</strong> / {{ m.max ?? 'illimité' }}</span>
-                  </div>
-                  <span class="meter" [class.is-high]="m.pct >= 80" aria-hidden="true">
-                    <span class="meter-fill" [style.width.%]="m.max ? m.pct : 8"></span>
-                  </span>
-                </div>
-              }
-            </div>
-            @if (settings.cancelled()) {
-              <button class="m-btn m-btn--primary plan-now-cta" type="button" (click)="reactivate()">Réactiver l’abonnement</button>
-            }
-          </section>
-
-          <section class="block">
-            <header class="block-head block-head--row">
-              <div>
-                <h2>Changer de formule</h2>
-                <p>Montée en gamme immédiate, au prorata. Une formule inférieure s’applique au prochain renouvellement.</p>
-              </div>
-              <div class="seg" role="radiogroup" aria-label="Facturation">
-                <button type="button" role="radio" class="seg-btn" [class.is-on]="pickCycle() === 'mensuel'" [attr.aria-checked]="pickCycle() === 'mensuel'" (click)="pickCycle.set('mensuel')">Mensuel</button>
-                <button type="button" role="radio" class="seg-btn" [class.is-on]="pickCycle() === 'annuel'" [attr.aria-checked]="pickCycle() === 'annuel'" (click)="pickCycle.set('annuel')">Annuel <span class="save-tag">2 mois offerts</span></button>
-              </div>
-            </header>
-            <div class="plans">
-              @for (p of plans; track p.key) {
-                <article class="plan" [class.is-current]="isCurrent(p)" [class.is-featured]="p.key === 'pro'">
-                  @if (isCurrent(p)) { <span class="plan-badge">Formule actuelle</span> }
-                  @else if (p.key === 'pro') { <span class="plan-badge plan-badge--soft">Le plus choisi</span> }
-                  <h3>{{ p.name }}</h3>
-                  <p class="plan-pitch">{{ p.pitch }}</p>
-                  <p class="plan-amount">
-                    <strong>{{ money(priceFor(p, pickCycle())) }}</strong> MAD <span>/ {{ pickCycle() === 'annuel' ? 'an' : 'mois' }}</span>
+                @if (subscription()!.status === 'active') {
+                  <p class="status">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    Actif{{ subscription()!.endDate ? ', jusqu’au ' + longDate(subscription()!.endDate) : '' }}
                   </p>
-                  @if (pickCycle() === 'annuel') {
-                    <p class="plan-eq">soit {{ money(priceFor(p, 'annuel') / 12) }} MAD par mois</p>
-                  }
-                  <ul class="plan-limits">
-                    <li>{{ p.limits.students ?? 'Élèves illimités' }}{{ p.limits.students ? ' élèves' : '' }}</li>
-                    <li>{{ p.limits.teachers ?? 'Enseignants illimités' }}{{ p.limits.teachers ? ' enseignants' : '' }}</li>
-                    <li>{{ p.limits.users }} {{ p.limits.users > 1 ? 'utilisateurs' : 'utilisateur' }}</li>
-                  </ul>
-                  <ul class="plan-features">
-                    @for (f of p.features; track f) {
-                      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{{ f }}</li>
-                    }
-                  </ul>
-                  @if (isCurrent(p)) {
-                    <button class="m-btn plan-btn" type="button" disabled>Formule actuelle</button>
-                  } @else {
-                    <button class="m-btn plan-btn" [class.m-btn--primary]="isUpgrade(p) || p.key === settings.plan()" type="button" (click)="askChange(p)">
-                      {{ p.key === settings.plan() ? 'Passer en ' + (pickCycle() === 'annuel' ? 'annuel' : 'mensuel') : (isUpgrade(p) ? 'Passer à ' + p.name : 'Revenir à ' + p.name) }}
-                    </button>
-                  }
-                </article>
-              }
-            </div>
-          </section>
-
-          <section class="block">
-            <header class="block-head">
-              <h2>Paiement</h2>
-            </header>
-            <div class="block-body pay-info">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10L12 4.5 20.5 10"/><path d="M5.5 10v8M10 10v8M14 10v8M18.5 10v8M3.5 20h17"/></svg>
-              <div>
-                <p><strong>Virement bancaire</strong>, chaque {{ settings.cycle() === 'annuel' ? 'année' : 'mois' }} à réception de la facture.</p>
-                <p class="hint">Pour payer autrement ou modifier les informations de facturation, écrivez au support : aucun numéro de carte n’est demandé ici.</p>
+                } @else {
+                  <p class="status is-off">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 8.5l7 7"/></svg>
+                    {{ statusLabel(subscription()!.status) }}
+                  </p>
+                }
+                <p class="hint">Débuté le {{ longDate(subscription()!.startDate) }}</p>
               </div>
-            </div>
-          </section>
-
-          <section class="block">
-            <header class="block-head">
-              <h2>Factures Moujtahid</h2>
-            </header>
-            <ul class="bills">
-              @for (b of settings.billing(); track b.number) {
-                <li class="bill">
-                  <span class="bill-main">
-                    <span class="bill-period">{{ b.period }}</span>
-                    <span class="bill-meta mono">{{ b.number }}, le {{ shortDate(b.date) }}</span>
-                  </span>
-                  <span class="bill-amount">{{ money(b.amount) }} MAD</span>
-                  <span class="bill-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Payée</span>
-                  <button class="m-icon-btn m-tip-end" type="button" data-tip="Télécharger le PDF" [attr.aria-label]="'Télécharger la facture ' + b.number" (click)="downloadInvoice(b.number)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
-                  </button>
-                </li>
-              }
-            </ul>
-          </section>
-
-          @if (!settings.cancelled()) {
-            <section class="danger">
-              <div>
-                <p class="danger-title">Résilier l’abonnement</p>
-                <p>Vos données restent accessibles jusqu’au {{ longDate(settings.renewsOn()) }}, puis le compte passe en lecture seule.</p>
+              <div class="meters">
+                @for (m of meters(); track m.label) {
+                  <div class="meter-row">
+                    <div class="meter-text">
+                      <span>{{ m.label }}</span>
+                      <span><strong>{{ m.used }}</strong> / {{ m.max ?? 'illimité' }}</span>
+                    </div>
+                    <span class="meter" [class.is-high]="m.pct >= 80" aria-hidden="true">
+                      <span class="meter-fill" [style.width.%]="m.max ? m.pct : 8"></span>
+                    </span>
+                  </div>
+                }
               </div>
-              <button class="m-btn danger-btn" type="button" (click)="confirmingCancel.set(true)">Résilier</button>
             </section>
+
+            @if (subscription()!.features.length) {
+              <section class="block">
+                <header class="block-head">
+                  <h2>Inclus dans votre formule</h2>
+                </header>
+                <ul class="plan-features">
+                  @for (f of subscription()!.features; track f) {
+                    <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{{ f }}</li>
+                  }
+                </ul>
+              </section>
+            }
+
+            <p class="hint">Pour changer de formule, résilier ou consulter vos factures, contactez le support Moujtahid.</p>
           }
         </div>
       }
@@ -429,7 +357,7 @@
                 <p class="ready-title">Niveaux et matières prêts</p>
                 <p>Créez maintenant votre premier groupe : {{ centre.subjects()[0] }}, {{ centre.levels()[0] }} par exemple.</p>
               </div>
-              <a class="m-btn m-btn--primary" routerLink="/accueil/groupes" [queryParams]="{ creer: 1 }">
+              <a class="m-btn m-btn--primary" routerLink="/v2/groupes" [queryParams]="{ creer: 1 }">
                 Créer mon premier groupe
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
               </a>
@@ -470,11 +398,11 @@
               }
 
               <ul class="items">
-                @for (l of centre.levels(); track l) {
-                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'level:' + l">
-                    <span class="item-name">{{ l }}</span>
-                    <span class="item-meta">{{ usage('level', l) ? usage('level', l) + (usage('level', l) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
-                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('level', l) > 0" [attr.data-tip]="removeTip('level', l)" [attr.aria-label]="'Retirer ' + l" (click)="remove('level', l)">
+                @for (l of levelItems(); track l.id) {
+                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'level:' + l.name">
+                    <span class="item-name">{{ l.name }}</span>
+                    <span class="item-meta">{{ usage('level', l.name) ? usage('level', l.name) + (usage('level', l.name) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
+                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('level', l.name) > 0" [attr.data-tip]="removeTip('level', l.name)" [attr.aria-label]="'Retirer ' + l.name" (click)="remove('level', l)">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                     </button>
                   </li>
@@ -517,11 +445,11 @@
               }
 
               <ul class="items">
-                @for (s of centre.subjects(); track s) {
-                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'subject:' + s">
-                    <span class="item-name">{{ s }}</span>
-                    <span class="item-meta">{{ usage('subject', s) ? usage('subject', s) + (usage('subject', s) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
-                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('subject', s) > 0" [attr.data-tip]="removeTip('subject', s)" [attr.aria-label]="'Retirer ' + s" (click)="remove('subject', s)">
+                @for (s of subjectItems(); track s.id) {
+                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'subject:' + s.name">
+                    <span class="item-name">{{ s.name }}</span>
+                    <span class="item-meta">{{ usage('subject', s.name) ? usage('subject', s.name) + (usage('subject', s.name) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
+                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('subject', s.name) > 0" [attr.data-tip]="removeTip('subject', s.name)" [attr.aria-label]="'Retirer ' + s.name" (click)="remove('subject', s)">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
                     </button>
                   </li>
@@ -537,55 +465,6 @@
   </main>
 
   <app-onboarding page="parametres" />
-
-  <!-- Plan change confirmation -->
-  @if (changing(); as p) {
-    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="changing.set(null)"></div>
-    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="plan-title" aria-describedby="plan-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
-      <h2 id="plan-title">
-        @if (p.key === settings.plan()) { Passer en facturation {{ pickCycle() === 'annuel' ? 'annuelle' : 'mensuelle' }} ? } @else { Passer à la formule {{ p.name }} ? }
-      </h2>
-      @if (blockers(p).length) {
-        <p id="plan-text">Cette formule ne suffit pas pour votre centre aujourd’hui :</p>
-        <ul class="dialog-list">
-          @for (b of blockers(p); track b) { <li>{{ b }}</li> }
-        </ul>
-        <p>Réduisez d’abord ces chiffres, ou gardez votre formule actuelle.</p>
-        <div class="dialog-actions">
-          <button class="m-btn" type="button" (click)="changing.set(null)">Compris</button>
-        </div>
-      } @else {
-        <p id="plan-text">
-          {{ money(priceFor(p, pickCycle())) }} MAD {{ pickCycle() === 'annuel' ? 'par an' : 'par mois' }}.
-          @if (isUpgrade(p)) {
-            Le changement est immédiat : vous ne payez que la différence jusqu’au {{ longDate(settings.renewsOn()) }}.
-          } @else {
-            Le changement prendra effet le {{ longDate(settings.renewsOn()) }}. Rien ne change d’ici là.
-          }
-        </p>
-        <div class="dialog-actions">
-          <button class="m-btn" type="button" (click)="changing.set(null)">Annuler</button>
-          <button class="m-btn m-btn--primary" type="button" (click)="confirmChange()">Confirmer</button>
-        </div>
-      }
-    </div>
-  }
-
-  <!-- Cancellation confirmation -->
-  @if (confirmingCancel()) {
-    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirmingCancel.set(false)"></div>
-    <div class="dialog dialog--danger" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
-      <h2 id="cancel-title">Résilier votre abonnement ?</h2>
-      <p id="cancel-text">
-        Moujtahid reste pleinement utilisable jusqu’au {{ longDate(settings.renewsOn()) }}. Ensuite, le compte passe en lecture seule :
-        vos élèves, paiements et reçus restent consultables et exportables. Vous pouvez réactiver à tout moment.
-      </p>
-      <div class="dialog-actions">
-        <button class="m-btn" type="button" (click)="confirmingCancel.set(false)">Garder mon abonnement</button>
-        <button class="m-btn m-btn--danger" type="button" (click)="confirmCancel()">Résilier</button>
-      </div>
-    </div>
-  }
 
   @for (s of snack() ? [snack()!] : []; track s.id) {
     <div class="snack" role="status" animate.enter="snack-enter" animate.leave="snack-leave">

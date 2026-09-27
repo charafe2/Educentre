@@ -9,4 +9,8 @@ Route::middleware('staff')->prefix('teachers')->group(function () {
     Route::post('/', [TeacherController::class, 'store']);
     Route::put('/{id}', [TeacherController::class, 'update']);
     Route::delete('/{id}', [TeacherController::class, 'destroy']);
+    Route::post('/{id}/access/reset-password', [TeacherController::class, 'resetPassword']);
+    Route::post('/{id}/access/suspend', [TeacherController::class, 'suspend']);
+    Route::post('/{id}/access/revoke', [TeacherController::class, 'revoke']);
+    Route::post('/{id}/access/reactivate', [TeacherController::class, 'reactivate']);
 });

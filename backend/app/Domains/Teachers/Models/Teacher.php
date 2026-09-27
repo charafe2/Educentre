@@ -24,6 +24,7 @@ class Teacher extends Model
         'user_id',
         'uuid',
         'specialty',
+        'phone',
         'payment_mode',
         'fixed_monthly_salary',
         'rate_per_student',

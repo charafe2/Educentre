@@ -17,6 +17,7 @@ class ClassSession extends Model
     protected $fillable = [
         'tenant_id',
         'class_id',
+        'group_id',
         'uuid',
         'day',
         'start_hour',
@@ -35,6 +36,12 @@ class ClassSession extends Model
     public function class(): BelongsTo
     {
         return $this->belongsTo(CourseClass::class, 'class_id');
+    }
+
+    /** Null when the whole class (every group) meets at this slot. */
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(Group::class, 'group_id');
     }
 
     public function attendances(): HasMany

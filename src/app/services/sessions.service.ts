@@ -36,11 +36,15 @@ export class SessionsService {
     return this.sessions().filter(s => s.classeId === classeId);
   }
 
+  getByGroup(groupId: number): Session[] {
+    return this.sessions().filter(s => s.groupId === groupId);
+  }
+
   getForSlot(day: number, hour: number): Session[] {
     return this.sessions().filter(s => s.day === day && s.startHour === hour);
   }
 
-  add(data: Omit<Session, "id">): Observable<ApiResponse<Session>> {
+  add(data: Omit<Session, "id" | "groupId"> & { groupId?: number | null }): Observable<ApiResponse<Session>> {
     return this.http.post<ApiResponse<Session>>(this.url, data).pipe(
       tap(res => {
         if (res.success) {

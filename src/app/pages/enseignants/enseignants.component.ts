@@ -1,49 +1,65 @@
 import { Component, ElementRef, HostListener, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Location } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
-import {
-  Civility, EnseignantsStore, PayMode, SUBJECTS, Teacher, TeacherGroup,
-  formatSlot, fullName, generatePassword, money, salary, shortName, suggestLogin,
-} from './enseignants.store';
+import { TeachersService } from '../../services/teachers.service';
+import { ClassesService } from '../../services/classes.service';
+import { GroupsService } from '../../services/groups.service';
+import { SubjectsService } from '../../services/subjects.service';
+import { ToastService } from '../../services/toast.service';
+import { Teacher, PaymentMode } from '../../models/teacher.model';
+import { Classe } from '../../models/classe.model';
+import { Group } from '../../models/group.model';
+import { money, fullName, formatDate } from './enseignants.util';
 
 /**
- * Enseignants — rebranded teachers page: the team, how each one is paid,
- * and their access to the app. Static for now, see EnseignantsStore.
+ * Enseignants — the centre's teachers, their pay and their app access.
+ * Wired to the real API: TeachersService for the roster, ClassesService +
+ * GroupsService to show what each teacher actually teaches. Every real
+ * teacher already has an app account from creation (no "no access yet"
+ * state exists server-side) — the access panel only resets/suspends/
+ * revokes/reactivates an existing account.
  */
 
-type Filter = 'tous' | 'actifs' | 'inactifs' | 'sans-acces';
+type Filter = 'tous' | 'actifs' | 'inactifs' | 'revoques';
 
 interface Draft {
-  civility: Civility;
   firstName: string;
   lastName: string;
   phone: string;
   email: string;
-  subjects: string[];
-  mode: PayMode;
+  specialty: string;
+  mode: PaymentMode;
   fixedSalary: number | null;
   ratePerStudent: number | null;
+  percentageRate: number | null;
   active: boolean;
-  /** New teacher only: open the access panel right after saving. */
-  withAccess: boolean;
+  /** Classes this teacher will own (`Classe.teacherId`) once saved — reassigns them away from whoever teaches them today, if anyone. */
+  classIds: number[];
 }
 
-interface AccessDraft {
-  login: string;
-  password: string;
+interface TeacherRow {
+  teacher: Teacher;
+  classes: Classe[];
+  groups: { classe: Classe; groups: Group[] }[];
+  studentCount: number;
+  salary: number;
 }
 
 @Component({
   selector: 'app-enseignants',
-  imports: [FormsModule, RouterLink, AppBarComponent],
-  providers: [EnseignantsStore],
+  imports: [FormsModule, AppBarComponent],
   templateUrl: './enseignants.component.html',
   styleUrl: './enseignants.component.css',
 })
 export class EnseignantsComponent {
-  readonly store = inject(EnseignantsStore);
+  private teachersService = inject(TeachersService);
+  private classesService = inject(ClassesService);
+  private groupsService = inject(GroupsService);
+  private subjectsService = inject(SubjectsService);
+  private toast = inject(ToastService);
 
   constructor() {
     // Home shortcut "Nouvel enseignant" lands straight on the form; the
@@ -51,19 +67,16 @@ export class EnseignantsComponent {
     if (inject(ActivatedRoute).snapshot.queryParamMap.get('nouveau') === '1') {
       const location = inject(Location);
       afterNextRender(() => {
-        location.replaceState('/accueil/enseignants');
+        location.replaceState('/v2/enseignants');
         this.openCreate();
       });
     }
   }
 
   readonly money = money;
-  readonly salary = salary;
   readonly fullName = fullName;
-  readonly shortName = shortName;
-  readonly formatSlot = formatSlot;
-  readonly subjects = SUBJECTS;
-  readonly civilities: Civility[] = ['M.', 'Mme'];
+  readonly formatDate = formatDate;
+  readonly subjects = computed(() => this.subjectsService.subjects().map(s => s.name));
 
   private search = viewChild<ElementRef<HTMLInputElement>>('search');
   private firstField = viewChild<ElementRef<HTMLInputElement>>('firstField');
@@ -71,14 +84,38 @@ export class EnseignantsComponent {
   // ── List ──────────────────────────────────────────────────────────
   readonly query = signal('');
   readonly filter = signal<Filter>('tous');
+  /** Optimistically hidden while a delete's undo window is running — see confirmDelete(). */
+  private readonly hiddenIds = signal<Set<number>>(new Set());
+
+  readonly teachers = this.teachersService.teachers;
+  readonly classes = this.classesService.classes;
+
+  readonly teacherRows = computed<TeacherRow[]>(() => {
+    const allClasses = this.classes();
+    return this.teachers().map(teacher => {
+      const classes = allClasses.filter(c => teacher.classIds.includes(c.id));
+      const groups = classes.map(c => ({
+        classe: c,
+        groups: this.groupsService.getGroupsForClasse(c.id),
+      }));
+      const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+      const salary = this.teachersService.getPayrollAmount(teacher, classes);
+      return { teacher, classes, groups, studentCount, salary };
+    });
+  });
+
+  readonly active = computed(() => this.teachers().filter(t => t.status === 'active'));
+  readonly payroll = computed(() => this.teacherRows()
+    .filter(r => r.teacher.status === 'active')
+    .reduce((n, r) => n + r.salary, 0));
 
   readonly counts = computed(() => {
-    const list = this.store.teachers();
+    const list = this.teachers();
     return {
       tous: list.length,
-      actifs: list.filter(t => t.active).length,
-      inactifs: list.filter(t => !t.active).length,
-      'sans-acces': list.filter(t => !t.access).length,
+      actifs: list.filter(t => t.status === 'active').length,
+      inactifs: list.filter(t => t.status === 'inactive').length,
+      revoques: list.filter(t => t.access.state === 'revoked').length,
     } satisfies Record<Filter, number>;
   });
 
@@ -86,58 +123,51 @@ export class EnseignantsComponent {
     { key: 'tous', label: 'Tous' },
     { key: 'actifs', label: 'Actifs' },
     { key: 'inactifs', label: 'Inactifs' },
-    { key: 'sans-acces', label: 'Sans accès' },
+    { key: 'revoques', label: 'Accès révoqué' },
   ];
 
   readonly rows = computed(() => {
     const q = normalize(this.query().trim());
     const f = this.filter();
-    return this.store.teachers()
-      .filter(t => f === 'tous' || (f === 'actifs' && t.active) || (f === 'inactifs' && !t.active) || (f === 'sans-acces' && !t.access))
-      .filter(t => !q || normalize(`${t.firstName} ${t.lastName} ${t.subjects.join(' ')} ${t.phone.replace(/\s/g, '')} ${t.email} ${t.access?.login ?? ''}`).includes(q))
-      .sort((a, b) => Number(b.active) - Number(a.active) || a.lastName.localeCompare(b.lastName, 'fr'));
+    const hidden = this.hiddenIds();
+    return this.teacherRows()
+      .filter(r => !hidden.has(r.teacher.id))
+      .filter(r => f === 'tous'
+        || (f === 'actifs' && r.teacher.status === 'active')
+        || (f === 'inactifs' && r.teacher.status === 'inactive')
+        || (f === 'revoques' && r.teacher.access.state === 'revoked'))
+      .filter(r => !q || normalize(`${r.teacher.firstName} ${r.teacher.lastName} ${r.teacher.specialty} ${r.teacher.phone} ${r.teacher.email}`).includes(q))
+      .sort((a, b) => Number(b.teacher.status === 'active') - Number(a.teacher.status === 'active') || a.teacher.lastName.localeCompare(b.teacher.lastName, 'fr'));
   });
-
-  readonly withoutAccess = computed(() => this.store.active().filter(t => !t.access).length);
 
   readonly flashed = signal<number | null>(null);
 
-  modeText(t: Teacher): string {
-    return t.mode === 'fixed' ? 'Salaire fixe' : `${t.ratePerStudent} MAD × ${t.students} ${t.students > 1 ? 'élèves' : 'élève'}`;
+  modeText(row: TeacherRow): string {
+    const t = row.teacher;
+    if (t.paymentMode === 'fixed') return 'Salaire fixe';
+    if (t.paymentMode === 'percentage') return `${t.percentageRate ?? 0}% du prix des classes`;
+    return `${t.ratePerStudent ?? 0} MAD × ${row.studentCount} ${row.studentCount > 1 ? 'élèves' : 'élève'}`;
   }
 
   initials(t: Teacher): string {
     return (t.firstName.charAt(0) + t.lastName.charAt(0)).toUpperCase();
   }
 
-  // ── Teacher card: who they are and every group they teach ─────────
+  // ── Teacher card: who they are and every class/group they teach ────
   readonly viewing = signal<number | null>(null);
-  readonly viewingTeacher = computed(() => this.store.byId(this.viewing()));
-  readonly viewingGroups = computed(() => {
-    const id = this.viewing();
-    this.store.groups();
-    return id === null ? [] : this.store.groupsOf(id);
-  });
-  /** Groups under their level heading, in the list's order. */
+  readonly viewingRow = computed(() => this.rows().find(r => r.teacher.id === this.viewing())
+    ?? this.teacherRows().find(r => r.teacher.id === this.viewing()));
   readonly viewingByLevel = computed(() => {
-    const sections: { level: string; groups: TeacherGroup[] }[] = [];
-    for (const g of this.viewingGroups()) {
-      const last = sections.at(-1);
-      if (last?.level === g.level) last.groups.push(g);
-      else sections.push({ level: g.level, groups: [g] });
+    const sections: { level: string; entries: { classe: Classe; group: Group }[] }[] = [];
+    const groups = this.viewingRow()?.groups ?? [];
+    for (const { classe, groups: classGroups } of groups) {
+      for (const group of classGroups) {
+        const last = sections.at(-1);
+        if (last?.level === classe.level) last.entries.push({ classe, group });
+        else sections.push({ level: classe.level, entries: [{ classe, group }] });
+      }
     }
     return sections;
-  });
-  readonly viewingTotals = computed(() => {
-    const groups = this.viewingGroups();
-    const students = groups.reduce((n, g) => n + g.students, 0);
-    return {
-      students,
-      /** What those groups bring in each month if every student pays. */
-      revenue: groups.reduce((n, g) => n + g.students * g.price, 0),
-      /** Weekly teaching time, in minutes. */
-      weekly: groups.reduce((n, g) => n + g.days.length * g.duration, 0),
-    };
   });
 
   openCard(t: Teacher): void {
@@ -156,7 +186,7 @@ export class EnseignantsComponent {
 
   /** From the card to another panel: close the card first so only one is open. */
   fromCard(next: 'access' | 'edit'): void {
-    const t = this.viewingTeacher();
+    const t = this.viewingRow()?.teacher;
     this.viewing.set(null);
     if (!t) return;
     if (next === 'access') this.openAccess(t);
@@ -167,14 +197,8 @@ export class EnseignantsComponent {
     return `tel:${t.phone.replace(/\s/g, '')}`;
   }
 
-  fillPercent(g: TeacherGroup): number {
-    return g.capacity ? Math.min(100, Math.round((g.students / g.capacity) * 100)) : 0;
-  }
-
-  formatHours(min: number): string {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
+  fillPercent(group: Group, classe: Classe): number {
+    return classe.maxCapacity ? Math.min(100, Math.round((group.studentIds.length / classe.maxCapacity) * 100)) : 0;
   }
 
   // ── Create / edit panel ───────────────────────────────────────────
@@ -183,17 +207,58 @@ export class EnseignantsComponent {
   /** Bumped on every draft change so computed checks re-run (draft is a plain object for ngModel). */
   readonly draftTick = signal(0);
   readonly submitted = signal(false);
+  readonly saving = signal(false);
 
   private blank(): Draft {
     return {
-      civility: 'M.', firstName: '', lastName: '', phone: '', email: '', subjects: [],
-      mode: 'fixed', fixedSalary: null, ratePerStudent: null, active: true, withAccess: true,
+      firstName: '', lastName: '', phone: '', email: '', specialty: '',
+      mode: 'fixed', fixedSalary: null, ratePerStudent: null, percentageRate: null, active: true,
+      classIds: [],
     };
+  }
+
+  /** Every class, the one(s) matching the chosen specialty first — this teacher's picker doesn't hard-filter by subject since a teacher can cover more than their main one. */
+  readonly pickableClasses = computed(() => {
+    this.draftTick();
+    const specialty = this.draft.specialty;
+    return [...this.classes()].sort((a, b) => {
+      const aMatch = specialty && a.subject === specialty ? 0 : 1;
+      const bMatch = specialty && b.subject === specialty ? 0 : 1;
+      return aMatch - bMatch || a.subject.localeCompare(b.subject, 'fr') || a.level.localeCompare(b.level, 'fr');
+    });
+  });
+
+  isClassPicked(classId: number): boolean {
+    return this.draft.classIds.includes(classId);
+  }
+
+  toggleDraftClass(classId: number): void {
+    this.draft.classIds = this.isClassPicked(classId)
+      ? this.draft.classIds.filter(id => id !== classId)
+      : [...this.draft.classIds, classId];
+    this.touch();
+  }
+
+  /**
+   * Expands picked classes into one row per real group (falling back to the
+   * class itself when it has none yet), each carrying that group's own
+   * effective price/roster — a class's own fields aren't enough for the pay
+   * estimate below since two of its groups can have different overrides
+   * (set from Groupes), and per_student/percentage need to add up what each
+   * group is actually billed, not the class's raw, possibly-stale numbers.
+   */
+  private effectiveRowsFor(classIds: number[]): Classe[] {
+    const picked = this.pickableClasses().filter(c => classIds.includes(c.id));
+    return picked.flatMap(c => {
+      const groups = this.groupsService.getGroupsForClasse(c.id);
+      if (!groups.length) return [c];
+      return groups.map(g => ({ ...c, monthlyPrice: g.monthlyPrice ?? c.monthlyPrice, enrolledStudentIds: g.studentIds }));
+    });
   }
 
   readonly editingTeacher = computed(() => {
     const e = this.editing();
-    return typeof e === 'number' ? this.store.byId(e) : undefined;
+    return typeof e === 'number' ? this.teachersService.getById(e) : undefined;
   });
 
   readonly draftErrors = computed(() => {
@@ -202,22 +267,28 @@ export class EnseignantsComponent {
     const errors: string[] = [];
     if (!d.firstName.trim() || !d.lastName.trim()) errors.push('Le prénom et le nom sont obligatoires.');
     if (!d.phone.trim()) errors.push('Le téléphone est obligatoire : c’est par là que le centre joint l’enseignant.');
-    if (d.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) errors.push('L’adresse email n’est pas valide.');
-    if (!d.subjects.length) errors.push('Choisissez au moins une matière.');
-    const amount = d.mode === 'fixed' ? d.fixedSalary : d.ratePerStudent;
+    if (!d.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) errors.push('Une adresse email valide est obligatoire : c’est son identifiant de connexion.');
+    if (!d.specialty.trim()) errors.push('Choisissez une matière.');
+    const amount = d.mode === 'fixed' ? d.fixedSalary : d.mode === 'percentage' ? d.percentageRate : d.ratePerStudent;
     if (amount === null || amount === undefined || +amount <= 0) {
-      errors.push(d.mode === 'fixed' ? 'Indiquez le salaire mensuel.' : 'Indiquez le montant par élève.');
+      errors.push(d.mode === 'fixed' ? 'Indiquez le salaire mensuel.' : d.mode === 'percentage' ? 'Indiquez le pourcentage.' : 'Indiquez le montant par élève.');
     }
     return errors;
   });
 
-  /** Live estimate shown under the pay fields. */
+  /** Live estimate shown under the pay fields — updates as classes are picked above, before anything is saved. */
   readonly draftEstimate = computed(() => {
     this.draftTick();
     const d = this.draft;
-    const students = this.editingTeacher()?.students ?? 0;
-    const owed = salary({ mode: d.mode, fixedSalary: +(d.fixedSalary ?? 0), ratePerStudent: +(d.ratePerStudent ?? 0), students });
-    return { students, owed };
+    const classes = this.effectiveRowsFor(d.classIds);
+    const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+    const owed = this.teachersService.getPayrollAmount({
+      paymentMode: d.mode,
+      fixedSalary: +(d.fixedSalary ?? 0),
+      ratePerStudent: +(d.ratePerStudent ?? 0),
+      percentageRate: +(d.percentageRate ?? 0),
+    } as Teacher, classes);
+    return { students: studentCount, owed };
   });
 
   touch(): void {
@@ -234,10 +305,11 @@ export class EnseignantsComponent {
 
   openEdit(t: Teacher): void {
     this.draft = {
-      civility: t.civility, firstName: t.firstName, lastName: t.lastName, phone: t.phone, email: t.email,
-      subjects: [...t.subjects], mode: t.mode,
-      fixedSalary: t.fixedSalary || null, ratePerStudent: t.ratePerStudent || null,
-      active: t.active, withAccess: false,
+      firstName: t.firstName, lastName: t.lastName, phone: t.phone, email: t.email,
+      specialty: t.specialty, mode: t.paymentMode,
+      fixedSalary: t.fixedSalary || null, ratePerStudent: t.ratePerStudent || null, percentageRate: t.percentageRate || null,
+      active: t.status === 'active',
+      classIds: [...t.classIds],
     };
     this.submitted.set(false);
     this.editing.set(t.id);
@@ -249,13 +321,12 @@ export class EnseignantsComponent {
     this.editing.set(null);
   }
 
-  toggleSubject(s: string): void {
-    const list = this.draft.subjects;
-    this.draft.subjects = list.includes(s) ? list.filter(x => x !== s) : [...list, s];
+  setSpecialty(s: string): void {
+    this.draft.specialty = s;
     this.touch();
   }
 
-  setMode(mode: PayMode): void {
+  setMode(mode: PaymentMode): void {
     this.draft.mode = mode;
     this.touch();
   }
@@ -269,161 +340,199 @@ export class EnseignantsComponent {
     }
 
     const d = this.draft;
-    const fields = {
-      civility: d.civility,
+    const payload = {
       firstName: d.firstName.trim(),
       lastName: d.lastName.trim(),
       phone: formatPhone(d.phone),
       email: d.email.trim(),
-      subjects: d.subjects,
-      mode: d.mode,
-      fixedSalary: d.mode === 'fixed' ? Math.round(+(d.fixedSalary ?? 0)) : 0,
-      ratePerStudent: d.mode === 'per_student' ? Math.round(+(d.ratePerStudent ?? 0)) : 0,
-      active: d.active,
+      specialty: d.specialty,
+      paymentMode: d.mode,
+      fixedSalary: d.mode === 'fixed' ? Math.round(+(d.fixedSalary ?? 0)) : undefined,
+      ratePerStudent: d.mode === 'per_student' ? Math.round(+(d.ratePerStudent ?? 0)) : undefined,
+      percentageRate: d.mode === 'percentage' ? +(d.percentageRate ?? 0) : undefined,
+      status: (d.active ? 'active' : 'inactive') as 'active' | 'inactive',
     };
 
     const target = this.editing();
+    this.saving.set(true);
     if (target === 'new') {
-      const created = this.store.add({ ...fields, students: 0, groups: 0, access: null });
-      this.editing.set(null);
-      this.flash(created.id);
-      if (d.withAccess) {
-        this.openAccess(created);
-        this.notify(`${fullName(created)} ajouté. Créez maintenant son accès.`);
-      } else {
-        this.notify(`${fullName(created)} ajouté`, () => this.store.remove(created.id));
-      }
+      this.teachersService.add({ ...payload, classIds: d.classIds }).subscribe({
+        next: res => {
+          this.saving.set(false);
+          this.editing.set(null);
+          this.flash(res.data.id);
+          this.classesService.loadClasses();
+          this.notify(`${d.firstName} ${d.lastName} ajouté`);
+          // Every real teacher gets an account at creation — reveal its
+          // one-time password straight away, same as after a reset. The
+          // background refetch triggered by add() hasn't landed yet, so
+          // this stand-in is shown until the real record replaces it.
+          if (res.data.plainPassword) {
+            this.openAccessReveal({
+              id: res.data.id, firstName: d.firstName, lastName: d.lastName,
+              email: payload.email, phone: payload.phone, specialty: payload.specialty,
+              paymentMode: payload.paymentMode, fixedSalary: payload.fixedSalary,
+              ratePerStudent: payload.ratePerStudent, percentageRate: payload.percentageRate,
+              classIds: d.classIds, status: payload.status, avatarColor: '#0d9488',
+              access: { login: payload.email, state: 'active', lastLoginAt: null },
+            } satisfies Teacher, res.data.plainPassword);
+          }
+        },
+        error: (err: unknown) => {
+          this.saving.set(false);
+          this.toast.show(extractValidationError(err, 'Erreur lors de l’ajout'), 'error');
+        },
+      });
     } else if (typeof target === 'number') {
-      const before = this.store.byId(target);
-      this.store.update(target, fields);
-      // A teacher who stops working here can't keep signing in.
-      if (before?.access?.state === 'active' && !fields.active) {
-        this.store.update(target, { access: { ...before.access, state: 'suspended' } });
-      }
-      this.editing.set(null);
-      this.flash(target);
-      this.notify(`Fiche de ${fields.firstName} ${fields.lastName} enregistrée`, before ? () => this.store.update(target, before) : undefined);
+      this.teachersService.update(target, { ...payload, classIds: d.classIds }).subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.editing.set(null);
+          this.flash(target);
+          this.classesService.loadClasses();
+          this.notify(`Fiche de ${d.firstName} ${d.lastName} enregistrée`);
+        },
+        error: (err: unknown) => {
+          this.saving.set(false);
+          this.toast.show(extractValidationError(err, 'Erreur lors de l’enregistrement'), 'error');
+        },
+      });
     }
   }
 
-  // ── Delete ────────────────────────────────────────────────────────
-  readonly confirming = signal<Teacher | null>(null);
+  // ── Delete (optimistic hide + undo, real delete once the window lapses) ──
+  readonly confirming = signal<TeacherRow | null>(null);
 
-  askDelete(t: Teacher): void {
-    this.confirming.set(t);
+  askDelete(row: TeacherRow): void {
+    this.confirming.set(row);
   }
 
   confirmDelete(): void {
-    const t = this.confirming();
+    const row = this.confirming();
     this.confirming.set(null);
-    if (!t) return;
-    const removed = this.store.remove(t.id);
-    if (removed) this.notify(`${fullName(t)} supprimé`, () => this.store.restore(removed));
+    if (!row) return;
+    const id = row.teacher.id;
+    this.hiddenIds.update(set => new Set(set).add(id));
+
+    let undone = false;
+    this.notify(`${fullName(row.teacher)} supprimé`, () => {
+      undone = true;
+      this.hiddenIds.update(set => {
+        const next = new Set(set);
+        next.delete(id);
+        return next;
+      });
+    }, () => {
+      if (undone) return;
+      this.teachersService.delete(id).subscribe({
+        next: () => this.hiddenIds.update(set => {
+          const next = new Set(set);
+          next.delete(id);
+          return next;
+        }),
+        error: () => {
+          this.hiddenIds.update(set => {
+            const next = new Set(set);
+            next.delete(id);
+            return next;
+          });
+          this.toast.show('Impossible de supprimer cet enseignant', 'error');
+        },
+      });
+    });
   }
 
   // ── Access panel ──────────────────────────────────────────────────
   readonly accessFor = signal<number | null>(null);
-  readonly accessTeacher = computed(() => this.store.byId(this.accessFor()));
-  accessDraft: AccessDraft = { login: '', password: '' };
-  readonly accessTick = signal(0);
+  /**
+   * Falls back to `pendingReveal` right after creating a teacher: the
+   * background refetch triggered by `add()` hasn't landed in
+   * TeachersService yet, so `getById` would otherwise find nothing.
+   */
+  private readonly pendingReveal = signal<Teacher | null>(null);
+  readonly accessTeacher = computed(() => this.teachersService.getById(this.accessFor() ?? -1) ?? this.pendingReveal());
+  readonly workingAccess = signal(false);
   readonly showPassword = signal(true);
   /**
-   * Plain password just created or reset. Kept only while the panel is open:
-   * once closed, nobody (not even the owner) can read it again, like the
-   * hashed column it stands for.
+   * Plain password just created or reset. Kept only while the panel is
+   * open: once closed, nobody (not even the owner) can read it again —
+   * the backend never stores or re-returns it.
    */
   readonly revealed = signal<{ login: string; password: string } | null>(null);
-  readonly editingLogin = signal(false);
   readonly copied = signal<'login' | 'password' | 'message' | null>(null);
 
   openAccess(t: Teacher): void {
     this.accessFor.set(t.id);
     this.revealed.set(null);
-    this.editingLogin.set(false);
     this.showPassword.set(true);
-    this.accessDraft = { login: t.access?.login ?? suggestLogin(t.firstName, t.lastName), password: generatePassword() };
-    this.accessTick.update(n => n + 1);
+  }
+
+  /** Reveal a freshly generated password right after creating a teacher. */
+  private openAccessReveal(teacher: Teacher, password: string): void {
+    this.pendingReveal.set(teacher);
+    this.accessFor.set(teacher.id);
+    this.showPassword.set(true);
+    this.revealed.set({ login: teacher.email, password });
   }
 
   closeAccess(): void {
     this.accessFor.set(null);
     this.revealed.set(null);
-  }
-
-  regenerate(): void {
-    this.accessDraft.password = generatePassword();
-    this.showPassword.set(true);
-    this.accessTick.update(n => n + 1);
-  }
-
-  readonly accessErrors = computed(() => {
-    this.accessTick();
-    const t = this.accessTeacher();
-    const { login, password } = this.accessDraft;
-    const errors: string[] = [];
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(login.trim())) errors.push('L’identifiant doit être une adresse email valide.');
-    else if (this.store.loginTaken(login, t?.id)) errors.push('Cet identifiant est déjà utilisé par un autre compte.');
-    if (!t?.access && password.length < 8) errors.push('Le mot de passe doit contenir au moins 8 caractères.');
-    return errors;
-  });
-
-  onAccessInput(): void {
-    this.accessTick.update(n => n + 1);
-  }
-
-  createAccess(): void {
-    const t = this.accessTeacher();
-    if (!t || this.accessErrors().length) return;
-    const login = this.accessDraft.login.trim().toLowerCase();
-    const password = this.accessDraft.password;
-    this.store.update(t.id, { access: { login, state: 'active', passwordSetAt: new Date().toISOString() } });
-    this.revealed.set({ login, password });
-    this.flash(t.id);
-    this.notify(`Accès créé pour ${fullName(t)}`);
+    this.pendingReveal.set(null);
   }
 
   resetPassword(): void {
     const t = this.accessTeacher();
-    if (!t?.access) return;
-    const password = generatePassword();
-    this.store.update(t.id, { access: { ...t.access, state: 'active', passwordSetAt: new Date().toISOString() } });
-    this.revealed.set({ login: t.access.login, password });
-    this.showPassword.set(true);
-    this.notify(`Nouveau mot de passe généré pour ${fullName(t)}. L’ancien ne fonctionne plus.`);
-  }
-
-  saveLogin(): void {
-    const t = this.accessTeacher();
-    if (!t?.access || this.accessErrors().length) return;
-    const before = t.access;
-    const login = this.accessDraft.login.trim().toLowerCase();
-    this.store.update(t.id, { access: { ...before, login } });
-    this.editingLogin.set(false);
-    if (this.revealed()) this.revealed.set({ ...this.revealed()!, login });
-    this.notify(`Identifiant modifié : ${login}`, () => this.store.update(t.id, { access: before }));
+    if (!t) return;
+    this.workingAccess.set(true);
+    this.teachersService.resetPassword(t.id).subscribe({
+      next: res => {
+        this.workingAccess.set(false);
+        this.revealed.set({ login: t.email, password: res.data.plainPassword });
+        this.showPassword.set(true);
+        this.notify(`Nouveau mot de passe généré pour ${fullName(t)}. L’ancien ne fonctionne plus.`);
+      },
+      error: () => {
+        this.workingAccess.set(false);
+        this.toast.show('Impossible de régénérer le mot de passe', 'error');
+      },
+    });
   }
 
   toggleSuspend(): void {
     const t = this.accessTeacher();
-    if (!t?.access) return;
-    const before = t.access;
-    const state = before.state === 'active' ? 'suspended' : 'active';
-    this.store.update(t.id, { access: { ...before, state } });
-    this.notify(
-      state === 'suspended' ? `Accès de ${fullName(t)} suspendu` : `Accès de ${fullName(t)} réactivé`,
-      () => this.store.update(t.id, { access: before }),
-    );
+    if (!t) return;
+    if (t.access.state === 'active') {
+      this.runAccessAction(this.teachersService.suspendAccess(t.id), `Accès de ${fullName(t)} suspendu`);
+    } else {
+      this.runAccessAction(this.teachersService.reactivateAccess(t.id), `Accès de ${fullName(t)} réactivé`);
+    }
   }
 
   revokeAccess(): void {
     const t = this.accessTeacher();
-    if (!t?.access) return;
-    const before = t.access;
-    this.store.update(t.id, { access: null });
-    this.revealed.set(null);
-    this.accessDraft = { login: before.login, password: generatePassword() };
-    this.accessTick.update(n => n + 1);
-    this.notify(`Accès de ${fullName(t)} supprimé`, () => this.store.update(t.id, { access: before }));
+    if (!t) return;
+    this.runAccessAction(this.teachersService.revokeAccess(t.id), `Accès de ${fullName(t)} révoqué`);
+  }
+
+  reactivateAccess(): void {
+    const t = this.accessTeacher();
+    if (!t) return;
+    this.runAccessAction(this.teachersService.reactivateAccess(t.id), `Accès de ${fullName(t)} réactivé`);
+  }
+
+  private runAccessAction(request: ReturnType<TeachersService['suspendAccess']>, message: string): void {
+    this.workingAccess.set(true);
+    request.subscribe({
+      next: () => {
+        this.workingAccess.set(false);
+        this.notify(message);
+      },
+      error: () => {
+        this.workingAccess.set(false);
+        this.toast.show('Action impossible', 'error');
+      },
+    });
   }
 
   /** Ready-to-send message: WhatsApp is how most centres reach teachers. */
@@ -449,16 +558,17 @@ export class EnseignantsComponent {
     return `https://wa.me/${intl}?text=${encodeURIComponent(this.credentialsMessage())}`;
   }
 
-  sendByEmail(): void {
+  mailtoUrl(): string {
     const t = this.accessTeacher();
-    if (!t?.email) return;
-    // Static preview: the real send goes through the backend mailer.
-    this.notify(`Identifiants envoyés à ${t.email}`);
+    if (!t?.email) return '';
+    const subject = encodeURIComponent('Vos accès Moujtahid');
+    const body = encodeURIComponent(this.credentialsMessage());
+    return `mailto:${t.email}?subject=${subject}&body=${body}`;
   }
 
   async copy(what: 'login' | 'password' | 'message'): Promise<void> {
     const r = this.revealed();
-    const text = what === 'message' ? this.credentialsMessage() : what === 'login' ? (r?.login ?? this.accessTeacher()?.access?.login ?? '') : (r?.password ?? '');
+    const text = what === 'message' ? this.credentialsMessage() : what === 'login' ? (r?.login ?? this.accessTeacher()?.email ?? '') : (r?.password ?? '');
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
@@ -469,28 +579,22 @@ export class EnseignantsComponent {
     }
   }
 
-  formatDate(iso?: string): string {
-    if (!iso) return '';
-    const d = new Date(iso);
-    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
-    if (days <= 0) return `aujourd’hui à ${String(d.getHours()).padStart(2, '0')}h${String(d.getMinutes()).padStart(2, '0')}`;
-    if (days === 1) return 'hier';
-    if (days < 30) return `il y a ${days} jours`;
-    return `le ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-  }
-
   // ── Snackbar ──────────────────────────────────────────────────────
   readonly snack = signal<{ text: string; undo?: () => void; id: number } | null>(null);
   private snackTimer?: ReturnType<typeof setTimeout>;
 
-  private notify(text: string, undo?: () => void): void {
+  private notify(text: string, undo?: () => void, onExpire?: () => void): void {
     clearTimeout(this.snackTimer);
     this.snack.set({ text, undo, id: Date.now() });
-    this.snackTimer = setTimeout(() => this.snack.set(null), undo ? 6000 : 3500);
+    this.snackTimer = setTimeout(() => {
+      this.snack.set(null);
+      onExpire?.();
+    }, undo ? 6000 : 3500);
   }
 
   runUndo(): void {
     const s = this.snack();
+    clearTimeout(this.snackTimer);
     s?.undo?.();
     this.snack.set(null);
     this.notify('Action annulée');
@@ -535,4 +639,15 @@ function normalize(value: string): string {
 function formatPhone(value: string): string {
   const digits = value.replace(/\D/g, '');
   return /^0\d{9}$/.test(digits) ? digits.replace(/(\d{2})(?=\d)/g, '$1 ') : value.trim();
+}
+
+function extractValidationError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

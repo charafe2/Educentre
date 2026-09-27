@@ -24,9 +24,9 @@ export const permissionGuard: CanActivateFn = (route) => {
     map(() => {
       if (!permKey) return true;
       if (permKey === 'parametres') {
-        return auth.isOwner() ? true : router.parseUrl('/dashboard');
+        return auth.isOwner() ? true : router.parseUrl('/v2');
       }
-      return auth.canAccess(permKey) ? true : router.parseUrl('/dashboard');
+      return auth.canAccess(permKey) ? true : router.parseUrl('/v2');
     }),
   );
 };

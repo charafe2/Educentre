@@ -52,6 +52,20 @@ class AnalyticsService
         ];
     }
 
+    /** Lighter-weight than report(): just the one number the Accueil home page needs. */
+    public function weeklyAttendanceRate(int $tenantId): float
+    {
+        $start = CarbonImmutable::now()->startOfWeek();
+        $end = CarbonImmutable::now()->endOfWeek();
+
+        $attendances = SessionAttendance::query()
+            ->where('tenant_id', $tenantId)
+            ->whereBetween('attended_on', [$start->toDateString(), $end->toDateString()])
+            ->get();
+
+        return $this->attendanceRate($attendances);
+    }
+
     private function periodRange(string $period): array
     {
         $today = CarbonImmutable::today();

@@ -18,6 +18,9 @@ class StoreGroupRequest extends FormRequest
             'maxCapacity' => ['nullable', 'integer', 'min:1'],
             'studentIds' => ['nullable', 'array'],
             'studentIds.*' => ['integer', 'exists:students,id'],
+            'teacherId' => ['nullable', 'integer', 'exists:teachers,id'],
+            'roomId' => ['nullable', 'integer', 'exists:rooms,id'],
+            'monthlyPrice' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 

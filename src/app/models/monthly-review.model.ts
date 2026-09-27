@@ -24,6 +24,7 @@ export interface TeacherSalaryRow {
   amountOwed: number;
   paid: boolean;
   paidAt?: string;
+  method?: string;
 }
 
 export interface MonthlyTask {

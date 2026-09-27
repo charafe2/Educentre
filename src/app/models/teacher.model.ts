@@ -1,4 +1,13 @@
 export type PaymentMode = 'fixed' | 'per_student' | 'percentage';
+export type TeacherAccessState = 'active' | 'suspended' | 'revoked';
+
+export interface TeacherAccess {
+  /** The teacher's login — always their account email. */
+  login: string;
+  state: TeacherAccessState;
+  lastLoginAt: string | null;
+}
+
 export interface Teacher {
   id: number;
   firstName: string;
@@ -16,4 +25,6 @@ export interface Teacher {
   classIds: number[];
   status: 'active' | 'inactive';
   avatarColor: string;
+  /** Every real teacher has an app account from creation — never null. */
+  access: TeacherAccess;
 }

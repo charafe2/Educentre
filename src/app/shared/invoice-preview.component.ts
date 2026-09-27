@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-import { CentreInfo, InvoiceSettings } from './centre-settings.store';
+import { InvoiceSettings } from './centre-settings.store';
+import { CentreInfo } from '../services/centre.service';
 
 /**
  * A receipt as the parent receives it, drawn from the centre's settings.

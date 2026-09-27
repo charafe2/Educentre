@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class TeacherService
 {
@@ -82,11 +83,13 @@ class TeacherService
     public function create(array $data): Teacher
     {
         return DB::transaction(function () use ($data) {
+            $plainPassword = Str::password(12);
+
             $user = User::create([
                 'tenant_id' => $data['tenant_id'],
                 'name' => trim(($data['firstName'] ?? '') . ' ' . ($data['lastName'] ?? '')),
                 'email' => $data['email'] ?? null,
-                'password' => 'password',
+                'password' => $plainPassword,
                 'role' => 'teacher',
                 'status' => 'active',
             ]);
@@ -95,6 +98,7 @@ class TeacherService
                 'tenant_id' => $data['tenant_id'],
                 'user_id' => $user->id,
                 'specialty' => $data['specialty'] ?? null,
+                'phone' => $data['phone'] ?? null,
                 'payment_mode' => $data['paymentMode'] ?? 'fixed',
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? null,
                 'rate_per_student' => $data['ratePerStudent'] ?? null,
@@ -105,6 +109,11 @@ class TeacherService
             ]);
 
             $this->syncClasses($teacher, $data['classIds'] ?? []);
+
+            // Transient, one-time-only field — never persisted, never
+            // re-derivable once this response is sent (see also
+            // resetPassword() below, which returns the same shape).
+            $teacher->plainPassword = $plainPassword;
 
             return $teacher->load(['user', 'classes']);
         });
@@ -126,6 +135,7 @@ class TeacherService
 
             $teacher->update([
                 'specialty' => $data['specialty'] ?? $teacher->specialty,
+                'phone' => $data['phone'] ?? $teacher->phone,
                 'payment_mode' => $data['paymentMode'] ?? $teacher->payment_mode,
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? $teacher->fixed_monthly_salary,
                 'rate_per_student' => $data['ratePerStudent'] ?? $teacher->rate_per_student,
@@ -144,8 +154,45 @@ class TeacherService
 
     public function delete(int $id, int $tenantId): void
     {
-        $teacher = Teacher::where('tenant_id', $tenantId)->findOrFail($id);
+        $teacher = Teacher::with('user')->where('tenant_id', $tenantId)->findOrFail($id);
+        // Soft-deleting the Teacher row alone would leave their account able
+        // to log in — cut access off the same way an explicit revoke does.
+        $teacher->user->update(['status' => 'revoked']);
         $teacher->delete();
+    }
+
+    /** Generates and saves a new password, returned once in plain text. */
+    public function resetPassword(int $id, int $tenantId): string
+    {
+        $teacher = Teacher::with('user')->where('tenant_id', $tenantId)->findOrFail($id);
+        $plainPassword = Str::password(12);
+        $teacher->user->update(['password' => $plainPassword]);
+
+        return $plainPassword;
+    }
+
+    public function suspend(int $id, int $tenantId): Teacher
+    {
+        return $this->setAccessState($id, $tenantId, 'suspended');
+    }
+
+    public function revoke(int $id, int $tenantId): Teacher
+    {
+        return $this->setAccessState($id, $tenantId, 'revoked');
+    }
+
+    public function reactivate(int $id, int $tenantId): Teacher
+    {
+        return $this->setAccessState($id, $tenantId, 'active');
+    }
+
+    /** AuthService::login() already rejects any status other than 'active' — writing the status is the whole feature. */
+    private function setAccessState(int $id, int $tenantId, string $state): Teacher
+    {
+        $teacher = Teacher::with(['user', 'classes'])->where('tenant_id', $tenantId)->findOrFail($id);
+        $teacher->user->update(['status' => $state]);
+
+        return $teacher;
     }
 
     private function syncClasses(Teacher $teacher, array $classIds): void

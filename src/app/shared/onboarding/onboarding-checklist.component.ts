@@ -1,93 +1,199 @@
-import { Component, DestroyRef, inject, input, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { OnboardingPage, OnboardingService } from './onboarding.service';
 
 /**
- * The onboarding's anchor on every page it spans: a small checklist in the
- * corner that ticks itself as the centre gets set up. Dropping it into a page
- * also registers that page with the guide.
+ * The onboarding's anchor on every page it spans: a tab folded against the
+ * left edge, showing progress at a glance and unfolding into the full
+ * "getting started" checklist on click. Dropping it into a page also
+ * registers that page with the guide (see OnboardingService).
  */
 @Component({
   selector: 'app-onboarding',
   imports: [RouterLink],
   template: `
     @if (ob.active() && !ob.celebrate()) {
-      @if (!ob.hidden()) {
-        <aside class="card" aria-labelledby="ob-title" animate.enter="card-enter" animate.leave="card-leave">
-          <header class="head">
-            <p id="ob-title" class="title">Lancer votre centre</p>
-            <span class="count">{{ ob.doneCount() }}/3</span>
-          </header>
-          <span class="bar" aria-hidden="true"><span class="bar-fill" [style.transform]="'scaleX(' + ob.doneCount() / 3 + ')'"></span></span>
-
-          <ol class="steps">
-            @for (s of ob.steps(); track s.key; let i = $index) {
-              <li class="step" [class.is-done]="s.done" [class.is-current]="ob.current()?.key === s.key">
-                <span class="mark" aria-hidden="true">
-                  @if (s.done) {
-                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  } @else {
-                    {{ i + 1 }}
-                  }
-                </span>
-                <span class="step-text">
-                  @if (ob.current()?.key === s.key) {
-                    <a [routerLink]="s.route">{{ s.label }}</a>
-                  } @else {
-                    <span>{{ s.label }}</span>
-                  }
-                  <small>{{ s.done ? 'Fait' : s.hint }}</small>
-                </span>
-              </li>
-            }
-          </ol>
-
-          <footer class="foot">
-            <button class="m-btn m-btn--primary" type="button" (click)="ob.resume()">Me guider</button>
-            <button class="later" type="button" (click)="ob.hide()">Plus tard</button>
-          </footer>
-        </aside>
-      } @else {
-        <button class="pill" type="button" animate.enter="card-enter" (click)="ob.resume()" [attr.aria-label]="'Reprendre le démarrage, ' + ob.doneCount() + ' étapes sur 3 faites'">
-          <span class="ring" [style.--p]="ob.doneCount() / 3" aria-hidden="true"></span>
-          Démarrage {{ ob.doneCount() }}/3
+      <div class="dock" [class.is-open]="expanded()">
+        <button
+          class="tab" type="button"
+          (click)="toggle()"
+          aria-haspopup="true" aria-controls="ob-panel"
+          [attr.aria-expanded]="expanded()"
+          [attr.aria-label]="(expanded() ? 'Fermer' : 'Ouvrir') + ' le guide de démarrage, ' + ob.doneCount() + ' étapes sur ' + ob.steps().length + ' faites'"
+        >
+          <span class="tab-ring" [style.--p]="ob.doneCount() / ob.steps().length" aria-hidden="true"></span>
+          <span class="tab-label">Démarrage</span>
+          <svg class="tab-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
         </button>
-      }
+
+        @if (expanded()) {
+          <aside id="ob-panel" class="panel" aria-labelledby="ob-title" animate.enter="panel-enter" animate.leave="panel-leave">
+            <header class="head">
+              <p id="ob-title" class="title">Lancer votre centre</p>
+              <span class="count">{{ ob.doneCount() }}/{{ ob.steps().length }}</span>
+            </header>
+            <span class="bar" aria-hidden="true"><span class="bar-fill" [style.transform]="'scaleX(' + ob.doneCount() / ob.steps().length + ')'"></span></span>
+
+            <ol class="steps">
+              @for (s of ob.steps(); track s.key; let i = $index) {
+                <li class="step" [class.is-done]="s.done" [class.is-current]="ob.current()?.key === s.key">
+                  <span class="mark" aria-hidden="true">
+                    @if (s.done) {
+                      <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    } @else {
+                      {{ i + 1 }}
+                    }
+                  </span>
+                  <span class="step-text">
+                    @if (ob.current()?.key === s.key) {
+                      <a [routerLink]="s.route" (click)="expanded.set(false)">{{ s.label }}</a>
+                    } @else {
+                      <span>{{ s.label }}</span>
+                    }
+                    <small>{{ s.done ? 'Fait' : s.hint }}</small>
+                  </span>
+                </li>
+              }
+            </ol>
+
+            <footer class="foot">
+              <button class="m-btn m-btn--primary" type="button" (click)="guide()">Me guider</button>
+              <button class="later" type="button" (click)="later()">Plus tard</button>
+            </footer>
+          </aside>
+        }
+      </div>
     }
   `,
   styles: `
     :host {
-      position: fixed;
-      inset-block-end: 20px;
-      inset-inline-start: 20px;
-      z-index: 15;
-      display: block;
+      display: contents;
     }
 
-    .card {
+    .dock {
+      position: fixed;
+      inset-block-start: 50%;
+      inset-inline-start: 0;
+      z-index: 15;
+      display: flex;
+      align-items: flex-start;
+      transform: translateY(-50%);
+    }
+
+    /* ── Folded tab ───────────────────────────────────────────────────── */
+
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      width: 40px;
+      padding: 14px 0 12px;
+      background: var(--m-paper);
+      border: 1px solid var(--m-line);
+      border-inline-start: none;
+      border-radius: 0 var(--m-r) var(--m-r) 0;
+      box-shadow: var(--m-shadow-lg);
+      transition: background-color var(--m-fast) linear, width var(--m-fast) linear;
+    }
+
+    .tab:hover {
+      background: var(--m-green-tint);
+    }
+
+    .dock.is-open .tab {
+      border-inline-end: 1px solid var(--m-line);
+    }
+
+    .tab-ring {
+      flex: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: conic-gradient(var(--m-green) calc(var(--p) * 360deg), var(--m-line-soft) 0);
+      mask: radial-gradient(circle, transparent 5px, #000 5.5px);
+    }
+
+    .tab-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      color: var(--m-ink);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+    }
+
+    .tab-chevron {
+      width: 15px;
+      height: 15px;
+      color: var(--m-ink-faint);
+      transition: transform var(--m-med) var(--m-ease);
+    }
+
+    .dock.is-open .tab-chevron {
+      transform: rotate(180deg);
+    }
+
+    [dir='rtl'] .tab {
+      border-radius: var(--m-r) 0 0 var(--m-r);
+      border-inline-start: 1px solid var(--m-line);
+      border-inline-end: none;
+    }
+
+    [dir='rtl'] .dock.is-open .tab {
+      border-inline-start: 1px solid var(--m-line);
+    }
+
+    [dir='rtl'] .tab-chevron {
+      transform: scaleX(-1);
+    }
+
+    [dir='rtl'] .dock.is-open .tab-chevron {
+      transform: scaleX(-1) rotate(180deg);
+    }
+
+    /* ── Unfolded panel ───────────────────────────────────────────────── */
+
+    .panel {
       width: 300px;
       overflow: clip;
       background: var(--m-paper);
       border: 1px solid var(--m-line);
+      border-inline-start: none;
       border-block-start: 3px solid var(--m-green);
-      border-radius: var(--m-r);
+      border-radius: 0 var(--m-r) var(--m-r) 0;
       box-shadow: var(--m-shadow-lg);
     }
 
-    .card-enter {
-      animation: card-in var(--m-slow) var(--m-ease) both;
+    [dir='rtl'] .panel {
+      border-inline-start: 1px solid var(--m-line);
+      border-inline-end: none;
+      border-radius: var(--m-r) 0 0 var(--m-r);
     }
 
-    .card-leave {
-      animation: card-out var(--m-med) var(--m-ease) both;
+    .panel-enter {
+      animation: panel-in var(--m-med) var(--m-ease) both;
     }
 
-    @keyframes card-in {
-      from { opacity: 0; transform: translateY(12px); }
+    .panel-leave {
+      animation: panel-out var(--m-fast) var(--m-ease) both;
     }
 
-    @keyframes card-out {
-      to { opacity: 0; transform: translateY(8px); }
+    @keyframes panel-in {
+      from { opacity: 0; transform: translateX(-10px); }
+    }
+
+    [dir='rtl'] .panel-enter {
+      animation-name: panel-in-rtl;
+    }
+
+    @keyframes panel-in-rtl {
+      from { opacity: 0; transform: translateX(10px); }
+    }
+
+    @keyframes panel-out {
+      to { opacity: 0; transform: translateX(-8px); }
     }
 
     .head {
@@ -134,6 +240,8 @@ import { OnboardingPage, OnboardingService } from './onboarding.service';
     .steps {
       margin: 0;
       padding: 10px 8px 6px;
+      max-height: 50vh;
+      overflow-y: auto;
       list-style: none;
     }
 
@@ -245,47 +353,15 @@ import { OnboardingPage, OnboardingService } from './onboarding.service';
       color: var(--m-ink);
     }
 
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      height: 42px;
-      padding-inline: 12px 16px;
-      border-radius: var(--m-r-pill);
-      background: var(--m-ink);
-      color: #fff;
-      font-size: 13.5px;
-      font-weight: 600;
-      box-shadow: 0 10px 24px -14px rgba(22, 40, 31, 0.6);
-      transition: transform var(--m-fast) var(--m-ease);
-    }
-
-    .pill:hover {
-      transform: translateY(-1px);
-    }
-
-    .ring {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: conic-gradient(#6ee7a8 calc(var(--p) * 360deg), rgba(255, 255, 255, 0.2) 0);
-      mask: radial-gradient(circle, transparent 5px, #000 5.5px);
-    }
-
     @media (max-width: 720px) {
-      :host {
-        inset-block-end: 12px;
-        inset-inline: 12px auto;
-      }
-
-      .card {
-        width: min(320px, calc(100vw - 24px));
+      .panel {
+        width: min(300px, calc(100vw - 56px));
       }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .card-enter,
-      .card-leave,
+      .panel-enter,
+      .panel-leave,
       .mark svg {
         animation-duration: 1ms;
       }
@@ -297,9 +373,25 @@ export class OnboardingChecklistComponent implements OnInit {
   readonly ob = inject(OnboardingService);
   private destroyRef = inject(DestroyRef);
 
+  /** Folded by default — a reference the owner opens when they want it, not a modal in their way. */
+  readonly expanded = signal(false);
+
   ngOnInit(): void {
     const page = this.page();
     this.ob.enter(page);
     this.destroyRef.onDestroy(() => this.ob.leave(page));
+  }
+
+  toggle(): void {
+    this.expanded.update(v => !v);
+  }
+
+  guide(): void {
+    this.ob.resume();
+  }
+
+  later(): void {
+    this.ob.hide();
+    this.expanded.set(false);
   }
 }

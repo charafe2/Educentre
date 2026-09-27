@@ -4,6 +4,7 @@ namespace App\Domains\Planning\Services;
 
 use App\Domains\Planning\Models\ClassSession;
 use App\Domains\Planning\Models\CourseClass;
+use App\Domains\Planning\Models\Group;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Validation\ValidationException;
 
@@ -40,12 +41,16 @@ class SessionService
     public function create(int $tenantId, array $data): ClassSession
     {
         $class = $this->findClass($tenantId, $data['classeId']);
+        $group = $this->findGroup($tenantId, $data['groupId'] ?? null);
         $isCancelled = (bool) ($data['isCancelled'] ?? false);
 
         if (!$isCancelled) {
             $this->assertNoScheduleConflict(
                 tenantId: $tenantId,
-                class: $class,
+                classId: $class->id,
+                groupId: $group?->id,
+                teacherId: $group?->effectiveTeacherId() ?? $class->teacher_id,
+                roomId: $group?->effectiveRoomId() ?? $class->room_id,
                 day: (int) $data['day'],
                 startHour: (int) $data['startHour'],
                 endHour: (int) $data['endHour'],
@@ -55,12 +60,13 @@ class SessionService
         return ClassSession::create([
             'tenant_id' => $tenantId,
             'class_id' => $class->id,
+            'group_id' => $group?->id,
             'day' => $data['day'],
             'start_hour' => $data['startHour'],
             'end_hour' => $data['endHour'],
             'is_cancelled' => $isCancelled,
             'cancel_reason' => $data['cancelReason'] ?? null,
-        ])->load('class');
+        ])->load('class', 'group');
     }
 
     public function update(int $tenantId, int $id, array $data): ClassSession
@@ -68,6 +74,8 @@ class SessionService
         $session = $this->find($tenantId, $id);
         $classId = $data['classeId'] ?? $session->class_id;
         $class = $this->findClass($tenantId, (int) $classId);
+        $groupId = array_key_exists('groupId', $data) ? $data['groupId'] : $session->group_id;
+        $group = $this->findGroup($tenantId, $groupId);
         $day = (int) ($data['day'] ?? $session->day);
         $startHour = (int) ($data['startHour'] ?? $session->start_hour);
         $endHour = (int) ($data['endHour'] ?? $session->end_hour);
@@ -82,7 +90,10 @@ class SessionService
         if (!$isCancelled) {
             $this->assertNoScheduleConflict(
                 tenantId: $tenantId,
-                class: $class,
+                classId: $class->id,
+                groupId: $group?->id,
+                teacherId: $group?->effectiveTeacherId() ?? $class->teacher_id,
+                roomId: $group?->effectiveRoomId() ?? $class->room_id,
                 day: $day,
                 startHour: $startHour,
                 endHour: $endHour,
@@ -92,6 +103,7 @@ class SessionService
 
         $session->update([
             'class_id' => $class->id,
+            'group_id' => $group?->id,
             'day' => $day,
             'start_hour' => $startHour,
             'end_hour' => $endHour,
@@ -99,7 +111,7 @@ class SessionService
             'cancel_reason' => array_key_exists('cancelReason', $data) ? $data['cancelReason'] : $session->cancel_reason,
         ]);
 
-        return $session->refresh()->load('class');
+        return $session->refresh()->load('class', 'group');
     }
 
     public function cancel(int $tenantId, int $id, string $reason): ClassSession
@@ -125,50 +137,65 @@ class SessionService
             ->findOrFail($classId);
     }
 
+    private function findGroup(int $tenantId, ?int $groupId): ?Group
+    {
+        if ($groupId === null) {
+            return null;
+        }
+
+        return Group::query()
+            ->with('courseClass')
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($groupId);
+    }
+
+    /**
+     * A conflict is: the exact same class+group slot (double-booking it), or
+     * another session whose EFFECTIVE teacher/room — its own group's
+     * override if it has one, else its class's — matches this one's. Groups
+     * can override their class's teacher/room/price (see Group model), so
+     * the comparison can't be done as a single whereHas('class', ...) query
+     * the way it could when only classes carried a teacher/room.
+     */
     private function assertNoScheduleConflict(
         int $tenantId,
-        CourseClass $class,
+        int $classId,
+        ?int $groupId,
+        ?int $teacherId,
+        ?int $roomId,
         int $day,
         int $startHour,
         int $endHour,
         ?int $ignoreSessionId = null,
     ): void {
-        $conflict = ClassSession::query()
-            ->with('class')
+        $overlapping = ClassSession::query()
+            ->with(['class', 'group.courseClass'])
             ->where('tenant_id', $tenantId)
             ->where('day', $day)
             ->where('is_cancelled', false)
             ->when($ignoreSessionId !== null, fn ($query) => $query->whereKeyNot($ignoreSessionId))
             ->where('start_hour', '<', $endHour)
             ->where('end_hour', '>', $startHour)
-            ->whereHas('class', function ($query) use ($class) {
-                $query->where('id', $class->id)
-                    ->orWhere(function ($query) use ($class) {
-                        $query->whereNotNull('teacher_id')
-                            ->where('teacher_id', $class->teacher_id);
-                    })
-                    ->orWhere(function ($query) use ($class) {
-                        $query->whereNotNull('room_id')
-                            ->where('room_id', $class->room_id);
-                    });
-            })
-            ->first();
+            ->get();
 
-        if ($conflict === null) {
-            return;
+        foreach ($overlapping as $session) {
+            $sameSlot = $session->class_id === $classId && $session->group_id === $groupId;
+            $sessionTeacherId = $session->group?->effectiveTeacherId() ?? $session->class?->teacher_id;
+            $sessionRoomId = $session->group?->effectiveRoomId() ?? $session->class?->room_id;
+            $teacherClash = $teacherId !== null && $sessionTeacherId === $teacherId;
+            $roomClash = $roomId !== null && $sessionRoomId === $roomId;
+
+            if (!$sameSlot && !$teacherClash && !$roomClash) {
+                continue;
+            }
+
+            $message = match (true) {
+                $sameSlot => 'Ce groupe a deja une seance sur ce creneau.',
+                $teacherClash => 'Ce professeur a deja une seance sur ce creneau.',
+                default => 'Cette salle est deja occupee sur ce creneau.',
+            };
+
+            throw ValidationException::withMessages(['startHour' => [$message]]);
         }
-
-        $message = 'Conflit de planning avec une autre seance.';
-        if ($conflict->class_id === $class->id) {
-            $message = 'Cette classe a deja une seance sur ce creneau.';
-        } elseif ($conflict->class?->teacher_id === $class->teacher_id && $class->teacher_id !== null) {
-            $message = 'Ce professeur a deja une seance sur ce creneau.';
-        } elseif ($conflict->class?->room_id === $class->room_id && $class->room_id !== null) {
-            $message = 'Cette salle est deja occupee sur ce creneau.';
-        }
-
-        throw ValidationException::withMessages([
-            'startHour' => [$message],
-        ]);
     }
 }

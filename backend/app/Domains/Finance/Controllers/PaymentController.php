@@ -3,6 +3,7 @@
 namespace App\Domains\Finance\Controllers;
 
 use App\Domains\Finance\Requests\MarkPaymentPaidRequest;
+use App\Domains\Finance\Requests\StoreBatchPaymentRequest;
 use App\Domains\Finance\Requests\StorePaymentRequest;
 use App\Domains\Finance\Requests\UpdatePaymentRequest;
 use App\Domains\Finance\Resources\PaymentResource;
@@ -68,5 +69,29 @@ class PaymentController extends Controller
         $this->paymentService->delete($request->user()->tenant_id, $id);
 
         return $this->success(null, 'Paiement supprimé avec succès.');
+    }
+
+    public function batch(StoreBatchPaymentRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $result = $this->paymentService->payBatch(
+            $request->user()->tenant_id,
+            $data['studentId'],
+            $data['lines'],
+            $data['method'],
+            $data['paidAt'] ?? null,
+        );
+
+        return $this->success([
+            'receiptNumber' => $result['receiptNumber'],
+            'payments' => PaymentResource::collection($result['payments']),
+        ], 'Paiement enregistré.', 201);
+    }
+
+    public function cancelReceipt(string $number, Request $request): JsonResponse
+    {
+        $this->paymentService->cancelReceipt($request->user()->tenant_id, $number);
+
+        return $this->success(null, 'Reçu annulé.');
     }
 }

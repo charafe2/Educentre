@@ -60,6 +60,8 @@ class StudentService
                 'student_code' => 'ETD-'.str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 'first_name' => $data['firstName'],
                 'last_name' => $data['lastName'],
+                'email' => $data['email'] ?? null,
+                'phone' => $data['phone'] ?? null,
                 'birth_date' => $data['birthDate'] ?? null,
                 'current_school' => $data['school'] ?? null,
                 'school_level' => $data['level'] ?? null,
@@ -125,6 +127,8 @@ class StudentService
             $student->update([
                 'first_name' => $data['firstName'] ?? $student->first_name,
                 'last_name' => $data['lastName'] ?? $student->last_name,
+                'email' => array_key_exists('email', $data) ? $data['email'] : $student->email,
+                'phone' => array_key_exists('phone', $data) ? $data['phone'] : $student->phone,
                 'birth_date' => $data['birthDate'] ?? $student->birth_date,
                 'current_school' => $data['school'] ?? $student->current_school,
                 'school_level' => $data['level'] ?? $student->school_level,

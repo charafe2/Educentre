@@ -70,8 +70,9 @@ export class TeachersService {
     return this.teachers().find(t => t.id === id);
   }
 
-  add(data: Omit<Teacher, 'id' | 'avatarColor'>): Observable<ApiResponse<{id: number}>> {
-    return this.http.post<ApiResponse<{id: number}>>(`${environment.apiUrl}/v1/teachers`, data).pipe(
+  /** `plainPassword` is present once, in the create response only — the account is created together with the teacher. */
+  add(data: Omit<Teacher, 'id' | 'avatarColor' | 'access'>): Observable<ApiResponse<{id: number; plainPassword?: string}>> {
+    return this.http.post<ApiResponse<{id: number; plainPassword?: string}>>(`${environment.apiUrl}/v1/teachers`, data).pipe(
       tap(() => this.refreshLists())
     );
   }
@@ -84,6 +85,31 @@ export class TeachersService {
 
   delete(id: number): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${environment.apiUrl}/v1/teachers/${id}`).pipe(
+      tap(() => this.refreshLists())
+    );
+  }
+
+  /** Generates a new password server-side, returned once in plain text. */
+  resetPassword(id: number): Observable<ApiResponse<{plainPassword: string}>> {
+    return this.http.post<ApiResponse<{plainPassword: string}>>(`${environment.apiUrl}/v1/teachers/${id}/access/reset-password`, {}).pipe(
+      tap(() => this.refreshLists())
+    );
+  }
+
+  suspendAccess(id: number): Observable<ApiResponse<null>> {
+    return this.setAccessState(id, 'suspend');
+  }
+
+  revokeAccess(id: number): Observable<ApiResponse<null>> {
+    return this.setAccessState(id, 'revoke');
+  }
+
+  reactivateAccess(id: number): Observable<ApiResponse<null>> {
+    return this.setAccessState(id, 'reactivate');
+  }
+
+  private setAccessState(id: number, action: 'suspend' | 'revoke' | 'reactivate'): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${environment.apiUrl}/v1/teachers/${id}/access/${action}`, {}).pipe(
       tap(() => this.refreshLists())
     );
   }

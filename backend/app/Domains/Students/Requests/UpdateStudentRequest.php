@@ -16,6 +16,8 @@ class UpdateStudentRequest extends FormRequest
         return [
             'firstName' => ['nullable', 'string', 'max:255'],
             'lastName' => ['nullable', 'string', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'birthDate' => ['nullable', 'date'],
             'school' => ['nullable', 'string', 'max:255'],
             'level' => ['nullable', 'string', 'max:255'],

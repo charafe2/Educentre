@@ -18,6 +18,13 @@ class SettingsResource extends JsonResource
             'address' => $settings['address'] ?? '',
             'phone' => $settings['phone'] ?? '',
             'whatsapp' => $settings['whatsapp'] ?? '',
+            'logo' => $settings['logo'] ?? '',
+            'email' => $settings['email'] ?? '',
+            'website' => $settings['website'] ?? '',
+            'ice' => $settings['ice'] ?? '',
+            'ifNumber' => $settings['ifNumber'] ?? '',
+            'rc' => $settings['rc'] ?? '',
+            'patente' => $settings['patente'] ?? '',
         ];
     }
 }

@@ -8,6 +8,17 @@ import { StudentsService } from './students.service';
 
 export type PaymentPayload = Omit<Payment, 'id' | 'paidAt' | 'amountPaid'> & { paidAt?: string; amountPaid?: number };
 
+export interface BatchPaymentLine {
+  classeId: number;
+  periodMonth: string;
+  amount: number;
+}
+
+export interface BatchPaymentResult {
+  receiptNumber: string;
+  payments: Payment[];
+}
+
 export interface PaymentPageFilters {
   page?: number;
   perPage?: number;
@@ -116,6 +127,19 @@ export class PaymentsService {
 
   markAsPaid(id: number, method: PaymentMethod): Observable<ApiResponse<Payment>> {
     return this.http.post<ApiResponse<Payment>>(`${environment.apiUrl}/v1/payments/${id}/mark-paid`, { method }).pipe(
+      tap(() => this.refreshRelatedData())
+    );
+  }
+
+  /** The cash register's "Encaisser" action: one or several class×month lines paid at once, sharing one receipt. */
+  payBatch(studentId: number, lines: BatchPaymentLine[], method: PaymentMethod): Observable<ApiResponse<BatchPaymentResult>> {
+    return this.http.post<ApiResponse<BatchPaymentResult>>(`${environment.apiUrl}/v1/payments/batch`, { studentId, lines, method }).pipe(
+      tap(() => this.refreshRelatedData())
+    );
+  }
+
+  cancelReceipt(receiptNumber: string): Observable<ApiResponse<null>> {
+    return this.http.delete<ApiResponse<null>>(`${environment.apiUrl}/v1/payments/receipt/${receiptNumber}`).pipe(
       tap(() => this.refreshRelatedData())
     );
   }

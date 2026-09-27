@@ -116,7 +116,7 @@
 
 .modules {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 200px));
+  grid-template-columns: repeat(5, minmax(0, 200px));
   gap: 1px;
   background: var(--h-line);
   border: 1px solid var(--h-line);
@@ -510,6 +510,16 @@
 /* Paramètres — the two sliders trade places. */
 .a-knob-1 {
   animation: knob-1 4.4s ease-in-out infinite;
+}
+
+/* Ajouter un élève — the plus sign gives a small, steady pulse. */
+.a-plus {
+  animation: plus 3.6s ease-in-out infinite;
+}
+
+@keyframes plus {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.15); opacity: 1; }
 }
 
 .a-knob-2 {

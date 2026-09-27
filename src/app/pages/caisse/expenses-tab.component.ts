@@ -43,24 +43,15 @@ export class ExpensesTabComponent {
 
   // ── Derived views (re-read whenever the stores change) ────────────
   readonly rows = computed(() => {
-    this.store.salaries();
     this.caisse.students();
     return this.store.salaryRows(this.month());
   });
-  readonly expenses = computed(() => {
-    this.store.expenses();
-    return this.store.expensesOf(this.month());
-  });
+  readonly expenses = computed(() => this.store.expensesOf(this.month()));
   readonly sum = computed(() => {
-    this.store.salaries();
-    this.store.expenses();
     this.caisse.payments();
     return this.store.summary(this.month());
   });
-  readonly carry = computed(() => {
-    this.store.expenses();
-    return this.store.carryOver(this.month());
-  });
+  readonly carry = computed(() => this.store.carryOver(this.month()));
   readonly unpaidRows = computed(() => this.rows().filter(r => !r.record));
   readonly categoryMax = computed(() => Math.max(1, ...this.sum().byCategory.map(c => c.amount)));
 
@@ -102,9 +93,9 @@ export class ExpensesTabComponent {
   }
 
   modeText(row: SalaryRow): string {
-    return row.teacher.mode === 'fixed'
-      ? 'Salaire fixe'
-      : `${row.teacher.ratePerStudent} MAD × ${row.students} élèves`;
+    if (row.teacher.mode === 'fixed') return 'Salaire fixe';
+    if (row.teacher.mode === 'percentage') return `${row.teacher.percentageRate}% du tarif, ${row.students} élèves`;
+    return `${row.teacher.ratePerStudent} MAD × ${row.students} élèves`;
   }
 
   // ── Expenses: quick add ───────────────────────────────────────────
@@ -127,15 +118,15 @@ export class ExpensesTabComponent {
     setTimeout(() => document.querySelector<HTMLInputElement>('.add input[name=label]')?.focus(), 40);
   }
 
-  addExpense(): void {
+  async addExpense(): Promise<void> {
     const d = this.draft;
     const amount = Math.round(+(d.amount ?? 0));
     if (!d.label.trim() || amount <= 0) return;
-    const e = this.store.addExpense({
+    const e = await this.store.addExpense({
       month: this.month(), date: new Date(`${d.date}T12:00:00`).toISOString(), category: d.category,
       label: d.label.trim(), amount, method: d.method, recurring: d.recurring,
     });
-    this.notify.emit({ text: `Dépense ajoutée : ${e.label}, ${money(e.amount)} MAD`, undo: () => this.store.removeExpense(e.id) });
+    this.notify.emit({ text: `Dépense ajoutée : ${e.label}, ${money(e.amount)} MAD`, undo: () => { void this.store.removeExpense(e.id); } });
     this.draft = { ...this.blank(), category: d.category, method: d.method };
     setTimeout(() => document.querySelector<HTMLInputElement>('.add input[name=label]')?.focus(), 20);
   }
@@ -146,20 +137,20 @@ export class ExpensesTabComponent {
     this.draft.recurring = ['Loyer', 'Internet et téléphone', 'Électricité et eau', 'Ménage'].includes(c);
   }
 
-  removeExpense(e: Expense): void {
-    const removed = this.store.removeExpense(e.id);
-    if (removed) this.notify.emit({ text: `Dépense supprimée : ${removed.label}`, undo: () => this.store.restoreExpense(removed) });
+  async removeExpense(e: Expense): Promise<void> {
+    const removed = await this.store.removeExpense(e.id);
+    if (removed) this.notify.emit({ text: `Dépense supprimée : ${removed.label}`, undo: () => { void this.store.restoreExpense(removed); } });
   }
 
-  carryOverAll(): void {
+  async carryOverAll(): Promise<void> {
     const items = this.carry();
     const month = this.month();
-    const created = items.map(e => this.store.addExpense({
+    const created = await Promise.all(items.map(e => this.store.addExpense({
       ...e, month, date: new Date(`${month}-${e.date.slice(8, 10)}T12:00:00`).toISOString(),
-    }));
+    })));
     this.notify.emit({
       text: `${created.length > 1 ? `${created.length} dépenses fixes reportées` : '1 dépense fixe reportée'} : ${money(created.reduce((n, e) => n + e.amount, 0))} MAD`,
-      undo: () => created.forEach(e => this.store.removeExpense(e.id)),
+      undo: () => created.forEach(e => { void this.store.removeExpense(e.id); }),
     });
   }
 

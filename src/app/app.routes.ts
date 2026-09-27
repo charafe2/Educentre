@@ -11,27 +11,39 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
-  // Rebranded home (static preview). Sits outside AdminLayout because the new
-  // UI has no sidebar; add authGuard once these pages read real tenant data.
+  // Rebranded, sidebar-less UI — lives outside AdminLayout (it has its own
+  // app bar) but behind the same auth/permission guards as its v1
+  // counterpart, so both versions enforce identical access while they run
+  // side by side during the migration.
   {
-    path: 'accueil',
+    path: 'v2',
+    canActivate: [authGuard],
     loadComponent: () => import('./pages/accueil/accueil.component').then(m => m.AccueilComponent),
   },
   {
-    path: 'accueil/groupes',
+    path: 'v2/groupes',
+    canActivate: [authGuard, permissionGuard], data: { permKey: 'groupes' },
     loadComponent: () => import('./pages/groupes-v2/groupes-v2.component').then(m => m.GroupesV2Component),
   },
   {
-    path: 'accueil/caisse',
+    path: 'v2/caisse',
+    canActivate: [authGuard, permissionGuard], data: { permKey: 'finances' },
     loadComponent: () => import('./pages/caisse/caisse.component').then(m => m.CaisseComponent),
   },
   {
-    path: 'accueil/parametres',
+    path: 'v2/parametres',
+    canActivate: [authGuard, permissionGuard], data: { permKey: 'parametres' },
     loadComponent: () => import('./pages/parametres-v2/parametres-v2.component').then(m => m.ParametresV2Component),
   },
   {
-    path: 'accueil/enseignants',
+    path: 'v2/enseignants',
+    canActivate: [authGuard, permissionGuard], data: { permKey: 'professeurs' },
     loadComponent: () => import('./pages/enseignants/enseignants.component').then(m => m.EnseignantsComponent),
+  },
+  {
+    path: 'v2/etudiants/nouveau',
+    canActivate: [authGuard, permissionGuard], data: { permKey: 'etudiants' },
+    loadComponent: () => import('./pages/ajouter-eleve-v2/ajouter-eleve-v2.component').then(m => m.AjouterEleveV2Component),
   },
 
   {

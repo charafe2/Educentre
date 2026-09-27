@@ -60,7 +60,7 @@ class TeacherController extends Controller
             'tenant_id' => $request->user()->tenant_id,
         ]);
         return $this->success(
-            ['id' => $teacher->id],
+            ['id' => $teacher->id, 'plainPassword' => $teacher->plainPassword],
             'Professeur créé avec succès.',
             201
         );
@@ -76,5 +76,29 @@ class TeacherController extends Controller
     {
         $this->teacherService->delete($id, $request->user()->tenant_id);
         return $this->success(null, 'Professeur supprimé avec succès.');
+    }
+
+    public function resetPassword(int $id, Request $request): JsonResponse
+    {
+        $plainPassword = $this->teacherService->resetPassword($id, $request->user()->tenant_id);
+        return $this->success(['plainPassword' => $plainPassword], 'Mot de passe régénéré.');
+    }
+
+    public function suspend(int $id, Request $request): JsonResponse
+    {
+        $this->teacherService->suspend($id, $request->user()->tenant_id);
+        return $this->success(null, "Accès suspendu.");
+    }
+
+    public function revoke(int $id, Request $request): JsonResponse
+    {
+        $this->teacherService->revoke($id, $request->user()->tenant_id);
+        return $this->success(null, "Accès révoqué.");
+    }
+
+    public function reactivate(int $id, Request $request): JsonResponse
+    {
+        $this->teacherService->reactivate($id, $request->user()->tenant_id);
+        return $this->success(null, "Accès réactivé.");
     }
 }

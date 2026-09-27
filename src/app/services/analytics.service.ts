@@ -18,4 +18,9 @@ export class AnalyticsService {
         .set('teacher_per_page', String(teacherPerPage)),
     });
   }
+
+  /** Lighter than getReport(): just this week's attendance rate, for the Accueil home page. */
+  getWeeklyAttendanceRate(): Observable<ApiResponse<{ rate: number }>> {
+    return this.http.get<ApiResponse<{ rate: number }>>(`${environment.apiUrl}/v1/analytics/attendance-this-week`);
+  }
 }

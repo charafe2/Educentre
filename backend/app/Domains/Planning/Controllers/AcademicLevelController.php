@@ -33,4 +33,11 @@ class AcademicLevelController extends Controller
 
         return $this->success(AcademicLevelResource::make($level), 'Niveau ajouté.', 201);
     }
+
+    public function destroy(int $id, Request $request): JsonResponse
+    {
+        $this->academicLevelService->removeForTenant($request->user()->tenant_id, $id);
+
+        return $this->success(null, 'Niveau retiré.');
+    }
 }

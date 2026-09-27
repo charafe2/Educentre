@@ -4,7 +4,9 @@ namespace App\Domains\Planning\Controllers;
 
 use App\Domains\Planning\Requests\StoreGroupRequest;
 use App\Domains\Planning\Requests\UpdateGroupCapacityRequest;
+use App\Domains\Planning\Requests\UpdateGroupRequest;
 use App\Domains\Planning\Requests\MoveStudentRequest;
+use App\Domains\Planning\Requests\RemoveStudentFromGroupRequest;
 use App\Domains\Planning\Resources\GroupResource;
 use App\Domains\Planning\Services\GroupService;
 use App\Http\Controllers\Controller;
@@ -40,6 +42,28 @@ class GroupController extends Controller
     {
         $this->groupService->updateCapacity($id, $request->user()->tenant_id, $request->validated()['maxCapacity']);
         return $this->success(null, 'Capacité mise à jour avec succès.');
+    }
+
+    public function update(int $id, UpdateGroupRequest $request): JsonResponse
+    {
+        $group = $this->groupService->update($id, $request->user()->tenant_id, $request->validated());
+        return $this->success(new GroupResource($group), 'Groupe mis à jour avec succès.');
+    }
+
+    public function destroy(int $id, Request $request): JsonResponse
+    {
+        $this->groupService->delete($id, $request->user()->tenant_id);
+        return $this->success(null, 'Groupe supprimé avec succès.');
+    }
+
+    public function removeStudent(RemoveStudentFromGroupRequest $request): JsonResponse
+    {
+        $this->groupService->removeStudent(
+            $request->user()->tenant_id,
+            $request->validated()['studentId'],
+            $request->validated()['groupId'],
+        );
+        return $this->success(null, 'Élève retiré du groupe avec succès.');
     }
 
     public function moveStudent(MoveStudentRequest $request): JsonResponse

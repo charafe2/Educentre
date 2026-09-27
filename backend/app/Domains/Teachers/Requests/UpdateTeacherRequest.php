@@ -23,6 +23,7 @@ class UpdateTeacherRequest extends FormRequest
             'lastName' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', Rule::unique('users', 'email')->ignore($userId, 'id')],
             'specialty' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'paymentMode' => ['nullable', 'string', 'in:fixed,per_student,percentage'],
             'fixedSalary' => ['nullable', 'numeric', 'min:0'],
             'ratePerStudent' => ['nullable', 'numeric', 'min:0'],

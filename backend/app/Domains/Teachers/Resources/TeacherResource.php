@@ -16,7 +16,7 @@ class TeacherResource extends JsonResource
             'firstName' => $parts[0] ?? '',
             'lastName' => $parts[1] ?? '',
             'email' => $this->user?->email ?? '',
-            'phone' => '',
+            'phone' => $this->phone,
             'specialty' => $this->specialty,
             'paymentMode' => $this->payment_mode,
             'fixedSalary' => (float) $this->fixed_monthly_salary,
@@ -25,6 +25,13 @@ class TeacherResource extends JsonResource
             'iban' => $this->iban,
             'classIds' => $this->classes->pluck('id'),
             'status' => $this->is_active ? 'active' : 'inactive',
+            'access' => [
+                'login' => $this->user?->email ?? '',
+                'state' => $this->user?->status ?? 'active',
+                'lastLoginAt' => $this->user?->last_login_at,
+            ],
+            // One-time-only: present only right after create() or resetPassword(), never persisted or re-derivable.
+            'plainPassword' => $this->when(isset($this->plainPassword), fn () => $this->plainPassword),
         ];
     }
 }

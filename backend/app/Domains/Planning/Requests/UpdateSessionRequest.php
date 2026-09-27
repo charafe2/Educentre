@@ -27,6 +27,11 @@ class UpdateSessionRequest extends FormRequest
             'endHour' => ['sometimes', 'integer', 'between:1,24'],
             'isCancelled' => ['sometimes', 'boolean'],
             'cancelReason' => ['nullable', 'string', 'max:255'],
+            'groupId' => [
+                'nullable',
+                'integer',
+                Rule::exists('groups', 'id')->where('tenant_id', $tenantId),
+            ],
         ];
     }
 

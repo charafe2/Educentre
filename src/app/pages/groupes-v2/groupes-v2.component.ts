@@ -4,22 +4,39 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
 import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding-checklist.component';
-import { CentreStore, DAY_SHORT, DEFAULT_DURATION, GroupRow, POOL, Slot } from '../../shared/centre.store';
+import { CentreStore, DAY_SHORT, DEFAULT_DURATION, GroupRow, Slot, sameName, slotToSessionPayloads } from '../../shared/centre.store';
+import { ClassesService } from '../../services/classes.service';
+import { GroupsService } from '../../services/groups.service';
+import { SessionsService } from '../../services/sessions.service';
+import { TeachersService } from '../../services/teachers.service';
+import { RoomsService } from '../../services/rooms.service';
+import { StudentsService } from '../../services/students.service';
 
 export type { GroupRow, Slot };
 
 /**
- * Groupes — rebranded list of every group in the centre.
- * Static for now: rows live in a local signal shaped after Classe + Group, so
- * every action works on screen. Wiring means swapping `groups` for
- * ClassesService/GroupsService and routing each write through them.
+ * Groupes — every group in the centre, wired to the real API. A "group"
+ * (GroupRow) is a view built by CentreStore joining a real Group with its
+ * Class (subject/level/default teacher/room/price) and its Sessions — a
+ * group can override its class's teacher/room/price/schedule (see the
+ * Group model's `effectiveTeacherId()` and friends on the backend); when it
+ * doesn't, it just shows what the class itself carries.
  */
 
-
-type Draft = Omit<GroupRow, 'id' | 'students'>;
+interface Draft {
+  subject: string;
+  level: string;
+  teacherId: number | null;
+  roomId: number | null;
+  schedule: Slot;
+  capacity: number;
+  price: number;
+}
 type SortKey = 'subject' | 'fill' | 'price' | 'schedule';
 type View = 'liste' | 'semaine';
 
@@ -31,14 +48,9 @@ interface Block {
   lanes: number;
 }
 
-const TEACHERS = ['M. Idrissi', 'M. Ouali', 'Mme Benjelloun', 'Mme Chraibi', 'Mme Alaoui', 'M. Tazi'];
-const ROOMS = ['Salle 1', 'Salle 2', 'Salle 3'];
 const DAY_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-const DURATIONS = [60, 90, 120, 150, 180];
+const DURATIONS = [60, 120, 180];
 const HOUR_PX = 56;
-
-
-
 
 @Component({
   selector: 'app-groupes-v2',
@@ -54,11 +66,18 @@ export class GroupesV2Component {
   private destroyRef = inject(DestroyRef);
 
   private centre = inject(CentreStore);
+  private classesService = inject(ClassesService);
+  private groupsService = inject(GroupsService);
+  private sessionsService = inject(SessionsService);
+  private teachersService = inject(TeachersService);
+  private roomsService = inject(RoomsService);
+  private studentsService = inject(StudentsService);
+
   /** Offered levels and subjects come from Paramètres. */
   readonly levels = this.centre.levels;
   readonly subjects = this.centre.subjects;
-  readonly teachers = TEACHERS;
-  readonly rooms = ROOMS;
+  readonly teachers = this.teachersService.teachers;
+  readonly rooms = this.roomsService.rooms;
   readonly dayShort = DAY_SHORT;
   readonly dayLong = DAY_LONG;
   readonly durations = DURATIONS;
@@ -89,7 +108,9 @@ export class GroupesV2Component {
   /** Every group that passes the filters, each with the students the search hit. */
   readonly results = computed(() => {
     const q = normalize(this.query().trim());
+    const hidden = this.hiddenIds();
     return this.groups()
+      .filter(g => !hidden.has(g.id))
       .filter(g =>
         (!this.level() || g.level === this.level()) &&
         (!this.subject() || g.subject === this.subject()) &&
@@ -148,12 +169,12 @@ export class GroupesV2Component {
   }
 
   // ── Conflicts: same room or same teacher at overlapping times ─────
-  /** Every clash in the centre, keyed by group id, as sentences. */
+  /** Every clash in the centre, keyed by group id, as sentences — an ambient view over real data; the actual save() is also validated server-side. */
   readonly conflicts = computed(() => {
     const map = new Map<number, string[]>();
     const list = this.groups();
     for (const g of list) {
-      const found = clashes(g, g.schedule, g.room, g.teacher, list);
+      const found = clashes(g.id, g.classeId, g.schedule, g.room, g.teacher, list);
       if (found.length) map.set(g.id, found);
     }
     return map;
@@ -167,6 +188,8 @@ export class GroupesV2Component {
 
   // ── Rows ──────────────────────────────────────────────────────────
   readonly expanded = signal<Set<number>>(new Set());
+  /** Optimistically hidden while a delete's undo window is running. */
+  private readonly hiddenIds = signal<Set<number>>(new Set());
   readonly removing = signal<number | null>(null);
 
   isExpanded(id: number): boolean {
@@ -186,7 +209,7 @@ export class GroupesV2Component {
   }
 
   fill(g: GroupRow): number {
-    return Math.min(100, Math.round((g.students.length / g.capacity) * 100));
+    return g.capacity ? Math.min(100, Math.round((g.students.length / g.capacity) * 100)) : 0;
   }
 
   money(value: number): string {
@@ -200,13 +223,10 @@ export class GroupesV2Component {
       .sort((a, b) => a.number - b.number);
   }
 
-  private nextNumber(subject: string, level: string): number {
-    return Math.max(0, ...this.groups().filter(g => g.subject === subject && g.level === level).map(g => g.number)) + 1;
-  }
-
   // ── Create / edit / duplicate drawer ──────────────────────────────
   readonly editing = signal<GroupRow | 'new' | null>(null);
   draft: Draft = this.blankDraft();
+  readonly saving = signal(false);
   private firstField = viewChild<ElementRef<HTMLSelectElement>>('firstField');
 
   openCreate(): void {
@@ -219,17 +239,23 @@ export class GroupesV2Component {
     this.focusFirstField();
   }
 
-  /** Same subject, level, teacher and price; next free number; no slot yet. */
+  /** Same subject, level, teacher, room and price; no slot yet — the backend assigns the next free group number. */
   openDuplicate(g: GroupRow): void {
-    const { id, students, ...rest } = g;
-    this.draft = { ...rest, number: this.nextNumber(g.subject, g.level), schedule: { days: [], start: g.schedule.start, duration: g.schedule.duration } };
+    this.draft = {
+      subject: g.subject, level: g.level, teacherId: g.teacherId, roomId: g.roomId,
+      schedule: { days: [], start: g.schedule.start || '17:00', duration: g.schedule.duration || DEFAULT_DURATION },
+      capacity: g.capacity, price: g.price,
+    };
     this.editing.set('new');
     this.focusFirstField();
   }
 
   openEdit(g: GroupRow): void {
-    const { id, students, ...rest } = g;
-    this.draft = { ...rest, schedule: { ...g.schedule, days: [...g.schedule.days] } };
+    this.draft = {
+      subject: g.subject, level: g.level, teacherId: g.teacherId, roomId: g.roomId,
+      schedule: { ...g.schedule, days: [...g.schedule.days] },
+      capacity: g.capacity, price: g.price,
+    };
     this.editing.set(g);
     this.focusFirstField();
   }
@@ -247,14 +273,9 @@ export class GroupesV2Component {
   draftErrors(): string[] {
     const d = this.draft;
     const target = this.editing();
-    const selfId = target && target !== 'new' ? target.id : null;
+    const enrolled = target && target !== 'new' ? target.students.length : 0;
     const errors: string[] = [];
     if (!d.subject || !d.level) errors.push('Choisissez une matière et un niveau.');
-    if (this.groups().some(g => g.id !== selfId && g.subject === d.subject && g.level === d.level && g.number === +d.number)) {
-      errors.push(`Le groupe ${d.number} existe déjà en ${d.subject}, ${d.level}.`);
-    }
-    if (!(+d.number >= 1)) errors.push('Le numéro de groupe doit être 1 ou plus.');
-    const enrolled = target && target !== 'new' ? target.students.length : 0;
     if (+d.capacity < Math.max(1, enrolled)) {
       errors.push(enrolled
         ? `Ce groupe compte déjà ${enrolled} élèves : la capacité ne peut pas descendre en dessous.`
@@ -264,35 +285,87 @@ export class GroupesV2Component {
     return errors;
   }
 
-  /** Non-blocking: clashes with the rest of the timetable, live as you edit. */
+  /** Non-blocking: clashes with the rest of the timetable, live as you edit — a live preview only; save() is the real, authoritative check. */
   draftConflicts(): string[] {
     const target = this.editing();
+    const teacherName = this.teachers().find(t => t.id === this.draft.teacherId);
+    const roomName = this.rooms().find(r => r.id === this.draft.roomId);
+    const classeId = target && target !== 'new'
+      ? target.classeId
+      : this.classesService.classes().find(c => sameName(c.subject, this.draft.subject) && sameName(c.level, this.draft.level))?.id ?? null;
     const others = this.groups().filter(g => !(target && target !== 'new' && g.id === target.id));
-    return clashes(null, this.draft.schedule, this.draft.room, this.draft.teacher, others);
+    return clashes(
+      null, classeId, this.draft.schedule,
+      roomName?.name ?? '', teacherName ? `${teacherName.firstName} ${teacherName.lastName}` : '',
+      others,
+    );
   }
 
-  save(): void {
+  async save(): Promise<void> {
     if (this.draftErrors().length) return;
     const target = this.editing();
     const d = this.draft;
-    const draft: Draft = { ...d, number: +d.number, capacity: +d.capacity, price: +d.price, schedule: { ...d.schedule, duration: +d.schedule.duration } };
-    if (target === 'new') {
-      const id = Math.max(0, ...this.groups().map(g => g.id)) + 1;
-      this.commit(list => [...list, { ...draft, id, students: [] }], `${draft.subject}, groupe ${draft.number} créé`);
-      this.flash(id);
-    } else if (target) {
-      this.commit(list => list.map(g => (g.id === target.id ? { ...g, ...draft } : g)), 'Modifications enregistrées');
-      this.flash(target.id);
+    this.saving.set(true);
+    try {
+      const overrides = { teacherId: d.teacherId, roomId: d.roomId, monthlyPrice: +d.price };
+      let groupId: number;
+      let classeId: number;
+      let isNew = false;
+
+      if (target && target !== 'new') {
+        groupId = target.id;
+        classeId = target.classeId;
+        await firstValueFrom(this.groupsService.update(groupId, { maxCapacity: +d.capacity, ...overrides }));
+      } else {
+        isNew = true;
+        const existingClass = this.classesService.classes().find(c => sameName(c.subject, d.subject) && sameName(c.level, d.level));
+        if (existingClass) {
+          classeId = existingClass.id;
+          const res = await firstValueFrom(this.groupsService.create(classeId, +d.capacity, overrides));
+          groupId = res.data.id;
+        } else {
+          // New (subject, level) combo: the backend auto-creates a first
+          // group for a brand-new class (same as "Ajouter classe") — reuse
+          // it rather than leaving an empty, unconfigured group behind.
+          const classRes = await firstValueFrom(this.classesService.add({ name: `${d.subject} ${d.level}`, subject: d.subject, level: d.level, status: 'active' }));
+          classeId = classRes.data.id;
+          const freshGroups = await this.groupsService.loadGroupsAsync();
+          const shellGroup = freshGroups.find(g => g.classeId === classeId);
+          if (!shellGroup) throw new Error('Groupe créé automatiquement introuvable.');
+          await firstValueFrom(this.groupsService.update(shellGroup.id, { maxCapacity: +d.capacity, ...overrides }));
+          groupId = shellGroup.id;
+        }
+      }
+
+      await this.applySchedule(groupId, classeId, d.schedule);
+      this.notify(isNew ? `${d.subject}, nouveau groupe créé` : 'Modifications enregistrées');
+      this.flash(groupId);
+      this.editing.set(null);
+    } catch (err) {
+      this.notify(extractValidationError(err, 'Conflit d’horaire : vérifiez le créneau, la salle ou l’enseignant.'));
+    } finally {
+      this.saving.set(false);
     }
-    this.editing.set(null);
+  }
+
+  /** Replaces this group's own sessions wholesale with the new slot (there's only ever one slot per group in this UI). */
+  private async applySchedule(groupId: number, classeId: number, schedule: Slot): Promise<void> {
+    for (const s of this.sessionsService.getByGroup(groupId)) {
+      await firstValueFrom(this.sessionsService.delete(s.id));
+    }
+    for (const payload of slotToSessionPayloads(schedule)) {
+      await firstValueFrom(this.sessionsService.add({ classeId, groupId, ...payload, isCancelled: false }));
+    }
   }
 
   private blankDraft(): Draft {
-    const level = this.level() ?? this.levels()[0] ?? '';
-    const subject = this.subject() || this.subjects()[0] || '';
     return {
-      subject, level, number: this.nextNumber(subject, level), teacher: this.teacher() || TEACHERS[0], room: ROOMS[0],
-      schedule: { days: [], start: '17:00', duration: DEFAULT_DURATION }, capacity: 18, price: 300,
+      subject: this.subject() || this.subjects()[0] || '',
+      level: this.level() ?? this.levels()[0] ?? '',
+      teacherId: this.teachers()[0]?.id ?? null,
+      roomId: this.rooms()[0]?.id ?? null,
+      schedule: { days: [], start: '17:00', duration: DEFAULT_DURATION },
+      capacity: 18, price: 300,
     };
   }
 
@@ -307,7 +380,7 @@ export class GroupesV2Component {
     setTimeout(() => this.flashed.set(null), 1400);
   }
 
-  // ── Delete: confirm, collapse the row, then offer undo ────────────
+  // ── Delete: confirm, collapse the row, then offer undo before the real call fires ──
   readonly confirming = signal<GroupRow | null>(null);
 
   askDelete(g: GroupRow): void {
@@ -326,7 +399,27 @@ export class GroupesV2Component {
 
     setTimeout(() => {
       this.removing.set(null);
-      this.commit(list => list.filter(x => x.id !== g.id), `${g.subject}, groupe ${g.number} supprimé`, true);
+      this.hiddenIds.update(set => new Set(set).add(g.id));
+
+      let undone = false;
+      this.notify(`${g.subject}, groupe ${g.number} supprimé`, true, () => {
+        undone = true;
+        this.hiddenIds.update(set => {
+          const next = new Set(set);
+          next.delete(g.id);
+          return next;
+        });
+      }, () => {
+        if (undone) return;
+        firstValueFrom(this.groupsService.delete(g.id)).catch(() => {
+          this.hiddenIds.update(set => {
+            const next = new Set(set);
+            next.delete(g.id);
+            return next;
+          });
+          this.notify('Impossible de supprimer ce groupe');
+        });
+      });
     }, 260);
   }
 
@@ -345,26 +438,37 @@ export class GroupesV2Component {
     return !!m && m.groupId === groupId && m.student === student;
   }
 
+  private studentIdByNameIn(g: GroupRow, name: string): number | undefined {
+    const index = g.students.indexOf(name);
+    return index >= 0 ? g.studentIds[index] : undefined;
+  }
+
   move(student: string, from: GroupRow, to: GroupRow): void {
     this.menu.set(null);
-    this.commit(
-      list => list.map(g =>
-        g.id === from.id ? { ...g, students: g.students.filter(s => s !== student) }
-        : g.id === to.id ? { ...g, students: [...g.students, student] }
-        : g),
-      `${student} est maintenant dans le groupe ${to.number}`,
-      true,
-    );
+    const studentId = this.studentIdByNameIn(from, student);
+    if (studentId === undefined) return;
+    this.groupsService.moveStudent(studentId, from.id, to.id).subscribe({
+      next: () => {
+        this.groupsService.loadGroups();
+        this.notify(`${student} est maintenant dans le groupe ${to.number}`, true, () => {
+          this.groupsService.moveStudent(studentId, to.id, from.id).subscribe(() => this.groupsService.loadGroups());
+        });
+      },
+      error: () => this.notify('Impossible de déplacer cet élève'),
+    });
     this.flash(to.id);
   }
 
   removeStudent(student: string, from: GroupRow): void {
     this.menu.set(null);
-    this.commit(
-      list => list.map(g => (g.id === from.id ? { ...g, students: g.students.filter(s => s !== student) } : g)),
-      `${student} n’est plus dans ce groupe`,
-      true,
-    );
+    const studentId = this.studentIdByNameIn(from, student);
+    if (studentId === undefined) return;
+    this.groupsService.removeStudentFromGroup(studentId, from.id).subscribe({
+      next: () => this.notify(`${student} n’est plus dans ce groupe`, true, () => {
+        this.groupsService.moveStudent(studentId, null, from.id).subscribe(() => this.groupsService.loadGroups());
+      }),
+      error: () => this.notify('Impossible de retirer cet élève'),
+    });
   }
 
   openPicker(g: GroupRow): void {
@@ -377,20 +481,27 @@ export class GroupesV2Component {
     this.pickerFor.set(null);
   }
 
-  /** Students of the centre not yet in this group, best matches first. */
-  candidates(g: GroupRow): string[] {
+  /** Students already enrolled in this group's class but not yet in any of its groups — same eligibility rule as the v1 Groupes page. */
+  candidates(g: GroupRow): { id: number; name: string }[] {
     const q = normalize(this.pickerQuery().trim());
-    return POOL
-      .filter(s => !g.students.includes(s) && (!q || normalize(s).includes(q)))
+    const groupedElsewhere = new Set(this.groupsService.groups().filter(x => x.classeId === g.classeId).flatMap(x => x.studentIds));
+    return this.studentsService.students()
+      .filter(s => s.status === 'active' && s.enrolledClassIds.includes(g.classeId) && !groupedElsewhere.has(s.id))
+      .map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}` }))
+      .filter(s => !q || normalize(s.name).includes(q))
       .slice(0, 6);
   }
 
-  addStudent(student: string, g: GroupRow): void {
-    this.commit(
-      list => list.map(x => (x.id === g.id ? { ...x, students: [...x.students, student] } : x)),
-      `${student} est maintenant dans le groupe ${g.number}`,
-      true,
-    );
+  addStudent(candidate: { id: number; name: string }, g: GroupRow): void {
+    this.groupsService.moveStudent(candidate.id, null, g.id).subscribe({
+      next: () => {
+        this.groupsService.loadGroups();
+        this.notify(`${candidate.name} est maintenant dans le groupe ${g.number}`, true, () => {
+          this.groupsService.removeStudentFromGroup(candidate.id, g.id).subscribe(() => this.groupsService.loadGroups());
+        });
+      },
+      error: () => this.notify(`Impossible d’ajouter ${candidate.name}`),
+    });
     this.pickerQuery.set('');
     if (g.students.length + 1 >= g.capacity) this.closePicker();
   }
@@ -477,29 +588,31 @@ export class GroupesV2Component {
     this.notify(`Export téléchargé : ${rows.length} ${rows.length > 1 ? 'groupes' : 'groupe'}`);
   }
 
-  // ── Undoable writes & snackbar ────────────────────────────────────
+  // ── Snackbar ──────────────────────────────────────────────────────
   readonly snack = signal<{ text: string; undo: boolean; id: number } | null>(null);
   private snackTimer?: ReturnType<typeof setTimeout>;
-  private undoSnapshot: GroupRow[] | null = null;
+  private pendingUndo: (() => void) | null = null;
+  private pendingExpire: (() => void) | null = null;
 
-  /** Applies a change; when `undoable`, keeps the previous list for "Annuler". */
-  private commit(change: (list: GroupRow[]) => GroupRow[], message: string, undoable = false): void {
-    this.undoSnapshot = undoable ? this.groups() : null;
-    this.groups.update(change);
-    this.notify(message, undoable);
+  private notify(text: string, undo = false, onUndo?: () => void, onExpire?: () => void): void {
+    clearTimeout(this.snackTimer);
+    this.pendingUndo = onUndo ?? null;
+    this.pendingExpire = onExpire ?? null;
+    this.snack.set({ text, undo, id: Date.now() });
+    this.snackTimer = setTimeout(() => {
+      this.snack.set(null);
+      this.pendingExpire?.();
+      this.pendingExpire = null;
+    }, undo ? 6000 : 3000);
   }
 
   undo(): void {
-    if (!this.undoSnapshot) return;
-    this.groups.set(this.undoSnapshot);
-    this.undoSnapshot = null;
-    this.notify('Action annulée');
-  }
-
-  private notify(text: string, undo = false): void {
     clearTimeout(this.snackTimer);
-    this.snack.set({ text, undo, id: Date.now() });
-    this.snackTimer = setTimeout(() => this.snack.set(null), undo ? 6000 : 3000);
+    this.pendingExpire = null;
+    this.pendingUndo?.();
+    this.pendingUndo = null;
+    this.snack.set(null);
+    this.notify('Action annulée');
   }
 
   // ── Toolbar: sticky state and the sliding level indicator ─────────
@@ -626,21 +739,22 @@ function scheduleKey(s: Slot): number {
  * Sentences describing every clash between `slot` (held in `room` by
  * `teacher`) and the groups in `others`. `self` is skipped when given.
  */
-function clashes(self: GroupRow | null, s: Slot, room: string, teacher: string, others: GroupRow[]): string[] {
+function clashes(selfId: number | null, classeId: number | null, s: Slot, room: string, teacher: string, others: GroupRow[]): string[] {
   if (!s.days.length) return [];
   const from = toMin(s.start);
   const to = from + +s.duration;
   const out: string[] = [];
   for (const o of others) {
-    if (o === self || !o.schedule.days.length) continue;
+    // Groups of the same class legitimately share its teacher/room/schedule — not a conflict.
+    if (o.id === selfId || o.classeId === classeId || !o.schedule.days.length) continue;
     const oFrom = toMin(o.schedule.start);
     const oTo = oFrom + o.schedule.duration;
     const day = s.days.find(d => o.schedule.days.includes(d));
     if (day === undefined || !(from < oTo && oFrom < to)) continue;
     const when = `le ${DAY_LONG[day]} de ${o.schedule.start} à ${endOf(o.schedule)}`;
     const what = `${o.subject}, ${o.level}, groupe ${o.number}`;
-    if (o.room === room) out.push(`${room} est déjà occupée ${when} (${what}).`);
-    if (o.teacher === teacher) out.push(`${teacher} donne déjà cours ${when} (${what}).`);
+    if (room && o.room === room) out.push(`${room} est déjà occupée ${when} (${what}).`);
+    if (teacher && o.teacher === teacher) out.push(`${teacher} donne déjà cours ${when} (${what}).`);
   }
   return out;
 }
@@ -648,4 +762,15 @@ function clashes(self: GroupRow | null, s: Slot, room: string, teacher: string, 
 /** The sticky app bar's height (--m-bar-h): the toolbar sticks under it. */
 function barHeight(): number {
   return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--m-bar-h')) || 64;
+}
+
+function extractValidationError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

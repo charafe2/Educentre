@@ -2,6 +2,7 @@
 
 namespace App\Domains\Planning\Services;
 
+use App\Domains\Planning\Models\ClassSession;
 use App\Domains\Planning\Models\CourseClass;
 use App\Domains\Planning\Models\Group;
 use App\Domains\Students\Models\Enrollment;
@@ -32,6 +33,9 @@ class GroupService
                 'class_id' => $data['classeId'],
                 'group_number' => $this->nextGroupNumber($data['classeId']),
                 'max_capacity' => $data['maxCapacity'] ?? 2,
+                'teacher_id' => $data['teacherId'] ?? null,
+                'room_id' => $data['roomId'] ?? null,
+                'monthly_price' => $data['monthlyPrice'] ?? null,
             ]);
 
             if (!empty($data['studentIds'])) {
@@ -55,6 +59,40 @@ class GroupService
         $group = Group::where('tenant_id', $tenantId)->findOrFail($id);
         $group->update(['max_capacity' => $maxCapacity]);
         return $group;
+    }
+
+    /**
+     * Teacher/room/price are per-group overrides (null clears an override,
+     * back to inheriting the class's own value) — only send a key when the
+     * owner actually meant to change it, same convention as ClassService.
+     */
+    public function update(int $id, int $tenantId, array $data): Group
+    {
+        $group = Group::where('tenant_id', $tenantId)->findOrFail($id);
+        $group->update([
+            'max_capacity' => $data['maxCapacity'] ?? $group->max_capacity,
+            'teacher_id' => array_key_exists('teacherId', $data) ? $data['teacherId'] : $group->teacher_id,
+            'room_id' => array_key_exists('roomId', $data) ? $data['roomId'] : $group->room_id,
+            'monthly_price' => array_key_exists('monthlyPrice', $data) ? $data['monthlyPrice'] : $group->monthly_price,
+        ]);
+
+        return $group->load('enrollments');
+    }
+
+    /**
+     * Enrollments fall back to un-grouped (still enrolled in the class),
+     * matching how a class's last group behaves today. Its own scheduled
+     * sessions go with it — left alive they'd be orphaned rows that
+     * `SessionService::assertNoScheduleConflict()` would still see, but
+     * whose `group()` relation resolves to null (soft-deleted group), so
+     * it would wrongly fall back to the class's own teacher/room.
+     */
+    public function delete(int $id, int $tenantId): void
+    {
+        $group = Group::where('tenant_id', $tenantId)->findOrFail($id);
+        Enrollment::where('tenant_id', $tenantId)->where('group_id', $id)->update(['group_id' => null]);
+        ClassSession::where('tenant_id', $tenantId)->where('group_id', $id)->delete();
+        $group->delete();
     }
 
     public function moveStudent(int $tenantId, int $studentId, ?int $fromGroupId, int $toGroupId): void
@@ -100,6 +138,15 @@ class GroupService
                 'class_id' => $toGroup->class_id,
                 'group_id' => $toGroupId,
             ]);
+    }
+
+    /** Un-groups a student without removing them from the class — they stay enrolled, just without a group. */
+    public function removeStudent(int $tenantId, int $studentId, int $groupId): void
+    {
+        Enrollment::where('tenant_id', $tenantId)
+            ->where('student_id', $studentId)
+            ->where('group_id', $groupId)
+            ->update(['group_id' => null]);
     }
 
     private function isSameSubjectAndLevel(Group $fromGroup, Group $toGroup): bool

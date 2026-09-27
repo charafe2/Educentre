@@ -6,8 +6,8 @@
       <div>
         <h1>Enseignants</h1>
         <p class="head-sub">
-          {{ store.active().length }} {{ store.active().length > 1 ? 'actifs' : 'actif' }},
-          masse salariale estimée {{ money(store.payroll()) }} MAD par mois
+          {{ active().length }} {{ active().length > 1 ? 'actifs' : 'actif' }},
+          masse salariale estimée {{ money(payroll()) }} MAD par mois
         </p>
       </div>
       <div class="head-actions">
@@ -18,16 +18,6 @@
         </button>
       </div>
     </header>
-
-    @if (withoutAccess()) {
-      <p class="notice" animate.enter="m-enter-fade">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-        <span>
-          {{ withoutAccess() }} {{ withoutAccess() > 1 ? 'enseignants actifs n’ont' : 'enseignant actif n’a' }} pas encore d’accès à l’application.
-        </span>
-        <button class="link" type="button" (click)="filter.set('sans-acces')">Voir la liste</button>
-      </p>
-    }
 
     <div class="toolbar">
       <label class="search">
@@ -64,78 +54,75 @@
       <div class="list" role="list">
         <div class="cols" aria-hidden="true">
           <span>Enseignant</span>
-          <span>Matières</span>
+          <span>Matière</span>
           <span>Rémunération</span>
           <span class="col-end">Salaire du mois</span>
           <span>Accès</span>
           <span></span>
         </div>
 
-        @for (t of rows(); track t.id) {
-          <article class="row" role="listitem" animate.enter="row-enter" [class.is-off]="!t.active" [class.is-flashed]="flashed() === t.id" [class.is-open]="viewing() === t.id" (click)="onRowClick($event, t)">
+        @for (row of rows(); track row.teacher.id) {
+          <article class="row" role="listitem" animate.enter="row-enter" [class.is-off]="row.teacher.status !== 'active'" [class.is-flashed]="flashed() === row.teacher.id" [class.is-open]="viewing() === row.teacher.id" (click)="onRowClick($event, row.teacher)">
             <div class="cell cell-who">
-              <span class="avatar" aria-hidden="true">{{ initials(t) }}</span>
+              <span class="avatar" aria-hidden="true">{{ initials(row.teacher) }}</span>
               <span class="who">
-                <button class="who-name" type="button" [attr.aria-label]="'Voir la fiche et les groupes de ' + fullName(t)" (click)="openCard(t)">{{ t.civility }} {{ fullName(t) }}</button>
+                <button class="who-name" type="button" [attr.aria-label]="'Voir la fiche et les groupes de ' + fullName(row.teacher)" (click)="openCard(row.teacher)">{{ fullName(row.teacher) }}</button>
                 <span class="who-meta">
-                  {{ t.phone }}
-                  @if (!t.active) { <span class="off-tag">Inactif</span> }
+                  {{ row.teacher.phone }}
+                  @if (row.teacher.status !== 'active') { <span class="off-tag">Inactif</span> }
                 </span>
               </span>
             </div>
 
             <div class="cell cell-subjects">
-              @for (s of t.subjects; track s) { <span class="tag">{{ s }}</span> }
-              <span class="groups-n">{{ t.groups }} {{ t.groups > 1 ? 'groupes' : 'groupe' }}</span>
+              <span class="tag">{{ row.teacher.specialty }}</span>
+              <span class="groups-n">{{ row.classes.length }} {{ row.classes.length > 1 ? 'classes' : 'classe' }}</span>
             </div>
 
             <div class="cell cell-pay">
-              <span class="mode" [class.is-rate]="t.mode === 'per_student'">
-                @if (t.mode === 'fixed') {
+              <span class="mode" [class.is-rate]="row.teacher.paymentMode !== 'fixed'">
+                @if (row.teacher.paymentMode === 'fixed') {
                   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg>
                   Fixe
+                } @else if (row.teacher.paymentMode === 'percentage') {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 8l8 8M9 9h.01M15 15h.01"/></svg>
+                  Pourcentage
                 } @else {
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19v-.5a5.5 5.5 0 0 1 11 0v.5"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M17.5 14a5.5 5.5 0 0 1 3 4.9V19"/></svg>
                   Par élève
                 }
               </span>
-              <span class="pay-detail">
-                @if (t.mode === 'fixed') { {{ money(t.fixedSalary) }} MAD/mois } @else { {{ t.ratePerStudent }} MAD × {{ t.students }} {{ t.students > 1 ? 'élèves' : 'élève' }} }
-              </span>
+              <span class="pay-detail">{{ modeText(row) }}</span>
             </div>
 
             <div class="cell cell-salary">
-              <strong>{{ money(salary(t)) }}</strong> <small>MAD</small>
+              <strong>{{ money(row.salary) }}</strong> <small>MAD</small>
             </div>
 
             <div class="cell cell-access">
-              @if (t.access; as a) {
-                <span class="access" [class.is-suspended]="a.state === 'suspended'">
-                  @if (a.state === 'active') {
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                    Actif
-                  } @else {
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>
-                    Suspendu
-                  }
-                </span>
-                <span class="access-login" [title]="a.login">{{ a.login }}</span>
-              } @else {
-                <button class="access-none" type="button" (click)="openAccess(t)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-                  Créer l’accès
-                </button>
-              }
+              <span class="access" [class.is-suspended]="row.teacher.access.state !== 'active'">
+                @if (row.teacher.access.state === 'active') {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  Actif
+                } @else if (row.teacher.access.state === 'suspended') {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>
+                  Suspendu
+                } @else {
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+                  Révoqué
+                }
+              </span>
+              <span class="access-login" [title]="row.teacher.access.login">{{ row.teacher.access.login }}</span>
             </div>
 
             <div class="cell cell-actions">
-              <button class="m-icon-btn" type="button" data-tip="Accès" [attr.aria-label]="'Accès de ' + fullName(t)" (click)="openAccess(t)">
+              <button class="m-icon-btn" type="button" data-tip="Accès" [attr.aria-label]="'Accès de ' + fullName(row.teacher)" (click)="openAccess(row.teacher)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16 7l2.5 2.5M14 9l2 2"/></svg>
               </button>
-              <button class="m-icon-btn" type="button" data-tip="Modifier" [attr.aria-label]="'Modifier ' + fullName(t)" (click)="openEdit(t)">
+              <button class="m-icon-btn" type="button" data-tip="Modifier" [attr.aria-label]="'Modifier ' + fullName(row.teacher)" (click)="openEdit(row.teacher)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
               </button>
-              <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Supprimer" [attr.aria-label]="'Supprimer ' + fullName(t)" (click)="askDelete(t)">
+              <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Supprimer" [attr.aria-label]="'Supprimer ' + fullName(row.teacher)" (click)="askDelete(row)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10.5 11v5.5M13.5 11v5.5"/></svg>
               </button>
             </div>
@@ -151,25 +138,25 @@
           <button class="m-btn" type="button" (click)="query.set(''); filter.set('tous')">Tout afficher</button>
         } @else {
           <p class="empty-title">Aucun enseignant pour l’instant</p>
-          <p class="empty-text">Ajoutez votre équipe pour lui attribuer des groupes et suivre les salaires.</p>
+          <p class="empty-text">Ajoutez votre équipe pour lui attribuer des classes et suivre les salaires.</p>
           <button class="m-btn m-btn--primary" type="button" (click)="openCreate()">Ajouter un enseignant</button>
         }
       </div>
     }
   </main>
 
-  <!-- Teacher card: profile + every group they teach -->
-  @if (viewingTeacher(); as t) {
+  <!-- Teacher card: profile + every class/group they teach -->
+  @if (viewingRow(); as row) {
     <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="closeCard()"></div>
     <aside class="panel panel--wide" role="dialog" aria-modal="true" aria-labelledby="card-title" animate.enter="panel-enter" animate.leave="panel-leave">
       <header class="panel-head">
         <div class="card-id">
-          <span class="avatar avatar--lg" aria-hidden="true">{{ initials(t) }}</span>
+          <span class="avatar avatar--lg" aria-hidden="true">{{ initials(row.teacher) }}</span>
           <div>
-            <h2 id="card-title">{{ t.civility }} {{ fullName(t) }}</h2>
+            <h2 id="card-title">{{ fullName(row.teacher) }}</h2>
             <p class="panel-sub">
-              {{ t.subjects.join(', ') }}
-              @if (!t.active) { <span class="off-tag">Inactif</span> }
+              {{ row.teacher.specialty }}
+              @if (row.teacher.status !== 'active') { <span class="off-tag">Inactif</span> }
             </p>
           </div>
         </div>
@@ -181,86 +168,68 @@
       <div class="panel-body panel-body--stack">
         <dl class="facts">
           <div class="fact">
-            <dt>Groupes</dt>
-            <dd>{{ viewingGroups().length }}</dd>
+            <dt>Classes</dt>
+            <dd>{{ row.classes.length }}</dd>
           </div>
           <div class="fact">
             <dt>Élèves</dt>
-            <dd>{{ viewingTotals().students }}</dd>
-          </div>
-          <div class="fact">
-            <dt>Cours par semaine</dt>
-            <dd>{{ formatHours(viewingTotals().weekly) }}</dd>
+            <dd>{{ row.studentCount }}</dd>
           </div>
           <div class="fact">
             <dt>Salaire du mois</dt>
-            <dd>{{ money(salary(t)) }} <small>MAD</small></dd>
+            <dd>{{ money(row.salary) }} <small>MAD</small></dd>
           </div>
         </dl>
 
         <p class="card-line">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z"/></svg>
-          <a [href]="telHref(t)">{{ t.phone }}</a>
-          @if (t.email) {
-            <span class="card-sep" aria-hidden="true"></span>
-            <a [href]="'mailto:' + t.email">{{ t.email }}</a>
-          }
+          <a [href]="telHref(row.teacher)">{{ row.teacher.phone }}</a>
+          <span class="card-sep" aria-hidden="true"></span>
+          <a [href]="'mailto:' + row.teacher.email">{{ row.teacher.email }}</a>
         </p>
         <p class="card-line">
-          @if (t.mode === 'fixed') {
+          @if (row.teacher.paymentMode === 'fixed') {
             <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg>
-            Salaire fixe : {{ money(t.fixedSalary) }} MAD par mois
+            Salaire fixe : {{ money(row.teacher.fixedSalary ?? 0) }} MAD par mois
+          } @else if (row.teacher.paymentMode === 'percentage') {
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 8l8 8M9 9h.01M15 15h.01"/></svg>
+            Pourcentage : {{ row.teacher.percentageRate ?? 0 }}% du prix de chaque classe
           } @else {
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19v-.5a5.5 5.5 0 0 1 11 0v.5"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M17.5 14a5.5 5.5 0 0 1 3 4.9V19"/></svg>
-            Par élève : {{ t.ratePerStudent }} MAD × {{ t.students }} {{ t.students > 1 ? 'élèves' : 'élève' }}
+            Par élève : {{ row.teacher.ratePerStudent ?? 0 }} MAD × {{ row.studentCount }} {{ row.studentCount > 1 ? 'élèves' : 'élève' }}
           }
         </p>
 
         <section class="card-groups" aria-labelledby="groups-title">
           <div class="card-groups-head">
             <h3 id="groups-title">Groupes</h3>
-            @if (viewingGroups().length) {
-              <a class="link" routerLink="/accueil/groupes" [queryParams]="{ prof: shortName(t) }">Voir dans Groupes</a>
-            }
           </div>
 
           @for (section of viewingByLevel(); track section.level) {
             <div class="g-section">
               <p class="g-level">{{ section.level }}</p>
-              @for (g of section.groups; track g.id) {
+              @for (entry of section.entries; track entry.group.id) {
                 <div class="g-row">
                   <div class="g-main">
-                    <span class="g-name">{{ g.subject }}, groupe {{ g.number }}</span>
-                    <span class="g-when">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 2"/></svg>
-                      {{ formatSlot(g) }}, {{ g.room }}
-                    </span>
+                    <span class="g-name">{{ entry.classe.subject }}, groupe {{ entry.group.groupNumber }}</span>
                   </div>
                   <div class="g-fill">
                     <span class="g-fill-text">
-                      <strong>{{ g.students }}</strong>/{{ g.capacity }}
-                      @if (g.students >= g.capacity) { <span class="g-full">Complet</span> }
+                      <strong>{{ entry.group.studentIds.length }}</strong>/{{ entry.classe.maxCapacity }}
+                      @if (entry.group.studentIds.length >= entry.classe.maxCapacity) { <span class="g-full">Complet</span> }
                     </span>
-                    <span class="meter" [class.is-full]="g.students >= g.capacity" aria-hidden="true">
-                      <span class="meter-fill" [style.width.%]="fillPercent(g)"></span>
+                    <span class="meter" [class.is-full]="entry.group.studentIds.length >= entry.classe.maxCapacity" aria-hidden="true">
+                      <span class="meter-fill" [style.width.%]="fillPercent(entry.group, entry.classe)"></span>
                     </span>
                   </div>
-                  <span class="g-price">{{ g.price }} <small>MAD/mois</small></span>
+                  <span class="g-price">{{ entry.classe.monthlyPrice }} <small>MAD/mois</small></span>
                 </div>
               }
             </div>
           } @empty {
             <div class="g-empty">
-              <p>Aucun groupe pour l’instant.</p>
-              <a class="m-btn" routerLink="/accueil/groupes">Attribuer un groupe dans Groupes</a>
+              <p>Aucune classe pour l’instant.</p>
             </div>
-          }
-
-          @if (viewingGroups().length) {
-            <p class="g-total">
-              <span>{{ viewingTotals().students }} élèves inscrits</span>
-              <span>Recettes de ses groupes : <strong>{{ money(viewingTotals().revenue) }} MAD</strong>/mois</span>
-            </p>
           }
         </section>
       </div>
@@ -268,7 +237,7 @@
       <footer class="panel-foot">
         <button class="m-btn" type="button" (click)="fromCard('access')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="4"/><path d="M11 12l8.5-8.5M16 7l2.5 2.5M14 9l2 2"/></svg>
-          {{ t.access ? 'Accès' : 'Créer l’accès' }}
+          Accès
         </button>
         <button class="m-btn m-btn--primary" type="button" (click)="fromCard('edit')">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
@@ -292,14 +261,6 @@
       <form class="panel-body" id="teacher-form" (ngSubmit)="save()" (input)="touch()" (change)="touch()">
         <p class="panel-section span-2">Identité</p>
 
-        <fieldset class="m-field span-2 seg-field">
-          <legend>Civilité</legend>
-          <div class="seg">
-            @for (c of civilities; track c) {
-              <button type="button" class="seg-btn" [class.is-on]="draft.civility === c" [attr.aria-pressed]="draft.civility === c" (click)="draft.civility = c; touch()">{{ c === 'M.' ? 'Monsieur' : 'Madame' }}</button>
-            }
-          </div>
-        </fieldset>
         <label class="m-field">
           <span>Prénom</span>
           <input #firstField class="m-input" name="firstName" autocomplete="off" [(ngModel)]="draft.firstName">
@@ -313,20 +274,45 @@
           <input class="m-input" name="phone" type="tel" inputmode="tel" placeholder="06 12 34 56 78" [(ngModel)]="draft.phone">
         </label>
         <label class="m-field">
-          <span>Email personnel <small>(facultatif)</small></span>
+          <span>Email <small>(c’est aussi son identifiant de connexion)</small></span>
           <input class="m-input" name="email" type="email" placeholder="nom@gmail.com" [(ngModel)]="draft.email">
         </label>
 
         <fieldset class="m-field span-2 seg-field">
-          <legend>Matières enseignées</legend>
+          <legend>Matière enseignée</legend>
           <div class="subject-picks">
-            @for (s of subjects; track s) {
-              <button type="button" class="subject-pick" [class.is-on]="draft.subjects.includes(s)" [attr.aria-pressed]="draft.subjects.includes(s)" (click)="toggleSubject(s)">
+            @for (s of subjects(); track s) {
+              <button type="button" class="subject-pick" [class.is-on]="draft.specialty === s" [attr.aria-pressed]="draft.specialty === s" (click)="setSpecialty(s)">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
                 {{ s }}
               </button>
             }
           </div>
+        </fieldset>
+
+        <fieldset class="m-field span-2 class-pick-field">
+          <legend>Classes et groupes enseignés</legend>
+          @if (pickableClasses().length) {
+            <div class="class-picks">
+              @for (c of pickableClasses(); track c.id) {
+                <button type="button" class="class-pick" [class.is-on]="isClassPicked(c.id)" [attr.aria-pressed]="isClassPicked(c.id)" (click)="toggleDraftClass(c.id)">
+                  <span class="class-pick-check" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  </span>
+                  <span class="class-pick-main">
+                    <span class="class-pick-name">{{ c.subject }}, {{ c.level }}</span>
+                    <span class="class-pick-meta">
+                      {{ c.enrolledStudentIds.length }} {{ c.enrolledStudentIds.length > 1 ? 'élèves' : 'élève' }}
+                      @if (c.teacherId && c.teacherId !== editingTeacher()?.id) { · actuellement {{ c.teacherName || 'un autre enseignant' }} }
+                    </span>
+                  </span>
+                </button>
+              }
+            </div>
+            <small class="hint">Cocher une classe déjà attribuée la retire à son enseignant actuel.</small>
+          } @else {
+            <p class="empty-hint">Aucune classe n’existe encore. Créez-en une depuis Groupes.</p>
+          }
         </fieldset>
 
         <p class="panel-section span-2">Rémunération</p>
@@ -340,7 +326,12 @@
           <button type="button" role="radio" class="pay-mode" [class.is-on]="draft.mode === 'per_student'" [attr.aria-checked]="draft.mode === 'per_student'" (click)="setMode('per_student')">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19v-.5a5.5 5.5 0 0 1 11 0v.5"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M17.5 14a5.5 5.5 0 0 1 3 4.9V19"/></svg>
             <span class="pay-mode-title">Par élève</span>
-            <span class="pay-mode-text">Un montant par élève inscrit dans ses groupes ce mois-ci.</span>
+            <span class="pay-mode-text">Un montant par élève inscrit dans ses classes ce mois-ci.</span>
+          </button>
+          <button type="button" role="radio" class="pay-mode" [class.is-on]="draft.mode === 'percentage'" [attr.aria-checked]="draft.mode === 'percentage'" (click)="setMode('percentage')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8 8l8 8M9 9h.01M15 15h.01"/></svg>
+            <span class="pay-mode-title">Pourcentage</span>
+            <span class="pay-mode-text">Une part du prix payé par chaque élève assigné.</span>
           </button>
         </div>
 
@@ -350,6 +341,14 @@
             <span class="amount-box">
               <input class="m-input" name="fixedSalary" type="number" min="0" step="50" inputmode="numeric" placeholder="3 000" [(ngModel)]="draft.fixedSalary">
               <span class="amount-unit">MAD / mois</span>
+            </span>
+          </label>
+        } @else if (draft.mode === 'percentage') {
+          <label class="m-field span-2 amount" animate.enter="m-enter-fade">
+            <span>Pourcentage</span>
+            <span class="amount-box">
+              <input class="m-input" name="percentageRate" type="number" min="0" max="100" step="5" inputmode="numeric" placeholder="30" [(ngModel)]="draft.percentageRate">
+              <span class="amount-unit">% / élève / mois</span>
             </span>
           </label>
         } @else {
@@ -366,9 +365,9 @@
           @if (draft.mode === 'fixed') {
             Estimation : <strong>{{ money(draftEstimate().owed) }} MAD</strong> par mois.
           } @else if (draftEstimate().students) {
-            Estimation : {{ draft.ratePerStudent || 0 }} MAD × {{ draftEstimate().students }} élèves = <strong>{{ money(draftEstimate().owed) }} MAD</strong> ce mois-ci.
+            Estimation, sur ses classes actuelles : <strong>{{ money(draftEstimate().owed) }} MAD</strong> ce mois-ci.
           } @else {
-            Pas encore d’élève : le salaire se calcule dès que l’enseignant a des groupes.
+            Pas encore d’élève : le salaire se calcule dès que l’enseignant a des classes.
           }
         </p>
 
@@ -379,20 +378,9 @@
           <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
           <span class="switch-text">
             <strong>{{ draft.active ? 'Actif' : 'Inactif' }}</strong>
-            <span>{{ draft.active ? 'Peut recevoir des groupes et être payé.' : 'Hors équipe : son accès est suspendu.' }}</span>
+            <span>{{ draft.active ? 'Peut recevoir des classes et être payé.' : 'Hors équipe.' }}</span>
           </span>
         </label>
-
-        @if (editing() === 'new') {
-          <label class="switch span-2">
-            <input type="checkbox" name="withAccess" [(ngModel)]="draft.withAccess">
-            <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
-            <span class="switch-text">
-              <strong>Créer son accès à l’application</strong>
-              <span>Identifiant et mot de passe générés juste après l’enregistrement.</span>
-            </span>
-          </label>
-        }
 
         @if (submitted() && draftErrors().length) {
           <div class="checks span-2" aria-live="polite">
@@ -408,7 +396,7 @@
 
       <footer class="panel-foot">
         <button class="m-btn" type="button" (click)="closeDrawer()">Annuler</button>
-        <button class="m-btn m-btn--primary" type="submit" form="teacher-form">
+        <button class="m-btn m-btn--primary" type="submit" form="teacher-form" [disabled]="saving()">
           {{ editing() === 'new' ? 'Ajouter l’enseignant' : 'Enregistrer' }}
         </button>
       </footer>
@@ -422,7 +410,7 @@
       <header class="panel-head">
         <div>
           <h2 id="access-title">Accès à l’application</h2>
-          <p class="panel-sub">{{ t.civility }} {{ fullName(t) }}</p>
+          <p class="panel-sub">{{ fullName(t) }}</p>
         </div>
         <button class="m-icon-btn" type="button" aria-label="Fermer" (click)="closeAccess()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -447,7 +435,7 @@
             </div>
             <div class="cred">
               <span class="cred-label">Mot de passe</span>
-              <code class="cred-value cred-pass">{{ showPassword() ? r.password : '••••-••••-••••' }}</code>
+              <code class="cred-value cred-pass">{{ showPassword() ? r.password : '••••••••••••' }}</code>
               <button class="m-icon-btn" type="button" [attr.data-tip]="showPassword() ? 'Masquer' : 'Afficher'" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" (click)="showPassword.set(!showPassword())">
                 @if (showPassword()) { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg> }
                 @else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><path d="M4 4l16 16"/></svg> }
@@ -466,10 +454,10 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-4A8.5 8.5 0 1 1 8 18.8z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/></svg>
                 WhatsApp
               </a>
-              <button class="m-btn" type="button" [disabled]="!t.email" [attr.data-tip]="t.email ? null : 'Pas d’email sur la fiche'" (click)="sendByEmail()">
+              <a class="m-btn" [href]="mailtoUrl()">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13"/><path d="M3.5 6.5l8.5 7 8.5-7"/></svg>
                 Email
-              </button>
+              </a>
               <button class="m-btn" type="button" (click)="copy('message')">
                 @if (copied() === 'message') {
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
@@ -483,62 +471,46 @@
           </section>
         }
 
-        @if (t.access; as a) {
-          <!-- Existing account -->
-          <section class="acct">
-            <div class="acct-row">
-              <span class="acct-label">Statut</span>
-              <span class="access" [class.is-suspended]="a.state === 'suspended'">
-                @if (a.state === 'active') {
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
-                  Actif, peut se connecter
-                } @else {
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>
-                  Suspendu, connexion bloquée
-                }
-              </span>
-            </div>
-            <div class="acct-row">
-              <span class="acct-label">Identifiant</span>
-              @if (editingLogin()) {
-                <form class="login-edit" (ngSubmit)="saveLogin()">
-                  <input class="m-input" name="login" type="email" [(ngModel)]="accessDraft.login" (ngModelChange)="onAccessInput()" aria-label="Nouvel identifiant">
-                  <button class="m-btn m-btn--primary" type="submit" [disabled]="accessErrors().length > 0">OK</button>
-                  <button class="m-btn" type="button" (click)="editingLogin.set(false); accessDraft.login = a.login; onAccessInput()">Annuler</button>
-                </form>
+        <section class="acct">
+          <div class="acct-row">
+            <span class="acct-label">Statut</span>
+            <span class="access" [class.is-suspended]="t.access.state !== 'active'">
+              @if (t.access.state === 'active') {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                Actif, peut se connecter
+              } @else if (t.access.state === 'suspended') {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>
+                Suspendu, connexion bloquée
               } @else {
-                <span class="acct-value">
-                  <code>{{ a.login }}</code>
-                  <button class="link" type="button" (click)="editingLogin.set(true)">Modifier</button>
-                </span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+                Révoqué, connexion bloquée
               }
-            </div>
-            <div class="acct-row">
-              <span class="acct-label">Mot de passe</span>
-              <span class="acct-value">Défini {{ formatDate(a.passwordSetAt) }}</span>
-            </div>
-            <div class="acct-row">
-              <span class="acct-label">Dernière connexion</span>
-              <span class="acct-value" [class.is-faint]="!a.lastLoginAt">{{ a.lastLoginAt ? formatDate(a.lastLoginAt) : 'Jamais connecté' }}</span>
-            </div>
-            @if (editingLogin() && accessErrors().length) {
-              <p class="check is-error">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
-                {{ accessErrors()[0] }}
-              </p>
-            }
-          </section>
+            </span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">Identifiant</span>
+            <span class="acct-value">
+              <code>{{ t.access.login }}</code>
+              <small class="hint">Modifiable via l’email de la fiche</small>
+            </span>
+          </div>
+          <div class="acct-row">
+            <span class="acct-label">Dernière connexion</span>
+            <span class="acct-value" [class.is-faint]="!t.access.lastLoginAt">{{ t.access.lastLoginAt ? formatDate(t.access.lastLoginAt) : 'Jamais connecté' }}</span>
+          </div>
+        </section>
 
-          <section class="acts">
-            <button class="act" type="button" (click)="resetPassword()">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4.5h4.5"/></svg>
-              <span class="act-text">
-                <strong>Générer un nouveau mot de passe</strong>
-                <span>L’ancien cesse de fonctionner immédiatement.</span>
-              </span>
-            </button>
-            <button class="act" type="button" (click)="toggleSuspend()">
-              @if (a.state === 'active') {
+        <section class="acts">
+          <button class="act" type="button" [disabled]="workingAccess()" (click)="resetPassword()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4.5h4.5"/></svg>
+            <span class="act-text">
+              <strong>Générer un nouveau mot de passe</strong>
+              <span>L’ancien cesse de fonctionner immédiatement.</span>
+            </span>
+          </button>
+          @if (t.access.state !== 'revoked') {
+            <button class="act" type="button" [disabled]="workingAccess()" (click)="toggleSuspend()">
+              @if (t.access.state === 'active') {
                 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9v6M14.5 9v6"/></svg>
                 <span class="act-text">
                   <strong>Suspendre l’accès</strong>
@@ -552,85 +524,45 @@
                 </span>
               }
             </button>
-            <button class="act act--danger" type="button" (click)="revokeAccess()">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+          }
+          @if (t.access.state === 'revoked') {
+            <button class="act" type="button" [disabled]="workingAccess()" (click)="reactivateAccess()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.5l5 3.5-5 3.5z"/></svg>
               <span class="act-text">
-                <strong>Supprimer l’accès</strong>
-                <span>La fiche, les groupes et les salaires sont conservés.</span>
+                <strong>Réactiver l’accès</strong>
+                <span>L’enseignant peut de nouveau se connecter.</span>
               </span>
             </button>
-          </section>
-        } @else {
-          <!-- No account yet -->
-          <form class="new-access" id="access-form" (ngSubmit)="createAccess()">
-            <p class="panel-intro">
-              L’enseignant se connecte sur la même page que vous, avec ces identifiants.
-            </p>
-            <label class="m-field">
-              <span>Identifiant (email de connexion)</span>
-              <input class="m-input" name="login" type="email" autocomplete="off" [(ngModel)]="accessDraft.login" (ngModelChange)="onAccessInput()">
-            </label>
-            <div class="m-field">
-              <span>Mot de passe provisoire</span>
-              <div class="pass-box">
-                <input class="m-input pass-input" name="password" [type]="showPassword() ? 'text' : 'password'" autocomplete="new-password" spellcheck="false" [(ngModel)]="accessDraft.password" (ngModelChange)="onAccessInput()" aria-label="Mot de passe provisoire">
-                <button class="m-icon-btn" type="button" [attr.data-tip]="showPassword() ? 'Masquer' : 'Afficher'" [attr.aria-label]="showPassword() ? 'Masquer le mot de passe' : 'Afficher le mot de passe'" (click)="showPassword.set(!showPassword())">
-                  @if (showPassword()) { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg> }
-                  @else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><path d="M4 4l16 16"/></svg> }
-                </button>
-                <button class="m-icon-btn m-tip-end" type="button" data-tip="Générer un autre" aria-label="Générer un autre mot de passe" (click)="regenerate()">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.5-5.8"/><path d="M4 4v4.5h4.5"/></svg>
-                </button>
-              </div>
-              <small class="hint">Généré sans caractères ambigus (0/O, 1/l) pour être dicté sans erreur.</small>
-            </div>
-            @if (accessErrors().length) {
-              <div class="checks" aria-live="polite">
-                @for (e of accessErrors(); track e) {
-                  <p class="check is-error">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
-                    {{ e }}
-                  </p>
-                }
-              </div>
-            }
-            @if (!t.active) {
-              <p class="check is-warn">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
-                Cet enseignant est inactif. Réactivez sa fiche s’il reprend ses cours.
-              </p>
-            }
-          </form>
-        }
+          } @else {
+            <button class="act act--danger" type="button" [disabled]="workingAccess()" (click)="revokeAccess()">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/></svg>
+              <span class="act-text">
+                <strong>Révoquer l’accès</strong>
+                <span>La fiche, les classes et les salaires sont conservés.</span>
+              </span>
+            </button>
+          }
+        </section>
       </div>
 
       <footer class="panel-foot">
-        @if (!t.access) {
-          <button class="m-btn" type="button" (click)="closeAccess()">Annuler</button>
-          <button class="m-btn m-btn--primary" type="submit" form="access-form" [disabled]="accessErrors().length > 0">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            Créer l’accès
-          </button>
-        } @else {
-          <button class="m-btn" type="button" (click)="closeAccess()">{{ revealed() ? 'J’ai transmis les identifiants' : 'Fermer' }}</button>
-        }
+        <button class="m-btn" type="button" (click)="closeAccess()">{{ revealed() ? 'J’ai transmis les identifiants' : 'Fermer' }}</button>
       </footer>
     </aside>
   }
 
   <!-- Delete confirmation -->
-  @if (confirming(); as t) {
+  @if (confirming(); as row) {
     <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirming.set(null)"></div>
     <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
-      <h2 id="del-title">Supprimer {{ t.civility }} {{ fullName(t) }} ?</h2>
+      <h2 id="del-title">Supprimer {{ fullName(row.teacher) }} ?</h2>
       <p id="del-text">
-        @if (t.groups) {
-          Ses {{ t.groups }} {{ t.groups > 1 ? 'groupes resteront sans enseignant' : 'groupe restera sans enseignant' }} jusqu’à ce que vous en choisissiez un autre.
+        @if (row.classes.length) {
+          Ses {{ row.classes.length }} {{ row.classes.length > 1 ? 'classes resteront sans enseignant' : 'classe restera sans enseignant' }} jusqu’à ce que vous en choisissiez un autre.
         } @else {
-          Aucun groupe ne lui est attribué.
+          Aucune classe ne lui est attribuée.
         }
-        @if (t.access) { Son accès à l’application sera supprimé. }
-        Les salaires déjà versés restent dans la caisse.
+        Son accès à l’application sera révoqué. Les salaires déjà versés restent dans la caisse.
       </p>
       <div class="dialog-actions">
         <button class="m-btn" type="button" (click)="confirming.set(null)">Annuler</button>

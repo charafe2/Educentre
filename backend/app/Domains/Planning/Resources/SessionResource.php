@@ -12,6 +12,7 @@ class SessionResource extends JsonResource
         return [
             'id' => $this->id,
             'classeId' => $this->class_id,
+            'groupId' => $this->group_id,
             'day' => $this->day,
             'startHour' => $this->start_hour,
             'endHour' => $this->end_hour,

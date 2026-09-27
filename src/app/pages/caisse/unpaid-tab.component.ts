@@ -1,6 +1,7 @@
 import { Component, computed, inject, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CaisseStore, LEVELS, capitalize, money, monthLong, monthShort } from './caisse.store';
+import { CaisseStore, capitalize, money, monthLong, monthShort } from './caisse.store';
+import { CentreService } from '../../services/centre.service';
 
 type SortKey = 'amount' | 'late' | 'name';
 
@@ -38,7 +39,7 @@ type SortKey = 'amount' | 'late' | 'name';
         <span class="m-visually-hidden">Niveau</span>
         <select class="m-select" [class.is-set]="level()" [ngModel]="level()" (ngModelChange)="level.set($event)">
           <option value="">Tous niveaux</option>
-          @for (l of levels; track l) { <option [value]="l">{{ l }}</option> }
+          @for (l of levels(); track l) { <option [value]="l">{{ l }}</option> }
         </select>
       </label>
       <label class="sort">
@@ -100,10 +101,11 @@ type SortKey = 'amount' | 'late' | 'name';
 })
 export class UnpaidTabComponent {
   readonly store = inject(CaisseStore);
+  private centreService = inject(CentreService);
   readonly collect = output<{ studentId: number; month: string }>();
   readonly notify = output<string>();
 
-  readonly levels = LEVELS;
+  readonly levels = computed(() => [...new Set(this.store.students().map(s => s.level))].sort());
   readonly money = money;
   readonly short = monthShort;
   readonly title = (m: string) => capitalize(monthLong(m));
@@ -138,7 +140,8 @@ export class UnpaidTabComponent {
   /** A ready-to-send WhatsApp / SMS message for the parent. */
   async copyReminder(r: { student: { name: string; parent: string }; months: Array<{ month: string }>; total: number }): Promise<void> {
     const months = r.months.map(m => monthLong(m.month)).join(', ');
-    const text = `Bonjour ${r.student.parent}, nous vous rappelons que les frais de ${r.student.name} pour ${months} restent à régler (${money(r.total)} MAD). Merci de passer à l’accueil du centre. Centre Ibn Khaldoun`;
+    const centre = this.centreService.centreInfo().name;
+    const text = `Bonjour ${r.student.parent}, nous vous rappelons que les frais de ${r.student.name} pour ${months} restent à régler (${money(r.total)} MAD). Merci de passer à l’accueil du centre. ${centre}`;
     try {
       await navigator.clipboard.writeText(text);
       this.notify.emit(`Rappel copié pour ${r.student.parent}. Collez-le dans WhatsApp.`);

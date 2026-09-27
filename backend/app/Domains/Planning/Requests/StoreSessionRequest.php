@@ -27,6 +27,11 @@ class StoreSessionRequest extends FormRequest
             'endHour' => ['required', 'integer', 'between:1,24', 'gt:startHour'],
             'isCancelled' => ['sometimes', 'boolean'],
             'cancelReason' => ['nullable', 'string', 'max:255'],
+            'groupId' => [
+                'nullable',
+                'integer',
+                Rule::exists('groups', 'id')->where('tenant_id', $tenantId),
+            ],
         ];
     }
 }

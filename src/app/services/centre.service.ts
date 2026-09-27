@@ -10,6 +10,13 @@ export interface CentreInfo {
   address: string;
   phone: string;
   whatsapp: string;
+  logo: string;
+  email: string;
+  website: string;
+  ice: string;
+  ifNumber: string;
+  rc: string;
+  patente: string;
 }
 
 export interface SubscriptionInfo {
@@ -37,6 +44,13 @@ export class CentreService {
     address: '',
     phone: '',
     whatsapp: '',
+    logo: '',
+    email: '',
+    website: '',
+    ice: '',
+    ifNumber: '',
+    rc: '',
+    patente: '',
   });
 
   loading = this._loading.asReadonly();

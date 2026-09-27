@@ -20,6 +20,13 @@ class UpdateSettingsRequest extends FormRequest
             'address' => ['sometimes', 'string', 'max:500'],
             'phone' => ['sometimes', 'string', 'max:50'],
             'whatsapp' => ['sometimes', 'string', 'max:50'],
+            'logo' => ['sometimes', 'nullable', 'string', 'max:2048'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255'],
+            'website' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'ice' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'ifNumber' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'rc' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'patente' => ['sometimes', 'nullable', 'string', 'max:50'],
         ];
     }
 
@@ -32,6 +39,7 @@ class UpdateSettingsRequest extends FormRequest
             'address.max' => 'L\'adresse ne doit pas dépasser 500 caractères.',
             'phone.max' => 'Le téléphone ne doit pas dépasser 50 caractères.',
             'whatsapp.max' => 'Le WhatsApp ne doit pas dépasser 50 caractères.',
+            'email.email' => 'L\'adresse email n\'est pas valide.',
         ];
     }
 }
