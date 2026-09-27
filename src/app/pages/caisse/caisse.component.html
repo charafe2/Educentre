@@ -346,7 +346,7 @@
         <app-unpaid-tab (collect)="collect($event)" (notify)="notify($event)" />
       }
       @case ('depenses') {
-        <app-expenses-tab (notify)="notify($event.text, $event.undo)" />
+        <app-expenses-tab [startAdding]="startAddingExpense" (notify)="notify($event.text, $event.undo)" />
       }
       @case ('statistiques') {
         <app-stats-tab />
@@ -372,7 +372,7 @@
   <!-- Printable receipt: invisible on screen, alone on paper -->
   @if (printing(); as r) {
     <section class="m-print print-receipt" aria-hidden="true">
-      <h1>Centre Ibn Khaldoun</h1>
+      <h1>{{ centreSettings.centre().name }}</h1>
       <p>Reçu {{ r.number }}, le {{ formatDate(r.paidAt) }}</p>
       <p>Élève : {{ r.student.name }} ({{ r.student.code }}), {{ r.student.level }}</p>
       <p>Mois : {{ monthTitle(r.month) }}, paiement {{ r.method.toLowerCase() }}</p>

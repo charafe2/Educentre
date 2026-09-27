@@ -2,6 +2,7 @@ import { Component, HostListener, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
 import { CountUpDirective } from '../../shared/count-up.directive';
+import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding-checklist.component';
 
 /**
  * Home page of the rebranded tenant app — replaces the sidebar as the way in.
@@ -13,6 +14,17 @@ interface Module {
   label: string;
   route: string;
   icon: 'groupes' | 'caisse' | 'enseignants' | 'parametres';
+}
+
+/** One-key jumps into the day's most frequent jobs. */
+interface QuickAction {
+  key: string;
+  label: string;
+  hint: string;
+  route: string;
+  query?: Record<string, string>;
+  icon: 'encaisser' | 'groupe' | 'enseignant' | 'relance' | 'depense';
+  tone?: 'late';
 }
 
 interface Stat {
@@ -29,7 +41,7 @@ interface Stat {
 
 @Component({
   selector: 'app-accueil',
-  imports: [RouterLink, AppBarComponent, CountUpDirective],
+  imports: [RouterLink, AppBarComponent, CountUpDirective, OnboardingChecklistComponent],
   templateUrl: './accueil.component.html',
   styleUrl: './accueil.component.css',
 })
@@ -39,8 +51,16 @@ export class AccueilComponent {
   readonly modules: Module[] = [
     { key: '1', label: 'Groupes', route: '/accueil/groupes', icon: 'groupes' },
     { key: '2', label: 'Caisse', route: '/accueil/caisse', icon: 'caisse' },
-    { key: '3', label: 'Enseignants', route: '/professeurs', icon: 'enseignants' },
-    { key: '4', label: 'Paramètres', route: '/parametres', icon: 'parametres' },
+    { key: '3', label: 'Enseignants', route: '/accueil/enseignants', icon: 'enseignants' },
+    { key: '4', label: 'Paramètres', route: '/accueil/parametres', icon: 'parametres' },
+  ];
+
+  readonly actions: QuickAction[] = [
+    { key: 'E', label: 'Encaisser', hint: 'Chercher un élève', route: '/accueil/caisse', query: { chercher: '1' }, icon: 'encaisser' },
+    { key: 'G', label: 'Nouveau groupe', hint: 'Matière et horaire', route: '/accueil/groupes', query: { creer: '1' }, icon: 'groupe' },
+    { key: 'P', label: 'Nouvel enseignant', hint: 'Fiche et salaire', route: '/accueil/enseignants', query: { nouveau: '1' }, icon: 'enseignant' },
+    { key: 'R', label: 'Relancer les impayés', hint: '9 élèves en retard', route: '/accueil/caisse', query: { onglet: 'impayes' }, icon: 'relance', tone: 'late' },
+    { key: 'D', label: 'Ajouter une dépense', hint: 'Loyer, fournitures…', route: '/accueil/caisse', query: { onglet: 'depenses', ajouter: '1' }, icon: 'depense' },
   ];
 
   /** Placeholder figures until the page reads AppBootstrapService. */
@@ -51,7 +71,7 @@ export class AccueilComponent {
     { label: 'Présence', value: '92', n: 92, unit: '%', note: 'Cette semaine', meter: 92 },
   ];
 
-  /** 1–4 jumps straight into a module. */
+  /** 1–4 jumps straight into a module; a letter runs a quick action. */
   @HostListener('document:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
     const target = event.target as HTMLElement | null;
@@ -59,6 +79,14 @@ export class AccueilComponent {
     if (typing || event.ctrlKey || event.metaKey || event.altKey) return;
 
     const module = this.modules.find(m => m.key === event.key);
-    if (module) this.router.navigateByUrl(module.route);
+    if (module) {
+      this.router.navigateByUrl(module.route);
+      return;
+    }
+    const action = this.actions.find(a => a.key === event.key.toUpperCase());
+    if (action) {
+      event.preventDefault();
+      this.router.navigate([action.route], { queryParams: action.query });
+    }
   }
 }

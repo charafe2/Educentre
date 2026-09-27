@@ -27,7 +27,9 @@ export class CountUpDirective {
       setTimeout(() => {
         const start = performance.now();
         const step = (now: number) => {
-          const t = Math.min(1, (now - start) / duration);
+          // A frame's timestamp can predate `start`: clamp, or the first
+          // frame shows a negative figure.
+          const t = Math.max(0, Math.min(1, (now - start) / duration));
           const eased = 1 - Math.pow(1 - t, 4);
           node.textContent = t < 1 ? format(Math.round(target * eased)) : final;
           if (t < 1) requestAnimationFrame(step);

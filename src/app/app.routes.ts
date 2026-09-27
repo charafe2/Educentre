@@ -25,6 +25,14 @@ export const routes: Routes = [
     path: 'accueil/caisse',
     loadComponent: () => import('./pages/caisse/caisse.component').then(m => m.CaisseComponent),
   },
+  {
+    path: 'accueil/parametres',
+    loadComponent: () => import('./pages/parametres-v2/parametres-v2.component').then(m => m.ParametresV2Component),
+  },
+  {
+    path: 'accueil/enseignants',
+    loadComponent: () => import('./pages/enseignants/enseignants.component').then(m => m.EnseignantsComponent),
+  },
 
   {
     path: 'login',

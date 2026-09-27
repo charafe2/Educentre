@@ -58,6 +58,7 @@
             "styles": [
               "src/styles.css",
               "src/styles/superadmin-theme.css",
+              "node_modules/driver.js/dist/driver.css",
               "src/styles/moujtahid-theme.css"
             ]
           },

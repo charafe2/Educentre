@@ -4,8 +4,12 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
+import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding-checklist.component';
+import { CentreStore, DAY_SHORT, DEFAULT_DURATION, GroupRow, POOL, Slot } from '../../shared/centre.store';
+
+export type { GroupRow, Slot };
 
 /**
  * Groupes — rebranded list of every group in the centre.
@@ -14,25 +18,6 @@ import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
  * ClassesService/GroupsService and routing each write through them.
  */
 
-/** Weekly slot. Days are 0 = lundi … 6 = dimanche; no days = not scheduled. */
-export interface Slot {
-  days: number[];
-  start: string;
-  duration: number;
-}
-
-export interface GroupRow {
-  id: number;
-  subject: string;
-  level: string;
-  number: number;
-  teacher: string;
-  room: string;
-  schedule: Slot;
-  capacity: number;
-  price: number;
-  students: string[];
-}
 
 type Draft = Omit<GroupRow, 'id' | 'students'>;
 type SortKey = 'subject' | 'fill' | 'price' | 'schedule';
@@ -46,56 +31,18 @@ interface Block {
   lanes: number;
 }
 
-const LEVELS = ['3e année collège', 'Tronc commun', '1re Bac', '2e Bac'];
-const SUBJECTS = ['Mathématiques', 'Physique-Chimie', 'SVT', 'Français', 'Anglais'];
 const TEACHERS = ['M. Idrissi', 'M. Ouali', 'Mme Benjelloun', 'Mme Chraibi', 'Mme Alaoui', 'M. Tazi'];
 const ROOMS = ['Salle 1', 'Salle 2', 'Salle 3'];
-const DAY_SHORT = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const DAY_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
 const DURATIONS = [60, 90, 120, 150, 180];
-const DEFAULT_DURATION = 90;
 const HOUR_PX = 56;
 
-const FIRST = ['Rania', 'Adam', 'Imane', 'Youssef', 'Salma', 'Mehdi', 'Hiba', 'Omar', 'Aya', 'Anas', 'Nour', 'Ilyas', 'Kenza', 'Hamza', 'Lina', 'Amine', 'Douae', 'Zakaria', 'Malak', 'Reda'];
-const LAST = ['El Fassi', 'Berrada', 'Ouazzani', 'Bennani', 'Tahiri', 'Lahlou', 'Kettani', 'Sqalli', 'Benkirane', 'Amrani', 'Chami', 'Naciri', 'Filali', 'Rami', 'Zouiten'];
 
-/** Deterministic pool of distinct names, spread across groups so a student
- *  shows up in two or three groups at most — as in a real centre. */
-const POOL = Array.from({ length: FIRST.length * LAST.length }, (_, i) => (i * 131) % (FIRST.length * LAST.length))
-  .map(n => `${FIRST[n % FIRST.length]} ${LAST[Math.floor(n / FIRST.length)]}`);
 
-function roster(seed: number, count: number): string[] {
-  const start = (seed * 23) % POOL.length;
-  return Array.from({ length: count }, (_, i) => POOL[(start + i) % POOL.length]);
-}
-
-/** "Lun, Mer 18:00" → Slot, for writing the seed by hand. */
-function slot(days: string, start: string, duration = DEFAULT_DURATION): Slot {
-  return { days: days.split(',').map(d => DAY_SHORT.indexOf(d.trim())), start, duration };
-}
-
-// Anglais 3e sits in Salle 2 on Saturday at 11:00 while Physique-Chimie
-// 2e Bac runs there until 11:30 — a real-looking clash for the checker.
-const SEED: Array<Draft & { size: number }> = [
-  { subject: 'Mathématiques', level: '2e Bac', number: 1, teacher: 'M. Idrissi', room: 'Salle 1', schedule: slot('Lun, Mer', '18:00'), capacity: 20, price: 400, size: 18 },
-  { subject: 'Mathématiques', level: '2e Bac', number: 2, teacher: 'M. Idrissi', room: 'Salle 1', schedule: slot('Mar, Jeu', '18:00'), capacity: 20, price: 400, size: 20 },
-  { subject: 'Physique-Chimie', level: '2e Bac', number: 1, teacher: 'Mme Benjelloun', room: 'Salle 2', schedule: slot('Sam', '10:00'), capacity: 16, price: 350, size: 14 },
-  { subject: 'SVT', level: '2e Bac', number: 1, teacher: 'Mme Chraibi', room: 'Salle 3', schedule: slot('Ven', '17:00', 120), capacity: 16, price: 300, size: 9 },
-  { subject: 'Mathématiques', level: '1re Bac', number: 1, teacher: 'M. Ouali', room: 'Salle 2', schedule: slot('Lun, Jeu', '17:00'), capacity: 18, price: 350, size: 17 },
-  { subject: 'Physique-Chimie', level: '1re Bac', number: 1, teacher: 'Mme Benjelloun', room: 'Salle 2', schedule: slot('Mer', '16:00'), capacity: 16, price: 300, size: 12 },
-  { subject: 'Français', level: '1re Bac', number: 1, teacher: 'Mme Alaoui', room: 'Salle 1', schedule: slot('Sam', '14:00'), capacity: 20, price: 250, size: 20 },
-  { subject: 'Mathématiques', level: 'Tronc commun', number: 1, teacher: 'M. Ouali', room: 'Salle 3', schedule: slot('Mar', '17:00'), capacity: 18, price: 300, size: 11 },
-  { subject: 'Français', level: 'Tronc commun', number: 1, teacher: 'Mme Alaoui', room: 'Salle 1', schedule: slot('Sam', '16:00'), capacity: 20, price: 250, size: 15 },
-  { subject: 'Anglais', level: 'Tronc commun', number: 1, teacher: 'M. Tazi', room: 'Salle 3', schedule: slot('Mer', '18:00', 60), capacity: 15, price: 250, size: 6 },
-  { subject: 'Mathématiques', level: '3e année collège', number: 1, teacher: 'M. Idrissi', room: 'Salle 2', schedule: slot('Sam', '16:00'), capacity: 18, price: 250, size: 16 },
-  { subject: 'Mathématiques', level: '3e année collège', number: 2, teacher: 'M. Idrissi', room: 'Salle 2', schedule: slot('Dim', '10:00'), capacity: 18, price: 250, size: 8 },
-  { subject: 'Français', level: '3e année collège', number: 1, teacher: 'Mme Alaoui', room: 'Salle 1', schedule: slot('Mer', '14:00'), capacity: 20, price: 200, size: 13 },
-  { subject: 'Anglais', level: '3e année collège', number: 1, teacher: 'M. Tazi', room: 'Salle 2', schedule: slot('Sam', '11:00', 60), capacity: 15, price: 200, size: 15 },
-];
 
 @Component({
   selector: 'app-groupes-v2',
-  imports: [FormsModule, AppBarComponent],
+  imports: [FormsModule, RouterLink, AppBarComponent, OnboardingChecklistComponent],
   templateUrl: './groupes-v2.component.html',
   styleUrl: './groupes-v2.component.css',
 })
@@ -106,8 +53,10 @@ export class GroupesV2Component {
   private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private destroyRef = inject(DestroyRef);
 
-  readonly levels = LEVELS;
-  readonly subjects = SUBJECTS;
+  private centre = inject(CentreStore);
+  /** Offered levels and subjects come from Paramètres. */
+  readonly levels = this.centre.levels;
+  readonly subjects = this.centre.subjects;
   readonly teachers = TEACHERS;
   readonly rooms = ROOMS;
   readonly dayShort = DAY_SHORT;
@@ -120,14 +69,13 @@ export class GroupesV2Component {
     { key: 'price', label: 'Trier par tarif' },
   ];
 
-  readonly groups = signal<GroupRow[]>(
-    SEED.map(({ size, ...g }, i) => ({ ...g, id: i + 1, students: roster(i + 1, size) })),
-  );
+  /** Shared with the other pages (and the onboarding) through CentreStore. */
+  readonly groups = this.centre.groups;
 
   // ── Search, filters, sort, view — mirrored in the URL ─────────────
   private params = this.route.snapshot.queryParamMap;
   readonly query = signal(this.params.get('q') ?? '');
-  readonly level = signal<string | null>(LEVELS.includes(this.params.get('niveau') ?? '') ? this.params.get('niveau') : null);
+  readonly level = signal<string | null>(this.centre.levels().includes(this.params.get('niveau') ?? '') ? this.params.get('niveau') : null);
   readonly subject = signal(this.params.get('matiere') ?? '');
   readonly teacher = signal(this.params.get('prof') ?? '');
   readonly openOnly = signal(this.params.get('libres') === '1');
@@ -165,7 +113,7 @@ export class GroupesV2Component {
       if (by === 'schedule') return scheduleKey(a.schedule) - scheduleKey(b.schedule);
       return a.subject.localeCompare(b.subject) || a.number - b.number;
     };
-    return LEVELS.map(level => ({
+    return this.levels().map(level => ({
       level,
       rows: this.results().filter(r => r.group.level === level).sort((a, b) => compare(a.group, b.group)),
     })).filter(s => s.rows.length > 0);
@@ -262,6 +210,10 @@ export class GroupesV2Component {
   private firstField = viewChild<ElementRef<HTMLSelectElement>>('firstField');
 
   openCreate(): void {
+    if (!this.levels().length || !this.subjects().length) {
+      this.notify('Ajoutez d’abord vos niveaux et vos matières dans Paramètres');
+      return;
+    }
     this.draft = this.blankDraft();
     this.editing.set('new');
     this.focusFirstField();
@@ -297,6 +249,7 @@ export class GroupesV2Component {
     const target = this.editing();
     const selfId = target && target !== 'new' ? target.id : null;
     const errors: string[] = [];
+    if (!d.subject || !d.level) errors.push('Choisissez une matière et un niveau.');
     if (this.groups().some(g => g.id !== selfId && g.subject === d.subject && g.level === d.level && g.number === +d.number)) {
       errors.push(`Le groupe ${d.number} existe déjà en ${d.subject}, ${d.level}.`);
     }
@@ -335,8 +288,8 @@ export class GroupesV2Component {
   }
 
   private blankDraft(): Draft {
-    const level = this.level() ?? LEVELS[0];
-    const subject = this.subject() || SUBJECTS[0];
+    const level = this.level() ?? this.levels()[0] ?? '';
+    const subject = this.subject() || this.subjects()[0] || '';
     return {
       subject, level, number: this.nextNumber(subject, level), teacher: this.teacher() || TEACHERS[0], room: ROOMS[0],
       schedule: { days: [], start: '17:00', duration: DEFAULT_DURATION }, capacity: 18, price: 300,
@@ -574,7 +527,7 @@ export class GroupesV2Component {
 
     afterRenderEffect(() => {
       this.viewport();
-      const index = this.level() === null ? 0 : LEVELS.indexOf(this.level()!) + 1;
+      const index = this.level() === null ? 0 : this.levels().indexOf(this.level()!) + 1;
       const tab = this.tabs()[index]?.nativeElement;
       const bar = this.indicator()?.nativeElement;
       if (!tab || !bar) return;
@@ -583,6 +536,10 @@ export class GroupesV2Component {
     });
 
     afterNextRender(() => {
+      // ?creer=1 (from Paramètres or the onboarding) opens the create panel.
+      // The URL effect above already drops the parameter from the address bar.
+      if (this.params.get('creer') === '1' && this.levels().length && this.subjects().length) this.openCreate();
+
       const onResize = () => this.viewport.set(window.innerWidth);
       window.addEventListener('resize', onResize, { passive: true });
 
@@ -590,7 +547,7 @@ export class GroupesV2Component {
       const tick = setInterval(() => this.clock.update(n => n + 1), 60_000);
 
       const sentinel = this.sentinel()?.nativeElement;
-      const io = sentinel ? new IntersectionObserver(([e]) => this.stuck.set(!e.isIntersecting)) : null;
+      const io = sentinel ? new IntersectionObserver(([e]) => this.stuck.set(!e.isIntersecting), { rootMargin: `-${barHeight()}px 0px 0px 0px` }) : null;
       if (sentinel) io!.observe(sentinel);
 
       const bar = this.toolbar()?.nativeElement;
@@ -686,4 +643,9 @@ function clashes(self: GroupRow | null, s: Slot, room: string, teacher: string, 
     if (o.teacher === teacher) out.push(`${teacher} donne déjà cours ${when} (${what}).`);
   }
   return out;
+}
+
+/** The sticky app bar's height (--m-bar-h): the toolbar sticks under it. */
+function barHeight(): number {
+  return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--m-bar-h')) || 64;
 }

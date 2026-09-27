@@ -1,0 +1,598 @@
+<div class="m-page page">
+  <app-bar section="Paramètres" />
+
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1>Paramètres</h1>
+        <p class="head-sub">{{ settings.centre().name }}, formule {{ currentPlan().name }}</p>
+      </div>
+      <a class="m-btn head-more" routerLink="/parametres">
+        Utilisateurs et sécurité
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Sections des paramètres">
+      @for (t of tabs; track t.key) {
+        <button role="tab" type="button" class="tab" [class.is-on]="tab() === t.key" [attr.aria-selected]="tab() === t.key" (click)="tab.set(t.key)">
+          @switch (t.key) {
+            @case ('centre') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg> }
+            @case ('facture') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg> }
+            @case ('abonnement') { <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M3 10h18M7 14.5h3"/></svg> }
+            @case ('enseignement') { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5L12 4l9 4.5-9 4.5z"/><path d="M7 10.5v5c3 2 7 2 10 0v-5"/></svg> }
+          }
+          {{ t.label }}
+          @if ((t.key === 'centre' && centreDirty()) || (t.key === 'facture' && invoiceDirty())) {
+            <span class="tab-dot" aria-label="Modifications non enregistrées"></span>
+          }
+        </button>
+      }
+    </nav>
+
+    @switch (tab()) {
+
+      <!-- ═════════════════ Centre ═════════════════ -->
+      @case ('centre') {
+        <form class="stack" animate.enter="m-enter-fade" (ngSubmit)="saveCentre()" (input)="touchCentre()" (change)="touchCentre()" id="centre-form">
+          <section class="block">
+            <header class="block-head">
+              <h2>Identité</h2>
+              <p>Ce qui apparaît en tête de chaque reçu et dans l’espace parents.</p>
+            </header>
+            <div class="block-body">
+              <div class="logo-row">
+                <div class="logo-box" [class.is-empty]="!centreDraft.logo">
+                  @if (centreDraft.logo) {
+                    <img [src]="centreDraft.logo" alt="Logo du centre">
+                  } @else {
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15"/><path d="M3.5 16l5-5 4 4 3-3 5 5"/><circle cx="15.5" cy="9" r="1.6"/></svg>
+                  }
+                </div>
+                <div class="logo-actions">
+                  <p class="field-title">Logo</p>
+                  <p class="hint">PNG, JPG ou SVG, 1 Mo maximum. Fond transparent conseillé.</p>
+                  <div class="row-btns">
+                    <label class="m-btn file-btn">
+                      <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" (change)="onLogo($event)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7.5 8.5L12 4l4.5 4.5"/><path d="M5 20h14"/></svg>
+                      {{ centreDraft.logo ? 'Changer' : 'Importer un logo' }}
+                    </label>
+                    @if (centreDraft.logo) {
+                      <button class="m-btn" type="button" (click)="removeLogo()">Retirer</button>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="fields">
+                <label class="m-field span-2" [class.has-error]="centreSubmitted() && centreErrors().name">
+                  <span>Nom du centre</span>
+                  <input class="m-input" name="name" [(ngModel)]="centreDraft.name" autocomplete="organization">
+                  @if (centreSubmitted() && centreErrors().name) { <small class="err">{{ centreErrors().name }}</small> }
+                </label>
+                <label class="m-field">
+                  <span>Type d’établissement</span>
+                  <select class="m-select" name="type" [(ngModel)]="centreDraft.type">
+                    @for (t of centreTypes; track t) { <option [value]="t">{{ t }}</option> }
+                  </select>
+                </label>
+                <label class="m-field">
+                  <span>Ville</span>
+                  <input class="m-input" name="city" [(ngModel)]="centreDraft.city" autocomplete="address-level2">
+                </label>
+                <label class="m-field span-2">
+                  <span>Adresse</span>
+                  <input class="m-input" name="address" [(ngModel)]="centreDraft.address" autocomplete="street-address">
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section class="block">
+            <header class="block-head">
+              <h2>Contact</h2>
+              <p>Comment les parents vous joignent.</p>
+            </header>
+            <div class="block-body fields">
+              <label class="m-field" [class.has-error]="centreSubmitted() && centreErrors().phone">
+                <span>Téléphone</span>
+                <input class="m-input" name="phone" type="tel" inputmode="tel" [(ngModel)]="centreDraft.phone">
+                @if (centreSubmitted() && centreErrors().phone) { <small class="err">{{ centreErrors().phone }}</small> }
+              </label>
+              <label class="m-field">
+                <span>WhatsApp</span>
+                <input class="m-input" name="whatsapp" type="tel" inputmode="tel" [(ngModel)]="centreDraft.whatsapp">
+                <small class="hint">Utilisé pour les rappels d’impayés.</small>
+              </label>
+              <label class="m-field" [class.has-error]="centreSubmitted() && centreErrors().email">
+                <span>Email</span>
+                <input class="m-input" name="email" type="email" [(ngModel)]="centreDraft.email">
+                @if (centreSubmitted() && centreErrors().email) { <small class="err">{{ centreErrors().email }}</small> }
+              </label>
+              <label class="m-field">
+                <span>Site web <small>(facultatif)</small></span>
+                <input class="m-input" name="website" type="url" placeholder="www.moncentre.ma" [(ngModel)]="centreDraft.website">
+              </label>
+            </div>
+          </section>
+
+          <section class="block">
+            <header class="block-head">
+              <h2>Mentions légales</h2>
+              <p>Obligatoires sur les factures au Maroc. Elles s’impriment en pied de reçu.</p>
+            </header>
+            <div class="block-body fields">
+              <label class="m-field" [class.has-error]="centreSubmitted() && centreErrors().ice">
+                <span>ICE</span>
+                <input class="m-input mono" name="ice" inputmode="numeric" maxlength="17" placeholder="15 chiffres" [(ngModel)]="centreDraft.ice">
+                @if (centreSubmitted() && centreErrors().ice) { <small class="err">{{ centreErrors().ice }}</small> }
+              </label>
+              <label class="m-field">
+                <span>Identifiant fiscal (IF)</span>
+                <input class="m-input mono" name="ifNumber" inputmode="numeric" [(ngModel)]="centreDraft.ifNumber">
+              </label>
+              <label class="m-field">
+                <span>Registre du commerce (RC)</span>
+                <input class="m-input mono" name="rc" [(ngModel)]="centreDraft.rc">
+              </label>
+              <label class="m-field">
+                <span>Patente</span>
+                <input class="m-input mono" name="patente" inputmode="numeric" [(ngModel)]="centreDraft.patente">
+              </label>
+            </div>
+          </section>
+        </form>
+
+        @if (centreDirty()) {
+          <div class="savebar" role="region" aria-label="Enregistrer les modifications" animate.enter="savebar-enter" animate.leave="savebar-leave">
+            <span class="savebar-text">
+              @if (centreSubmitted() && centreErrorCount()) {
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
+                {{ centreErrorCount() }} {{ centreErrorCount() > 1 ? 'champs à corriger' : 'champ à corriger' }}
+              } @else {
+                Modifications non enregistrées
+              }
+            </span>
+            <button class="m-btn" type="button" (click)="discardCentre()">Annuler</button>
+            <button class="m-btn m-btn--primary" type="submit" form="centre-form">Enregistrer <kbd>Ctrl S</kbd></button>
+          </div>
+        }
+      }
+
+      <!-- ═════════════════ Facture ═════════════════ -->
+      @case ('facture') {
+        <div class="invoice" animate.enter="m-enter-fade">
+          <div class="controls">
+            <section class="block">
+              <header class="block-head">
+                <h2>Modèle</h2>
+              </header>
+              <div class="block-body">
+                <div class="templates" role="radiogroup" aria-label="Modèle de reçu">
+                  @for (t of templates; track t.key) {
+                    <button type="button" role="radio" class="template" [class.is-on]="invoiceDraft.template === t.key" [attr.aria-checked]="invoiceDraft.template === t.key" (click)="setInvoice('template', t.key)" [style.--accent]="invoiceDraft.accent">
+                      <span [class]="'thumb thumb--' + t.key" aria-hidden="true">
+                        <span class="t-head"></span><span class="t-line"></span><span class="t-line short"></span><span class="t-table"></span><span class="t-total"></span>
+                      </span>
+                      {{ t.label }}
+                    </button>
+                  }
+                </div>
+
+                <p class="field-title">Format</p>
+                <div class="seg" role="radiogroup" aria-label="Format du papier">
+                  <button type="button" role="radio" class="seg-btn" [class.is-on]="invoiceDraft.paper === 'a4'" [attr.aria-checked]="invoiceDraft.paper === 'a4'" (click)="setInvoice('paper', 'a4')">A4</button>
+                  <button type="button" role="radio" class="seg-btn" [class.is-on]="invoiceDraft.paper === 'ticket'" [attr.aria-checked]="invoiceDraft.paper === 'ticket'" (click)="setInvoice('paper', 'ticket')">Ticket 80 mm</button>
+                </div>
+
+                <p class="field-title">Couleur</p>
+                <div class="swatches" role="radiogroup" aria-label="Couleur d’accent">
+                  @for (c of accents; track c) {
+                    <button type="button" role="radio" class="swatch" [style.background]="c" [class.is-on]="invoiceDraft.accent === c" [attr.aria-checked]="invoiceDraft.accent === c" [attr.aria-label]="'Couleur ' + c" (click)="setInvoice('accent', c)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                    </button>
+                  }
+                  <label class="swatch swatch--custom" [class.is-on]="!accents.includes(invoiceDraft.accent)" data-tip="Autre couleur">
+                    <input type="color" [value]="invoiceDraft.accent" (input)="setInvoice('accent', $any($event.target).value)" aria-label="Choisir une autre couleur">
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <section class="block">
+              <header class="block-head">
+                <h2>Contenu</h2>
+              </header>
+              <div class="block-body">
+                <div class="fields">
+                  <label class="m-field span-2">
+                    <span>Titre du document</span>
+                    <input class="m-input" name="title" [ngModel]="invoiceDraft.title" (ngModelChange)="setInvoice('title', $event)">
+                  </label>
+                  <label class="m-field">
+                    <span>Préfixe de numéro</span>
+                    <input class="m-input mono" name="prefix" [ngModel]="invoiceDraft.prefix" (ngModelChange)="setInvoice('prefix', $event)">
+                  </label>
+                  <label class="m-field">
+                    <span>Prochain numéro</span>
+                    <input class="m-input mono" name="next" type="number" min="1" [ngModel]="invoiceDraft.nextNumber" (ngModelChange)="setInvoice('nextNumber', $event)">
+                  </label>
+                  <p class="hint span-2">Prochain reçu : <strong class="mono">{{ preview().data.number }}</strong></p>
+                </div>
+
+                <p class="field-title">Afficher sur le reçu</p>
+                <div class="checks">
+                  @for (t of toggles; track t.key) {
+                    <label class="check">
+                      <input type="checkbox" [checked]="isOn(t.key)" (change)="toggle(t.key)">
+                      <span class="check-box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                      {{ t.label }}
+                    </label>
+                  }
+                </div>
+                @if (missingLegal()) {
+                  <p class="warn">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
+                    <span>Aucun ICE renseigné. <button class="link" type="button" (click)="tab.set('centre')">L’ajouter dans Centre</button></span>
+                  </p>
+                }
+
+                <div class="fields">
+                  <label class="m-field span-2">
+                    <span>Mention <small>(conditions, rappel de paiement…)</small></span>
+                    <textarea class="m-input m-textarea" name="note" rows="2" [ngModel]="invoiceDraft.note" (ngModelChange)="setInvoice('note', $event)"></textarea>
+                  </label>
+                  <label class="m-field span-2">
+                    <span>Pied de page</span>
+                    <input class="m-input" name="footer" [ngModel]="invoiceDraft.footer" (ngModelChange)="setInvoice('footer', $event)">
+                  </label>
+                </div>
+              </div>
+            </section>
+
+            <div class="row-btns">
+              <button class="m-btn" type="button" (click)="printSample()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8"/><path d="M7 14h10v6.5H7z"/></svg>
+                Imprimer un exemple
+              </button>
+              <button class="link" type="button" (click)="resetInvoice()">Rétablir par défaut</button>
+            </div>
+          </div>
+
+          <div class="preview-col">
+            <div class="preview-sticky">
+              <p class="preview-label">
+                <span class="live-dot" aria-hidden="true"></span>
+                Aperçu en direct
+              </p>
+              <app-invoice-preview [centre]="preview().centre" [settings]="preview().settings" [data]="preview().data" />
+              <p class="hint preview-hint">Logo, nom et mentions légales viennent de l’onglet <button class="link" type="button" (click)="tab.set('centre')">Centre</button>.</p>
+            </div>
+          </div>
+        </div>
+
+        @if (invoiceDirty()) {
+          <div class="savebar" role="region" aria-label="Enregistrer le modèle" animate.enter="savebar-enter" animate.leave="savebar-leave">
+            <span class="savebar-text">Modèle modifié</span>
+            <button class="m-btn" type="button" (click)="discardInvoice()">Annuler</button>
+            <button class="m-btn m-btn--primary" type="button" (click)="saveInvoice()">Enregistrer <kbd>Ctrl S</kbd></button>
+          </div>
+        }
+
+        <!-- Only this reaches the paper when printing the sample -->
+        <section class="m-print print-sheet" aria-hidden="true">
+          <app-invoice-preview [centre]="preview().centre" [settings]="preview().settings" [data]="preview().data" />
+        </section>
+      }
+
+      <!-- ═════════════════ Abonnement ═════════════════ -->
+      @case ('abonnement') {
+        <div class="stack" animate.enter="m-enter-fade">
+          <section class="block plan-now" [class.is-cancelled]="settings.cancelled()">
+            <div class="plan-now-main">
+              <p class="eyebrow">Votre formule</p>
+              <h2>{{ currentPlan().name }}</h2>
+              <p class="plan-price">
+                <strong>{{ money(priceFor(currentPlan(), settings.cycle())) }}</strong> MAD
+                <span>/ {{ settings.cycle() === 'annuel' ? 'an' : 'mois' }}</span>
+              </p>
+              @if (settings.cancelled()) {
+                <p class="status is-off">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 8.5l7 7"/></svg>
+                  Résilié, actif jusqu’au {{ longDate(settings.renewsOn()) }}
+                </p>
+              } @else {
+                <p class="status">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+                  Actif, renouvellement le {{ longDate(settings.renewsOn()) }}
+                </p>
+              }
+            </div>
+            <div class="meters">
+              @for (m of meters(); track m.label) {
+                <div class="meter-row">
+                  <div class="meter-text">
+                    <span>{{ m.label }}</span>
+                    <span><strong>{{ m.used }}</strong> / {{ m.max ?? 'illimité' }}</span>
+                  </div>
+                  <span class="meter" [class.is-high]="m.pct >= 80" aria-hidden="true">
+                    <span class="meter-fill" [style.width.%]="m.max ? m.pct : 8"></span>
+                  </span>
+                </div>
+              }
+            </div>
+            @if (settings.cancelled()) {
+              <button class="m-btn m-btn--primary plan-now-cta" type="button" (click)="reactivate()">Réactiver l’abonnement</button>
+            }
+          </section>
+
+          <section class="block">
+            <header class="block-head block-head--row">
+              <div>
+                <h2>Changer de formule</h2>
+                <p>Montée en gamme immédiate, au prorata. Une formule inférieure s’applique au prochain renouvellement.</p>
+              </div>
+              <div class="seg" role="radiogroup" aria-label="Facturation">
+                <button type="button" role="radio" class="seg-btn" [class.is-on]="pickCycle() === 'mensuel'" [attr.aria-checked]="pickCycle() === 'mensuel'" (click)="pickCycle.set('mensuel')">Mensuel</button>
+                <button type="button" role="radio" class="seg-btn" [class.is-on]="pickCycle() === 'annuel'" [attr.aria-checked]="pickCycle() === 'annuel'" (click)="pickCycle.set('annuel')">Annuel <span class="save-tag">2 mois offerts</span></button>
+              </div>
+            </header>
+            <div class="plans">
+              @for (p of plans; track p.key) {
+                <article class="plan" [class.is-current]="isCurrent(p)" [class.is-featured]="p.key === 'pro'">
+                  @if (isCurrent(p)) { <span class="plan-badge">Formule actuelle</span> }
+                  @else if (p.key === 'pro') { <span class="plan-badge plan-badge--soft">Le plus choisi</span> }
+                  <h3>{{ p.name }}</h3>
+                  <p class="plan-pitch">{{ p.pitch }}</p>
+                  <p class="plan-amount">
+                    <strong>{{ money(priceFor(p, pickCycle())) }}</strong> MAD <span>/ {{ pickCycle() === 'annuel' ? 'an' : 'mois' }}</span>
+                  </p>
+                  @if (pickCycle() === 'annuel') {
+                    <p class="plan-eq">soit {{ money(priceFor(p, 'annuel') / 12) }} MAD par mois</p>
+                  }
+                  <ul class="plan-limits">
+                    <li>{{ p.limits.students ?? 'Élèves illimités' }}{{ p.limits.students ? ' élèves' : '' }}</li>
+                    <li>{{ p.limits.teachers ?? 'Enseignants illimités' }}{{ p.limits.teachers ? ' enseignants' : '' }}</li>
+                    <li>{{ p.limits.users }} {{ p.limits.users > 1 ? 'utilisateurs' : 'utilisateur' }}</li>
+                  </ul>
+                  <ul class="plan-features">
+                    @for (f of p.features; track f) {
+                      <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>{{ f }}</li>
+                    }
+                  </ul>
+                  @if (isCurrent(p)) {
+                    <button class="m-btn plan-btn" type="button" disabled>Formule actuelle</button>
+                  } @else {
+                    <button class="m-btn plan-btn" [class.m-btn--primary]="isUpgrade(p) || p.key === settings.plan()" type="button" (click)="askChange(p)">
+                      {{ p.key === settings.plan() ? 'Passer en ' + (pickCycle() === 'annuel' ? 'annuel' : 'mensuel') : (isUpgrade(p) ? 'Passer à ' + p.name : 'Revenir à ' + p.name) }}
+                    </button>
+                  }
+                </article>
+              }
+            </div>
+          </section>
+
+          <section class="block">
+            <header class="block-head">
+              <h2>Paiement</h2>
+            </header>
+            <div class="block-body pay-info">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10L12 4.5 20.5 10"/><path d="M5.5 10v8M10 10v8M14 10v8M18.5 10v8M3.5 20h17"/></svg>
+              <div>
+                <p><strong>Virement bancaire</strong>, chaque {{ settings.cycle() === 'annuel' ? 'année' : 'mois' }} à réception de la facture.</p>
+                <p class="hint">Pour payer autrement ou modifier les informations de facturation, écrivez au support : aucun numéro de carte n’est demandé ici.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="block">
+            <header class="block-head">
+              <h2>Factures Moujtahid</h2>
+            </header>
+            <ul class="bills">
+              @for (b of settings.billing(); track b.number) {
+                <li class="bill">
+                  <span class="bill-main">
+                    <span class="bill-period">{{ b.period }}</span>
+                    <span class="bill-meta mono">{{ b.number }}, le {{ shortDate(b.date) }}</span>
+                  </span>
+                  <span class="bill-amount">{{ money(b.amount) }} MAD</span>
+                  <span class="bill-status"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Payée</span>
+                  <button class="m-icon-btn m-tip-end" type="button" data-tip="Télécharger le PDF" [attr.aria-label]="'Télécharger la facture ' + b.number" (click)="downloadInvoice(b.number)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+                  </button>
+                </li>
+              }
+            </ul>
+          </section>
+
+          @if (!settings.cancelled()) {
+            <section class="danger">
+              <div>
+                <p class="danger-title">Résilier l’abonnement</p>
+                <p>Vos données restent accessibles jusqu’au {{ longDate(settings.renewsOn()) }}, puis le compte passe en lecture seule.</p>
+              </div>
+              <button class="m-btn danger-btn" type="button" (click)="confirmingCancel.set(true)">Résilier</button>
+            </section>
+          }
+        </div>
+      }
+
+      <!-- ═════════════════ Niveaux et matières ═════════════════ -->
+      @case ('enseignement') {
+        <div animate.enter="m-enter-fade">
+          @if (readyForGroup()) {
+            <section class="ready" data-tour="premier-groupe" animate.enter="m-enter-rise">
+              <svg class="ready-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+              <div class="ready-text">
+                <p class="ready-title">Niveaux et matières prêts</p>
+                <p>Créez maintenant votre premier groupe : {{ centre.subjects()[0] }}, {{ centre.levels()[0] }} par exemple.</p>
+              </div>
+              <a class="m-btn m-btn--primary" routerLink="/accueil/groupes" [queryParams]="{ creer: 1 }">
+                Créer mon premier groupe
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              </a>
+            </section>
+          }
+
+          <div class="grid">
+            <section class="block" id="niveaux" aria-labelledby="niveaux-title">
+              <header class="block-head block-head--row">
+                <div>
+                  <h2 id="niveaux-title">Niveaux</h2>
+                  <p>Les classes ou années que vous accueillez.</p>
+                </div>
+                <span class="block-n">{{ centre.levels().length }}</span>
+              </header>
+
+              <form class="add" (ngSubmit)="add('level')">
+                <label class="m-visually-hidden" for="new-level">Nouveau niveau</label>
+                <input id="new-level" class="m-input" name="level" autocomplete="off" placeholder="Ex. : 2e Bac Sciences Maths" [ngModel]="newLevel()" (ngModelChange)="newLevel.set($event)">
+                <button class="m-btn m-btn--primary" type="submit" [disabled]="!newLevel().trim()">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  Ajouter
+                </button>
+              </form>
+
+              @if (levelSuggestions().length) {
+                <div class="suggest">
+                  <p class="suggest-label">Suggestions</p>
+                  <div class="chips">
+                    @for (s of levelSuggestions(); track s) {
+                      <button class="chip-add" type="button" animate.leave="chip-leave" (click)="add('level', s)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+                        {{ s }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <ul class="items">
+                @for (l of centre.levels(); track l) {
+                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'level:' + l">
+                    <span class="item-name">{{ l }}</span>
+                    <span class="item-meta">{{ usage('level', l) ? usage('level', l) + (usage('level', l) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
+                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('level', l) > 0" [attr.data-tip]="removeTip('level', l)" [attr.aria-label]="'Retirer ' + l" (click)="remove('level', l)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="none">Aucun niveau pour l’instant.</li>
+                }
+              </ul>
+            </section>
+
+            <section class="block" id="matieres" aria-labelledby="matieres-title">
+              <header class="block-head block-head--row">
+                <div>
+                  <h2 id="matieres-title">Matières</h2>
+                  <p>Ce que vos enseignants donnent en cours.</p>
+                </div>
+                <span class="block-n">{{ centre.subjects().length }}</span>
+              </header>
+
+              <form class="add" (ngSubmit)="add('subject')">
+                <label class="m-visually-hidden" for="new-subject">Nouvelle matière</label>
+                <input id="new-subject" class="m-input" name="subject" autocomplete="off" placeholder="Ex. : Économie" [ngModel]="newSubject()" (ngModelChange)="newSubject.set($event)">
+                <button class="m-btn m-btn--primary" type="submit" [disabled]="!newSubject().trim()">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                  Ajouter
+                </button>
+              </form>
+
+              @if (subjectSuggestions().length) {
+                <div class="suggest">
+                  <p class="suggest-label">Suggestions</p>
+                  <div class="chips">
+                    @for (s of subjectSuggestions(); track s) {
+                      <button class="chip-add" type="button" animate.leave="chip-leave" (click)="add('subject', s)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>
+                        {{ s }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+
+              <ul class="items">
+                @for (s of centre.subjects(); track s) {
+                  <li class="item" animate.enter="item-enter" [class.is-fresh]="fresh() === 'subject:' + s">
+                    <span class="item-name">{{ s }}</span>
+                    <span class="item-meta">{{ usage('subject', s) ? usage('subject', s) + (usage('subject', s) > 1 ? ' groupes' : ' groupe') : 'Aucun groupe' }}</span>
+                    <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" [disabled]="usage('subject', s) > 0" [attr.data-tip]="removeTip('subject', s)" [attr.aria-label]="'Retirer ' + s" (click)="remove('subject', s)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                    </button>
+                  </li>
+                } @empty {
+                  <li class="none">Aucune matière pour l’instant.</li>
+                }
+              </ul>
+            </section>
+          </div>
+        </div>
+      }
+    }
+  </main>
+
+  <app-onboarding page="parametres" />
+
+  <!-- Plan change confirmation -->
+  @if (changing(); as p) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="changing.set(null)"></div>
+    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="plan-title" aria-describedby="plan-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
+      <h2 id="plan-title">
+        @if (p.key === settings.plan()) { Passer en facturation {{ pickCycle() === 'annuel' ? 'annuelle' : 'mensuelle' }} ? } @else { Passer à la formule {{ p.name }} ? }
+      </h2>
+      @if (blockers(p).length) {
+        <p id="plan-text">Cette formule ne suffit pas pour votre centre aujourd’hui :</p>
+        <ul class="dialog-list">
+          @for (b of blockers(p); track b) { <li>{{ b }}</li> }
+        </ul>
+        <p>Réduisez d’abord ces chiffres, ou gardez votre formule actuelle.</p>
+        <div class="dialog-actions">
+          <button class="m-btn" type="button" (click)="changing.set(null)">Compris</button>
+        </div>
+      } @else {
+        <p id="plan-text">
+          {{ money(priceFor(p, pickCycle())) }} MAD {{ pickCycle() === 'annuel' ? 'par an' : 'par mois' }}.
+          @if (isUpgrade(p)) {
+            Le changement est immédiat : vous ne payez que la différence jusqu’au {{ longDate(settings.renewsOn()) }}.
+          } @else {
+            Le changement prendra effet le {{ longDate(settings.renewsOn()) }}. Rien ne change d’ici là.
+          }
+        </p>
+        <div class="dialog-actions">
+          <button class="m-btn" type="button" (click)="changing.set(null)">Annuler</button>
+          <button class="m-btn m-btn--primary" type="button" (click)="confirmChange()">Confirmer</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Cancellation confirmation -->
+  @if (confirmingCancel()) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirmingCancel.set(false)"></div>
+    <div class="dialog dialog--danger" role="alertdialog" aria-modal="true" aria-labelledby="cancel-title" aria-describedby="cancel-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
+      <h2 id="cancel-title">Résilier votre abonnement ?</h2>
+      <p id="cancel-text">
+        Moujtahid reste pleinement utilisable jusqu’au {{ longDate(settings.renewsOn()) }}. Ensuite, le compte passe en lecture seule :
+        vos élèves, paiements et reçus restent consultables et exportables. Vous pouvez réactiver à tout moment.
+      </p>
+      <div class="dialog-actions">
+        <button class="m-btn" type="button" (click)="confirmingCancel.set(false)">Garder mon abonnement</button>
+        <button class="m-btn m-btn--danger" type="button" (click)="confirmCancel()">Résilier</button>
+      </div>
+    </div>
+  }
+
+  @for (s of snack() ? [snack()!] : []; track s.id) {
+    <div class="snack" role="status" animate.enter="snack-enter" animate.leave="snack-leave">
+      <span>{{ s.text }}</span>
+      @if (s.undo) {
+        <button type="button" (click)="runUndo()">Annuler</button>
+      }
+    </div>
+  }
+</div>

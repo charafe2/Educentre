@@ -1,4 +1,4 @@
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, afterNextRender, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CaisseStore, METHODS, Method, capitalize, money, monthLong } from './caisse.store';
 import { CATEGORIES, Category, Expense, ExpensesStore, SalaryRecord, SalaryRow } from './expenses.store';
@@ -14,6 +14,14 @@ export class ExpensesTabComponent {
   readonly caisse = inject(CaisseStore);
   readonly store = inject(ExpensesStore);
   readonly notify = output<{ text: string; undo?: () => void }>();
+  /** Opened from the home shortcut: start on the quick-add form. */
+  readonly startAdding = input(false);
+
+  constructor() {
+    afterNextRender(() => {
+      if (this.startAdding()) this.openAdd();
+    });
+  }
 
   readonly money = money;
   readonly Math = Math;

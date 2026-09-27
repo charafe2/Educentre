@@ -1,6 +1,6 @@
 /* ══════════════════════════════════════════════════════════════════
    Accueil — the tenant app's front door, replacing the sidebar.
-   Light greens on white, square corners, four doors and nothing else.
+   Crisp greens on white, soft corners, four doors and nothing else.
    Motion is ambient and slow: a drifting grid behind, and each icon
    quietly doing its job on a loop. None of it competes with a click.
    ══════════════════════════════════════════════════════════════════ */
@@ -15,7 +15,7 @@
   --h-green-deep: var(--m-green-deep);
   --h-green-wash: var(--m-green-wash);
   --h-late: var(--m-late);
-  --h-grid: rgba(31, 138, 91, 0.07);
+  --h-grid: rgba(15, 145, 88, 0.07);
   --h-ease: var(--m-ease);
 
   display: block;
@@ -32,10 +32,52 @@
   stroke-width: 2;
 }
 
+/* ── Backdrop: the login page's classroom photo, softened so it sets the
+   mood without competing with the doors. Blurred and slightly
+   desaturated, then washed with the canvas colour: light at the top so
+   the class shows behind the greeting, near-opaque lower down where the
+   shortcuts and figures need a calm surface. It drifts in very slowly. ── */
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.backdrop::before {
+  content: '';
+  position: absolute;
+  inset: -24px;
+  background: url('/background.jpg') center 38% / cover no-repeat;
+  filter: blur(3px) saturate(0.85);
+  transform: scale(1.04);
+  animation: backdrop-drift 40s ease-in-out infinite alternate;
+}
+
+.backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(244, 248, 246, 0.55), transparent 70%),
+    linear-gradient(180deg,
+      rgba(244, 248, 246, 0.62) 0%,
+      rgba(236, 246, 240, 0.74) 34%,
+      rgba(244, 248, 246, 0.9) 62%,
+      var(--m-canvas) 88%);
+}
+
+@keyframes backdrop-drift {
+  to { transform: scale(1.1) translate(-1.2%, -0.8%); }
+}
+
 /* Drifting grid: one slow, endless move so the page feels alive at rest. */
 .home::before {
   content: '';
   position: absolute;
+  z-index: 1;
   inset: -64px;
   background-image:
     linear-gradient(var(--h-grid) 1px, transparent 1px),
@@ -136,6 +178,160 @@
     opacity: 0;
     transform: translateY(10px);
   }
+}
+
+/* ── Quick actions: one strip of the day's frequent jobs. Lighter than
+   the doors above (outlined, not filled) so the hierarchy holds: doors
+   first, shortcuts second, figures last. Each carries its key. ── */
+
+.quick {
+  width: min(100%, 803px);
+  margin-block-start: -8px;
+}
+
+.quick-title {
+  margin-block-end: 10px;
+  color: var(--m-ink-faint);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quick-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.quick-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 12px 11px;
+  border: 1px solid var(--h-line);
+  background: color-mix(in srgb, var(--h-paper) 82%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition:
+    border-color var(--m-fast) linear,
+    background-color var(--m-fast) linear,
+    transform var(--m-med) var(--m-ease),
+    box-shadow var(--m-med) var(--m-ease);
+  animation: tile-in 600ms var(--h-ease) both;
+  animation-delay: calc(var(--i) * 50ms + 300ms);
+}
+
+.quick-item:hover,
+.quick-item:focus-visible {
+  border-color: var(--h-green);
+  background: var(--h-paper);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 22px -18px rgba(22, 40, 31, 0.6);
+}
+
+.quick-item:active {
+  transform: translateY(0);
+}
+
+.quick-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  background: var(--m-green-tint);
+  color: var(--h-green);
+  transition: background-color var(--m-fast) linear, color var(--m-fast) linear;
+}
+
+.quick-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.quick-item:hover .quick-icon {
+  background: var(--h-green);
+  color: #fff;
+}
+
+.quick-item.is-late .quick-icon {
+  background: var(--m-late-wash);
+  color: var(--h-late);
+}
+
+.quick-item.is-late:hover {
+  border-color: var(--h-late);
+}
+
+.quick-item.is-late:hover .quick-icon {
+  background: var(--h-late);
+  color: #fff;
+}
+
+/* The bell rings once on hover. */
+.quick-item.is-late:hover .quick-icon svg {
+  animation: ring 600ms var(--m-ease);
+  transform-origin: 50% 20%;
+}
+
+@keyframes ring {
+  20% { transform: rotate(14deg); }
+  45% { transform: rotate(-10deg); }
+  70% { transform: rotate(5deg); }
+}
+
+.quick-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+}
+
+.quick-label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.quick-hint {
+  overflow: hidden;
+  color: var(--h-ink-soft);
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-item.is-late .quick-hint {
+  color: var(--h-late);
+  font-weight: 500;
+}
+
+.quick-key {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-end: 12px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  border: 1px solid var(--h-line);
+  background: var(--h-paper);
+  color: var(--m-ink-faint);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  transition: border-color var(--m-fast) linear, color var(--m-fast) linear;
+}
+
+.quick-item:hover .quick-key {
+  border-color: var(--h-green);
+  color: var(--h-green-deep);
 }
 
 /* ── Stats: read-only, so no white fill — they must never look like the
@@ -338,15 +534,43 @@
     grid-template-columns: repeat(2, minmax(0, 200px));
   }
 
+  .quick {
+    width: min(100%, 402px);
+  }
+
+  .quick-list {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .quick-item {
+    flex-direction: row;
+    align-items: center;
+    min-height: 56px;
+  }
+
+  .quick-text {
+    padding-inline-end: 28px;
+  }
+
+  .quick-key {
+    inset-block-start: 50%;
+    transform: translateY(-50%);
+  }
+
   .stat:nth-child(3) {
     border-inline-start-color: transparent;
   }
 }
 
 @media (max-width: 560px) {
-  .bar {
-    height: 60px;
-    padding-inline: 16px;
+  .quick {
+    width: 100%;
+  }
+
+  /* No physical keyboard to speak of: the key badges go. */
+  .quick-key {
+    display: none;
   }
 
   .main {
@@ -408,9 +632,46 @@
    brief ("animations constantes") that the page should never lose. */
 @media (prefers-reduced-motion: reduce) {
   .home::before,
+  .backdrop::before,
   .tile,
   .stat,
+  .quick-item,
+  .quick-item.is-late:hover .quick-icon svg,
   .meter-fill {
     animation: none;
   }
+}
+
+
+/* ── Shape: soft corners and depth (radius scale in moujtahid-theme) ──
+   Kept together at the end so the layout rules above stay readable.
+   Framed lists use overflow: clip (not hidden) so sticky headers inside
+   keep working. */
+
+.modules {
+  overflow: clip;
+  border-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow);
+}
+
+.quick-item {
+  border-radius: var(--m-r);
+}
+
+.quick-icon {
+  border-radius: var(--m-r-sm);
+}
+
+.quick-key {
+  border-radius: var(--m-r-xs);
+}
+
+.meter,
+.meter-fill {
+  border-radius: var(--m-r-pill);
+}
+
+.stat-note.is-late::before,
+.stat-note.is-live::before {
+  border-radius: 50%;
 }

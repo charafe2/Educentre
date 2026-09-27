@@ -1,4 +1,6 @@
 <div class="home m-page">
+  <!-- The classroom photo from the login page, washed into the theme -->
+  <div class="backdrop" aria-hidden="true"></div>
 
   <app-bar />
 
@@ -7,7 +9,7 @@
 
     <nav class="modules" aria-label="Modules">
       @for (m of modules; track m.key; let i = $index) {
-        <a class="tile" [routerLink]="m.route" [style.--i]="i" [attr.aria-keyshortcuts]="m.key">
+        <a class="tile" [routerLink]="m.route" [style.--i]="i" [attr.aria-keyshortcuts]="m.key" [attr.data-tour]="m.icon">
           <span class="tile-icon" aria-hidden="true">
             @switch (m.icon) {
               @case ('groupes') {
@@ -46,6 +48,30 @@
       }
     </nav>
 
+    <section class="quick" aria-labelledby="quick-title">
+      <h2 id="quick-title" class="quick-title">Actions rapides</h2>
+      <div class="quick-list">
+        @for (a of actions; track a.key; let i = $index) {
+          <a class="quick-item" [class.is-late]="a.tone === 'late'" [routerLink]="a.route" [queryParams]="a.query" [style.--i]="i" [attr.aria-keyshortcuts]="a.key">
+            <span class="quick-icon" aria-hidden="true">
+              @switch (a.icon) {
+                @case ('encaisser') { <svg viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/><path d="M6.5 9.5v5M17.5 9.5v5"/></svg> }
+                @case ('groupe') { <svg viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19v-.5a5.5 5.5 0 0 1 11 0v.5"/><path d="M18.5 8v6M15.5 11h6"/></svg> }
+                @case ('enseignant') { <svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="13" height="10"/><path d="M7 8h6M9.5 19l1.5-5M13.5 19l-1.5-5"/><path d="M19.5 13v6M16.5 16h6"/></svg> }
+                @case ('relance') { <svg viewBox="0 0 24 24"><path d="M6 9.5a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4s2-1.5 2-6.5"/><path d="M10 19.5a2 2 0 0 0 4 0"/></svg> }
+                @case ('depense') { <svg viewBox="0 0 24 24"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M12 7.5v7M9 11h6"/></svg> }
+              }
+            </span>
+            <span class="quick-text">
+              <span class="quick-label">{{ a.label }}</span>
+              <span class="quick-hint">{{ a.hint }}</span>
+            </span>
+            <kbd class="quick-key" aria-hidden="true">{{ a.key }}</kbd>
+          </a>
+        }
+      </div>
+    </section>
+
     <section class="stats" aria-label="Paiements et séances">
       @for (st of stats; track st.label; let i = $index) {
         <div class="stat" [style.--i]="i">
@@ -64,4 +90,6 @@
       }
     </section>
   </main>
+
+  <app-onboarding page="accueil" />
 </div>

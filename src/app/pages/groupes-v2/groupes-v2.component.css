@@ -66,7 +66,7 @@
 
 .toolbar {
   position: sticky;
-  top: 0;
+  top: var(--m-bar-h);
   z-index: 5;
   margin-inline: -32px;
   padding: 0 32px;
@@ -388,7 +388,7 @@
 
 .section-title {
   position: sticky;
-  top: var(--toolbar-h);
+  top: calc(var(--m-bar-h) + var(--toolbar-h));
   z-index: 2;
   display: flex;
   align-items: baseline;
@@ -1092,7 +1092,7 @@
 .snack button {
   height: 32px;
   padding-inline: 12px;
-  color: #8fd9b3;
+  color: #6ee7a8;
   font-weight: 700;
   transition: background-color var(--m-fast) linear;
 }
@@ -1339,7 +1339,7 @@
 
 .week-head {
   position: sticky;
-  top: var(--toolbar-h);
+  top: calc(var(--m-bar-h) + var(--toolbar-h));
   z-index: 3;
   background: var(--m-paper);
   border-block-end: 1px solid var(--m-line);
@@ -1879,4 +1879,107 @@
   .search {
     transition: none;
   }
+}
+
+
+/* ── Shape: soft corners and depth (radius scale in moujtahid-theme) ──
+   Kept together at the end so the layout rules above stay readable.
+   Framed lists use overflow: clip (not hidden) so sticky headers inside
+   keep working. */
+
+.btn-key,
+.search-key,
+.level-n {
+  border-radius: var(--m-r-xs);
+}
+
+.search {
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow-sm);
+}
+
+.search-clear,
+.hit,
+.student-add,
+.picker-field,
+.check,
+.clash-banner,
+.roster-clash,
+.toggle,
+.filter .m-select {
+  border-radius: var(--m-r-sm);
+}
+
+.toggle-box {
+  border-radius: 5px;
+}
+
+.level-bar {
+  border-radius: 2px;
+}
+
+.list,
+.week,
+.empty {
+  overflow: clip;
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow);
+}
+
+.week-days,
+.views,
+.day-picks {
+  overflow: clip;
+  border-radius: var(--m-r-sm);
+}
+
+.meter,
+.meter-fill,
+.student {
+  border-radius: var(--m-r-pill);
+}
+
+.menu,
+.picker {
+  overflow: clip;
+  border-radius: var(--m-r-sm);
+  box-shadow: var(--m-shadow-lg);
+}
+
+.menu button {
+  border-radius: 7px;
+}
+
+.slot,
+.clash-dot {
+  border-radius: 7px;
+}
+
+.panel {
+  overflow: clip;
+  border-start-start-radius: var(--m-r-lg);
+  border-end-start-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow-lg);
+}
+
+[dir='rtl'] .panel {
+  border-radius: 0 var(--m-r-lg) var(--m-r-lg) 0;
+}
+
+.dialog {
+  border-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow-lg);
+}
+
+.snack {
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow-lg);
+}
+
+.snack button {
+  border-radius: 8px;
+}
+
+.scrim {
+  backdrop-filter: blur(2px);
 }

@@ -7,7 +7,7 @@
       <div>
         <h1>Groupes</h1>
         <p class="head-sub">
-          {{ groups().length }} groupes, {{ totalStudents() }} élèves inscrits, {{ openSeats() }} places libres
+          {{ groups().length }} {{ groups().length > 1 ? 'groupes' : 'groupe' }}, {{ totalStudents() }} élèves inscrits, {{ openSeats() }} places libres
         </p>
       </div>
       <div class="head-actions">
@@ -25,7 +25,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
           <span class="btn-text">Exporter</span>
         </button>
-        <button class="m-btn m-btn--primary head-new" type="button" aria-keyshortcuts="n" (click)="openCreate()">
+        <button class="m-btn m-btn--primary head-new" type="button" aria-keyshortcuts="n" data-tour="nouveau-groupe" (click)="openCreate()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           <span class="btn-text">Nouveau groupe</span>
           <kbd class="btn-key" aria-hidden="true">N</kbd>
@@ -61,7 +61,7 @@
         <button #tab role="tab" type="button" class="level" [class.is-on]="level() === null" [attr.aria-selected]="level() === null" (click)="level.set(null)">
           Tous <span class="level-n">{{ levelCount(null) }}</span>
         </button>
-        @for (l of levels; track l) {
+        @for (l of levels(); track l) {
           <button #tab role="tab" type="button" class="level" [class.is-on]="level() === l" [attr.aria-selected]="level() === l" (click)="level.set(l)">
             {{ l }} <span class="level-n">{{ levelCount(l) }}</span>
           </button>
@@ -76,7 +76,7 @@
         <span class="m-visually-hidden">Matière</span>
         <select class="m-select" [class.is-set]="subject()" [ngModel]="subject()" (ngModelChange)="subject.set($event)">
           <option value="">Toutes matières</option>
-          @for (s of subjects; track s) { <option [value]="s">{{ s }}</option> }
+          @for (s of subjects(); track s) { <option [value]="s">{{ s }}</option> }
         </select>
       </label>
       <label class="filter">
@@ -385,6 +385,10 @@
           <p class="empty-title">Aucun groupe ne correspond</p>
           <p class="empty-text">Essayez un autre nom ou retirez un filtre.</p>
           <button class="m-btn" type="button" (click)="clearFilters()">Effacer les filtres</button>
+        } @else if (!levels().length || !subjects().length) {
+          <p class="empty-title">Commencez par vos niveaux et vos matières</p>
+          <p class="empty-text">Un groupe, c’est une matière pour un niveau. Ajoutez-les dans Paramètres, puis revenez ici.</p>
+          <a class="m-btn m-btn--primary" routerLink="/accueil/parametres" data-tour="parametres-link">Aller aux paramètres</a>
         } @else {
           <p class="empty-title">Aucun groupe pour l’instant</p>
           <p class="empty-text">Créez un premier groupe pour y inscrire des élèves.</p>
@@ -393,6 +397,8 @@
       </div>
     }
   </main>
+
+  <app-onboarding page="groupes" />
 
   <!-- Create / edit panel -->
   @if (editing(); as target) {
@@ -411,13 +417,13 @@
         <label class="m-field span-2">
           <span>Matière</span>
           <select #firstField class="m-select" name="subject" [(ngModel)]="draft.subject">
-            @for (s of subjects; track s) { <option [value]="s">{{ s }}</option> }
+            @for (s of subjects(); track s) { <option [value]="s">{{ s }}</option> }
           </select>
         </label>
         <label class="m-field">
           <span>Niveau</span>
           <select class="m-select" name="level" [(ngModel)]="draft.level">
-            @for (l of levels; track l) { <option [value]="l">{{ l }}</option> }
+            @for (l of levels(); track l) { <option [value]="l">{{ l }}</option> }
           </select>
         </label>
         <label class="m-field">

@@ -663,3 +663,37 @@
     animation-duration: 1ms;
   }
 }
+
+
+/* ── Shape: soft corners and depth (radius scale in moujtahid-theme) ──
+   Kept together at the end so the layout rules above stay readable.
+   Framed lists use overflow: clip (not hidden) so sticky headers inside
+   keep working. */
+
+.summary,
+.panel,
+.add {
+  overflow: clip;
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow);
+}
+
+.method-row {
+  overflow: clip;
+  border-radius: var(--m-r-sm);
+}
+
+.box {
+  border-radius: 5px;
+}
+
+.paid-tag,
+.e-recurring,
+.hbar-track,
+.hbar-fill {
+  border-radius: var(--m-r-pill);
+}
+
+.avatar {
+  border-radius: 50%;
+}

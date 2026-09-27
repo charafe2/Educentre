@@ -671,7 +671,7 @@
 
 .pay {
   position: sticky;
-  top: 16px;
+  top: calc(var(--m-bar-h) + 16px);
   background: var(--m-paper);
   border: 1px solid var(--m-line);
   border-block-start: 3px solid var(--m-ink);
@@ -1113,7 +1113,7 @@
   height: 32px;
   margin-inline-end: -8px;
   padding-inline: 12px;
-  color: #8fd9b3;
+  color: #6ee7a8;
   font-weight: 700;
   transition: background-color var(--m-fast) linear;
 }
@@ -1334,4 +1334,79 @@
   .snack-leave {
     animation-duration: 1ms;
   }
+}
+
+
+/* ── Shape: soft corners and depth (radius scale in moujtahid-theme) ──
+   Kept together at the end so the layout rules above stay readable.
+   Framed lists use overflow: clip (not hidden) so sticky headers inside
+   keep working. */
+
+.search-key,
+.sw {
+  border-radius: var(--m-r-xs);
+}
+
+.search,
+.finder-list,
+.idle,
+.student,
+.months,
+.history,
+.pay,
+.settled {
+  overflow: clip;
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow);
+}
+
+.search {
+  overflow: visible;
+}
+
+.finder-item,
+.idle-item,
+.owed.is-clear,
+.month,
+.line,
+.amount,
+.pay-partial {
+  border-radius: var(--m-r-sm);
+}
+
+.methods {
+  overflow: clip;
+  border-radius: var(--m-r-sm);
+}
+
+.check {
+  border-radius: 5px;
+}
+
+.tab-n,
+.finder-owed,
+.finder-ok,
+.subject-tag,
+.badge,
+.month-now {
+  border-radius: var(--m-r-pill);
+}
+
+.avatar,
+.done-mark {
+  border-radius: 50%;
+}
+
+.dialog {
+  border-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow-lg);
+}
+
+.snack {
+  border-radius: var(--m-r);
+  box-shadow: var(--m-shadow-lg);
+}
+
+.snack button {
+  border-radius: 8px;
 }

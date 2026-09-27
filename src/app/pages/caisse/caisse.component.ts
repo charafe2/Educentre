@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, afterNextRender, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -11,6 +11,7 @@ import { UnpaidTabComponent } from './unpaid-tab.component';
 import { StatsTabComponent } from './stats-tab.component';
 import { ExpensesTabComponent } from './expenses-tab.component';
 import { ExpensesStore } from './expenses.store';
+import { CentreSettingsStore } from '../../shared/centre-settings.store';
 
 type Tab = 'encaisser' | 'impayes' | 'depenses' | 'statistiques';
 
@@ -31,6 +32,8 @@ const STATUS_LABEL: Record<MonthStatus, string> = {
 })
 export class CaisseComponent {
   readonly store = inject(CaisseStore);
+  /** Name printed on receipts, set in Paramètres. */
+  readonly centreSettings = inject(CentreSettingsStore);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -46,6 +49,7 @@ export class CaisseComponent {
   private params = this.route.snapshot.queryParamMap;
   readonly tab = signal<Tab>((['impayes', 'depenses', 'statistiques'] as Tab[]).find(t => t === this.params.get('onglet')) ?? 'encaisser');
   readonly unpaidCount = computed(() => this.store.unpaid().length);
+  readonly startAddingExpense = this.params.get('ajouter') === '1';
 
   // ── Student search ────────────────────────────────────────────────
   readonly query = signal('');
@@ -277,6 +281,8 @@ export class CaisseComponent {
     // Seed "récents" with a few students who owe money: the likely next visitors.
     this.recents.set(this.store.unpaid().slice(0, 3).map(u => u.student.id));
     if (fromUrl) this.selectStudent(fromUrl, this.params.get('mois') ?? undefined);
+    // Home shortcuts: "Encaisser" lands in the finder, "Dépense" on its form.
+    if (!fromUrl && this.params.get('chercher') === '1') afterNextRender(() => this.focusSearch());
 
     effect(() => {
       const queryParams: Record<string, string> = {};
