@@ -11,41 +11,6 @@ export const routes: Routes = [
     pathMatch: 'full',
   },
 
-  // Rebranded, sidebar-less UI — lives outside AdminLayout (it has its own
-  // app bar) but behind the same auth/permission guards as its v1
-  // counterpart, so both versions enforce identical access while they run
-  // side by side during the migration.
-  {
-    path: 'v2',
-    canActivate: [authGuard],
-    loadComponent: () => import('./pages/accueil/accueil.component').then(m => m.AccueilComponent),
-  },
-  {
-    path: 'v2/groupes',
-    canActivate: [authGuard, permissionGuard], data: { permKey: 'groupes' },
-    loadComponent: () => import('./pages/groupes-v2/groupes-v2.component').then(m => m.GroupesV2Component),
-  },
-  {
-    path: 'v2/caisse',
-    canActivate: [authGuard, permissionGuard], data: { permKey: 'finances' },
-    loadComponent: () => import('./pages/caisse/caisse.component').then(m => m.CaisseComponent),
-  },
-  {
-    path: 'v2/parametres',
-    canActivate: [authGuard, permissionGuard], data: { permKey: 'parametres' },
-    loadComponent: () => import('./pages/parametres-v2/parametres-v2.component').then(m => m.ParametresV2Component),
-  },
-  {
-    path: 'v2/enseignants',
-    canActivate: [authGuard, permissionGuard], data: { permKey: 'professeurs' },
-    loadComponent: () => import('./pages/enseignants/enseignants.component').then(m => m.EnseignantsComponent),
-  },
-  {
-    path: 'v2/etudiants/nouveau',
-    canActivate: [authGuard, permissionGuard], data: { permKey: 'etudiants' },
-    loadComponent: () => import('./pages/ajouter-eleve-v2/ajouter-eleve-v2.component').then(m => m.AjouterEleveV2Component),
-  },
-
   {
     path: 'login',
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
@@ -111,55 +76,46 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/legal/mentions-legales/mentions-legales.component').then(m => m.MentionsLegalesComponent),
   },
 
+  // Old addresses (the retired sidebar UI and the /v2 preview) still land
+  // somewhere sensible, so bookmarks and shared links keep working.
+  { path: 'v2', redirectTo: 'accueil', pathMatch: 'full' },
+  { path: 'v2/:page', redirectTo: ':page' }, // prefix match keeps the rest, e.g. v2/etudiants/nouveau
+  { path: 'dashboard', redirectTo: 'accueil' },
+  { path: 'finances', redirectTo: 'caisse' },
+  { path: 'professeurs', redirectTo: 'enseignants' },
+  { path: 'etudiants', redirectTo: 'etudiants/nouveau', pathMatch: 'full' },
+  { path: 'ajouter-classe', redirectTo: 'etudiants/nouveau' },
+  { path: 'revue-mensuelle', redirectTo: 'accueil' },
+  { path: 'calendrier', redirectTo: 'groupes' },
+  { path: 'notifications', redirectTo: 'accueil' },
+  { path: 'analytiques', redirectTo: 'accueil' },
+  { path: 'documents', redirectTo: 'accueil' },
+
   {
     path: '',
-    loadComponent: () => import('./layout/admin-layout/admin-layout.component').then(m => m.AdminLayoutComponent),
+    loadComponent: () => import('./layout/app-shell/app-shell.component').then(m => m.AppShellComponent),
     canActivate: [authGuard],
     children: [
-      { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
-      {
-        path: 'revue-mensuelle', canActivate: [permissionGuard], data: { permKey: 'revue-mensuelle' },
-        loadComponent: () => import('./pages/monthly-review/monthly-review.component').then(m => m.MonthlyReviewComponent),
-      },
-      {
-        path: 'etudiants', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
-        loadComponent: () => import('./pages/etudiants/etudiants.component').then(m => m.EtudiantsComponent),
-      },
-      {
-        path: 'ajouter-classe', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
-        loadComponent: () => import('./pages/ajouter-classe/ajouter-classe.component').then(m => m.AjouterClasseComponent),
-      },
+      { path: 'accueil', loadComponent: () => import('./pages/accueil/accueil.component').then(m => m.AccueilComponent) },
       {
         path: 'groupes', canActivate: [permissionGuard], data: { permKey: 'groupes' },
-        loadComponent: () => import('./pages/groupes/groupes.component').then(m => m.GroupesComponent),
+        loadComponent: () => import('./pages/groupes-v2/groupes-v2.component').then(m => m.GroupesV2Component),
       },
       {
-        path: 'professeurs', canActivate: [permissionGuard], data: { permKey: 'professeurs' },
-        loadComponent: () => import('./pages/professeurs/professeurs.component').then(m => m.ProfesseursComponent),
+        path: 'caisse', canActivate: [permissionGuard], data: { permKey: 'finances' },
+        loadComponent: () => import('./pages/caisse/caisse.component').then(m => m.CaisseComponent),
       },
       {
-        path: 'finances', canActivate: [permissionGuard], data: { permKey: 'finances' },
-        loadComponent: () => import('./pages/finances/finances.component').then(m => m.FinancesComponent),
+        path: 'enseignants', canActivate: [permissionGuard], data: { permKey: 'professeurs' },
+        loadComponent: () => import('./pages/enseignants/enseignants.component').then(m => m.EnseignantsComponent),
       },
       {
-        path: 'calendrier', canActivate: [permissionGuard], data: { permKey: 'calendrier' },
-        loadComponent: () => import('./pages/calendrier/calendrier.component').then(m => m.CalendrierComponent),
-      },
-      {
-        path: 'notifications',
-        loadComponent: () => import('./pages/notifications/notifications').then(m => m.NotificationsComponent),
-      },
-      {
-        path: 'analytiques', canActivate: [permissionGuard], data: { permKey: 'analytiques' },
-        loadComponent: () => import('./pages/analytiques/analytiques.component').then(m => m.AnalytiquesComponent),
-      },
-      {
-        path: 'documents', canActivate: [permissionGuard], data: { permKey: 'documents' },
-        loadComponent: () => import('./pages/documents/documents.component').then(m => m.DocumentsComponent),
+        path: 'etudiants/nouveau', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
+        loadComponent: () => import('./pages/ajouter-eleve-v2/ajouter-eleve-v2.component').then(m => m.AjouterEleveV2Component),
       },
       {
         path: 'parametres', canActivate: [permissionGuard], data: { permKey: 'parametres' },
-        loadComponent: () => import('./pages/parametres/parametres.component').then(m => m.ParametresComponent),
+        loadComponent: () => import('./pages/parametres-v2/parametres-v2.component').then(m => m.ParametresV2Component),
       },
     ],
   },

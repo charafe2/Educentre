@@ -6,6 +6,7 @@ import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding
 import { CaisseStore, money } from '../caisse/caisse.store';
 import { SessionsService } from '../../services/sessions.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { AuthStore } from '../../auth/auth.store';
 
 /**
  * Home page of the rebranded tenant app — replaces the sidebar as the way in.
@@ -54,13 +55,17 @@ export class AccueilComponent {
   private caisseStore = inject(CaisseStore);
   private sessionsService = inject(SessionsService);
   private analyticsService = inject(AnalyticsService);
+  private auth = inject(AuthStore);
+
+  /** First name of the signed-in user, for the greeting. */
+  readonly firstName = computed(() => this.auth.user()?.name?.trim().split(/\s+/)[0] ?? '');
 
   readonly modules: Module[] = [
-    { key: '1', label: 'Groupes', route: '/v2/groupes', icon: 'groupes' },
-    { key: '2', label: 'Caisse', route: '/v2/caisse', icon: 'caisse' },
-    { key: '3', label: 'Enseignants', route: '/v2/enseignants', icon: 'enseignants' },
-    { key: '4', label: 'Paramètres', route: '/v2/parametres', icon: 'parametres' },
-    { key: '5', label: 'Ajouter un élève', route: '/v2/etudiants/nouveau', icon: 'ajouter-eleve' },
+    { key: '1', label: 'Ajouter un élève', route: '/etudiants/nouveau', icon: 'ajouter-eleve' },
+    { key: '2', label: 'Groupes', route: '/groupes', icon: 'groupes' },
+    { key: '3', label: 'Caisse', route: '/caisse', icon: 'caisse' },
+    { key: '4', label: 'Enseignants', route: '/enseignants', icon: 'enseignants' },
+    { key: '5', label: 'Paramètres', route: '/parametres', icon: 'parametres' },
   ];
 
   /** Real: everyone still owed money, oldest-overdue-first — same source as Caisse's own Impayés tab. */
@@ -70,11 +75,11 @@ export class AccueilComponent {
   readonly actions = computed<QuickAction[]>(() => {
     const late = this.lateCount();
     const list: QuickAction[] = [
-      { key: 'E', label: 'Encaisser', hint: 'Chercher un élève', route: '/v2/caisse', query: { chercher: '1' }, icon: 'encaisser' },
-      { key: 'G', label: 'Nouveau groupe', hint: 'Matière et horaire', route: '/v2/groupes', query: { creer: '1' }, icon: 'groupe' },
-      { key: 'P', label: 'Nouvel enseignant', hint: 'Fiche et salaire', route: '/v2/enseignants', query: { nouveau: '1' }, icon: 'enseignant' },
-      { key: 'R', label: 'Relancer les impayés', hint: late ? `${late} ${late > 1 ? 'élèves' : 'élève'} en retard` : 'Aucun retard', route: '/v2/caisse', query: { onglet: 'impayes' }, icon: 'relance', tone: 'late' },
-      { key: 'D', label: 'Ajouter une dépense', hint: 'Loyer, fournitures…', route: '/v2/caisse', query: { onglet: 'depenses', ajouter: '1' }, icon: 'depense' },
+      { key: 'E', label: 'Encaisser', hint: 'Chercher un élève', route: '/caisse', query: { chercher: '1' }, icon: 'encaisser' },
+      { key: 'G', label: 'Nouveau groupe', hint: 'Matière et horaire', route: '/groupes', query: { creer: '1' }, icon: 'groupe' },
+      { key: 'P', label: 'Nouvel enseignant', hint: 'Fiche et salaire', route: '/enseignants', query: { nouveau: '1' }, icon: 'enseignant' },
+      { key: 'R', label: 'Relancer les impayés', hint: late ? `${late} ${late > 1 ? 'élèves' : 'élève'} en retard` : 'Aucun retard', route: '/caisse', query: { onglet: 'impayes' }, icon: 'relance', tone: 'late' },
+      { key: 'D', label: 'Ajouter une dépense', hint: 'Loyer, fournitures…', route: '/caisse', query: { onglet: 'depenses', ajouter: '1' }, icon: 'depense' },
     ];
     return list;
   });

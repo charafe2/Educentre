@@ -31,7 +31,7 @@ export class SelectCentreComponent implements OnInit {
     try {
       const ok = await this.auth.selectCentre(centre.centreUuid);
       if (ok) {
-        this.router.navigate(['/v2']);
+        this.router.navigate(['/accueil']);
       } else {
         this.error.set("Impossible d'entrer dans ce centre. Réessayez.");
       }

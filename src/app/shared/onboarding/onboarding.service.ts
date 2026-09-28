@@ -51,27 +51,27 @@ export class OnboardingService {
   readonly steps = computed<OnboardingStep[]>(() => [
     {
       key: 'levels', label: 'Ajouter vos niveaux', hint: 'Collège, lycée, Bac…',
-      route: '/v2/parametres', done: this.centre.levels().length > 0,
+      route: '/parametres', done: this.centre.levels().length > 0,
     },
     {
       key: 'subjects', label: 'Ajouter vos matières', hint: 'Mathématiques, Français…',
-      route: '/v2/parametres', done: this.centre.subjects().length > 0,
+      route: '/parametres', done: this.centre.subjects().length > 0,
     },
     {
       key: 'group', label: 'Créer votre premier groupe', hint: 'Niveau, matière, horaire',
-      route: '/v2/groupes', done: this.centre.groups().length > 0,
+      route: '/groupes', done: this.centre.groups().length > 0,
     },
     {
       key: 'teacher', label: 'Ajouter un enseignant', hint: 'Fiche et rémunération',
-      route: '/v2/enseignants', done: this.teachersService.teachers().length > 0,
+      route: '/enseignants', done: this.teachersService.teachers().length > 0,
     },
     {
       key: 'student', label: 'Ajouter un élève', hint: 'Niveau et classes',
-      route: '/v2/etudiants/nouveau', done: this.studentsService.students().length > 0,
+      route: '/etudiants/nouveau', done: this.studentsService.students().length > 0,
     },
     {
       key: 'payment', label: 'Encaisser un premier paiement', hint: 'Depuis la Caisse',
-      route: '/v2/caisse', done: this.paymentsService.payments().some(p => p.amountPaid > 0),
+      route: '/caisse', done: this.paymentsService.payments().some(p => p.amountPaid > 0),
     },
   ]);
 

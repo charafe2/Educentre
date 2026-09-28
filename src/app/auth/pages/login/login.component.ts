@@ -30,7 +30,7 @@ export class LoginComponent {
     try {
       const result = await this.auth.login(this.email, this.password);
       if (result === 'authenticated') {
-        this.router.navigate(['/v2']);
+        this.router.navigate(['/accueil']);
       } else if (result === 'centre-selection') {
         this.router.navigate(['/select-centre']);
       } else {
