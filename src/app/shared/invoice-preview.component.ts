@@ -524,6 +524,22 @@ export const SAMPLE_INVOICE: Omit<InvoiceData, 'number'> = {
       padding-block-start: 10px;
       border-block-start: 1px dashed var(--ink);
     }
+
+    /* ── On paper: same sheet as on screen, kept on one A4 page ── */
+    @media print {
+      :host {
+        max-width: 185mm;
+        margin-inline: auto;
+      }
+
+      .sheet {
+        border-radius: 0;
+        box-shadow: none;
+        break-inside: avoid;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
   `,
 })
 export class InvoicePreviewComponent {

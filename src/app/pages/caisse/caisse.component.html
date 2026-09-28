@@ -390,18 +390,9 @@
   }
 
   <!-- Printable receipt: invisible on screen, alone on paper -->
-  @if (printing(); as r) {
-    <section class="m-print print-receipt" aria-hidden="true">
-      <h1>{{ centreSettings.centreInfo().name }}</h1>
-      <p>Reçu {{ r.number }}, le {{ formatDate(r.paidAt) }}</p>
-      <p>Élève : {{ r.student.name }} ({{ r.student.code }}), {{ r.student.level }}</p>
-      <p>Mois : {{ monthTitle(r.month) }}, paiement {{ r.method.toLowerCase() }}</p>
-      <table>
-        @for (l of r.lines; track l.subject) {
-          <tr><td>{{ l.subject }}, groupe {{ l.group }}</td><td>{{ money(l.amount) }} MAD</td></tr>
-        }
-        <tr class="print-total"><td>Total</td><td>{{ money(r.total) }} MAD</td></tr>
-      </table>
+  @if (printData(); as data) {
+    <section class="m-print" aria-hidden="true">
+      <app-invoice-preview [centre]="centreSettings.centreInfo()" [settings]="invoiceSettings.invoice()" [data]="data" />
     </section>
   }
 

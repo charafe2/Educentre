@@ -1139,37 +1139,6 @@
   to { opacity: 0; transform: translate(-50%, 8px); }
 }
 
-/* Printed receipt (see .m-print in the theme). */
-.print-receipt {
-  padding: 24px;
-  color: #000;
-  font-size: 13px;
-}
-
-.print-receipt h1 {
-  margin-block-end: 8px;
-  font-size: 18px;
-}
-
-.print-receipt table {
-  width: 100%;
-  margin-block-start: 12px;
-  border-collapse: collapse;
-}
-
-.print-receipt td {
-  padding: 6px 0;
-  border-block-end: 1px solid #ccc;
-}
-
-.print-receipt td + td {
-  text-align: end;
-}
-
-.print-total td {
-  font-weight: 700;
-}
-
 /* ── Narrower screens ─────────────────────────────────────────────── */
 
 @media (max-width: 1080px) {

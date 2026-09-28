@@ -63,7 +63,7 @@ export interface Receipt {
   month: string;
   method: Method;
   paidAt: string;
-  lines: Array<{ subject: string; group: number; amount: number }>;
+  lines: Array<{ subject: string; group: number; teacher: string; amount: number }>;
   total: number;
 }
 
@@ -330,7 +330,7 @@ export class CaisseStore {
   private toReceipt(number: string, student: Student, ps: Payment[]): Receipt {
     const lines = ps.map(p => {
       const e = student.enrollments.find(x => x.id === p.enrollmentId);
-      return { subject: e?.subject ?? '—', group: e?.group ?? 0, amount: p.amount };
+      return { subject: e?.subject ?? '—', group: e?.group ?? 0, teacher: e?.teacher ?? '', amount: p.amount };
     });
     return {
       number, student, month: ps[0]?.month ?? this.current, method: ps[0]?.method ?? 'Espèces', paidAt: ps[0]?.paidAt ?? new Date().toISOString(),

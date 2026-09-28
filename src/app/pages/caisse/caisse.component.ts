@@ -12,6 +12,8 @@ import { StatsTabComponent } from './stats-tab.component';
 import { ExpensesTabComponent } from './expenses-tab.component';
 import { ExpensesStore } from './expenses.store';
 import { CentreService } from '../../services/centre.service';
+import { CentreSettingsStore } from '../../shared/centre-settings.store';
+import { InvoiceData, InvoicePreviewComponent } from '../../shared/invoice-preview.component';
 
 type Tab = 'encaisser' | 'impayes' | 'depenses' | 'statistiques';
 
@@ -25,7 +27,7 @@ const STATUS_LABEL: Record<MonthStatus, string> = {
 
 @Component({
   selector: 'app-caisse',
-  imports: [FormsModule, AppBarComponent, UnpaidTabComponent, StatsTabComponent, ExpensesTabComponent],
+  imports: [FormsModule, AppBarComponent, UnpaidTabComponent, StatsTabComponent, ExpensesTabComponent, InvoicePreviewComponent],
   providers: [CaisseStore, ExpensesStore],
   templateUrl: './caisse.component.html',
   styleUrl: './caisse.component.css',
@@ -34,6 +36,8 @@ export class CaisseComponent {
   readonly store = inject(CaisseStore);
   /** Name printed on receipts, set in Paramètres. */
   readonly centreSettings = inject(CentreService);
+  /** Receipt template (colours, layout, toggles), also set in Paramètres. */
+  readonly invoiceSettings = inject(CentreSettingsStore);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -248,6 +252,27 @@ export class CaisseComponent {
     setTimeout(() => window.print(), 50);
   }
   readonly printing = signal<Receipt | null>(null);
+
+  /** The receipt being printed, in the shape of the Paramètres preview so paper matches screen. */
+  readonly printData = computed<InvoiceData | null>(() => {
+    const r = this.printing();
+    if (!r) return null;
+    return {
+      number: r.number,
+      date: this.formatDate(r.paidAt),
+      student: r.student.name,
+      code: r.student.code,
+      level: r.student.level,
+      parent: r.student.parent,
+      month: this.monthTitle(r.month),
+      method: r.method,
+      lines: r.lines.map(l => ({
+        label: l.subject,
+        detail: [l.group ? `Groupe ${l.group}` : '', l.teacher].filter(Boolean).join(', '),
+        amount: l.amount,
+      })),
+    };
+  });
 
   // ── Receipt cancellation ──────────────────────────────────────────
   readonly cancelling = signal<Receipt | null>(null);
