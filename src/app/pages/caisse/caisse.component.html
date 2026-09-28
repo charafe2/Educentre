@@ -230,6 +230,9 @@
                       } @else {
                         <button class="m-btn m-btn--primary" type="button" (click)="clearStudent()">Élève suivant</button>
                       }
+                      <button class="m-icon-btn m-icon-btn--danger" type="button" data-tip="Annuler ce paiement" aria-label="Annuler ce paiement" (click)="cancelling.set(r)">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                      </button>
                     </div>
                   </div>
                 } @else if (!lines().length) {
@@ -251,7 +254,7 @@
                     }
                   </ul>
                 } @else {
-                  <form class="pay-form" (ngSubmit)="pay()">
+                  <form class="pay-form" (ngSubmit)="askPay()">
                     <ul class="pay-lines">
                       @for (l of lines(); track l.enrollment.id) {
                         <li class="line" [class.is-on]="isChecked(l.enrollment.id)" [class.is-settled]="l.rest === 0">
@@ -353,6 +356,23 @@
       }
     }
   </main>
+
+  <!-- Confirm a payment before it's recorded -->
+  @if (confirmingPay() && month(); as m) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirmingPay.set(false)"></div>
+    <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirm-pay-title" aria-describedby="confirm-pay-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
+      <h2 id="confirm-pay-title">Valider cet encaissement ?</h2>
+      <p id="confirm-pay-text">
+        {{ money(total()) }} MAD en {{ method().toLowerCase() }} pour {{ student()?.name }}, {{ monthTitle(m) }}.
+      </p>
+      <div class="dialog-actions">
+        <button class="m-btn" type="button" (click)="confirmingPay.set(false)">Annuler</button>
+        <button class="m-btn m-btn--primary" type="button" [disabled]="paying()" (click)="confirmPay()">
+          {{ paying() ? 'Encaissement…' : 'Confirmer' }}
+        </button>
+      </div>
+    </div>
+  }
 
   <!-- Cancel a receipt -->
   @if (cancelling(); as r) {

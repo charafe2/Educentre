@@ -165,6 +165,7 @@ export class CaisseComponent {
   selectMonth(month: string): void {
     this.month.set(month);
     this.receipt.set(null);
+    this.confirmingPay.set(false);
     const s = this.student();
     const init: Record<number, number> = {};
     if (s) for (const l of this.store.dueLines(s, month)) if (l.rest > 0) init[l.enrollment.id] = l.rest;
@@ -206,6 +207,18 @@ export class CaisseComponent {
   readonly isPartial = computed(() => this.total() > 0 && this.total() < this.monthRest());
 
   readonly paying = signal(false);
+  readonly confirmingPay = signal(false);
+
+  /** Opens the "confirm this payment" dialog; pay() itself only runs once confirmed. */
+  askPay(): void {
+    if (this.total() <= 0 || this.paying()) return;
+    this.confirmingPay.set(true);
+  }
+
+  async confirmPay(): Promise<void> {
+    this.confirmingPay.set(false);
+    await this.pay();
+  }
 
   async pay(): Promise<void> {
     const s = this.student();
@@ -327,8 +340,9 @@ export class CaisseComponent {
   // ── Keyboard ──────────────────────────────────────────────────────
   @HostListener('document:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
-    if (event.key === 'Escape' && this.cancelling()) {
+    if (event.key === 'Escape' && (this.cancelling() || this.confirmingPay())) {
       this.cancelling.set(null);
+      this.confirmingPay.set(false);
       return;
     }
     const target = event.target as HTMLElement | null;
@@ -338,7 +352,7 @@ export class CaisseComponent {
       this.focusSearch();
       return;
     }
-    if (typing || event.ctrlKey || event.metaKey || event.altKey || this.cancelling()) return;
+    if (typing || event.ctrlKey || event.metaKey || event.altKey || this.cancelling() || this.confirmingPay()) return;
     if (event.key === '/') {
       event.preventDefault();
       this.focusSearch();

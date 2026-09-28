@@ -1027,7 +1027,8 @@
 
 .done-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
   gap: 8px;
   width: 100%;
   margin-block-start: 18px;
@@ -1037,6 +1038,11 @@
   height: 44px;
   white-space: normal;
   line-height: 1.2;
+}
+
+.done-actions .m-icon-btn {
+  height: 44px;
+  width: 44px;
 }
 
 /* ── Dialog, scrim, snackbar ──────────────────────────────────────── */

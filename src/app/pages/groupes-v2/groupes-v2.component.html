@@ -310,6 +310,10 @@
                               </button>
                               @if (isMenuOpen(r.group.id, s)) {
                                 <span class="menu" role="menu" animate.enter="menu-enter" animate.leave="m-leave-fade">
+                                  <button role="menuitem" type="button" (click)="openDetails(s, r.group)">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8v.01"/></svg>
+                                    Plus de détails
+                                  </button>
                                   @for (to of siblings(r.group); track to.id) {
                                     <button role="menuitem" type="button" [disabled]="isFull(to)" (click)="move(s, r.group, to)">
                                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h14M13 7l5 5-5 5"/></svg>
@@ -503,6 +507,73 @@
           {{ target === 'new' ? 'Créer le groupe' : 'Enregistrer' }}
         </button>
       </footer>
+    </aside>
+  }
+
+  <!-- Student details: info, every group, months paid/unpaid -->
+  @if (detailsFor() !== null && detailsStudent(); as st) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="closeDetails()"></div>
+    <aside class="panel details-panel" role="dialog" aria-modal="true" aria-labelledby="details-title" animate.enter="panel-enter" animate.leave="panel-leave">
+      <header class="panel-head">
+        <div>
+          <h2 id="details-title">{{ st.name }}</h2>
+          <p class="panel-sub">{{ st.code }}, {{ st.level }}</p>
+        </div>
+        <button class="m-icon-btn" type="button" aria-label="Fermer" (click)="closeDetails()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <div class="panel-body details-body">
+        <section class="details-section">
+          <h3>Informations</h3>
+          <dl class="details-info">
+            <div><dt>Parent</dt><dd>{{ st.parent }}</dd></div>
+            <div><dt>Téléphone</dt><dd>{{ st.phone }}</dd></div>
+            <div><dt>Niveau</dt><dd>{{ st.level }}</dd></div>
+            <div><dt>Code</dt><dd>{{ st.code }}</dd></div>
+          </dl>
+        </section>
+
+        <section class="details-section">
+          <h3>Emploi du temps</h3>
+          @if (detailsGroups().length) {
+            <ul class="details-groups">
+              @for (g of detailsGroups(); track g.id) {
+                <li>
+                  <span class="dg-subject">{{ g.subject }}, {{ g.level }}</span>
+                  <span class="dg-meta">Groupe {{ g.number }} · {{ g.teacher }} · {{ g.room }}</span>
+                  <span class="dg-schedule">{{ formatSlot(g.schedule) }}</span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="details-empty">Cet élève n’est inscrit dans aucun groupe.</p>
+          }
+        </section>
+
+        <section class="details-section">
+          <h3>Paiements par mois</h3>
+          <ul class="details-legend">
+            <li><span class="sw s-paid"></span>Payé</li>
+            <li><span class="sw s-partial"></span>Partiel</li>
+            <li><span class="sw s-unpaid"></span>Impayé</li>
+            <li><span class="sw s-upcoming"></span>À venir</li>
+          </ul>
+          @for (year of detailsYears(); track year.label) {
+            <p class="details-year">{{ year.label }}</p>
+            <div class="details-month-grid">
+              @for (m of year.months; track m) {
+                <div [class]="'details-month s-' + detailsStatus(m)">
+                  <span class="dm-name">{{ detailsMonthShort(m) }}</span>
+                  <span class="dm-amount">{{ detailsCellAmount(m) }}</span>
+                  <span class="dm-status">{{ detailsStatusLabel[detailsStatus(m)] }}</span>
+                </div>
+              }
+            </div>
+          }
+        </section>
+      </div>
     </aside>
   }
 

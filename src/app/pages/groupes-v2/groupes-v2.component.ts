@@ -17,6 +17,7 @@ import { TeachersService } from '../../services/teachers.service';
 import { RoomsService } from '../../services/rooms.service';
 import { StudentsService } from '../../services/students.service';
 import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
+import { CaisseStore, MonthStatus, Student as CaisseStudent, addMonths, monthShort } from '../caisse/caisse.store';
 
 export type { GroupRow, Slot };
 
@@ -53,9 +54,18 @@ const DAY_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', '
 const DURATIONS = [60, 120, 180];
 const HOUR_PX = 56;
 
+const DETAILS_STATUS_LABEL: Record<MonthStatus, string> = {
+  paid: 'Payé',
+  partial: 'Partiel',
+  unpaid: 'Impayé',
+  upcoming: 'À venir',
+  none: 'Pas de cours',
+};
+
 @Component({
   selector: 'app-groupes-v2',
   imports: [FormsModule, RouterLink, AppBarComponent, OnboardingChecklistComponent],
+  providers: [CaisseStore],
   templateUrl: './groupes-v2.component.html',
   styleUrl: './groupes-v2.component.css',
 })
@@ -74,6 +84,7 @@ export class GroupesV2Component {
   private roomsService = inject(RoomsService);
   private studentsService = inject(StudentsService);
   private receiptCustomization = inject(ReceiptCustomizationService);
+  private caisseStore = inject(CaisseStore);
 
   /** Offered levels and subjects come from Paramètres. */
   readonly levels = this.centre.levels;
@@ -529,6 +540,59 @@ export class GroupesV2Component {
     if (g.students.length + 1 >= g.capacity) this.closePicker();
   }
 
+  // ── Student details: info, every group they're in, months paid/unpaid ──
+  readonly detailsFor = signal<number | null>(null);
+  readonly detailsStatusLabel = DETAILS_STATUS_LABEL;
+
+  readonly detailsStudent = computed<CaisseStudent | undefined>(() => {
+    const id = this.detailsFor();
+    return id === null ? undefined : this.caisseStore.student(id);
+  });
+
+  /** Every group (in any class) this student currently belongs to — not just the row the menu was opened from. */
+  readonly detailsGroups = computed<GroupRow[]>(() => {
+    const id = this.detailsFor();
+    return id === null ? [] : this.groups().filter(g => g.studentIds.includes(id));
+  });
+
+  openDetails(student: string, g: GroupRow): void {
+    const id = this.studentIdByNameIn(g, student);
+    this.menu.set(null);
+    if (id !== undefined) this.detailsFor.set(id);
+  }
+
+  closeDetails(): void {
+    this.detailsFor.set(null);
+  }
+
+  /** Only the current school year — the full history lives in Caisse. */
+  detailsYears(): Array<{ label: string; months: string[] }> {
+    const start = this.caisseStore.currentSchoolStart;
+    return [{
+      label: `${start.slice(0, 4)}–${+start.slice(0, 4) + 1}`,
+      months: Array.from({ length: 12 }, (_, i) => addMonths(start, i)),
+    }];
+  }
+
+  detailsMonthShort(month: string): string {
+    return monthShort(month);
+  }
+
+  detailsStatus(month: string): MonthStatus {
+    const s = this.detailsStudent();
+    return s ? this.caisseStore.status(s, month) : 'none';
+  }
+
+  detailsCellAmount(month: string): string {
+    const s = this.detailsStudent();
+    if (!s) return '—';
+    const lines = this.caisseStore.dueLines(s, month);
+    if (!lines.length) return '—';
+    const due = lines.reduce((n, l) => n + l.enrollment.price, 0);
+    const paid = lines.reduce((n, l) => n + Math.min(l.paid, l.enrollment.price), 0);
+    return paid && paid < due ? `${this.money(paid)}/${this.money(due)}` : this.money(due);
+  }
+
   // ── Week view ─────────────────────────────────────────────────────
   readonly today = (new Date().getDay() + 6) % 7;
   readonly focusDay = signal(this.today);
@@ -706,6 +770,7 @@ export class GroupesV2Component {
   onKey(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
       if (this.confirming()) this.confirming.set(null);
+      else if (this.detailsFor() !== null) this.closeDetails();
       else if (this.editing()) this.closeDrawer();
       else if (this.menu()) this.menu.set(null);
       else if (this.pickerFor() !== null) this.closePicker();
@@ -713,7 +778,7 @@ export class GroupesV2Component {
     }
     const target = event.target as HTMLElement | null;
     const typing = !!target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
-    const overlay = !!(this.editing() || this.confirming());
+    const overlay = !!(this.editing() || this.confirming() || this.detailsFor() !== null);
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
       this.search()?.nativeElement.focus();
