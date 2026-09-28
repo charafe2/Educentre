@@ -71,7 +71,7 @@ export class EnseignantsComponent {
     if (inject(ActivatedRoute).snapshot.queryParamMap.get('nouveau') === '1') {
       const location = inject(Location);
       afterNextRender(() => {
-        location.replaceState('/v2/enseignants');
+        location.replaceState('/enseignants');
         this.openCreate();
       });
     }

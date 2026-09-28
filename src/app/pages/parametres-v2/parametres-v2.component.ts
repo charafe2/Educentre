@@ -15,6 +15,9 @@ import { Subject } from '../../models/subject.model';
 import { InvoicePreviewComponent, SAMPLE_INVOICE } from '../../shared/invoice-preview.component';
 import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding-checklist.component';
 import { OnboardingService } from '../../shared/onboarding/onboarding.service';
+import { SettingsUsersService, TenantUser } from '../../services/settings-users.service';
+import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
+import { HttpErrorResponse } from '@angular/common/http';
 
 /**
  * Paramètres — the centre (identity, contact, legal ids), its receipts
@@ -24,10 +27,19 @@ import { OnboardingService } from '../../shared/onboarding/onboarding.service';
  * The tab lives in the URL (?onglet=) so a link can open the right one.
  */
 
-type Tab = 'centre' | 'facture' | 'abonnement' | 'enseignement';
+type Tab = 'centre' | 'facture' | 'abonnement' | 'enseignement' | 'utilisateurs' | 'securite';
 type Kind = 'level' | 'subject';
 
-const TABS: Tab[] = ['centre', 'facture', 'abonnement', 'enseignement'];
+const TABS: Tab[] = ['centre', 'facture', 'abonnement', 'enseignement', 'utilisateurs', 'securite'];
+
+/** What a staff account can be given, named after the modules it opens.
+ *  The keys are the backend's TenantPermissions::KEYS. */
+const ACCESS_OPTIONS: { key: TenantPermissionKey; label: string; hint: string }[] = [
+  { key: 'etudiants', label: 'Élèves', hint: 'Inscrire un élève' },
+  { key: 'groupes', label: 'Groupes', hint: 'Créer et remplir les groupes' },
+  { key: 'finances', label: 'Caisse', hint: 'Encaisser, impayés, dépenses' },
+  { key: 'professeurs', label: 'Enseignants', hint: 'Fiches et salaires' },
+];
 
 const CENTRE_TYPES = ['Soutien scolaire', 'Centre de langues', 'Informatique', 'École privée', 'Artistique', 'Autre'];
 
@@ -71,6 +83,8 @@ export class ParametresV2Component {
     { key: 'facture', label: 'Facture' },
     { key: 'abonnement', label: 'Abonnement' },
     { key: 'enseignement', label: 'Niveaux et matières' },
+    { key: 'utilisateurs', label: 'Utilisateurs' },
+    { key: 'securite', label: 'Sécurité' },
   ];
 
   /** A centre still being set up lands where the onboarding happens. */
@@ -87,6 +101,7 @@ export class ParametresV2Component {
       this.touchCentre();
     });
     this.centreService.loadSubscription();
+    this.users.load();
 
     effect(() => {
       const onglet = this.tab();
@@ -344,6 +359,122 @@ export class ParametresV2Component {
     return n ? `Utilisé par ${n} ${n > 1 ? 'groupes' : 'groupe'}` : 'Retirer';
   }
 
+  // ── Utilisateurs ──────────────────────────────────────────────────
+  readonly users = inject(SettingsUsersService);
+  private auth = inject(AuthStore);
+  readonly accessOptions = ACCESS_OPTIONS;
+
+  /** null: no dialog; '' : adding; a uuid: editing that account. */
+  readonly editingUser = signal<string | null>(null);
+  userDraft = { name: '', email: '', permissions: [] as TenantPermissionKey[] };
+  readonly userError = signal('');
+  readonly userSaving = signal(false);
+  readonly confirmDelete = signal<TenantUser | null>(null);
+
+  openAddUser(): void {
+    this.userDraft = { name: '', email: '', permissions: [] };
+    this.userError.set('');
+    this.editingUser.set('');
+  }
+
+  openEditUser(u: TenantUser): void {
+    this.userDraft = { name: u.name, email: u.email, permissions: [...(u.permissions ?? [])] };
+    this.userError.set('');
+    this.editingUser.set(u.uuid);
+  }
+
+  hasAccess(key: TenantPermissionKey): boolean {
+    return this.userDraft.permissions.includes(key);
+  }
+
+  toggleAccess(key: TenantPermissionKey): void {
+    const p = this.userDraft.permissions;
+    this.userDraft.permissions = p.includes(key) ? p.filter(k => k !== key) : [...p, key];
+  }
+
+  saveUser(): void {
+    const uuid = this.editingUser();
+    if (uuid === null) return;
+    const name = this.userDraft.name.trim();
+    const email = this.userDraft.email.trim();
+    if (!name || (!uuid && !email)) {
+      this.userError.set(uuid ? 'Le nom est obligatoire.' : 'Le nom et l’email sont obligatoires.');
+      return;
+    }
+    if (!this.userDraft.permissions.length) {
+      this.userError.set('Donnez accès à au moins un module.');
+      return;
+    }
+    const permissions = this.userDraft.permissions;
+    const request = uuid
+      ? this.users.update(uuid, { name, permissions })
+      : this.users.add({ name, email, permissions });
+    this.userSaving.set(true);
+    request.subscribe({
+      next: () => {
+        this.userSaving.set(false);
+        this.editingUser.set(null);
+        this.notify(uuid ? `Accès de ${name} mis à jour` : `${name} peut maintenant se connecter`);
+      },
+      error: (err: unknown) => {
+        this.userSaving.set(false);
+        this.userError.set(errorMessage(err, 'Impossible d’enregistrer : réessayez.'));
+      },
+    });
+  }
+
+  deleteUser(): void {
+    const u = this.confirmDelete();
+    if (!u) return;
+    this.confirmDelete.set(null);
+    this.users.remove(u.uuid).subscribe({
+      next: () => this.notify(`Compte de ${u.name} supprimé`),
+      error: (err: unknown) => this.notify(errorMessage(err, `Impossible de supprimer ${u.name}`)),
+    });
+  }
+
+  accessSummary(u: TenantUser): string {
+    if (u.is_owner) return 'Tous les accès';
+    const labels = ACCESS_OPTIONS.filter(o => u.permissions?.includes(o.key)).map(o => o.label);
+    return labels.length ? labels.join(', ') : 'Aucun accès';
+  }
+
+  lastLogin(u: TenantUser): string {
+    return u.last_login_at ? `Dernière connexion le ${this.longDate(u.last_login_at)}` : 'Jamais connecté';
+  }
+
+  // ── Sécurité ──────────────────────────────────────────────────────
+  passwordDraft = { current: '', next: '', confirm: '' };
+  readonly showPasswords = signal(false);
+  readonly passwordError = signal('');
+  readonly passwordSaving = signal(false);
+
+  async changePassword(): Promise<void> {
+    const { current, next, confirm } = this.passwordDraft;
+    if (!current || !next || !confirm) {
+      this.passwordError.set('Remplissez les trois champs.');
+      return;
+    }
+    if (next.length < 6) {
+      this.passwordError.set('Le nouveau mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (next !== confirm) {
+      this.passwordError.set('Les deux nouveaux mots de passe ne correspondent pas.');
+      return;
+    }
+    this.passwordError.set('');
+    this.passwordSaving.set(true);
+    const error = await this.auth.changePassword(current, next, confirm);
+    this.passwordSaving.set(false);
+    if (error) {
+      this.passwordError.set(error);
+      return;
+    }
+    this.passwordDraft = { current: '', next: '', confirm: '' };
+    this.notify('Mot de passe modifié');
+  }
+
   // ── Helpers ───────────────────────────────────────────────────────
   money(n: number): string {
     return Math.round(n).toLocaleString('fr-FR').replace(/ | /g, ' ');
@@ -372,7 +503,11 @@ export class ParametresV2Component {
   // ── Keyboard ──────────────────────────────────────────────────────
   @HostListener('document:keydown', ['$event'])
   onKey(event: KeyboardEvent): void {
-    if (event.key === 'Escape') return;
+    if (event.key === 'Escape') {
+      this.editingUser.set(null);
+      this.confirmDelete.set(null);
+      return;
+    }
     // Ctrl/Cmd + S saves the tab being edited.
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
       if (this.tab() === 'centre' && this.centreDirty()) {
@@ -390,4 +525,15 @@ export class ParametresV2Component {
   onBeforeUnload(event: BeforeUnloadEvent): void {
     if (this.centreDirty() || this.invoiceDirty()) event.preventDefault();
   }
+}
+
+/** The backend's own wording when it has one (validation, seat limit…). */
+function errorMessage(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse) {
+    if (err.status === 422 && err.error?.errors) {
+      return Object.values(err.error.errors as Record<string, string[]>).flat().join(' ');
+    }
+    if (err.error?.message) return err.error.message;
+  }
+  return fallback;
 }

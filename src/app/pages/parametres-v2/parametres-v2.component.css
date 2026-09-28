@@ -1255,6 +1255,91 @@
   color: #fff;
 }
 
+/* ── Utilisateurs ─────────────────────────────────────────────────── */
+
+.users-warn {
+  margin: 0 20px 4px;
+}
+
+.user {
+  min-height: 64px;
+}
+
+.user-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  background: var(--m-green-tint);
+  color: var(--m-green-deep);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-main,
+.user-access {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-main {
+  flex: 1;
+}
+
+.user-main .item-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-sub {
+  overflow: hidden;
+  color: var(--m-ink-soft);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-badge {
+  padding: 1px 8px;
+  background: var(--m-green-tint);
+  color: var(--m-green-deep);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.user-access {
+  align-items: flex-end;
+  max-width: 45%;
+  font-size: 13px;
+  text-align: end;
+}
+
+.dialog-fields {
+  margin-block-start: 18px;
+}
+
+.access-checks {
+  gap: 6px 12px;
+}
+
+.access-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.access-text small {
+  color: var(--m-ink-faint);
+  font-size: 12px;
+}
+
+.dialog .warn {
+  margin-block-end: 0;
+}
+
 /* ── Dialogs ──────────────────────────────────────────────────────── */
 
 .scrim {
@@ -1413,6 +1498,21 @@
     align-items: flex-start;
   }
 
+  /* Phone: who first; what they can open goes under the name. */
+  .user {
+    flex-wrap: wrap;
+    padding-block: 10px;
+  }
+
+  .user-access {
+    order: 1;
+    align-items: flex-start;
+    max-width: none;
+    width: 100%;
+    padding-inline-start: 48px;
+    text-align: start;
+  }
+
   .savebar {
     left: 12px;
     right: 12px;
@@ -1505,7 +1605,12 @@
   border-radius: 5px;
 }
 
+.user-avatar {
+  border-radius: 50%;
+}
+
 .block-n,
+.user-badge,
 .chip-add,
 .save-tag,
 .status,

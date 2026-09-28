@@ -180,7 +180,7 @@ export class AjouterEleveV2Component {
               status: this.paymentChoice(),
             });
           } else {
-            this.router.navigateByUrl('/v2');
+            this.router.navigateByUrl('/accueil');
           }
         };
 
@@ -202,7 +202,7 @@ export class AjouterEleveV2Component {
   }
 
   done(): void {
-    this.router.navigateByUrl('/v2');
+    this.router.navigateByUrl('/accueil');
   }
 
   formatDate(iso: string): string {

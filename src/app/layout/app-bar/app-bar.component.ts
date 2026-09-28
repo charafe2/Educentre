@@ -24,13 +24,13 @@ interface NavLink {
       <div class="inner">
         <nav class="trail" aria-label="Fil d’Ariane">
           @if (section()) {
-            <a class="back" routerLink="/v2" aria-label="Retour à l’accueil" aria-keyshortcuts="Alt+ArrowLeft">
+            <a class="back" routerLink="/accueil" aria-label="Retour à l’accueil" aria-keyshortcuts="Alt+ArrowLeft">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
               <span class="back-text">Retour</span>
             </a>
             <span class="back-sep" aria-hidden="true"></span>
           }
-          <a class="brand" routerLink="/v2" aria-label="Moujtahid, accueil">
+          <a class="brand" routerLink="/accueil" aria-label="Moujtahid, accueil">
             <img class="brand-mark" src="/logo.png" alt="" aria-hidden="true">
             <span class="brand-text">
               <span class="brand-name">Moujtahid</span>
@@ -75,30 +75,30 @@ interface NavLink {
                     <span>Propriétaire</span>
                   </span>
                 </div>
-                <a class="menu-centre" role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                <a class="menu-centre" role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
                   <span class="menu-centre-name">{{ centre().name }}</span>
                   <span class="menu-plan">{{ plan() }}</span>
                 </a>
                 <div class="menu-list">
-                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg>
                     Informations du centre
                   </a>
-                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg>
                     Modèle de reçu
                   </a>
-                  <a role="menuitem" routerLink="/v2/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M3 10h18M7 14.5h3"/></svg>
                     Abonnement
                   </a>
-                  <a role="menuitem" routerLink="/parametres" (click)="menuOpen.set(false)">
+                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'utilisateurs' }" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
-                    Utilisateurs et sécurité
+                    Utilisateurs
                   </a>
-                  <a role="menuitem" routerLink="/dashboard" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="6" height="6"/><rect x="14.5" y="4.5" width="6" height="6"/><rect x="3.5" y="14.5" width="6" height="6"/><rect x="14.5" y="14.5" width="6" height="6"/></svg>
-                    Ancienne interface
+                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'securite' }" (click)="menuOpen.set(false)">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+                    Sécurité
                   </a>
                 </div>
                 <div class="menu-list menu-list--end">
@@ -566,10 +566,10 @@ export class AppBarComponent {
   }
 
   readonly links: NavLink[] = [
-    { label: 'Groupes', route: '/v2/groupes', icon: 'groupes' },
-    { label: 'Caisse', route: '/v2/caisse', icon: 'caisse' },
-    { label: 'Enseignants', route: '/v2/enseignants', icon: 'enseignants' },
-    { label: 'Paramètres', route: '/v2/parametres', icon: 'parametres' },
+    { label: 'Groupes', route: '/groupes', icon: 'groupes' },
+    { label: 'Caisse', route: '/caisse', icon: 'caisse' },
+    { label: 'Enseignants', route: '/enseignants', icon: 'enseignants' },
+    { label: 'Paramètres', route: '/parametres', icon: 'parametres' },
   ];
 
   readonly menuOpen = signal(false);
@@ -589,7 +589,7 @@ export class AppBarComponent {
     }
     if (this.section() && event.altKey && event.key === 'ArrowLeft') {
       event.preventDefault();
-      this.router.navigateByUrl('/v2');
+      this.router.navigateByUrl('/accueil');
     }
   }
 
