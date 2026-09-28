@@ -6,6 +6,7 @@ import { OnboardingChecklistComponent } from '../../shared/onboarding/onboarding
 import { CaisseStore, money } from '../caisse/caisse.store';
 import { SessionsService } from '../../services/sessions.service';
 import { AnalyticsService } from '../../services/analytics.service';
+import { AuthStore } from '../../auth/auth.store';
 
 /**
  * Home page of the rebranded tenant app — replaces the sidebar as the way in.
@@ -54,6 +55,10 @@ export class AccueilComponent {
   private caisseStore = inject(CaisseStore);
   private sessionsService = inject(SessionsService);
   private analyticsService = inject(AnalyticsService);
+  private auth = inject(AuthStore);
+
+  /** First name of the signed-in user, for the greeting. */
+  readonly firstName = computed(() => this.auth.user()?.name?.trim().split(/\s+/)[0] ?? '');
 
   readonly modules: Module[] = [
     { key: '1', label: 'Ajouter un élève', route: '/etudiants/nouveau', icon: 'ajouter-eleve' },

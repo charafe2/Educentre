@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CentreService } from '../../services/centre.service';
+import { AuthStore } from '../../auth/auth.store';
 
 /**
  * Top bar of the rebranded app. There is no sidebar: the brand always leads
@@ -61,18 +62,18 @@ interface NavLink {
 
         <div class="side">
           <div class="me-wrap">
-            <button class="me" type="button" [class.is-open]="menuOpen()" aria-haspopup="menu" [attr.aria-expanded]="menuOpen()" aria-label="Compte de Youssef Amrani" (click)="menuOpen.set(!menuOpen())">
-              <span class="me-initials" aria-hidden="true">YA</span>
+            <button class="me" type="button" [class.is-open]="menuOpen()" aria-haspopup="menu" [attr.aria-expanded]="menuOpen()" [attr.aria-label]="'Compte de ' + userName()" (click)="menuOpen.set(!menuOpen())">
+              <span class="me-initials" aria-hidden="true">{{ initials() }}</span>
               <svg class="me-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
             </button>
 
             @if (menuOpen()) {
               <div class="menu" role="menu" aria-label="Compte" animate.enter="menu-enter" animate.leave="menu-leave">
                 <div class="menu-head">
-                  <span class="menu-avatar" aria-hidden="true">YA</span>
+                  <span class="menu-avatar" aria-hidden="true">{{ initials() }}</span>
                   <span class="menu-who">
-                    <strong>Youssef Amrani</strong>
-                    <span>Propriétaire</span>
+                    <strong>{{ userName() }}</strong>
+                    <span>{{ isOwner() ? 'Propriétaire' : 'Membre de l’équipe' }}</span>
                   </span>
                 </div>
                 <a class="menu-centre" role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
@@ -559,6 +560,13 @@ export class AppBarComponent {
 
   readonly centre = this.centreService.centreInfo;
   readonly plan = computed(() => this.centreService.subscription()?.plan ?? '');
+
+  private auth = inject(AuthStore);
+  readonly userName = computed(() => this.auth.user()?.name?.trim() ?? '');
+  readonly isOwner = this.auth.isOwner;
+  readonly initials = computed(() =>
+    this.userName().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w.charAt(0).toUpperCase()).join(''),
+  );
 
   constructor() {
     this.centreService.load();

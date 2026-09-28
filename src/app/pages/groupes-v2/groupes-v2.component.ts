@@ -17,6 +17,7 @@ import { TeachersService } from '../../services/teachers.service';
 import { RoomsService } from '../../services/rooms.service';
 import { StudentsService } from '../../services/students.service';
 import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
+import { CentreService } from '../../services/centre.service';
 
 export type { GroupRow, Slot };
 
@@ -74,6 +75,7 @@ export class GroupesV2Component {
   private roomsService = inject(RoomsService);
   private studentsService = inject(StudentsService);
   private receiptCustomization = inject(ReceiptCustomizationService);
+  private centreService = inject(CentreService);
 
   /** Offered levels and subjects come from Paramètres. */
   readonly levels = this.centre.levels;
@@ -177,7 +179,7 @@ export class GroupesV2Component {
       time: `${g.schedule.start}–${endOf(g.schedule)}`,
     }));
     await this.receiptCustomization.downloadGroupSchedule({
-      centerName: this.receiptCustomization.settings().centerName,
+      centerName: this.centreService.centreInfo().name || this.receiptCustomization.settings().centerName,
       subject: g.subject,
       level: g.level,
       groupNumber: g.number,

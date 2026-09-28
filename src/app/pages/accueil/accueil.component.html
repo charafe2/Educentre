@@ -5,7 +5,7 @@
   <app-bar />
 
   <main class="main">
-    <h1 class="hello">Bonjour, Youssef</h1>
+    <h1 class="hello">Bonjour{{ firstName() ? ', ' + firstName() : '' }}</h1>
 
     <nav class="modules" aria-label="Modules">
       @for (m of modules; track m.key; let i = $index) {
