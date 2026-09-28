@@ -9,7 +9,7 @@ import { ToastService } from '../../services/toast.service';
 import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
 import { ModalComponent } from '../../components/modal/modal.component';
 import { TeacherPayslipPreviewComponent } from '../../components/teacher-payslip-preview/teacher-payslip-preview.component';
-import { Teacher } from '../../models/teacher.model';
+import { PaymentMode, Teacher } from '../../models/teacher.model';
 import { Classe } from '../../models/classe.model';
 import { Group } from '../../models/group.model';
 import { TeacherPayslipData } from '../../models/teacher-payslip.model';
@@ -31,7 +31,7 @@ function payslipMonthOptions(): { value: string; label: string }[] {
 
 interface TeacherForm {
   firstName: string; lastName: string; email: string; phone: string;
-  specialty: string; paymentMode: 'fixed' | 'per_student' | 'percentage';
+  specialty: string; paymentMode: PaymentMode;
   fixedSalary: number; ratePerStudent: number; percentageRate: number;
   status: 'active' | 'inactive'; classIds: number[];
 }

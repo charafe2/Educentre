@@ -4,9 +4,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
-import { TeachersService } from '../../services/teachers.service';
+import { TeachersService, weeklyHoursForClasses } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
 import { GroupsService } from '../../services/groups.service';
+import { SessionsService } from '../../services/sessions.service';
 import { SubjectsService } from '../../services/subjects.service';
 import { ToastService } from '../../services/toast.service';
 import { Teacher, PaymentMode } from '../../models/teacher.model';
@@ -35,6 +36,7 @@ interface Draft {
   fixedSalary: number | null;
   ratePerStudent: number | null;
   percentageRate: number | null;
+  ratePerHour: number | null;
   active: boolean;
   /** Classes this teacher will own (`Classe.teacherId`) once saved — reassigns them away from whoever teaches them today, if anyone. */
   classIds: number[];
@@ -45,6 +47,7 @@ interface TeacherRow {
   classes: Classe[];
   groups: { classe: Classe; groups: Group[] }[];
   studentCount: number;
+  weeklyHours: number;
   salary: number;
 }
 
@@ -58,6 +61,7 @@ export class EnseignantsComponent {
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
   private groupsService = inject(GroupsService);
+  private sessionsService = inject(SessionsService);
   private subjectsService = inject(SubjectsService);
   private toast = inject(ToastService);
 
@@ -99,8 +103,9 @@ export class EnseignantsComponent {
         groups: this.groupsService.getGroupsForClasse(c.id),
       }));
       const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+      const weeklyHours = weeklyHoursForClasses(this.sessionsService.sessions(), classes);
       const salary = this.teachersService.getPayrollAmount(teacher, classes);
-      return { teacher, classes, groups, studentCount, salary };
+      return { teacher, classes, groups, studentCount, weeklyHours, salary };
     });
   });
 
@@ -146,6 +151,7 @@ export class EnseignantsComponent {
     const t = row.teacher;
     if (t.paymentMode === 'fixed') return 'Salaire fixe';
     if (t.paymentMode === 'percentage') return `${t.percentageRate ?? 0}% du prix des classes`;
+    if (t.paymentMode === 'per_hour') return `${t.hourlyRate ?? 0} MAD × ${row.weeklyHours} h/semaine`;
     return `${t.ratePerStudent ?? 0} MAD × ${row.studentCount} ${row.studentCount > 1 ? 'élèves' : 'élève'}`;
   }
 
@@ -212,7 +218,7 @@ export class EnseignantsComponent {
   private blank(): Draft {
     return {
       firstName: '', lastName: '', phone: '', email: '', specialty: '',
-      mode: 'fixed', fixedSalary: null, ratePerStudent: null, percentageRate: null, active: true,
+      mode: 'fixed', fixedSalary: null, ratePerStudent: null, percentageRate: null, ratePerHour: null, active: true,
       classIds: [],
     };
   }
@@ -269,9 +275,17 @@ export class EnseignantsComponent {
     if (!d.phone.trim()) errors.push('Le téléphone est obligatoire : c’est par là que le centre joint l’enseignant.');
     if (!d.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email.trim())) errors.push('Une adresse email valide est obligatoire : c’est son identifiant de connexion.');
     if (!d.specialty.trim()) errors.push('Choisissez une matière.');
-    const amount = d.mode === 'fixed' ? d.fixedSalary : d.mode === 'percentage' ? d.percentageRate : d.ratePerStudent;
+    const amount = d.mode === 'fixed' ? d.fixedSalary
+      : d.mode === 'percentage' ? d.percentageRate
+      : d.mode === 'per_hour' ? d.ratePerHour
+      : d.ratePerStudent;
     if (amount === null || amount === undefined || +amount <= 0) {
-      errors.push(d.mode === 'fixed' ? 'Indiquez le salaire mensuel.' : d.mode === 'percentage' ? 'Indiquez le pourcentage.' : 'Indiquez le montant par élève.');
+      errors.push(
+        d.mode === 'fixed' ? 'Indiquez le salaire mensuel.'
+        : d.mode === 'percentage' ? 'Indiquez le pourcentage.'
+        : d.mode === 'per_hour' ? 'Indiquez le tarif horaire.'
+        : 'Indiquez le montant par élève.',
+      );
     }
     return errors;
   });
@@ -282,13 +296,15 @@ export class EnseignantsComponent {
     const d = this.draft;
     const classes = this.effectiveRowsFor(d.classIds);
     const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
+    const hours = weeklyHoursForClasses(this.sessionsService.sessions(), classes);
     const owed = this.teachersService.getPayrollAmount({
       paymentMode: d.mode,
       fixedSalary: +(d.fixedSalary ?? 0),
       ratePerStudent: +(d.ratePerStudent ?? 0),
       percentageRate: +(d.percentageRate ?? 0),
+      hourlyRate: +(d.ratePerHour ?? 0),
     } as Teacher, classes);
-    return { students: studentCount, owed };
+    return { students: studentCount, hours, owed };
   });
 
   touch(): void {
@@ -308,6 +324,7 @@ export class EnseignantsComponent {
       firstName: t.firstName, lastName: t.lastName, phone: t.phone, email: t.email,
       specialty: t.specialty, mode: t.paymentMode,
       fixedSalary: t.fixedSalary || null, ratePerStudent: t.ratePerStudent || null, percentageRate: t.percentageRate || null,
+      ratePerHour: t.hourlyRate || null,
       active: t.status === 'active',
       classIds: [...t.classIds],
     };
@@ -350,6 +367,7 @@ export class EnseignantsComponent {
       fixedSalary: d.mode === 'fixed' ? Math.round(+(d.fixedSalary ?? 0)) : undefined,
       ratePerStudent: d.mode === 'per_student' ? Math.round(+(d.ratePerStudent ?? 0)) : undefined,
       percentageRate: d.mode === 'percentage' ? +(d.percentageRate ?? 0) : undefined,
+      hourlyRate: d.mode === 'per_hour' ? Math.round(+(d.ratePerHour ?? 0)) : undefined,
       status: (d.active ? 'active' : 'inactive') as 'active' | 'inactive',
     };
 
@@ -373,6 +391,7 @@ export class EnseignantsComponent {
               email: payload.email, phone: payload.phone, specialty: payload.specialty,
               paymentMode: payload.paymentMode, fixedSalary: payload.fixedSalary,
               ratePerStudent: payload.ratePerStudent, percentageRate: payload.percentageRate,
+              hourlyRate: payload.hourlyRate,
               classIds: d.classIds, status: payload.status, avatarColor: '#0d9488',
               access: { login: payload.email, state: 'active', lastLoginAt: null },
             } satisfies Teacher, res.data.plainPassword);

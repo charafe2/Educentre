@@ -12,6 +12,9 @@ use Illuminate\Support\Str;
 
 class TeacherService
 {
+    /** A weekly recurring schedule is extrapolated to a month the same flat way a class's own monthly price already is — no calendar-exact week counting. */
+    private const WEEKS_PER_MONTH = 4;
+
     public function all(?int $tenantId = null): Collection
     {
         return $this->query($tenantId)->get();
@@ -30,7 +33,7 @@ class TeacherService
     {
         $teachers = Teacher::query()
             ->where('tenant_id', $tenantId)
-            ->with(['classes.enrollments'])
+            ->with(['classes.enrollments', 'classes.sessions'])
             ->get();
 
         return [
@@ -49,6 +52,10 @@ class TeacherService
      * computed per class (rate × class.monthly_price × that class's
      * enrollment count) and summed, since a student in two classes pays
      * (and so is owed a share of) each class's price separately.
+     * `per_hour`: a flat rate × the teacher's weekly scheduled hours across
+     * all their classes (every non-cancelled session's own duration,
+     * regardless of which group it belongs to — same class-level fidelity
+     * as the other modes), extrapolated to a month at WEEKS_PER_MONTH.
      */
     private function payrollAmount(Teacher $teacher): float
     {
@@ -64,6 +71,10 @@ class TeacherService
             );
         }
 
+        if ($teacher->payment_mode === 'per_hour') {
+            return (float) $teacher->hourly_rate * $this->weeklyHours($teacher) * self::WEEKS_PER_MONTH;
+        }
+
         $studentCount = $teacher->classes
             ->flatMap->enrollments
             ->pluck('student_id')
@@ -71,6 +82,14 @@ class TeacherService
             ->count();
 
         return (float) $teacher->rate_per_student * $studentCount;
+    }
+
+    private function weeklyHours(Teacher $teacher): float
+    {
+        return (float) $teacher->classes
+            ->flatMap->sessions
+            ->where('is_cancelled', false)
+            ->sum(fn ($session) => $session->end_hour - $session->start_hour);
     }
 
     public function find(int $id, int $tenantId): Teacher
@@ -103,6 +122,7 @@ class TeacherService
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? null,
                 'rate_per_student' => $data['ratePerStudent'] ?? null,
                 'percentage_rate' => $data['percentageRate'] ?? null,
+                'hourly_rate' => $data['hourlyRate'] ?? null,
                 'min_students_threshold' => 0,
                 'iban' => $data['iban'] ?? null,
                 'is_active' => ($data['status'] ?? 'active') === 'active',
@@ -140,6 +160,7 @@ class TeacherService
                 'fixed_monthly_salary' => $data['fixedSalary'] ?? $teacher->fixed_monthly_salary,
                 'rate_per_student' => $data['ratePerStudent'] ?? $teacher->rate_per_student,
                 'percentage_rate' => $data['percentageRate'] ?? $teacher->percentage_rate,
+                'hourly_rate' => $data['hourlyRate'] ?? $teacher->hourly_rate,
                 'iban' => $data['iban'] ?? $teacher->iban,
                 'is_active' => isset($data['status']) ? ($data['status'] === 'active') : $teacher->is_active,
             ]);

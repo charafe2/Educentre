@@ -1,3 +1,5 @@
+import { PaymentMode } from './teacher.model';
+
 export interface PayslipClassRow {
   className: string;
   subject: string;
@@ -16,7 +18,7 @@ export interface TeacherPayslipData {
   phone: string;
   period: string;
   generatedAt: string;
-  paymentMode: 'fixed' | 'per_student' | 'percentage';
+  paymentMode: PaymentMode;
   paymentModeLabel: string;
   /** Human sentence describing the rate, e.g. "50 Dhs par étudiant assigné"
    *  or "40% du prix mensuel de chaque étudiant assigné". */

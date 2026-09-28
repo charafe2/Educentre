@@ -33,6 +33,19 @@ export interface ReceiptPreviewData {
   reference: string;
 }
 
+export interface GroupScheduleData {
+  centerName: string;
+  subject: string;
+  level: string;
+  groupNumber: number;
+  teacherName: string;
+  roomName: string;
+  rows: { day: string; time: string }[];
+  studentCount: number;
+  capacity: number;
+  generatedAt: string;
+}
+
 const STORAGE_KEY_PREFIX = 'moujtahid_receipt_customization_v1';
 
 export const DEFAULT_RECEIPT_SETTINGS: ReceiptCustomizationSettings = {
@@ -140,6 +153,27 @@ export class ReceiptCustomizationService {
 
     const safeName = data.teacherName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     this.triggerPdfDownload(pdf, `bulletin-paie-${safeName || 'professeur'}-${data.period.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+  }
+
+  /**
+   * Same concept as downloadTeacherPayslip() above — a single group's
+   * weekly schedule only (not the whole centre's timetable), meant to be
+   * sent straight to that group's students.
+   */
+  async downloadGroupSchedule(data: GroupScheduleData, settings = this.settings()): Promise<void> {
+    const width = 900;
+    const rowHeight = 46;
+    const baseHeight = 620; // header + group info + table head + footer
+    const height = baseHeight + Math.max(data.rows.length, 1) * rowHeight;
+
+    const image = await this.renderGroupScheduleImage(data, settings, width, height);
+    const pageWidth = 595.28; // A4 portrait width, in points
+    const pageHeight = pageWidth * (height / width);
+    const pdf = this.buildPdf(image, width, height, pageWidth, pageHeight);
+
+    const safeName = `${data.subject}-${data.level}-groupe-${data.groupNumber}`
+      .trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    this.triggerPdfDownload(pdf, `emploi-du-temps-${safeName || 'groupe'}.pdf`);
   }
 
   private triggerPdfDownload(pdf: Uint8Array, filename: string): void {
@@ -500,6 +534,121 @@ ${this.receiptMarkup(data, settings, logo)}
     const sigCenterX = contentX + noteW + (contentRight - contentX - noteW) / 2;
     this.drawText(ctx, 'SIGNATURE ET CACHET DU CENTRE', sigCenterX, y + 18, { align: 'center', color: accent, font: '800 12px Arial' });
     this.drawText(ctx, 'Signature', sigCenterX, y + 58, { align: 'center', color: ink, font: '32px "Brush Script MT", cursive' });
+
+    return canvas.toDataURL('image/jpeg', 0.94);
+  }
+
+  /**
+   * Same drawing toolkit and top-to-bottom `y` cursor as renderPayslipImage()
+   * above — a compact, single-group card rather than a full-centre table.
+   */
+  private async renderGroupScheduleImage(
+    data: GroupScheduleData,
+    settings: ReceiptCustomizationSettings,
+    width: number,
+    height: number,
+  ): Promise<string> {
+    const accent = settings.accentColor;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas rendering is not available.');
+
+    const ink = '#081333';
+    const muted = '#53637c';
+    const border = '#dbe4ee';
+    const softerAccent = this.mixColor(accent, '#ffffff', 0.94);
+    const logoImage = settings.logoDataUrl ? await this.safeLoadImage(settings.logoDataUrl) : null;
+
+    const margin = 32;
+    const cardX = margin;
+    const cardY = margin;
+    const cardW = width - margin * 2;
+    const contentX = cardX + 30;
+    const contentRight = cardX + cardW - 30;
+    const contentW = contentRight - contentX;
+
+    ctx.fillStyle = '#f4f7fb';
+    ctx.fillRect(0, 0, width, height);
+    this.drawRoundRect(ctx, cardX, cardY, cardW, height - margin * 2, 18, '#ffffff', '#dfe7ef');
+
+    let y = cardY + 40;
+
+    // Header: logo/centre name (left), "EMPLOI DU TEMPS" + date (right)
+    if (logoImage) {
+      this.drawRoundRect(ctx, contentX, y, 50, 50, 12, '#ffffff');
+      ctx.save();
+      this.clipRoundRect(ctx, contentX, y, 50, 50, 12);
+      ctx.drawImage(logoImage, contentX, y, 50, 50);
+      ctx.restore();
+    } else {
+      this.drawRoundRect(ctx, contentX, y, 50, 50, 12, accent);
+      this.drawText(ctx, data.centerName.slice(0, 2).toUpperCase(), contentX + 25, y + 32, {
+        align: 'center', color: '#ffffff', font: '800 18px Arial',
+      });
+    }
+    this.drawText(ctx, data.centerName, contentX + 64, y + 20, { color: ink, font: '800 22px Arial' });
+    this.drawText(ctx, 'Gestion intelligente de centre de soutien', contentX + 64, y + 42, { color: muted, font: '13px Arial' });
+
+    this.drawText(ctx, 'EMPLOI DU TEMPS', contentRight, y + 14, { align: 'right', color: ink, font: '800 20px Arial' });
+    this.drawText(ctx, data.generatedAt, contentRight, y + 38, { align: 'right', color: muted, font: '13px Arial' });
+
+    y += 80;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 32;
+
+    // Group identity
+    this.drawText(ctx, `${data.subject.toUpperCase()} · ${data.level.toUpperCase()}`, contentX, y, { color: accent, font: '800 14px Arial' });
+    y += 30;
+    this.drawText(ctx, `Groupe ${data.groupNumber}`, contentX, y, { color: ink, font: '800 26px Arial' });
+    y += 34;
+    this.drawText(ctx, `Enseignant : ${data.teacherName || 'Non assigné'}`, contentX, y, { color: muted, font: '15px Arial' });
+    y += 24;
+    this.drawText(ctx, `Salle : ${data.roomName || 'Non assignée'}`, contentX, y, { color: muted, font: '15px Arial' });
+    y += 24;
+    this.drawText(ctx, `${data.studentCount} élève${data.studentCount > 1 ? 's' : ''} sur ${data.capacity} places`, contentX, y, { color: muted, font: '15px Arial' });
+
+    y += 40;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 32;
+
+    // Schedule table
+    this.drawText(ctx, 'HORAIRES DE LA SEMAINE', contentX, y, { color: ink, font: '800 15px Arial' });
+    y += 24;
+
+    this.drawRoundRect(ctx, contentX, y, contentW, 40, 8, softerAccent);
+    this.drawText(ctx, 'JOUR', contentX + 20, y + 25, { color: accent, font: '800 12px Arial' });
+    this.drawText(ctx, 'HORAIRE', contentX + contentW * 0.5, y + 25, { color: accent, font: '800 12px Arial' });
+    y += 40;
+
+    const rowH = 46;
+    if (data.rows.length === 0) {
+      this.drawText(ctx, 'Pas encore de créneau planifié pour ce groupe.', contentX + contentW / 2, y + 29, {
+        align: 'center', color: muted, font: '14px Arial',
+      });
+      y += rowH;
+    }
+    data.rows.forEach((row, index) => {
+      if (index % 2 === 1) {
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillRect(contentX, y, contentW, rowH);
+      }
+      this.drawText(ctx, row.day, contentX + 20, y + 29, { color: ink, font: '700 15px Arial' });
+      this.drawText(ctx, row.time, contentX + contentW * 0.5, y + 29, { color: ink, font: '15px Arial' });
+      y += rowH;
+    });
+
+    y += 26;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 28;
+
+    // Footer
+    this.wrapText(
+      ctx,
+      'Ce document présente uniquement les séances de ce groupe. Merci de le communiquer aux élèves concernés.',
+      contentX, y, contentW, 20, { color: muted, font: '13px Arial' },
+    );
 
     return canvas.toDataURL('image/jpeg', 0.94);
   }

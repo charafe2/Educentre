@@ -333,6 +333,11 @@
             <span class="pay-mode-title">Pourcentage</span>
             <span class="pay-mode-text">Une part du prix payé par chaque élève assigné.</span>
           </button>
+          <button type="button" role="radio" class="pay-mode" [class.is-on]="draft.mode === 'per_hour'" [attr.aria-checked]="draft.mode === 'per_hour'" (click)="setMode('per_hour')">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5l3.5 2"/></svg>
+            <span class="pay-mode-title">Par heure</span>
+            <span class="pay-mode-text">Un tarif horaire, selon ses heures de cours planifiées chaque semaine.</span>
+          </button>
         </div>
 
         @if (draft.mode === 'fixed') {
@@ -351,6 +356,15 @@
               <span class="amount-unit">% / élève / mois</span>
             </span>
           </label>
+        } @else if (draft.mode === 'per_hour') {
+          <label class="m-field span-2 amount" animate.enter="m-enter-fade">
+            <span>Tarif horaire</span>
+            <span class="amount-box">
+              <input class="m-input" name="ratePerHour" type="number" min="0" step="10" inputmode="numeric" placeholder="120" [(ngModel)]="draft.ratePerHour">
+              <span class="amount-unit">MAD / heure</span>
+            </span>
+            <small class="hint">Calculé sur ses heures de cours planifiées, ×4 semaines par mois.</small>
+          </label>
         } @else {
           <label class="m-field span-2 amount" animate.enter="m-enter-fade">
             <span>Montant par élève</span>
@@ -364,6 +378,12 @@
         <p class="estimate span-2" aria-live="polite">
           @if (draft.mode === 'fixed') {
             Estimation : <strong>{{ money(draftEstimate().owed) }} MAD</strong> par mois.
+          } @else if (draft.mode === 'per_hour') {
+            @if (draftEstimate().hours) {
+              Estimation, sur ses classes actuelles : <strong>{{ money(draftEstimate().owed) }} MAD</strong> ce mois-ci ({{ draftEstimate().hours }} h/semaine).
+            } @else {
+              Pas encore d’horaire : le salaire se calcule dès que ses classes ont des séances planifiées.
+            }
           } @else if (draftEstimate().students) {
             Estimation, sur ses classes actuelles : <strong>{{ money(draftEstimate().owed) }} MAD</strong> ce mois-ci.
           } @else {

@@ -1,8 +1,9 @@
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { CaisseStore, Method, addMonths, monthIndex } from './caisse.store';
-import { TeachersService } from '../../services/teachers.service';
+import { TeachersService, weeklyHoursForClasses } from '../../services/teachers.service';
 import { ClassesService } from '../../services/classes.service';
+import { SessionsService } from '../../services/sessions.service';
 import { TeacherPayrollService } from '../../services/teacher-payroll.service';
 import { ExpensesService } from '../../services/expenses.service';
 import { Expense as RealExpense, ExpenseCategory } from '../../models/expense.model';
@@ -15,7 +16,7 @@ import { Expense as RealExpense, ExpenseCategory } from '../../models/expense.mo
  * (real, `expenses`-backed).
  */
 
-export type PayMode = 'fixed' | 'per_student' | 'percentage';
+export type PayMode = 'fixed' | 'per_student' | 'percentage' | 'per_hour';
 
 export interface Teacher {
   id: number;
@@ -25,6 +26,7 @@ export interface Teacher {
   fixedSalary?: number;
   ratePerStudent?: number;
   percentageRate?: number;
+  ratePerHour?: number;
 }
 
 export interface SalaryRecord {
@@ -38,6 +40,7 @@ export interface SalaryRecord {
 export interface SalaryRow {
   teacher: Teacher;
   students: number;
+  hours: number;
   owed: number;
   record?: SalaryRecord;
 }
@@ -64,6 +67,7 @@ export class ExpensesStore {
   private caisse = inject(CaisseStore);
   private teachersService = inject(TeachersService);
   private classesService = inject(ClassesService);
+  private sessionsService = inject(SessionsService);
   private payrollService = inject(TeacherPayrollService);
   private expensesService = inject(ExpensesService);
 
@@ -80,6 +84,12 @@ export class ExpensesStore {
     return new Set(classes.flatMap(c => c.enrolledStudentIds)).size;
   }
 
+  /** Weekly scheduled hours across this teacher's currently-assigned classes. */
+  private weeklyHoursOf(teacherId: number): number {
+    const classes = this.classesService.classes().filter(c => c.teacherId === teacherId);
+    return weeklyHoursForClasses(this.sessionsService.sessions(), classes);
+  }
+
   salaryRows(month: string): SalaryRow[] {
     return this.payrollService
       .buildSalaryRows(this.teachersService.teachers(), this.classesService.classes(), month)
@@ -93,11 +103,12 @@ export class ExpensesStore {
           fixedSalary: teacherModel?.fixedSalary,
           ratePerStudent: teacherModel?.ratePerStudent,
           percentageRate: teacherModel?.percentageRate,
+          ratePerHour: teacherModel?.hourlyRate,
         };
         const record: SalaryRecord | undefined = r.paid
           ? { teacherId: r.teacherId, month, amount: r.amountOwed, method: (r.method as Method) ?? 'Virement', paidAt: r.paidAt ?? '' }
           : undefined;
-        return { teacher, students: this.studentCountOf(r.teacherId), owed: r.amountOwed, record };
+        return { teacher, students: this.studentCountOf(r.teacherId), hours: this.weeklyHoursOf(r.teacherId), owed: r.amountOwed, record };
       });
   }
 

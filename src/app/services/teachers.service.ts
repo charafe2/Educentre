@@ -2,12 +2,25 @@ import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Teacher } from '../models/teacher.model';
 import { Classe } from '../models/classe.model';
+import { Session } from '../models/session.model';
 import { PayslipClassRow } from '../models/teacher-payslip.model';
 import { environment } from '../../environments/environment';
 import { Observable, tap } from 'rxjs';
 import { ApiResponse, PaginatedApiResponse, PaginationMeta } from '../models/api-response.model';
+import { SessionsService } from './sessions.service';
 
 const AVATAR_COLORS = ['#0d9488', '#7c3aed', '#dc2626', '#d97706', '#059669', '#0891b2', '#be185d', '#b45309'];
+
+/** A weekly recurring schedule is extrapolated to a month the same flat way a class's own monthly price already is — no calendar-exact week counting. */
+export const WEEKS_PER_MONTH = 4;
+
+/** Every non-cancelled weekly hour across the given classes, regardless of which group a session belongs to — same class-level fidelity as the other pay modes. Shared by TeachersService and TeacherPayrollService so `per_hour` computes identically everywhere. */
+export function weeklyHoursForClasses(sessions: Session[], classes: Classe[]): number {
+  const classIds = new Set(classes.map(c => c.id));
+  return sessions
+    .filter(s => classIds.has(s.classeId) && !s.isCancelled)
+    .reduce((sum, s) => sum + (s.endHour - s.startHour), 0);
+}
 
 export interface TeacherPageFilters {
   page?: number;
@@ -25,6 +38,7 @@ export interface TeacherSummary {
 @Injectable({ providedIn: 'root' })
 export class TeachersService {
   private http = inject(HttpClient);
+  private sessionsService = inject(SessionsService);
   private lastPageFilters: TeacherPageFilters = { page: 1, perPage: 8 };
 
   teachers = signal<Teacher[]>([]);
@@ -118,7 +132,8 @@ export class TeachersService {
    * `percentage` mode needs each class's own monthlyPrice (a student in two
    * of the teacher's classes is owed a share of each class's price
    * separately), so this takes the teacher's classes rather than a plain
-   * student count.
+   * student count. `per_hour` needs the teacher's weekly scheduled hours
+   * across those same classes, read from the already-loaded SessionsService.
    */
   getPayrollAmount(teacher: Teacher, classes: Classe[]): number {
     if (teacher.paymentMode === 'fixed') {
@@ -127,6 +142,9 @@ export class TeachersService {
     if (teacher.paymentMode === 'percentage') {
       const rate = (teacher.percentageRate ?? 0) / 100;
       return classes.reduce((sum, c) => sum + c.monthlyPrice * c.enrolledStudentIds.length * rate, 0);
+    }
+    if (teacher.paymentMode === 'per_hour') {
+      return (teacher.hourlyRate ?? 0) * weeklyHoursForClasses(this.sessionsService.sessions(), classes) * WEEKS_PER_MONTH;
     }
     const studentCount = classes.reduce((s, c) => s + c.enrolledStudentIds.length, 0);
     return (teacher.ratePerStudent ?? 0) * studentCount;
@@ -138,12 +156,15 @@ export class TeachersService {
    * `fixed` mode since that pay isn't tied to any one class.
    */
   getPayslipClassRows(teacher: Teacher, classes: Classe[]): PayslipClassRow[] {
+    const sessions = this.sessionsService.sessions();
     return classes.map(c => {
       let contribution = 0;
       if (teacher.paymentMode === 'percentage') {
         contribution = c.monthlyPrice * c.enrolledStudentIds.length * ((teacher.percentageRate ?? 0) / 100);
       } else if (teacher.paymentMode === 'per_student') {
         contribution = (teacher.ratePerStudent ?? 0) * c.enrolledStudentIds.length;
+      } else if (teacher.paymentMode === 'per_hour') {
+        contribution = (teacher.hourlyRate ?? 0) * weeklyHoursForClasses(sessions, [c]) * WEEKS_PER_MONTH;
       }
       return {
         className: c.name,

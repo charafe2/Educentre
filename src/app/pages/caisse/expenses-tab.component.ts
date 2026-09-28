@@ -95,6 +95,7 @@ export class ExpensesTabComponent {
   modeText(row: SalaryRow): string {
     if (row.teacher.mode === 'fixed') return 'Salaire fixe';
     if (row.teacher.mode === 'percentage') return `${row.teacher.percentageRate}% du tarif, ${row.students} élèves`;
+    if (row.teacher.mode === 'per_hour') return `${row.teacher.ratePerHour} MAD × ${row.hours} h/semaine`;
     return `${row.teacher.ratePerStudent} MAD × ${row.students} élèves`;
   }
 

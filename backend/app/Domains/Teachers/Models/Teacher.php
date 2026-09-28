@@ -29,6 +29,7 @@ class Teacher extends Model
         'fixed_monthly_salary',
         'rate_per_student',
         'percentage_rate',
+        'hourly_rate',
         'min_students_threshold',
         'iban',
         'is_active',
@@ -39,6 +40,7 @@ class Teacher extends Model
         'fixed_monthly_salary' => 'decimal:2',
         'rate_per_student' => 'decimal:2',
         'percentage_rate' => 'decimal:2',
+        'hourly_rate' => 'decimal:2',
     ];
 
     public function user(): BelongsTo

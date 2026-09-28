@@ -16,6 +16,7 @@ import { SessionsService } from '../../services/sessions.service';
 import { TeachersService } from '../../services/teachers.service';
 import { RoomsService } from '../../services/rooms.service';
 import { StudentsService } from '../../services/students.service';
+import { ReceiptCustomizationService } from '../../services/receipt-customization.service';
 
 export type { GroupRow, Slot };
 
@@ -72,6 +73,7 @@ export class GroupesV2Component {
   private teachersService = inject(TeachersService);
   private roomsService = inject(RoomsService);
   private studentsService = inject(StudentsService);
+  private receiptCustomization = inject(ReceiptCustomizationService);
 
   /** Offered levels and subjects come from Paramètres. */
   readonly levels = this.centre.levels;
@@ -166,6 +168,27 @@ export class GroupesV2Component {
     const h = Math.floor(min / 60);
     const m = min % 60;
     return m ? `${h} h ${m}` : `${h} h`;
+  }
+
+  /** Downloads this one group's own weekly schedule as a PDF, to send to its students. */
+  async downloadSchedule(g: GroupRow): Promise<void> {
+    const rows = [...g.schedule.days].sort().map(d => ({
+      day: this.dayLong[d].replace(/^\w/, c => c.toUpperCase()),
+      time: `${g.schedule.start}–${endOf(g.schedule)}`,
+    }));
+    await this.receiptCustomization.downloadGroupSchedule({
+      centerName: this.receiptCustomization.settings().centerName,
+      subject: g.subject,
+      level: g.level,
+      groupNumber: g.number,
+      teacherName: g.teacher,
+      roomName: g.room,
+      rows,
+      studentCount: g.students.length,
+      capacity: g.capacity,
+      generatedAt: new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()),
+    });
+    this.notify(`Emploi du temps téléchargé : ${g.subject}, groupe ${g.number}`);
   }
 
   // ── Conflicts: same room or same teacher at overlapping times ─────

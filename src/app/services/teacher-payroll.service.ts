@@ -5,6 +5,8 @@ import { ApiResponse } from '../models/api-response.model';
 import { TeacherPayrollRecord, TeacherSalaryRow } from '../models/monthly-review.model';
 import { Teacher } from '../models/teacher.model';
 import { Classe } from '../models/classe.model';
+import { SessionsService } from './sessions.service';
+import { WEEKS_PER_MONTH, weeklyHoursForClasses } from './teachers.service';
 
 interface TeacherPaymentApiRow {
   teacherId: number;
@@ -26,6 +28,7 @@ interface TeacherPaymentApiRow {
 @Injectable({ providedIn: 'root' })
 export class TeacherPayrollService {
   private http = inject(HttpClient);
+  private sessionsService = inject(SessionsService);
   private records = signal<TeacherPayrollRecord[]>([]);
 
   constructor() {
@@ -84,7 +87,10 @@ export class TeacherPayrollService {
   // - percentage      -> rate × each class's monthlyPrice × that class's own enrollment
   //                      count, summed per class (not deduped): a student in two of the
   //                      teacher's classes pays, and so owes a share of, each class's price.
+  // - per_hour        -> rate × weekly scheduled hours across their classes, ×4 for a month
+  //                      (same weekly-hours math as TeachersService.getPayrollAmount()).
   buildSalaryRows(teachers: Teacher[], classes: Classe[], month: string): TeacherSalaryRow[] {
+    const sessions = this.sessionsService.sessions();
     return teachers
       .filter(t => t.status === 'active')
       .map(teacher => {
@@ -95,6 +101,8 @@ export class TeacherPayrollService {
           ? (teacher.fixedSalary ?? 0)
           : teacher.paymentMode === 'percentage'
           ? teacherClasses.reduce((sum, c) => sum + c.monthlyPrice * c.enrolledStudentIds.length * ((teacher.percentageRate ?? 0) / 100), 0)
+          : teacher.paymentMode === 'per_hour'
+          ? (teacher.hourlyRate ?? 0) * weeklyHoursForClasses(sessions, teacherClasses) * WEEKS_PER_MONTH
           : (teacher.ratePerStudent ?? 0) * studentCount;
 
         return {

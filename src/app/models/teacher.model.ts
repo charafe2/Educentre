@@ -1,4 +1,4 @@
-export type PaymentMode = 'fixed' | 'per_student' | 'percentage';
+export type PaymentMode = 'fixed' | 'per_student' | 'percentage' | 'per_hour';
 export type TeacherAccessState = 'active' | 'suspended' | 'revoked';
 
 export interface TeacherAccess {
@@ -21,6 +21,8 @@ export interface Teacher {
   /** `percentage` mode: share (0-100) of each assigned student's class
    *  monthlyPrice, not a flat per-student rate. */
   percentageRate?: number;
+  /** `per_hour` mode: flat rate × the teacher's weekly scheduled hours across their classes, ×4 for a month. */
+  hourlyRate?: number;
   iban?: string;
   classIds: number[];
   status: 'active' | 'inactive';
