@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
 import { StudentsService } from '../../services/students.service';
+import { ToastService } from '../../services/toast.service';
 import { Student } from '../../models/student.model';
 import { CentreStore, DAY_SHORT, GroupRow, Slot } from '../../shared/centre.store';
 
@@ -32,6 +33,7 @@ function endOf(s: Slot): string {
 export class EtudiantsListeComponent {
   private studentsService = inject(StudentsService);
   private centre = inject(CentreStore);
+  private toast = inject(ToastService);
 
   readonly query = signal('');
   readonly students = this.studentsService.pagedStudents;
@@ -107,6 +109,43 @@ export class EtudiantsListeComponent {
   formatSlot(s: Slot): string {
     if (!s.days.length) return 'À planifier';
     return `${[...s.days].sort().map(d => DAY_SHORT[d]).join(', ')} ${s.start}–${endOf(s)}`;
+  }
+
+  // ── Delete (confirmation dialog, then the real delete) ─────────────
+  readonly confirming = signal<Student | null>(null);
+  readonly deleting = signal(false);
+
+  askDelete(s: Student): void {
+    this.confirming.set(s);
+  }
+
+  cancelDelete(): void {
+    if (!this.deleting()) this.confirming.set(null);
+  }
+
+  confirmDelete(): void {
+    const s = this.confirming();
+    if (!s || this.deleting()) return;
+    this.deleting.set(true);
+    this.studentsService.delete(s.id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.confirming.set(null);
+        this.toast.show(`${this.fullName(s)} supprimé`);
+        // Deleting the last row of a page would leave it empty — step back.
+        const p = this.pagination();
+        if (this.students().length === 1 && p.current_page > 1) this.request(p.current_page - 1);
+      },
+      error: () => {
+        this.deleting.set(false);
+        this.toast.show('Impossible de supprimer cet élève', 'error');
+      },
+    });
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    this.cancelDelete();
   }
 
   private request(page: number): void {

@@ -108,7 +108,7 @@
 /* ── List ─────────────────────────────────────────────────────────── */
 
 .list {
-  --cols: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 1fr) 90px;
+  --cols: minmax(0, 1.5fr) minmax(0, 0.8fr) minmax(0, 1.3fr) minmax(0, 1fr) 90px 36px;
   margin-block-start: 20px;
   background: var(--m-paper);
   border: 1px solid var(--m-line);
@@ -440,5 +440,83 @@
   .drawer-row,
   .expand svg {
     transition: none;
+  }
+}
+
+/* ── Delete action + confirmation ─────────────────────────────────── */
+
+.cell-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(22, 40, 31, 0.28);
+  backdrop-filter: blur(2px);
+}
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 21;
+  width: min(440px, calc(100% - 32px));
+  padding: 24px;
+  background: var(--m-paper);
+  border-block-start: 3px solid var(--m-late);
+  border-radius: var(--m-r-lg);
+  box-shadow: var(--m-shadow-lg);
+  transform: translate(-50%, -50%);
+}
+
+.dialog-enter {
+  animation: dialog-in var(--m-med) var(--m-ease) both;
+}
+
+.dialog-leave {
+  animation: dialog-out var(--m-fast) linear both;
+}
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: translate(-50%, -47%) scale(0.98); }
+}
+
+@keyframes dialog-out {
+  to { opacity: 0; transform: translate(-50%, -49%); }
+}
+
+.dialog h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.dialog p {
+  margin-block-start: 10px;
+  color: var(--m-ink-soft);
+  font-size: 14.5px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-block-start: 24px;
+}
+
+@media (max-width: 860px) {
+  .cell-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-enter,
+  .dialog-leave {
+    animation-duration: 1ms;
   }
 }
