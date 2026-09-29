@@ -14,8 +14,10 @@ import { ExpensesStore } from './expenses.store';
 import { CentreService } from '../../services/centre.service';
 import { CentreSettingsStore } from '../../shared/centre-settings.store';
 import { InvoiceData, InvoicePreviewComponent } from '../../shared/invoice-preview.component';
+import { AuthStore } from '../../auth/auth.store';
 
 type Tab = 'encaisser' | 'impayes' | 'depenses' | 'statistiques';
+const TABS: Tab[] = ['encaisser', 'impayes', 'depenses', 'statistiques'];
 
 const STATUS_LABEL: Record<MonthStatus, string> = {
   paid: 'Payé',
@@ -38,6 +40,7 @@ export class CaisseComponent {
   readonly centreSettings = inject(CentreService);
   /** Receipt template (colours, layout, toggles), also set in Paramètres. */
   readonly invoiceSettings = inject(CentreSettingsStore);
+  private auth = inject(AuthStore);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -50,9 +53,19 @@ export class CaisseComponent {
   readonly monthTitle = (m: string) => capitalize(monthLong(m));
   readonly statusLabel = STATUS_LABEL;
 
+  /** Shared with Accueil's quick actions so both agree on what's visible — see Paramètres > Utilisateurs. */
+  canSeeTab(tab: Tab): boolean {
+    return this.auth.canSeeCaisseTab(tab);
+  }
+
+  private allowedTab(preferred: Tab): Tab {
+    if (this.canSeeTab(preferred)) return preferred;
+    return TABS.find(t => this.canSeeTab(t)) ?? preferred;
+  }
+
   // ── Tabs (in the URL) ─────────────────────────────────────────────
   private params = this.route.snapshot.queryParamMap;
-  readonly tab = signal<Tab>((['impayes', 'depenses', 'statistiques'] as Tab[]).find(t => t === this.params.get('onglet')) ?? 'encaisser');
+  readonly tab = signal<Tab>(this.allowedTab((['impayes', 'depenses', 'statistiques'] as Tab[]).find(t => t === this.params.get('onglet')) ?? 'encaisser'));
   readonly unpaidCount = computed(() => this.store.unpaid().length);
   readonly startAddingExpense = this.params.get('ajouter') === '1';
 
@@ -121,7 +134,7 @@ export class CaisseComponent {
     this.query.set('');
     this.searchOpen.set(false);
     this.searchInput()?.nativeElement.blur();
-    this.tab.set('encaisser');
+    this.tab.set(this.allowedTab('encaisser'));
     this.receipt.set(null);
     this.selectMonth(month ?? this.store.suggestedMonth(s));
   }
@@ -159,6 +172,20 @@ export class CaisseComponent {
     const s = this.student();
     const m = this.month();
     return s && m ? this.store.dueLines(s, m) : [];
+  });
+
+  /** "2 octobre" — the recurring due date for this month, from the day of
+   *  the month the student first enrolled (the earliest, if several classes
+   *  started on different days). Shown every month, not just the join one. */
+  readonly dueDateLabel = computed(() => {
+    const m = this.month();
+    const ls = this.lines();
+    if (!m || !ls.length) return '';
+    const day = Math.min(...ls.map(l => l.enrollment.day));
+    const [y, mo] = m.split('-').map(Number);
+    const clampedDay = Math.min(day, new Date(y, mo, 0).getDate());
+    const date = new Date(y, mo - 1, clampedDay);
+    return capitalize(new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long' }).format(date));
   });
 
   /** Amount typed per enrollment; absent = not being paid now. */
@@ -385,7 +412,7 @@ export class CaisseComponent {
   }
 
   focusSearch(): void {
-    this.tab.set('encaisser');
+    this.tab.set(this.allowedTab('encaisser'));
     setTimeout(() => this.searchInput()?.nativeElement.focus(), 30);
   }
 

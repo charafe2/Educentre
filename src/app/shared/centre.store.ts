@@ -37,6 +37,10 @@ export interface GroupRow {
   roomId: number | null;
   room: string;
   schedule: Slot;
+  /** The same sessions `schedule` was collapsed from, each keeping its own
+   *  id/day/startHour/endHour — the week view drags one of these
+   *  individually instead of moving every day the group meets. */
+  sessions: Session[];
   /** Whether `schedule` is this group's own sessions, vs inherited from its class (no override). */
   hasOwnSchedule: boolean;
   capacity: number;
@@ -111,6 +115,7 @@ export class CentreStore {
         roomId,
         room: roomObj?.name ?? (roomId !== null ? 'Salle supprimée' : 'Sans salle'),
         schedule: sessionsToSlot(effective),
+        sessions: effective,
         hasOwnSchedule: ownSessions.length > 0,
         capacity: g.maxCapacity,
         price: price ?? 0,

@@ -30,6 +30,11 @@
               <span>Email</span>
               <input class="m-input" type="email" name="email" [(ngModel)]="form.email" autocomplete="off">
             </label>
+            <label class="m-field">
+              <span>Date d’inscription</span>
+              <input class="m-input" type="date" name="enrolledAt" [(ngModel)]="form.enrolledAt">
+              <small class="hint">Le premier mois facturé. Antidatez-la si l’élève suit déjà les cours, ou postdatez-la s’il ne commence que plus tard.</small>
+            </label>
           </div>
         </section>
 

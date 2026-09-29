@@ -698,6 +698,11 @@
   font-size: 13px;
 }
 
+.pay-due-date {
+  color: var(--m-green-deep);
+  font-weight: 600;
+}
+
 .badge {
   flex: none;
   padding: 4px 9px;

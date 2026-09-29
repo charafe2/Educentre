@@ -12,23 +12,31 @@
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Sections de la caisse">
-      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'encaisser'" [attr.aria-selected]="tab() === 'encaisser'" (click)="tab.set('encaisser')">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg>
-        Encaisser
-      </button>
-      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'impayes'" [attr.aria-selected]="tab() === 'impayes'" (click)="tab.set('impayes')">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
-        Impayés
-        @if (unpaidCount()) { <span class="tab-n">{{ unpaidCount() }}</span> }
-      </button>
-      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'depenses'" [attr.aria-selected]="tab() === 'depenses'" (click)="tab.set('depenses')">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"/><path d="M4 7l2-3h12l2 3"/><path d="M9 12h6"/></svg>
-        Dépenses
-      </button>
-      <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'statistiques'" [attr.aria-selected]="tab() === 'statistiques'" (click)="tab.set('statistiques')">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/></svg>
-        Statistiques
-      </button>
+      @if (canSeeTab('encaisser')) {
+        <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'encaisser'" [attr.aria-selected]="tab() === 'encaisser'" (click)="tab.set('encaisser')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6.5" width="18" height="11"/><circle cx="12" cy="12" r="2.4"/></svg>
+          Encaisser
+        </button>
+      }
+      @if (canSeeTab('impayes')) {
+        <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'impayes'" [attr.aria-selected]="tab() === 'impayes'" (click)="tab.set('impayes')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5.5M12 16v.5"/></svg>
+          Impayés
+          @if (unpaidCount()) { <span class="tab-n">{{ unpaidCount() }}</span> }
+        </button>
+      }
+      @if (canSeeTab('depenses')) {
+        <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'depenses'" [attr.aria-selected]="tab() === 'depenses'" (click)="tab.set('depenses')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z"/><path d="M4 7l2-3h12l2 3"/><path d="M9 12h6"/></svg>
+          Dépenses
+        </button>
+      }
+      @if (canSeeTab('statistiques')) {
+        <button role="tab" type="button" class="tab" [class.is-on]="tab() === 'statistiques'" [attr.aria-selected]="tab() === 'statistiques'" (click)="tab.set('statistiques')">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16v-5M12 16V7M17 16v-8"/></svg>
+          Statistiques
+        </button>
+      }
     </nav>
 
     @switch (tab()) {
@@ -200,6 +208,9 @@
                   <div>
                     <h3 id="pay-title">{{ monthTitle(m) }}</h3>
                     <p>{{ lines().length }} {{ lines().length > 1 ? 'matières' : 'matière' }}, {{ money(monthDue()) }} MAD au total</p>
+                    @if (dueDateLabel()) {
+                      <p class="pay-due-date">Échéance le {{ dueDateLabel() }}</p>
+                    }
                   </div>
                   <span class="badge" [class]="'badge s-' + statusOf(m)">{{ statusLabel[statusOf(m)] }}</span>
                 </header>

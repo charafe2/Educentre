@@ -1325,6 +1325,33 @@
   gap: 6px 12px;
 }
 
+.sub-checks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 12px;
+  margin: 2px 0 8px 27px;
+  padding: 10px 14px;
+  background: var(--m-band);
+  border-radius: var(--m-r-sm);
+}
+
+.sub-checks-hint {
+  grid-column: 1 / -1;
+  margin-block-end: 2px;
+  color: var(--m-ink-soft);
+}
+
+.check-sub {
+  min-height: 30px;
+  font-size: 13px;
+}
+
+.check-sub .check-box {
+  width: 16px;
+  height: 16px;
+}
+
 .access-text {
   display: flex;
   flex-direction: column;

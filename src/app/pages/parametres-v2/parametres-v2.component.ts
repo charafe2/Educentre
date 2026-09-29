@@ -41,6 +41,18 @@ const ACCESS_OPTIONS: { key: TenantPermissionKey; label: string; hint: string }[
   { key: 'professeurs', label: 'Enseignants', hint: 'Fiches et salaires' },
 ];
 
+/** Caisse's own tabs — a 'finances' grant can be narrowed to just some of
+ *  these (e.g. let someone encaisser without seeing Statistiques). No
+ *  narrowing keys stored at all means every tab stays open. */
+type CaisseTabKey = 'encaisser' | 'impayes' | 'depenses' | 'statistiques';
+const CAISSE_SUB_OPTIONS: { key: CaisseTabKey; label: string }[] = [
+  { key: 'encaisser', label: 'Encaisser' },
+  { key: 'impayes', label: 'Impayés' },
+  { key: 'depenses', label: 'Dépenses' },
+  { key: 'statistiques', label: 'Statistiques' },
+];
+const caissePermKey = (tab: CaisseTabKey): TenantPermissionKey => `finances.${tab}` as TenantPermissionKey;
+
 const CENTRE_TYPES = ['Soutien scolaire', 'Centre de langues', 'Informatique', 'École privée', 'Artistique', 'Autre'];
 
 const LEVEL_SUGGESTIONS = [
@@ -389,6 +401,33 @@ export class ParametresV2Component {
 
   toggleAccess(key: TenantPermissionKey): void {
     const p = this.userDraft.permissions;
+    const next = p.includes(key) ? p.filter(k => k !== key) : [...p, key];
+    // Turning Caisse off entirely: drop any tab-level narrowing too, so it
+    // doesn't linger unused and reappear pre-restricted if re-granted later.
+    this.userDraft.permissions = key === 'finances' && !next.includes('finances')
+      ? next.filter(k => !k.startsWith('finances.'))
+      : next;
+  }
+
+  readonly caisseSubOptions = CAISSE_SUB_OPTIONS;
+
+  /** Whether the draft narrows Caisse to specific tabs at all. */
+  private caisseRestricted(): boolean {
+    return this.userDraft.permissions.some(k => k.startsWith('finances.'));
+  }
+
+  hasCaisseTab(tab: CaisseTabKey): boolean {
+    return !this.caisseRestricted() || this.userDraft.permissions.includes(caissePermKey(tab));
+  }
+
+  toggleCaisseTab(tab: CaisseTabKey): void {
+    const key = caissePermKey(tab);
+    const p = this.userDraft.permissions;
+    if (!this.caisseRestricted()) {
+      // First narrowing: everyone else stays granted, only this tab drops.
+      this.userDraft.permissions = [...p, ...CAISSE_SUB_OPTIONS.map(o => caissePermKey(o.key)).filter(k => k !== key)];
+      return;
+    }
     this.userDraft.permissions = p.includes(key) ? p.filter(k => k !== key) : [...p, key];
   }
 
@@ -435,7 +474,12 @@ export class ParametresV2Component {
 
   accessSummary(u: TenantUser): string {
     if (u.is_owner) return 'Tous les accès';
-    const labels = ACCESS_OPTIONS.filter(o => u.permissions?.includes(o.key)).map(o => o.label);
+    const perms = u.permissions ?? [];
+    const labels = ACCESS_OPTIONS.filter(o => perms.includes(o.key)).map(o => {
+      if (o.key !== 'finances' || !perms.some(p => p.startsWith('finances.'))) return o.label;
+      const allowed = CAISSE_SUB_OPTIONS.filter(so => perms.includes(caissePermKey(so.key))).map(so => so.label);
+      return `Caisse (${allowed.join(', ') || 'aucun onglet'})`;
+    });
     return labels.length ? labels.join(', ') : 'Aucun accès';
   }
 

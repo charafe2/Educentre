@@ -28,6 +28,10 @@ class StoreStudentRequest extends FormRequest
             'parentName' => ['nullable', 'string', 'max:255'],
             'parentPhone' => ['nullable', 'string', 'max:20'],
             'parentWhatsapp' => ['nullable', 'string', 'max:20'],
+            // When their billing actually starts — Caisse never shows a
+            // month before this as unpaid (see CaisseStore.dueLines on the
+            // frontend). Defaults to now() if omitted.
+            'enrolledAt' => ['nullable', 'date'],
             'enrolledClassIds' => ['nullable', 'array'],
             'enrolledClassIds.*' => ['integer', 'exists:classes,id'],
             // Enrollment-time payment (see PaymentService::createForEnrollment) —

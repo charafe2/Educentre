@@ -1568,6 +1568,7 @@
   background: var(--m-green-tint);
   border-inline-start: 3px solid var(--m-green);
   text-align: start;
+  cursor: grab;
   transition: background-color var(--m-fast) linear, box-shadow var(--m-med) var(--m-ease), transform var(--m-med) var(--m-ease);
 }
 
@@ -1594,6 +1595,24 @@
 
 .slot.is-clash:hover {
   background: #f6dcd8;
+}
+
+.slot.is-dragging {
+  opacity: 0.35;
+  cursor: grabbing;
+}
+
+.week-col.is-drop-target {
+  background-color: var(--m-green-tint);
+}
+
+.drop-indicator {
+  position: absolute;
+  inset-inline: 3px;
+  height: var(--hour);
+  background: var(--m-green-wash);
+  border: 1.5px dashed var(--m-green);
+  pointer-events: none;
 }
 
 .slot-enter {

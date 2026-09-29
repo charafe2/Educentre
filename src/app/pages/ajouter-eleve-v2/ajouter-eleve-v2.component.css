@@ -74,6 +74,12 @@
   font-size: 13.5px;
 }
 
+.hint {
+  margin-block-start: 2px;
+  color: var(--m-ink-faint);
+  font-size: 12.5px;
+}
+
 /* ── Subjects: priced, checkable chips ───────────────────────────── */
 
 .subjects {

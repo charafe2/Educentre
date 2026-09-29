@@ -586,6 +586,18 @@
             <span class="check-box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
             <span class="access-text"><strong>{{ o.label }}</strong><small>{{ o.hint }}</small></span>
           </label>
+          @if (o.key === 'finances' && hasAccess('finances')) {
+            <div class="sub-checks" animate.enter="m-enter-fade">
+              <small class="hint sub-checks-hint">Par défaut, tous les onglets sont ouverts. Décochez pour restreindre.</small>
+              @for (so of caisseSubOptions; track so.key) {
+                <label class="check check-sub">
+                  <input type="checkbox" [checked]="hasCaisseTab(so.key)" (change)="toggleCaisseTab(so.key)">
+                  <span class="check-box" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                  <span class="access-text"><strong>{{ so.label }}</strong></span>
+                </label>
+              }
+            </div>
+          }
         }
       </div>
       @if (userError()) {

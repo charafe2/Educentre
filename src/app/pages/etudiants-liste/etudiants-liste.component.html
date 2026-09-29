@@ -1,0 +1,138 @@
+<div class="m-page page">
+  <app-bar section="Étudiants" />
+
+  <main class="main">
+    <header class="head">
+      <div>
+        <h1>Étudiants</h1>
+        <p class="head-sub">
+          {{ summary().total }} {{ summary().total > 1 ? 'élèves' : 'élève' }},
+          {{ summary().active }} {{ summary().active > 1 ? 'actifs' : 'actif' }}
+        </p>
+      </div>
+      <div class="head-actions">
+        <a class="m-btn m-btn--primary" routerLink="/etudiants/nouveau">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          <span class="btn-text">Ajouter un élève</span>
+        </a>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <label class="search">
+        <span class="m-visually-hidden">Rechercher un élève</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <input
+          #search
+          type="search"
+          placeholder="Rechercher : nom, code ou école"
+          autocomplete="off"
+          [ngModel]="query()"
+          (ngModelChange)="onQuery($event)"
+        >
+        @if (query()) {
+          <button class="search-clear" type="button" aria-label="Effacer la recherche" animate.enter="m-enter-fade" (click)="clearSearch(); search.focus()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        }
+      </label>
+    </div>
+
+    @if (students().length) {
+      <div class="list" role="list" [class.is-loading]="loading()">
+        <div class="cols" aria-hidden="true">
+          <span>Élève</span>
+          <span>Niveau</span>
+          <span>Parent</span>
+          <span>Paiement</span>
+          <span class="col-end">Statut</span>
+        </div>
+
+        @for (s of students(); track s.id) {
+          <article class="row" role="listitem" [class.is-open]="isExpanded(s.id)">
+            <div class="row-main">
+              <div class="cell cell-who">
+                <span class="avatar" aria-hidden="true">{{ initials(s) }}</span>
+                <span class="who">
+                  <span class="who-name">{{ fullName(s) }}</span>
+                  <span class="who-meta">{{ s.code }}</span>
+                </span>
+                <button class="m-icon-btn expand" type="button"
+                  [attr.data-tip]="isExpanded(s.id) ? 'Masquer les groupes' : 'Voir les groupes'"
+                  [attr.aria-expanded]="isExpanded(s.id)"
+                  [attr.aria-controls]="'groups-' + s.id"
+                  [attr.aria-label]="'Groupes de ' + fullName(s)"
+                  (click)="toggle(s.id)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+                </button>
+              </div>
+
+              <div class="cell cell-level">
+                <span class="tag">{{ s.level }}</span>
+              </div>
+
+              <div class="cell cell-parent">
+                <span class="parent-name">{{ s.parentName || '—' }}</span>
+                <span class="parent-phone">{{ s.parentPhone || '—' }}</span>
+              </div>
+
+              <div class="cell cell-payment">
+                <span class="pay-badge" [class]="'pay-badge s-' + s.paymentStatus">{{ paymentLabel(s.paymentStatus) }}</span>
+              </div>
+
+              <div class="cell cell-status col-end">
+                @if (s.status === 'active') {
+                  <span class="status-tag is-active">Actif</span>
+                } @else {
+                  <span class="status-tag">Inactif</span>
+                }
+              </div>
+            </div>
+
+            <div class="drawer-row" [id]="'groups-' + s.id">
+              <div class="drawer-inner">
+                @if (isExpanded(s.id)) {
+                  @if (groupsOf(s.id).length) {
+                    <ul class="student-groups">
+                      @for (g of groupsOf(s.id); track g.id) {
+                        <li>
+                          <span class="sg-subject">{{ g.subject }}, {{ g.level }}</span>
+                          <span class="sg-meta">Groupe {{ g.number }} · {{ g.teacher }} · {{ g.room }}</span>
+                          <span class="sg-schedule">{{ formatSlot(g.schedule) }}</span>
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p class="student-groups-empty">Cet élève n’est inscrit dans aucun groupe.</p>
+                  }
+                }
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="pagination-bar">
+        <span class="pagination-info">{{ rangeLabel() }}</span>
+        <div class="pagination-controls">
+          <button type="button" class="m-btn" [disabled]="pagination().current_page <= 1 || loading()" (click)="previousPage()">Précédent</button>
+          <span class="pagination-page">Page {{ pagination().current_page }} sur {{ pagination().last_page }}</span>
+          <button type="button" class="m-btn" [disabled]="pagination().current_page >= pagination().last_page || loading()" (click)="nextPage()">Suivant</button>
+        </div>
+      </div>
+    } @else {
+      <div class="empty" animate.enter="m-enter-fade">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="18" cy="17" r="7.5"/><path d="M6 40v-2a12 12 0 0 1 24 0v2"/><circle cx="34" cy="15" r="5"/><path d="M42 38v-2a10 10 0 0 0-8.5-9.9"/></svg>
+        @if (query()) {
+          <p class="empty-title">Aucun élève ne correspond à « {{ query() }} »</p>
+          <p class="empty-text">Essayez un autre nom, code ou école.</p>
+          <button class="m-btn" type="button" (click)="clearSearch()">Tout afficher</button>
+        } @else {
+          <p class="empty-title">Aucun élève pour l’instant</p>
+          <p class="empty-text">Ajoutez votre premier élève pour commencer à suivre ses classes et ses paiements.</p>
+          <a class="m-btn m-btn--primary" routerLink="/etudiants/nouveau">Ajouter un élève</a>
+        }
+      </div>
+    }
+  </main>
+</div>

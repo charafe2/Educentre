@@ -20,5 +20,13 @@ class TenantPermissions
         'calendrier',
         'analytiques',
         'documents',
+        // Caisse sub-sections: granted only to narrow a 'finances' user down
+        // to specific tabs (e.g. let them encaisser but hide Statistiques).
+        // Absent entirely = unrestricted, every tab open, for anyone who
+        // already had 'finances' before this existed.
+        'finances.encaisser',
+        'finances.impayes',
+        'finances.depenses',
+        'finances.statistiques',
     ];
 }

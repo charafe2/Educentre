@@ -93,6 +93,7 @@ class StudentService
                         'tenant_id' => $tenantId,
                         'student_id' => $student->id,
                         'class_id' => $classId,
+                        'enrolled_at' => $data['enrolledAt'] ?? now(),
                     ]);
                 }
 
