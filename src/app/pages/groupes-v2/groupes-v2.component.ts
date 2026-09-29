@@ -45,6 +45,10 @@ type View = 'liste' | 'semaine';
 
 interface Block {
   group: GroupRow;
+  /** The one real session this block renders — dragging moves just this row. */
+  sessionId: number;
+  startHour: number;
+  endHour: number;
   top: number;
   height: number;
   lane: number;
@@ -599,24 +603,25 @@ export class GroupesV2Component {
   readonly today = (new Date().getDay() + 6) % 7;
   readonly focusDay = signal(this.today);
 
-  /** Hour range that fits every shown slot, never narrower than 9h–20h. */
+  /** Hour range that fits every shown session, never narrower than 9h–20h. */
   readonly hours = computed(() => {
-    const slots = this.results().map(r => r.group.schedule).filter(s => s.days.length);
-    const from = Math.min(9, ...slots.map(s => Math.floor(toMin(s.start) / 60)));
-    const to = Math.max(20, ...slots.map(s => Math.ceil((toMin(s.start) + s.duration) / 60)));
+    const sessions = this.results().flatMap(r => r.group.sessions);
+    const from = Math.min(9, ...sessions.map(s => s.startHour));
+    const to = Math.max(20, ...sessions.map(s => s.endHour));
     return Array.from({ length: to - from }, (_, i) => from + i);
   });
 
   readonly gridHeight = computed(() => this.hours().length * HOUR_PX);
 
-  /** Blocks per day, laid out in side-by-side lanes where they overlap. */
+  /** Blocks per day, one per real session (not per group) — laid out in
+   *  side-by-side lanes where they overlap, so each day's block for a group
+   *  keeps its own time and can be dragged independently of its siblings. */
   readonly week = computed(() => {
     const origin = this.hours()[0] * 60;
-    const shown = this.results().map(r => r.group).filter(g => g.schedule.days.length);
+    const shown = this.results().map(r => r.group);
     return DAY_SHORT.map((_, day) => {
       const items = shown
-        .filter(g => g.schedule.days.includes(day))
-        .map(g => ({ group: g, from: toMin(g.schedule.start), to: toMin(g.schedule.start) + g.schedule.duration }))
+        .flatMap(g => g.sessions.filter(s => s.day === day).map(s => ({ group: g, session: s, from: s.startHour * 60, to: s.endHour * 60 })))
         .sort((a, b) => a.from - b.from || a.to - b.to);
 
       const blocks: Block[] = [];
@@ -625,7 +630,10 @@ export class GroupesV2Component {
       const flush = () => {
         const lanes = Math.max(1, ...cluster.map(c => c.lane + 1));
         for (const c of cluster) {
-          blocks.push({ group: c.group, top: ((c.from - origin) / 60) * HOUR_PX, height: ((c.to - c.from) / 60) * HOUR_PX, lane: c.lane, lanes });
+          blocks.push({
+            group: c.group, sessionId: c.session.id, startHour: c.session.startHour, endHour: c.session.endHour,
+            top: ((c.from - origin) / 60) * HOUR_PX, height: ((c.to - c.from) / 60) * HOUR_PX, lane: c.lane, lanes,
+          });
         }
         cluster = [];
       };
@@ -642,7 +650,7 @@ export class GroupesV2Component {
     });
   });
 
-  readonly unscheduled = computed(() => this.results().map(r => r.group).filter(g => !g.schedule.days.length));
+  readonly unscheduled = computed(() => this.results().map(r => r.group).filter(g => !g.sessions.length));
 
   /** The "now" rule in today's column; null outside the visible hours. */
   readonly nowTop = computed(() => {
@@ -659,6 +667,84 @@ export class GroupesV2Component {
   });
 
   private clock = signal(0);
+
+  // ── Week view: drag a single session to reschedule it ───────────────
+  /** The one real session being dragged (not the whole group) — dropping it
+   *  moves just that day, leaving the group's other days untouched. */
+  private dragging: { group: GroupRow; sessionId: number; fromDay: number; fromHour: number; duration: number } | null = null;
+  readonly dragOverCell = signal<{ day: number; hour: number } | null>(null);
+  readonly draggingSessionId = signal<number | null>(null);
+
+  formatHour(h: number): string {
+    return `${String(h).padStart(2, '0')}:00`;
+  }
+
+  onSlotDragStart(event: DragEvent, b: Block, day: number): void {
+    this.dragging = { group: b.group, sessionId: b.sessionId, fromDay: day, fromHour: b.startHour, duration: b.endHour - b.startHour };
+    this.draggingSessionId.set(b.sessionId);
+    event.dataTransfer?.setData('text/plain', String(b.sessionId));
+    if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+  }
+
+  onSlotDragEnd(): void {
+    this.dragging = null;
+    this.draggingSessionId.set(null);
+    this.dragOverCell.set(null);
+  }
+
+  onColDragOver(event: DragEvent, day: number): void {
+    if (!this.dragging) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    const hour = this.hours()[0] + Math.floor((event.clientY - rect.top) / HOUR_PX);
+    this.dragOverCell.set({ day, hour });
+  }
+
+  onColDragLeave(day: number): void {
+    if (this.dragOverCell()?.day === day) this.dragOverCell.set(null);
+  }
+
+  /** Top offset (px) for the drop-preview band in this day's column, if it's the one being hovered. */
+  dropIndicatorTop(day: number): number | null {
+    const cell = this.dragOverCell();
+    return cell && cell.day === day ? (cell.hour - this.hours()[0]) * HOUR_PX : null;
+  }
+
+  async onColDrop(event: DragEvent, day: number): Promise<void> {
+    event.preventDefault();
+    const drag = this.dragging;
+    const cell = this.dragOverCell();
+    this.dragging = null;
+    this.draggingSessionId.set(null);
+    this.dragOverCell.set(null);
+    if (!drag || !cell) return;
+    if (cell.day === drag.fromDay && cell.hour === drag.fromHour) return; // dropped back where it started
+
+    const g = drag.group;
+    const startHour = Math.max(0, cell.hour);
+    const endHour = startHour + drag.duration;
+
+    try {
+      if (g.hasOwnSchedule) {
+        // Already its own sessions: move just this one row.
+        await firstValueFrom(this.sessionsService.update(drag.sessionId, { day: cell.day, startHour, endHour }));
+      } else {
+        // Still riding the class-wide schedule: fork it into sessions of its
+        // own — every other day unchanged, this one moved — same as what
+        // saving the edit drawer would do, but keeping each day independent.
+        for (const s of g.sessions) {
+          if (s.id === drag.sessionId) continue;
+          await firstValueFrom(this.sessionsService.add({ classeId: g.classeId, groupId: g.id, day: s.day, startHour: s.startHour, endHour: s.endHour, isCancelled: false }));
+        }
+        await firstValueFrom(this.sessionsService.add({ classeId: g.classeId, groupId: g.id, day: cell.day, startHour, endHour, isCancelled: false }));
+      }
+      this.notify(`${g.subject}, groupe ${g.number} : séance déplacée`);
+      this.flash(g.id);
+    } catch (err) {
+      this.notify(extractValidationError(err, 'Conflit d’horaire : vérifiez le créneau, la salle ou l’enseignant.'));
+    }
+  }
 
   // ── Export ────────────────────────────────────────────────────────
   exportCsv(): void {

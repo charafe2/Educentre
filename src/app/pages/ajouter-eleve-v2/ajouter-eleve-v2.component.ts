@@ -59,6 +59,10 @@ export class AjouterEleveV2Component {
     parentName: '',
     parentPhone: '',
     parentWhatsapp: '',
+    /** When their billing actually starts — Caisse never shows a month
+     *  before this as unpaid. Defaults to today; back- or post-date it for
+     *  a student who joined earlier or starts next month. */
+    enrolledAt: toDateInput(new Date()),
   };
 
   readonly selectedClassIds = signal<number[]>([]);
@@ -156,6 +160,7 @@ export class AjouterEleveV2Component {
       parentName: this.form.parentName.trim() || undefined,
       parentPhone: this.form.parentPhone.trim() || undefined,
       parentWhatsapp: this.form.parentWhatsapp.trim() || undefined,
+      enrolledAt: this.form.enrolledAt || undefined,
       enrolledClassIds: classIds,
       ...(hasClasses ? {
         totalAmount: this.total(),
@@ -215,6 +220,10 @@ export class AjouterEleveV2Component {
   constructor() {
     this.centreService.load();
   }
+}
+
+function toDateInput(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 function extractValidationError(err: unknown, fallback: string): string {

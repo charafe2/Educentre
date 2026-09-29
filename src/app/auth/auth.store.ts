@@ -51,6 +51,12 @@ export const TENANT_PERMISSION_KEYS = [
   'calendrier',
   'analytiques',
   'documents',
+  // Caisse sub-sections: narrow a 'finances' grant down to specific tabs.
+  // Absent entirely = unrestricted, every tab open.
+  'finances.encaisser',
+  'finances.impayes',
+  'finances.depenses',
+  'finances.statistiques',
 ] as const;
 
 export type TenantPermissionKey = typeof TENANT_PERMISSION_KEYS[number];
@@ -237,6 +243,20 @@ export const AuthStore = signalStore(
         if (!user) return false;
         if (key === 'dashboard' || user.is_owner) return true;
         return user.permissions?.includes(key) ?? false;
+      },
+
+      /** Whether this account can see one of Caisse's own tabs: needs
+       *  'finances' at all first; a 'finances' grant with no finances.*
+       *  narrowing means every tab is open, otherwise only the explicitly
+       *  granted ones are — see Paramètres > Utilisateurs. */
+      canSeeCaisseTab(tab: 'encaisser' | 'impayes' | 'depenses' | 'statistiques'): boolean {
+        const user = store.user();
+        if (!user) return false;
+        if (user.is_owner) return true;
+        const perms = user.permissions ?? [];
+        if (!perms.includes('finances')) return false;
+        const restricted = perms.some(p => p.startsWith('finances.'));
+        return !restricted || perms.includes(`finances.${tab}`);
       },
     };
   }),

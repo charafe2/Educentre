@@ -28,6 +28,8 @@ export interface Enrollment {
   /** First and (open-ended, far-future) last billed months, 'YYYY-MM'. */
   from: string;
   to: string;
+  /** Day of the month they joined on — the recurring due date shown every month, not just the join month. */
+  day: number;
 }
 
 export interface Student {
@@ -149,6 +151,7 @@ export class CaisseStore {
             price: group?.monthlyPrice ?? classe.monthlyPrice,
             from: e.enrolledAt.slice(0, 7),
             to: OPEN_ENDED_TO,
+            day: Number(e.enrolledAt.slice(8, 10)) || 1,
           }];
         });
 

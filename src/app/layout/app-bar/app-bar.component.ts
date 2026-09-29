@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, computed, inject, input, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { CentreService } from '../../services/centre.service';
-import { AuthStore } from '../../auth/auth.store';
+import { AuthStore, TenantPermissionKey } from '../../auth/auth.store';
 
 /**
  * Top bar of the rebranded app. There is no sidebar: the brand always leads
@@ -15,6 +15,8 @@ interface NavLink {
   label: string;
   route: string;
   icon: 'groupes' | 'caisse' | 'enseignants' | 'parametres';
+  /** 'parametres' is owner-only, not a grantable TenantPermissionKey. */
+  perm: TenantPermissionKey | 'parametres';
 }
 
 @Component({
@@ -46,7 +48,7 @@ interface NavLink {
 
         @if (section()) {
           <nav class="modules" aria-label="Modules">
-            @for (l of links; track l.route) {
+            @for (l of links(); track l.route) {
               <a class="module" [routerLink]="l.route" routerLinkActive="is-on" [routerLinkActiveOptions]="{ exact: false }" #rla="routerLinkActive" [attr.aria-current]="rla.isActive ? 'page' : null">
                 @switch (l.icon) {
                   @case ('groupes') { <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19v-.5a5.5 5.5 0 0 1 11 0v.5"/><path d="M16 5.5a3.2 3.2 0 0 1 0 6.2M17.5 14a5.5 5.5 0 0 1 3 4.9V19"/></svg> }
@@ -76,32 +78,34 @@ interface NavLink {
                     <span>{{ isOwner() ? 'Propriétaire' : 'Membre de l’équipe' }}</span>
                   </span>
                 </div>
-                <a class="menu-centre" role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
-                  <span class="menu-centre-name">{{ centre().name }}</span>
-                  <span class="menu-plan">{{ plan() }}</span>
-                </a>
-                <div class="menu-list">
-                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg>
-                    Informations du centre
+                @if (isOwner()) {
+                  <a class="menu-centre" role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                    <span class="menu-centre-name">{{ centre().name }}</span>
+                    <span class="menu-plan">{{ plan() }}</span>
                   </a>
-                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg>
-                    Modèle de reçu
-                  </a>
-                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M3 10h18M7 14.5h3"/></svg>
-                    Abonnement
-                  </a>
-                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'utilisateurs' }" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
-                    Utilisateurs
-                  </a>
-                  <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'securite' }" (click)="menuOpen.set(false)">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
-                    Sécurité
-                  </a>
-                </div>
+                  <div class="menu-list">
+                    <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'centre' }" (click)="menuOpen.set(false)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9l8-5 8 5v11"/><path d="M9.5 20v-6h5v6"/></svg>
+                      Informations du centre
+                    </a>
+                    <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'facture' }" (click)="menuOpen.set(false)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.5h12v17l-3-2-3 2-3-2-3 2z"/><path d="M9 8.5h6M9 12h6"/></svg>
+                      Modèle de reçu
+                    </a>
+                    <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'abonnement' }" (click)="menuOpen.set(false)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12"/><path d="M3 10h18M7 14.5h3"/></svg>
+                      Abonnement
+                    </a>
+                    <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'utilisateurs' }" (click)="menuOpen.set(false)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg>
+                      Utilisateurs
+                    </a>
+                    <a role="menuitem" routerLink="/parametres" [queryParams]="{ onglet: 'securite' }" (click)="menuOpen.set(false)">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>
+                      Sécurité
+                    </a>
+                  </div>
+                }
                 <div class="menu-list menu-list--end">
                   <a role="menuitem" routerLink="/login" (click)="menuOpen.set(false)">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h5v16h-5"/><path d="M10 8l-4 4 4 4M6 12h10"/></svg>
@@ -573,12 +577,19 @@ export class AppBarComponent {
     this.centreService.loadSubscription();
   }
 
-  readonly links: NavLink[] = [
-    { label: 'Groupes', route: '/groupes', icon: 'groupes' },
-    { label: 'Caisse', route: '/caisse', icon: 'caisse' },
-    { label: 'Enseignants', route: '/enseignants', icon: 'enseignants' },
-    { label: 'Paramètres', route: '/parametres', icon: 'parametres' },
+  private readonly allLinks: NavLink[] = [
+    { label: 'Groupes', route: '/groupes', icon: 'groupes', perm: 'groupes' },
+    { label: 'Caisse', route: '/caisse', icon: 'caisse', perm: 'finances' },
+    { label: 'Enseignants', route: '/enseignants', icon: 'enseignants', perm: 'professeurs' },
+    { label: 'Paramètres', route: '/parametres', icon: 'parametres', perm: 'parametres' },
   ];
+
+  /** Only the modules this account can actually open — same gate as the route guard. */
+  readonly links = computed(() => this.allLinks.filter(l => this.canOpen(l.perm)));
+
+  private canOpen(perm: TenantPermissionKey | 'parametres'): boolean {
+    return perm === 'parametres' ? this.isOwner() : this.auth.canAccess(perm);
+  }
 
   readonly menuOpen = signal(false);
   readonly scrolled = signal(false);

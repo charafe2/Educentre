@@ -83,7 +83,6 @@ export const routes: Routes = [
   { path: 'dashboard', redirectTo: 'accueil' },
   { path: 'finances', redirectTo: 'caisse' },
   { path: 'professeurs', redirectTo: 'enseignants' },
-  { path: 'etudiants', redirectTo: 'etudiants/nouveau', pathMatch: 'full' },
   { path: 'ajouter-classe', redirectTo: 'etudiants/nouveau' },
   { path: 'revue-mensuelle', redirectTo: 'accueil' },
   { path: 'calendrier', redirectTo: 'groupes' },
@@ -108,6 +107,10 @@ export const routes: Routes = [
       {
         path: 'enseignants', canActivate: [permissionGuard], data: { permKey: 'professeurs' },
         loadComponent: () => import('./pages/enseignants/enseignants.component').then(m => m.EnseignantsComponent),
+      },
+      {
+        path: 'etudiants', canActivate: [permissionGuard], data: { permKey: 'etudiants' },
+        loadComponent: () => import('./pages/etudiants-liste/etudiants-liste.component').then(m => m.EtudiantsListeComponent),
       },
       {
         path: 'etudiants/nouveau', canActivate: [permissionGuard], data: { permKey: 'etudiants' },

@@ -149,23 +149,35 @@
           </div>
 
           @for (d of week(); track d.day) {
-            <div class="week-col" [class.is-today]="d.day === today" [class.is-focus]="focusDay() === d.day" [attr.aria-label]="dayLong[d.day]">
-              @for (b of d.blocks; track b.group.id) {
+            <div class="week-col"
+              [class.is-today]="d.day === today"
+              [class.is-focus]="focusDay() === d.day"
+              [class.is-drop-target]="dragOverCell()?.day === d.day"
+              [attr.aria-label]="dayLong[d.day]"
+              (dragover)="onColDragOver($event, d.day)"
+              (dragleave)="onColDragLeave(d.day)"
+              (drop)="onColDrop($event, d.day)"
+            >
+              @for (b of d.blocks; track b.sessionId) {
                 <button
                   type="button"
                   class="slot"
                   animate.enter="slot-enter"
+                  draggable="true"
                   [class.is-clash]="conflictsOf(b.group.id).length"
                   [class.is-full]="isFull(b.group)"
                   [class.is-short]="b.height < 80"
+                  [class.is-dragging]="draggingSessionId() === b.sessionId"
                   [style.top.px]="b.top"
                   [style.height.px]="b.height"
                   [style.--lane]="b.lane"
                   [style.--lanes]="b.lanes"
-                  [attr.aria-label]="b.group.subject + ', ' + b.group.level + ', groupe ' + b.group.number + ', ' + formatSlot(b.group.schedule) + ', ' + b.group.room + '. Modifier.'"
+                  [attr.aria-label]="b.group.subject + ', ' + b.group.level + ', groupe ' + b.group.number + ', ' + dayLong[d.day] + ' ' + formatHour(b.startHour) + '–' + formatHour(b.endHour) + ', ' + b.group.room + '. Modifier, ou glisser pour changer l’horaire de cette seule séance.'"
                   (click)="openEdit(b.group)"
+                  (dragstart)="onSlotDragStart($event, b, d.day)"
+                  (dragend)="onSlotDragEnd()"
                 >
-                  <span class="slot-time">{{ b.group.schedule.start }}</span>
+                  <span class="slot-time">{{ formatHour(b.startHour) }}</span>
                   <span class="slot-subject">{{ b.group.subject }}</span>
                   <span class="slot-meta">{{ b.group.level }}, G{{ b.group.number }}</span>
                   <span class="slot-meta">{{ b.group.room }}, {{ b.group.teacher }}</span>
@@ -173,6 +185,10 @@
                     <svg class="slot-clash" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5L21.5 20h-19z"/><path d="M12 10v4.5M12 17v.5"/></svg>
                   }
                 </button>
+              }
+
+              @if (dragOverCell()?.day === d.day) {
+                <span class="drop-indicator" [style.top.px]="dropIndicatorTop(d.day)" aria-hidden="true"></span>
               }
 
               @if (d.day === today && nowTop() !== null) {
