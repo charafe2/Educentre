@@ -57,6 +57,23 @@ class GroupNumberingTest extends TestCase
         $this->assertSame([1, 2, 3], $this->groupNumbers($classId));
     }
 
+    public function test_a_deleted_group_number_is_reused_by_the_next_group(): void
+    {
+        $user = User::factory()->for(Tenant::factory())->create();
+        $classId = $this->actingAs($user)
+            ->postJson('/api/v1/classes', ['name' => 'Maths 2Bac', 'subject' => 'Mathématiques', 'level' => '2ème Bac'])
+            ->json('data.id');
+
+        $firstGroupId = Group::where('class_id', $classId)->value('id');
+        $this->actingAs($user)->deleteJson("/api/v1/groups/{$firstGroupId}")->assertSuccessful();
+
+        $this->actingAs($user)
+            ->postJson('/api/v1/groups', ['classeId' => $classId, 'maxCapacity' => 2, 'studentIds' => []])
+            ->assertCreated();
+
+        $this->assertSame([1], $this->groupNumbers($classId));
+    }
+
     private function groupNumbers(int $classId): array
     {
         return Group::query()

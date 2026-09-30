@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
+import { guestGuard } from './auth/guest.guard';
 import { permissionGuard } from './auth/permission.guard';
 import { superadminAuthGuard } from './superadmin/superadmin-auth.guard';
 import { superadminGuestGuard } from './superadmin/superadmin-guest.guard';
@@ -14,14 +15,17 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./auth/pages/login/login.component').then(m => m.LoginComponent),
+    canActivate: [guestGuard],
   },
   {
     path: 'select-centre',
     loadComponent: () => import('./auth/pages/select-centre/select-centre.component').then(m => m.SelectCentreComponent),
+    canActivate: [guestGuard],
   },
   {
     path: 'forgot-password',
     loadComponent: () => import('./auth/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+    canActivate: [guestGuard],
   },
 
   // Public SEO marketing landing pages (Moroccan French). Kept above the

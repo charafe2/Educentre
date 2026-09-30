@@ -17,8 +17,8 @@ class GroupService
     }
 
     /**
-     * The group number is always assigned here as the class's highest number
-     * + 1. A number computed by the client from its own (possibly stale) list
+     * The group number is always assigned here (see nextGroupNumber()).
+     * A number computed by the client from its own (possibly stale) list
      * is ignored: that is how repeated clicks used to pile up duplicate "G2"s.
      */
     public function create(array $data): Group
@@ -49,9 +49,21 @@ class GroupService
         });
     }
 
+    /**
+     * Lowest number not used by a live group of the class, so deleting G1
+     * and creating a new group gives G1 again (not G2). Soft-deleted groups
+     * are ignored on purpose — they no longer show anywhere in the UI.
+     */
     private function nextGroupNumber(int $classId): int
     {
-        return (int) Group::withTrashed()->where('class_id', $classId)->max('group_number') + 1;
+        $taken = Group::where('class_id', $classId)->pluck('group_number')->map(fn ($n) => (int) $n)->all();
+
+        $number = 1;
+        while (in_array($number, $taken, true)) {
+            $number++;
+        }
+
+        return $number;
     }
 
     public function updateCapacity(int $id, int $tenantId, int $maxCapacity): Group
