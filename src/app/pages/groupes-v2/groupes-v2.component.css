@@ -853,15 +853,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   width: 100%;
-  height: 38px;
+  min-height: 38px;
+  padding-block: 6px;
   padding-inline: 12px;
   font-size: 14px;
   text-align: start;
   transition: background-color var(--m-fast) linear;
 }
 
-.picker-list button span {
+.picker-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.picker-name small {
+  color: var(--m-ink-faint);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.picker-action {
+  flex: none;
   color: var(--m-green-deep);
   font-size: 12.5px;
   font-weight: 600;
@@ -874,8 +889,8 @@
   background: var(--m-green-tint);
 }
 
-.picker-list button:hover span,
-.picker-list button.is-first span {
+.picker-list button:hover .picker-action,
+.picker-list button.is-first .picker-action {
   opacity: 1;
 }
 

@@ -3,6 +3,9 @@ export interface StudentEnrollment {
   groupId: number | null;
   enrolledAt: string;
   status: 'active' | 'dropped' | 'graduated';
+  /** Overrides the group's/class's own price for this one student — a
+   *  discount the owner granted at enrollment. Null inherits as usual. */
+  customPrice?: number | null;
 }
 
 export interface Student {

@@ -148,7 +148,7 @@ export class CaisseStore {
             subject: classe.subject,
             group: group?.groupNumber ?? 0,
             teacher: teacherObj ? `${teacherObj.firstName} ${teacherObj.lastName}` : (classe.teacherName ?? 'Sans enseignant'),
-            price: group?.monthlyPrice ?? classe.monthlyPrice,
+            price: e.customPrice ?? group?.monthlyPrice ?? classe.monthlyPrice,
             from: e.enrolledAt.slice(0, 7),
             to: OPEN_ENDED_TO,
             day: Number(e.enrolledAt.slice(8, 10)) || 1,

@@ -58,17 +58,20 @@
             @if (classesForLevel().length) {
               <div class="subjects">
                 @for (c of classesForLevel(); track c.id) {
-                  <button type="button" class="subject" [class.is-on]="selectedClassIds().includes(c.id)"
-                    [attr.aria-pressed]="selectedClassIds().includes(c.id)" (click)="toggleClass(c.id)">
-                    <span class="subject-check" [style.background]="selectedClassIds().includes(c.id) ? c.color : 'transparent'" [style.border-color]="c.color" aria-hidden="true">
-                      @if (selectedClassIds().includes(c.id)) { <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> }
+                  <div class="subject" [class.is-on]="selectedClassIds().includes(c.id)">
+                    <button type="button" class="subject-toggle" [attr.aria-pressed]="selectedClassIds().includes(c.id)" (click)="toggleClass(c.id)">
+                      <span class="subject-check" [style.background]="selectedClassIds().includes(c.id) ? c.color : 'transparent'" [style.border-color]="c.color" aria-hidden="true">
+                        @if (selectedClassIds().includes(c.id)) { <svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg> }
+                      </span>
+                      <span class="subject-main">
+                        <span class="subject-name">{{ c.subject }}</span>
+                        <span class="subject-meta">{{ c.name }}</span>
+                      </span>
+                    </button>
+                    <span class="subject-price" [class.is-static]="!selectedClassIds().includes(c.id)">
+                      {{ selectedClassIds().includes(c.id) ? effectivePrice(c) : classPrice(c) }} <small>Dhs/mois</small>
                     </span>
-                    <span class="subject-main">
-                      <span class="subject-name">{{ c.subject }}</span>
-                      <span class="subject-meta">{{ c.name }}</span>
-                    </span>
-                    <span class="subject-price">{{ classPrice(c) }} <small>Dhs/mois</small></span>
-                  </button>
+                  </div>
                 }
               </div>
             } @else {
@@ -83,8 +86,20 @@
 
             <div class="pay-summary">
               <span>Total à payer</span>
-              <strong>{{ total() }} <small>Dhs/mois</small></strong>
+              <label class="pay-total">
+                <input type="number" min="0" step="10" inputmode="numeric" name="total"
+                  [ngModel]="total()" (ngModelChange)="setTotal($event)">
+                <small>Dhs/mois</small>
+              </label>
             </div>
+            @if (selectedClasses().length > 1) {
+              <p class="hint pay-split-hint">
+                Réparti entre les matières :
+                @for (c of selectedClasses(); track c.id; let last = $last) {
+                  {{ c.subject }} {{ effectivePrice(c) }}{{ !last ? ', ' : '' }}
+                }
+              </p>
+            }
 
             <fieldset class="status-picks">
               <legend class="m-visually-hidden">Statut du paiement</legend>

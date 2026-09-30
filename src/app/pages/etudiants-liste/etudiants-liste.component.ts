@@ -1,12 +1,50 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AppBarComponent } from '../../layout/app-bar/app-bar.component';
 import { StudentsService } from '../../services/students.service';
+import { AcademicLevelsService } from '../../services/academic-levels.service';
+import { ToastService } from '../../services/toast.service';
 import { Student } from '../../models/student.model';
 import { CentreStore, DAY_SHORT, GroupRow, Slot } from '../../shared/centre.store';
+import { CaisseStore } from '../caisse/caisse.store';
 
 const PER_PAGE = 15;
+
+interface StudentDraft {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDate: string;
+  school: string;
+  level: string;
+  status: 'active' | 'inactive';
+  parentName: string;
+  parentPhone: string;
+  parentWhatsapp: string;
+}
+
+function draftFrom(s: Student): StudentDraft {
+  return {
+    firstName: s.firstName,
+    lastName: s.lastName,
+    email: s.email ?? '',
+    phone: s.phone ?? '',
+    birthDate: s.birthDate ?? '',
+    school: s.school ?? '',
+    level: s.level ?? '',
+    status: s.status,
+    parentName: s.parentName ?? '',
+    parentPhone: s.parentPhone ?? '',
+    parentWhatsapp: s.parentWhatsapp ?? '',
+  };
+}
+
+function blankDraft(): StudentDraft {
+  return { firstName: '', lastName: '', email: '', phone: '', birthDate: '', school: '', level: '', status: 'active', parentName: '', parentPhone: '', parentWhatsapp: '' };
+}
 
 function toMin(hhmm: string): number {
   const [h, m] = hhmm.split(':').map(Number);
@@ -28,16 +66,26 @@ function endOf(s: Slot): string {
   imports: [FormsModule, RouterLink, AppBarComponent],
   templateUrl: './etudiants-liste.component.html',
   styleUrl: './etudiants-liste.component.css',
+  // CaisseStore isn't providedIn: 'root' (it's scoped per-feature) — provide
+  // our own instance here just to reuse its effective-price computation.
+  providers: [CaisseStore],
 })
 export class EtudiantsListeComponent {
   private studentsService = inject(StudentsService);
   private centre = inject(CentreStore);
+  private academicLevelsService = inject(AcademicLevelsService);
+  private toast = inject(ToastService);
+  private caisseStore = inject(CaisseStore);
 
   readonly query = signal('');
-  readonly students = this.studentsService.pagedStudents;
   readonly pagination = this.studentsService.pagination;
   readonly summary = this.studentsService.summary;
   readonly loading = this.studentsService.loadingPage;
+  readonly levels = computed(() => this.academicLevelsService.levels().map(l => l.name));
+
+  // Optimistically hidden while a delete's undo window is running — see confirmDelete().
+  private readonly hiddenIds = signal<Set<number>>(new Set());
+  readonly students = computed(() => this.studentsService.pagedStudents().filter(s => !this.hiddenIds().has(s.id)));
 
   private searchTimer?: ReturnType<typeof setTimeout>;
 
@@ -85,6 +133,12 @@ export class EtudiantsListeComponent {
     return 'À venir';
   }
 
+  /** What this student is billed every month, across every class they're enrolled in — same effective price Caisse bills from (respects a per-student discount). */
+  monthlyTotal(s: Student): number {
+    const enrollments = this.caisseStore.student(s.id)?.enrollments ?? [];
+    return enrollments.reduce((sum, e) => sum + e.price, 0);
+  }
+
   // ── Expand a row to show every group this student is in ────────────
   readonly expanded = signal<Set<number>>(new Set());
 
@@ -112,4 +166,110 @@ export class EtudiantsListeComponent {
   private request(page: number): void {
     this.studentsService.loadStudentPage({ page, perPage: PER_PAGE, search: this.query().trim() || undefined });
   }
+
+  // ── Edit (basic info) ────────────────────────────────────────────
+  readonly editing = signal<Student | null>(null);
+  draft: StudentDraft = blankDraft();
+  readonly saving = signal(false);
+
+  openEdit(s: Student): void {
+    this.draft = draftFrom(s);
+    this.editing.set(s);
+  }
+
+  closeEdit(): void {
+    this.editing.set(null);
+  }
+
+  save(): void {
+    const target = this.editing();
+    if (!target || this.saving()) return;
+    this.saving.set(true);
+
+    this.studentsService.update(target.id, { ...this.draft }).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.editing.set(null);
+        this.notify(`Fiche de ${this.draft.firstName} ${this.draft.lastName} enregistrée`);
+      },
+      error: (err: unknown) => {
+        this.saving.set(false);
+        this.toast.show(extractValidationError(err, 'Erreur lors de l’enregistrement'), 'error');
+      },
+    });
+  }
+
+  // ── Delete (optimistic hide + undo, real delete once the window lapses) ──
+  readonly confirming = signal<Student | null>(null);
+
+  askDelete(s: Student): void {
+    this.confirming.set(s);
+  }
+
+  confirmDelete(): void {
+    const s = this.confirming();
+    this.confirming.set(null);
+    if (!s) return;
+    const id = s.id;
+    this.hiddenIds.update(set => new Set(set).add(id));
+
+    let undone = false;
+    this.notify(`${this.fullName(s)} supprimé`, () => {
+      undone = true;
+      this.hiddenIds.update(set => {
+        const next = new Set(set);
+        next.delete(id);
+        return next;
+      });
+    }, () => {
+      if (undone) return;
+      this.studentsService.delete(id).subscribe({
+        next: () => this.hiddenIds.update(set => {
+          const next = new Set(set);
+          next.delete(id);
+          return next;
+        }),
+        error: () => {
+          this.hiddenIds.update(set => {
+            const next = new Set(set);
+            next.delete(id);
+            return next;
+          });
+          this.toast.show('Impossible de supprimer cet élève', 'error');
+        },
+      });
+    });
+  }
+
+  // ── Snackbar ──────────────────────────────────────────────────────
+  readonly snack = signal<{ text: string; undo?: () => void; id: number } | null>(null);
+  private snackTimer?: ReturnType<typeof setTimeout>;
+
+  private notify(text: string, undo?: () => void, onExpire?: () => void): void {
+    clearTimeout(this.snackTimer);
+    this.snack.set({ text, undo, id: Date.now() });
+    this.snackTimer = setTimeout(() => {
+      this.snack.set(null);
+      onExpire?.();
+    }, undo ? 6000 : 3500);
+  }
+
+  runUndo(): void {
+    const s = this.snack();
+    clearTimeout(this.snackTimer);
+    s?.undo?.();
+    this.snack.set(null);
+    this.notify('Action annulée');
+  }
+}
+
+function extractValidationError(err: unknown, fallback: string): string {
+  if (err instanceof HttpErrorResponse && err.status === 422 && err.error?.errors) {
+    const messages = Object.values(err.error.errors as Record<string, string[]>).flat();
+    return messages.join('. ');
+  }
+  if (err instanceof HttpErrorResponse && err.error?.message) {
+    return err.error.message;
+  }
+  return fallback;
 }

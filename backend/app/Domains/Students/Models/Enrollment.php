@@ -22,10 +22,12 @@ class Enrollment extends Model
         'uuid',
         'enrolled_at',
         'status',
+        'custom_price',
     ];
 
     protected $casts = [
         'enrolled_at' => 'datetime',
+        'custom_price' => 'decimal:2',
     ];
 
     public function student(): BelongsTo

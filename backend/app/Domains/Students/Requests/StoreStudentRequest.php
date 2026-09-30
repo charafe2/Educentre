@@ -34,6 +34,12 @@ class StoreStudentRequest extends FormRequest
             'enrolledAt' => ['nullable', 'date'],
             'enrolledClassIds' => ['nullable', 'array'],
             'enrolledClassIds.*' => ['integer', 'exists:classes,id'],
+            // Per-class price for this one student — a discount the owner
+            // grants at enrollment, kept for every month after (see
+            // Enrollment.custom_price). Keyed by class id; missing entries
+            // fall back to the group's/class's own price as before.
+            'classPrices' => ['nullable', 'array'],
+            'classPrices.*' => ['numeric', 'min:0'],
             // Enrollment-time payment (see PaymentService::createForEnrollment) —
             // all optional so this request stays backward compatible with any
             // caller that doesn't send them.

@@ -36,6 +36,7 @@ class StudentResource extends JsonResource
                 'groupId' => $e->group_id,
                 'enrolledAt' => $e->enrolled_at?->format('Y-m-d'),
                 'status' => $e->status,
+                'customPrice' => $e->custom_price !== null ? (float) $e->custom_price : null,
             ]),
             'paymentStatus' => $paymentStatus,
             'status' => $this->is_active ? 'active' : 'inactive',

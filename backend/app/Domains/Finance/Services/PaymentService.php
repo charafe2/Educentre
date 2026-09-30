@@ -118,6 +118,7 @@ class PaymentService
         ?float $customTotal,
         string $paymentStatus,
         ?float $amountPaid,
+        array $classPrices = [],
     ): void {
         $ids = array_values(array_unique($classIds));
         if (empty($ids)) {
@@ -125,7 +126,13 @@ class PaymentService
         }
 
         $classes = CourseClass::query()->where('tenant_id', $tenantId)->whereIn('id', $ids)->get()->keyBy('id');
-        $effectivePrices = $classes->mapWithKeys(fn (CourseClass $class) => [$class->id => $this->effectivePrice($class)]);
+        // A class the owner gave this one student a specific price for
+        // (Ajouter un élève) weighs in with that price instead of the
+        // usual cheapest-group estimate, so the enrollment-time split
+        // matches exactly what was shown on the form.
+        $effectivePrices = $classes->mapWithKeys(fn (CourseClass $class) => [
+            $class->id => isset($classPrices[$class->id]) ? (float) $classPrices[$class->id] : $this->effectivePrice($class),
+        ]);
         $rawTotal = (float) $effectivePrices->sum();
         if ($rawTotal <= 0) {
             return;
