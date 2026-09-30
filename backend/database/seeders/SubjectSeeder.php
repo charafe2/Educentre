@@ -12,7 +12,7 @@ class SubjectSeeder extends Seeder
      * Global subject catalog, named to match the `classes.subject` strings
      * MoroccanDemoSeeder writes so demo classes line up with real catalog rows.
      */
-    private const SUBJECTS = [
+    public const SUBJECTS = [
         'Mathématiques' => ['#1d4ed8', '#dbeafe'],
         'Physique-Chimie' => ['#7c3aed', '#ede9fe'],
         'SVT' => ['#15803d', '#dcfce7'],
