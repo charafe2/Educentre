@@ -88,12 +88,15 @@ class StudentService
             }
 
             if (! empty($data['enrolledClassIds'])) {
+                $classPrices = $data['classPrices'] ?? [];
+
                 foreach ($data['enrolledClassIds'] as $classId) {
                     Enrollment::create([
                         'tenant_id' => $tenantId,
                         'student_id' => $student->id,
                         'class_id' => $classId,
                         'enrolled_at' => $data['enrolledAt'] ?? now(),
+                        'custom_price' => $classPrices[$classId] ?? null,
                     ]);
                 }
 
@@ -108,6 +111,7 @@ class StudentService
                         customTotal: isset($data['totalAmount']) ? (float) $data['totalAmount'] : null,
                         paymentStatus: $data['paymentStatus'],
                         amountPaid: isset($data['amountPaid']) ? (float) $data['amountPaid'] : null,
+                        classPrices: $classPrices,
                     );
                 }
             }
@@ -136,6 +140,32 @@ class StudentService
                 'status' => $data['status'] ?? $student->status,
                 'is_active' => ($data['status'] ?? $student->status) === 'active',
             ]);
+
+            if (array_key_exists('parentName', $data) || array_key_exists('parentPhone', $data) || array_key_exists('parentWhatsapp', $data)) {
+                $parent = StudentParent::where('student_id', $id)->where('is_primary', true)->first()
+                    ?? StudentParent::where('student_id', $id)->first();
+                $names = explode(' ', $data['parentName'] ?? '', 2);
+
+                if ($parent) {
+                    $parent->update([
+                        'first_name' => array_key_exists('parentName', $data) ? ($names[0] ?? 'Parent') : $parent->first_name,
+                        'last_name' => array_key_exists('parentName', $data) ? ($names[1] ?? '') : $parent->last_name,
+                        'phone' => array_key_exists('parentPhone', $data) ? $data['parentPhone'] : $parent->phone,
+                        'whatsapp_phone' => array_key_exists('parentWhatsapp', $data) ? $data['parentWhatsapp'] : $parent->whatsapp_phone,
+                    ]);
+                } elseif (! empty($data['parentName']) || ! empty($data['parentPhone'])) {
+                    StudentParent::create([
+                        'tenant_id' => $student->tenant_id,
+                        'student_id' => $id,
+                        'first_name' => $names[0] ?? 'Parent',
+                        'last_name' => $names[1] ?? '',
+                        'phone' => $data['parentPhone'] ?? null,
+                        'whatsapp_phone' => $data['parentWhatsapp'] ?? null,
+                        'password' => Hash::make('parent2026'),
+                        'is_primary' => true,
+                    ]);
+                }
+            }
 
             if (isset($data['enrolledClassIds'])) {
                 Enrollment::where('student_id', $id)

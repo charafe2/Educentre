@@ -46,6 +46,15 @@ export interface GroupScheduleData {
   generatedAt: string;
 }
 
+export interface WeekScheduleData {
+  centerName: string;
+  generatedAt: string;
+  days: {
+    label: string;
+    sessions: { time: string; subject: string; group: string; teacher: string; room: string }[];
+  }[];
+}
+
 const STORAGE_KEY_PREFIX = 'moujtahid_receipt_customization_v1';
 
 export const DEFAULT_RECEIPT_SETTINGS: ReceiptCustomizationSettings = {
@@ -174,6 +183,139 @@ export class ReceiptCustomizationService {
     const safeName = `${data.subject}-${data.level}-groupe-${data.groupNumber}`
       .trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     this.triggerPdfDownload(pdf, `emploi-du-temps-${safeName || 'groupe'}.pdf`);
+  }
+
+  /**
+   * The whole centre's weekly timetable — every group, every day — laid out
+   * as a 7-day-column table so it reads like the on-screen week view, not
+   * like downloadGroupSchedule()'s single day/time list. Landscape A4, since
+   * 7 columns need the width.
+   */
+  async downloadWeekSchedule(data: WeekScheduleData, settings = this.settings()): Promise<void> {
+    const width = 1500;
+    const cardH = 74;
+    const cardGap = 8;
+    const maxSessions = Math.max(1, ...data.days.map(d => d.sessions.length));
+    const baseHeight = 260; // header + day-column head + margins
+    const height = baseHeight + maxSessions * (cardH + cardGap);
+
+    const image = await this.renderWeekScheduleImage(data, settings, width, height);
+    const pageWidth = 841.89; // A4 landscape width, in points
+    const pageHeight = pageWidth * (height / width);
+    const pdf = this.buildPdf(image, width, height, pageWidth, pageHeight);
+
+    const stamp = new Intl.DateTimeFormat('fr-CA').format(new Date()); // yyyy-mm-dd, locale-stable
+    this.triggerPdfDownload(pdf, `emploi-du-temps-semaine-${stamp}.pdf`);
+  }
+
+  private async renderWeekScheduleImage(
+    data: WeekScheduleData,
+    settings: ReceiptCustomizationSettings,
+    width: number,
+    height: number,
+  ): Promise<string> {
+    const accent = settings.accentColor;
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Canvas rendering is not available.');
+
+    const ink = '#081333';
+    const muted = '#53637c';
+    const border = '#dbe4ee';
+    const softerAccent = this.mixColor(accent, '#ffffff', 0.94);
+    const logoImage = settings.logoDataUrl ? await this.safeLoadImage(settings.logoDataUrl) : null;
+
+    const fit = (text: string, font: string, maxWidth: number): string => {
+      ctx.font = font;
+      if (ctx.measureText(text).width <= maxWidth) return text;
+      let t = text;
+      while (t.length > 1 && ctx.measureText(`${t}…`).width > maxWidth) t = t.slice(0, -1);
+      return `${t}…`;
+    };
+
+    const margin = 32;
+    const cardX = margin;
+    const cardY = margin;
+    const cardW = width - margin * 2;
+    const contentX = cardX + 30;
+    const contentRight = cardX + cardW - 30;
+    const contentW = contentRight - contentX;
+
+    ctx.fillStyle = '#f4f7fb';
+    ctx.fillRect(0, 0, width, height);
+    this.drawRoundRect(ctx, cardX, cardY, cardW, height - margin * 2, 18, '#ffffff', '#dfe7ef');
+
+    let y = cardY + 40;
+
+    // Header: logo/centre name (left), title + date (right)
+    if (logoImage) {
+      this.drawRoundRect(ctx, contentX, y, 50, 50, 12, '#ffffff');
+      ctx.save();
+      this.clipRoundRect(ctx, contentX, y, 50, 50, 12);
+      ctx.drawImage(logoImage, contentX, y, 50, 50);
+      ctx.restore();
+    } else {
+      this.drawRoundRect(ctx, contentX, y, 50, 50, 12, accent);
+      this.drawText(ctx, data.centerName.slice(0, 2).toUpperCase(), contentX + 25, y + 32, {
+        align: 'center', color: '#ffffff', font: '800 18px Arial',
+      });
+    }
+    this.drawText(ctx, data.centerName, contentX + 64, y + 20, { color: ink, font: '800 22px Arial' });
+    this.drawText(ctx, 'Gestion intelligente de centre de soutien', contentX + 64, y + 42, { color: muted, font: '13px Arial' });
+
+    this.drawText(ctx, 'EMPLOI DU TEMPS DE LA SEMAINE', contentRight, y + 14, { align: 'right', color: ink, font: '800 20px Arial' });
+    this.drawText(ctx, data.generatedAt, contentRight, y + 38, { align: 'right', color: muted, font: '13px Arial' });
+
+    y += 80;
+    this.drawLine(ctx, contentX, y, contentRight, y, border);
+    y += 26;
+
+    // Day columns, each a header pill plus its sessions stacked underneath —
+    // the same day-column arrangement as the on-screen week grid.
+    const tableTop = y;
+    const columns = data.days.length;
+    const colW = contentW / columns;
+    const headH = 40;
+
+    data.days.forEach((day, i) => {
+      const x = contentX + i * colW;
+      this.drawRoundRect(ctx, x + 4, tableTop, colW - 8, headH, 8, softerAccent);
+      this.drawText(ctx, day.label.toUpperCase(), x + colW / 2, tableTop + 25, {
+        align: 'center', color: accent, font: '800 12px Arial',
+      });
+    });
+
+    const cardTop = tableTop + headH + 10;
+    const cardH = 74;
+    const cardGap = 8;
+    const innerW = colW - 8 - 20;
+
+    data.days.forEach((day, i) => {
+      const x = contentX + i * colW + 4;
+      const cw = colW - 8;
+      let cy = cardTop;
+      if (!day.sessions.length) {
+        this.drawText(ctx, '—', x + cw / 2, cy + 20, { align: 'center', color: muted, font: '13px Arial' });
+        return;
+      }
+      day.sessions.forEach(session => {
+        this.drawRoundRect(ctx, x, cy, cw, cardH, 8, '#f8fafc', border);
+        this.drawText(ctx, session.time, x + 10, cy + 20, { color: accent, font: '800 12px Arial' });
+        this.drawText(ctx, fit(session.subject, '700 12px Arial', innerW), x + 10, cy + 37, { color: ink, font: '700 12px Arial' });
+        this.drawText(ctx, fit(`${session.group} · ${session.teacher}`, '11px Arial', innerW), x + 10, cy + 53, { color: muted, font: '11px Arial' });
+        this.drawText(ctx, fit(session.room, '11px Arial', innerW), x + 10, cy + 67, { color: muted, font: '11px Arial' });
+        cy += cardH + cardGap;
+      });
+    });
+
+    for (let i = 1; i < columns; i++) {
+      const x = contentX + i * colW;
+      this.drawLine(ctx, x, tableTop, x, height - margin - 24, border);
+    }
+
+    return canvas.toDataURL('image/jpeg', 0.94);
   }
 
   private triggerPdfDownload(pdf: Uint8Array, filename: string): void {

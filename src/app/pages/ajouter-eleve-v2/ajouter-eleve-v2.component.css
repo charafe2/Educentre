@@ -95,7 +95,6 @@
   padding: 12px 14px;
   border: 1px solid var(--m-line);
   background: var(--m-band);
-  text-align: start;
   transition: border-color var(--m-fast) linear, background-color var(--m-fast) linear;
 }
 
@@ -106,6 +105,15 @@
 .subject.is-on {
   background: var(--m-green-tint);
   border-color: var(--m-green);
+}
+
+.subject-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  text-align: start;
 }
 
 .subject-check {
@@ -146,9 +154,16 @@
 
 .subject-price {
   flex: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+.subject-price.is-static {
+  color: var(--m-ink-faint);
 }
 
 .subject-price small {
@@ -169,15 +184,37 @@
   border: 1px solid var(--m-line-soft);
 }
 
-.pay-summary strong {
-  font-size: 22px;
-  font-weight: 700;
+.pay-total {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
-.pay-summary strong small {
+.pay-total input {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid var(--m-line);
+  background: var(--m-paper);
+  font: inherit;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: end;
+  color: var(--m-ink);
+}
+
+.pay-total input:focus-visible {
+  outline: 2px solid var(--m-green);
+  outline-offset: 1px;
+}
+
+.pay-total small {
   color: var(--m-ink-faint);
   font-size: 12.5px;
   font-weight: 500;
+}
+
+.pay-split-hint {
+  margin-block: -4px 14px;
 }
 
 .status-picks {

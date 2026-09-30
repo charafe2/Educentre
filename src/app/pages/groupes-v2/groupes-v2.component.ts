@@ -56,7 +56,6 @@ interface Block {
 }
 
 const DAY_LONG = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
-const DURATIONS = [60, 120, 180];
 const HOUR_PX = 56;
 
 const DETAILS_STATUS_LABEL: Record<MonthStatus, string> = {
@@ -99,7 +98,6 @@ export class GroupesV2Component {
   readonly rooms = this.roomsService.rooms;
   readonly dayShort = DAY_SHORT;
   readonly dayLong = DAY_LONG;
-  readonly durations = DURATIONS;
   readonly sortOptions: Array<{ key: SortKey; label: string }> = [
     { key: 'subject', label: 'Trier par matière' },
     { key: 'fill', label: 'Trier par remplissage' },
@@ -179,12 +177,6 @@ export class GroupesV2Component {
   formatSlot(s: Slot): string {
     if (!s.days.length) return 'À planifier';
     return `${[...s.days].sort().map(d => DAY_SHORT[d]).join(', ')} ${s.start}–${endOf(s)}`;
-  }
-
-  formatDuration(min: number): string {
-    const h = Math.floor(min / 60);
-    const m = min % 60;
-    return m ? `${h} h ${m}` : `${h} h`;
   }
 
   /** Downloads this one group's own weekly schedule as a PDF, to send to its students. */
@@ -521,23 +513,37 @@ export class GroupesV2Component {
     this.pickerFor.set(null);
   }
 
-  /** Students already enrolled in this group's class but not yet in any of its groups — same eligibility rule as the v1 Groupes page. */
-  candidates(g: GroupRow): { id: number; name: string }[] {
+  /**
+   * Students enrolled in this group's class and not yet in this particular
+   * group. A student already sitting in one of the class's other groups is
+   * still shown — picking them moves them here instead of double-enrolling
+   * them (the class only holds one group membership per student).
+   */
+  candidates(g: GroupRow): { id: number; name: string; fromGroupId: number | null; fromGroupNumber: number | null }[] {
     const q = normalize(this.pickerQuery().trim());
-    const groupedElsewhere = new Set(this.groupsService.groups().filter(x => x.classeId === g.classeId).flatMap(x => x.studentIds));
+    const classGroups = this.groupsService.groups().filter(x => x.classeId === g.classeId);
+    const otherGroups = classGroups.filter(x => x.id !== g.id);
+    const inThisGroup = new Set(classGroups.find(x => x.id === g.id)?.studentIds ?? []);
     return this.studentsService.students()
-      .filter(s => s.status === 'active' && s.enrolledClassIds.includes(g.classeId) && !groupedElsewhere.has(s.id))
-      .map(s => ({ id: s.id, name: `${s.firstName} ${s.lastName}` }))
+      .filter(s => s.status === 'active' && s.enrolledClassIds.includes(g.classeId) && !inThisGroup.has(s.id))
+      .map(s => {
+        const current = otherGroups.find(x => x.studentIds.includes(s.id));
+        return { id: s.id, name: `${s.firstName} ${s.lastName}`, fromGroupId: current?.id ?? null, fromGroupNumber: current?.groupNumber ?? null };
+      })
       .filter(s => !q || normalize(s.name).includes(q))
       .slice(0, 6);
   }
 
-  addStudent(candidate: { id: number; name: string }, g: GroupRow): void {
-    this.groupsService.moveStudent(candidate.id, null, g.id).subscribe({
+  addStudent(candidate: { id: number; name: string; fromGroupId: number | null; fromGroupNumber: number | null }, g: GroupRow): void {
+    this.groupsService.moveStudent(candidate.id, candidate.fromGroupId, g.id).subscribe({
       next: () => {
         this.groupsService.loadGroups();
         this.notify(`${candidate.name} est maintenant dans le groupe ${g.number}`, true, () => {
-          this.groupsService.removeStudentFromGroup(candidate.id, g.id).subscribe(() => this.groupsService.loadGroups());
+          if (candidate.fromGroupId !== null) {
+            this.groupsService.moveStudent(candidate.id, g.id, candidate.fromGroupId).subscribe(() => this.groupsService.loadGroups());
+          } else {
+            this.groupsService.removeStudentFromGroup(candidate.id, g.id).subscribe(() => this.groupsService.loadGroups());
+          }
         });
       },
       error: () => this.notify(`Impossible d’ajouter ${candidate.name}`),
@@ -761,6 +767,28 @@ export class GroupesV2Component {
     a.click();
     URL.revokeObjectURL(url);
     this.notify(`Export téléchargé : ${rows.length} ${rows.length > 1 ? 'groupes' : 'groupe'}`);
+  }
+
+  /** The whole centre's weekly timetable (every group, every day) as one PDF table — for the owner, from the week view. */
+  async downloadWeekSchedule(): Promise<void> {
+    const days = this.week().map((d, i) => ({
+      label: this.dayLong[i].replace(/^\w/, c => c.toUpperCase()),
+      sessions: [...d.blocks]
+        .sort((a, b) => a.startHour - b.startHour)
+        .map(b => ({
+          time: `${String(b.startHour).padStart(2, '0')}:00–${String(b.endHour).padStart(2, '0')}:00`,
+          subject: `${b.group.subject}, ${b.group.level}`,
+          group: `Groupe ${b.group.number}`,
+          teacher: b.group.teacher || 'Sans enseignant',
+          room: b.group.room || 'Sans salle',
+        })),
+    }));
+    await this.receiptCustomization.downloadWeekSchedule({
+      centerName: this.centreService.centreInfo().name || this.receiptCustomization.settings().centerName,
+      generatedAt: new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' }).format(new Date()),
+      days,
+    });
+    this.notify('Emploi du temps de la semaine téléchargé');
   }
 
   // ── Snackbar ──────────────────────────────────────────────────────

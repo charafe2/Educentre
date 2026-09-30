@@ -44,6 +44,7 @@
           <span>Élève</span>
           <span>Niveau</span>
           <span>Parent</span>
+          <span>Tarif</span>
           <span>Paiement</span>
           <span class="col-end">Statut</span>
           <span class="m-visually-hidden">Actions</span>
@@ -77,6 +78,14 @@
                 <span class="parent-phone">{{ s.parentPhone || '—' }}</span>
               </div>
 
+              <div class="cell cell-price">
+                @if (monthlyTotal(s) > 0) {
+                  {{ monthlyTotal(s) }} <small>Dhs/mois</small>
+                } @else {
+                  <span class="cell-price-empty">—</span>
+                }
+              </div>
+
               <div class="cell cell-payment">
                 <span class="pay-badge" [class]="'pay-badge s-' + s.paymentStatus">{{ paymentLabel(s.paymentStatus) }}</span>
               </div>
@@ -90,6 +99,9 @@
               </div>
 
               <div class="cell cell-actions">
+                <button class="m-icon-btn" type="button" data-tip="Modifier" [attr.aria-label]="'Modifier ' + fullName(s)" (click)="openEdit(s)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>
+                </button>
                 <button class="m-icon-btn m-icon-btn--danger m-tip-end" type="button" data-tip="Supprimer" [attr.aria-label]="'Supprimer ' + fullName(s)" (click)="askDelete(s)">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13"/><path d="M10.5 11v5.5M13.5 11v5.5"/></svg>
                 </button>
@@ -143,20 +155,104 @@
     }
   </main>
 
+  <!-- Edit panel -->
+  @if (editing(); as s) {
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="closeEdit()"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="panel-title" animate.enter="panel-enter" animate.leave="panel-leave">
+      <header class="panel-head">
+        <h2 id="panel-title">Modifier la fiche de {{ fullName(s) }}</h2>
+        <button class="m-icon-btn" type="button" aria-label="Fermer" (click)="closeEdit()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+
+      <form class="panel-body" id="student-edit-form" (ngSubmit)="save()">
+        <p class="panel-section span-2">Identité</p>
+
+        <label class="m-field">
+          <span>Prénom</span>
+          <input class="m-input" name="firstName" autocomplete="off" [(ngModel)]="draft.firstName">
+        </label>
+        <label class="m-field">
+          <span>Nom</span>
+          <input class="m-input" name="lastName" autocomplete="off" [(ngModel)]="draft.lastName">
+        </label>
+        <label class="m-field">
+          <span>Téléphone</span>
+          <input class="m-input" name="phone" type="tel" inputmode="tel" placeholder="06 12 34 56 78" [(ngModel)]="draft.phone">
+        </label>
+        <label class="m-field">
+          <span>Email</span>
+          <input class="m-input" name="email" type="email" [(ngModel)]="draft.email">
+        </label>
+        <label class="m-field">
+          <span>Date de naissance</span>
+          <input class="m-input" type="date" name="birthDate" [(ngModel)]="draft.birthDate">
+        </label>
+        <label class="m-field">
+          <span>École</span>
+          <input class="m-input" name="school" autocomplete="off" [(ngModel)]="draft.school">
+        </label>
+        <label class="m-field">
+          <span>Niveau scolaire</span>
+          <select class="m-select" name="level" [(ngModel)]="draft.level">
+            <option value="">Sélectionner…</option>
+            @for (l of levels(); track l) { <option [value]="l">{{ l }}</option> }
+          </select>
+        </label>
+        <label class="m-field">
+          <span>Statut</span>
+          <select class="m-select" name="status" [(ngModel)]="draft.status">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+          </select>
+        </label>
+
+        <p class="panel-section span-2">Parent</p>
+
+        <label class="m-field">
+          <span>Nom du parent</span>
+          <input class="m-input" name="parentName" autocomplete="off" [(ngModel)]="draft.parentName">
+        </label>
+        <label class="m-field">
+          <span>Téléphone du parent</span>
+          <input class="m-input" name="parentPhone" type="tel" autocomplete="off" [(ngModel)]="draft.parentPhone">
+        </label>
+        <label class="m-field">
+          <span>WhatsApp</span>
+          <input class="m-input" name="parentWhatsapp" type="tel" autocomplete="off" [(ngModel)]="draft.parentWhatsapp">
+        </label>
+      </form>
+
+      <footer class="panel-foot">
+        <button class="m-btn" type="button" (click)="closeEdit()">Annuler</button>
+        <button class="m-btn m-btn--primary" type="submit" form="student-edit-form" [disabled]="saving()">
+          {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+        </button>
+      </footer>
+    </aside>
+  }
+
   <!-- Delete confirmation -->
   @if (confirming(); as s) {
-    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="cancelDelete()"></div>
+    <div class="scrim" animate.enter="m-enter-fade" animate.leave="m-leave-fade" (click)="confirming.set(null)"></div>
     <div class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="del-title" aria-describedby="del-text" animate.enter="dialog-enter" animate.leave="dialog-leave">
       <h2 id="del-title">Supprimer {{ fullName(s) }} ?</h2>
-      <p id="del-text">
-        Cet élève n’apparaîtra plus dans la liste. Les paiements déjà enregistrés restent dans la caisse.
-      </p>
+      <p id="del-text">Cet élève n’apparaîtra plus dans la liste. Les paiements déjà enregistrés restent dans la caisse.</p>
       <div class="dialog-actions">
-        <button class="m-btn" type="button" [disabled]="deleting()" (click)="cancelDelete()">Annuler</button>
-        <button class="m-btn m-btn--danger" type="button" [disabled]="deleting()" (click)="confirmDelete()">
-          {{ deleting() ? 'Suppression…' : 'Supprimer' }}
-        </button>
+        <button class="m-btn" type="button" (click)="confirming.set(null)">Annuler</button>
+        <button class="m-btn m-btn--danger" type="button" (click)="confirmDelete()">Supprimer l’élève</button>
       </div>
+    </div>
+  }
+
+  <!-- Snackbar -->
+  @for (s of snack() ? [snack()!] : []; track s.id) {
+    <div class="snack" role="status" animate.enter="snack-enter" animate.leave="snack-leave">
+      <span>{{ s.text }}</span>
+      @if (s.undo) {
+        <button type="button" (click)="runUndo()">Annuler</button>
+      }
     </div>
   }
 </div>

@@ -22,6 +22,9 @@ class UpdateStudentRequest extends FormRequest
             'school' => ['nullable', 'string', 'max:255'],
             'level' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'in:active,inactive'],
+            'parentName' => ['nullable', 'string', 'max:255'],
+            'parentPhone' => ['nullable', 'string', 'max:20'],
+            'parentWhatsapp' => ['nullable', 'string', 'max:20'],
             'enrolledClassIds' => ['nullable', 'array'],
             'enrolledClassIds.*' => ['integer', 'exists:classes,id'],
         ];

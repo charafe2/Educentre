@@ -21,10 +21,17 @@
             <span class="btn-text">Semaine</span>
           </button>
         </div>
-        <button class="m-btn head-export m-tip-end" type="button" data-tip="Exporter la liste affichée" aria-label="Exporter en CSV" (click)="exportCsv()">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
-          <span class="btn-text">Exporter</span>
-        </button>
+        @if (view() === 'semaine') {
+          <button class="m-btn head-export m-tip-end" type="button" data-tip="Exporter l’emploi du temps de la semaine" aria-label="Exporter l’emploi du temps en PDF" (click)="downloadWeekSchedule()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+            <span class="btn-text">Exporter</span>
+          </button>
+        } @else {
+          <button class="m-btn head-export m-tip-end" type="button" data-tip="Exporter la liste affichée" aria-label="Exporter en CSV" (click)="exportCsv()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5"/><path d="M5 19h14"/></svg>
+            <span class="btn-text">Exporter</span>
+          </button>
+        }
         <button class="m-btn m-btn--primary head-new" type="button" aria-keyshortcuts="n" data-tour="nouveau-groupe" (click)="openCreate()">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
           <span class="btn-text">Nouveau groupe</span>
@@ -376,8 +383,11 @@
                             <div class="picker-list">
                               @for (c of candidates(r.group); track c.id; let first = $first) {
                                 <button type="button" [class.is-first]="first && pickerQuery()" (click)="addStudent(c, r.group)">
-                                  {{ c.name }}
-                                  <span>Ajouter</span>
+                                  <span class="picker-name">
+                                    {{ c.name }}
+                                    @if (c.fromGroupNumber) { <small>Groupe {{ c.fromGroupNumber }} → Groupe {{ r.group.number }}</small> }
+                                  </span>
+                                  <span class="picker-action">{{ c.fromGroupNumber ? 'Déplacer' : 'Ajouter' }}</span>
                                 </button>
                               } @empty {
                                 <p class="picker-empty">Aucun élève ne porte ce nom.</p>
@@ -483,10 +493,9 @@
           <input class="m-input" type="time" name="start" step="900" [(ngModel)]="draft.schedule.start" required>
         </label>
         <label class="m-field">
-          <span>Durée</span>
-          <select class="m-select" name="duration" [(ngModel)]="draft.schedule.duration">
-            @for (m of durations; track m) { <option [ngValue]="m">{{ formatDuration(m) }}</option> }
-          </select>
+          <span>Durée (minutes)</span>
+          <input class="m-input" type="number" min="15" step="15" name="duration" [(ngModel)]="draft.schedule.duration" required>
+          <small class="hint">Arrondie à l’heure la plus proche à l’enregistrement.</small>
         </label>
         <p class="slot-summary span-2">
           {{ draft.schedule.days.length ? formatSlot(draft.schedule) : 'Sans jour choisi, le groupe reste à planifier.' }}
